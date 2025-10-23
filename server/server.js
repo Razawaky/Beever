@@ -5,6 +5,10 @@ const {getConnection} = require('./db/conn')
 
 //rotas
 const usersRouter = require('./routes/users');
+app.use('/users', usersRouter);
+
+const perfilRouter = require('./routes/perfil');
+app.use('/perfil', perfilRouter)
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,9 +16,6 @@ const PORT = process.env.PORT || 3000;
 //configouração dos middleware
 app.use(cors()); //permite requisção de outras origens
 app.use(express.json()) //transforma em JSON as requisições do body
-
-//rotas ----
-app.use('/users', usersRouter);
 
 //node-cron pra poder deletar users após 15 dias, tem que deixar rodando isso, em HIPÓTESE ALGUMA REMOVER ISSO!!!!!!!!!!
 cron.schedule('0 0 * * *', async() => {
