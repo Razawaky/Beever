@@ -83,3 +83,55 @@ router.post('/login', async (req, res) => {
         res.status(500).json({error:'Erro no login'});
     }
 })
+
+//atualizar user
+router.put('/:id', async (req, res) => {
+    const {id} = req.params;
+    const {nome, email, data_nasc} = req.body;
+
+    try{
+        const conn = await getConnection();
+
+        const [result] = await conn.execute(`
+            UPDATE usuario SET 
+            nome = COALESCE(?, nome),
+            email = COALESCE(?, email),
+            data_nasc = COALESCE(?, data_nasc)
+            WHERE id = ?`, [nome, email, data_nasc, id]
+        );
+
+        await conn.end();
+
+        if(result.affectedRows === 0){
+            return res.status(404).json({error:'Usuário não encontrado'});
+        }
+
+        res.json({message: 'Dados atualizados com sucesso!'})
+    } catch(e){
+        console.error(e);
+        res.status(500).json({error: 'Erro ao atualizar dados'})
+    }
+})
+
+//deletar user
+router.delete('/:id', async (req, res) => {
+    const {id} = req.params;
+        const {nome, email} = req.body;
+
+    try{
+        const conn = await getConnection();
+
+        //atualiza status para inativo
+        await conn.execute(`UPDATE usuario SET status = 'Inativo' WHERE id = ?`, [id]);
+
+        //cria log
+        await conn.execute('INSERT INTO log_user (id_user, nome, email, acao) VALUES (?,?,?,?)', [id, nome, email, 'INATIVADO'])
+
+        await conn.end();
+
+        res.json({message: 'Usuário deletado com sucesso'})
+    } catch(e){
+        console.error(e);
+        res.status(500).json({error: 'Erro ao deletar usuário'})
+    }
+})
