@@ -18,8 +18,8 @@ router.get('/', async (req, res) => {
 
 //criar perfil
 router.post('/', async (req, res) => {
-    const {nome_perfil, senha_perfil, data_nasc, avatar_img} = req.body;
-    if(!nome_perfil || !senha_perfil || !data_nasc || !avatar_img){
+    const {id_user, nome_perfil, senha_perfil, data_nasc, avatar_img} = req.body;
+    if(!id_user || !nome_perfil || !senha_perfil || !data_nasc){
         return res.status(400).json({ error: 'Tem campos vazios a serem preenchidos' });
     }
 
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
         const hash = await bcrypt.hash(senha_perfil, 10);
         const conn = await getConnection();
 
-        const query = `INSERT INTO perfil (id_user, nome_perfil, senha_perfil, data_nasc, moedas, data_criacao, ultimo_login, avatar_img) VALUES (?,?,?,?,0,NOW(),NULL,NULL)`;
+        const query = `INSERT INTO perfil (id_user, nome_perfil, senha_perfil, data_nasc, moedas, data_criacao, ultimo_login, avatar_img) VALUES (?,?,?,?,0,NOW(),NULL,?)`;
 
         const [result] = await conn.execute(query, [id_user,nome_perfil,hash,data_nasc,avatar_img || null]);
         await conn.end();
@@ -44,10 +44,10 @@ router.post('/', async (req, res) => {
     }
 })
 
-//login perfil
+//login perfil - PRECISA TESTAR AINDA
 router.post('/login', async (req, res) => {
-    const {nome_perfil, senha} = req.body;
-    if(!nome_perfil || !senha){
+    const {nome_perfil, senha_perfil} = req.body;
+    if(!nome_perfil || !senha_perfil){
         return res.status(400).json({ error: 'Nome e senha obrigatórios' });
     }
 
@@ -62,7 +62,7 @@ router.post('/login', async (req, res) => {
         }
 
         const perfil = rows[0];
-        const senhaCorreta = await bcrypt.compare(senha, perfil.senha_perfil);
+        const senhaCorreta = await bcrypt.compare(senha_perfil, perfil.senha_perfil);
 
         if(!senhaCorreta){
             return res.status(401).json({error:'Senha incorreta'});
@@ -74,6 +74,7 @@ router.post('/login', async (req, res) => {
         await conn2.end();
 
         res.json({
+            message: 'Logado com sucesso!',
             id: perfil.id,
             id_user: perfil.id_user,
             nome_perfil: perfil.nome_perfil,
@@ -117,23 +118,26 @@ router.put('/:id', async (req, res) => {
 //deletar perfil
 router.delete('/:id', async (req, res) => {
     const {id} = req.params;
-        const {nome, email} = req.body;
 
     try{
         const conn = await getConnection();
 
-        //atualiza status para inativo
-        await conn.execute(`UPDATE usuario SET status = 'Inativo' WHERE id = ?`, [id]);
+        //verifica se o perfil existe ou nao
+        const [rows] = await conn.execute(`SELECT * FROM perfil WHERE id = ?`, [id]);
+        if(rows.lenght === 0){
+            await conn.end();
+            return res.status(404).json({error: 'Perfil não encontrado'});
+        }
 
-        //cria log
-        await conn.execute('INSERT INTO log_user (id_user, nome, email, acao) VALUES (?,?,?,?)', [id, nome, email, 'INATIVADO'])
+        //deletar perfil
+        await conn.execute('DELETE FROM perfil WHERE id = ?', [id])
 
         await conn.end();
 
-        res.json({message: 'Usuário deletado com sucesso'})
+        res.json({message: 'Perfil deletado com sucesso'})
     } catch(e){
         console.error(e);
-        res.status(500).json({error: 'Erro ao deletar usuário'})
+        res.status(500).json({error: 'Erro ao deletar perfil'})
     }
 })
 

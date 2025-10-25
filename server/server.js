@@ -5,10 +5,7 @@ const {getConnection} = require('./db/conn')
 
 //rotas
 const usersRouter = require('./routes/users');
-app.use('/users', usersRouter);
-
 const perfilRouter = require('./routes/perfil');
-app.use('/perfil', perfilRouter)
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +33,10 @@ cron.schedule('0 0 * * *', async() => {
 
     console.log(`[CRON] Removido users inativos a mais de 15 dias`)
 })
+
+//chamando as rotas
+app.use('/users', usersRouter);
+app.use('/perfil', perfilRouter)
 
 //iniciar server
 app.listen(PORT, () => {
