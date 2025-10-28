@@ -3,8 +3,14 @@ const router = express.Router();
 const { getConnection } = require('../db/conn');
 const bcrypt = require('bcrypt')
 
+//verifica se tem sessao do user ativa
+function authMiddleware(req, res, next) {
+    if (req.session.userId) return next();
+    res.status(401).json({ error: 'Não autorizado' });
+}
+
 //listar perfis
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try{
         const conn = await getConnection();
         const [rows] = await conn.execute('SELECT * FROM perfil');
@@ -17,7 +23,7 @@ router.get('/', async (req, res) => {
 })
 
 //criar perfil
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
     const {id_user, nome_perfil, senha_perfil, data_nasc, avatar_img} = req.body;
     if(!id_user || !nome_perfil || !senha_perfil || !data_nasc){
         return res.status(400).json({ error: 'Tem campos vazios a serem preenchidos' });
@@ -44,8 +50,8 @@ router.post('/', async (req, res) => {
     }
 })
 
-//login perfil - PRECISA TESTAR AINDA
-router.post('/login', async (req, res) => {
+//login perfil
+router.post('/login', authMiddleware, async (req, res) => {
     const {nome_perfil, senha_perfil} = req.body;
     if(!nome_perfil || !senha_perfil){
         return res.status(400).json({ error: 'Nome e senha obrigatórios' });
@@ -88,7 +94,7 @@ router.post('/login', async (req, res) => {
 })
 
 //atualizar perfil
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
     const {id} = req.params;
     const {nome_perfil, data_nasc} = req.body;
 
@@ -116,7 +122,7 @@ router.put('/:id', async (req, res) => {
 })
 
 //deletar perfil
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     const {id} = req.params;
 
     try{
@@ -124,7 +130,7 @@ router.delete('/:id', async (req, res) => {
 
         //verifica se o perfil existe ou nao
         const [rows] = await conn.execute(`SELECT * FROM perfil WHERE id = ?`, [id]);
-        if(rows.lenght === 0){
+        if(rows.length === 0){
             await conn.end();
             return res.status(404).json({error: 'Perfil não encontrado'});
         }
