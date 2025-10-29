@@ -1,27 +1,6 @@
 import '../../main.css'
 
 document.querySelector('#app').innerHTML = ` 
-
-<!doctype html>
-<html class="bg-zinc-950">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Carregando o Tailwind via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://horizon-ui.com/shadcn-nextjs-boilerplate/_next/static/css/32144b924e2aa5af.css"
-    />
-    <style>
-      /* Estilos personalizados, se necessário */
-      body {
-        font-family: 'Inter', sans-serif; /* Exemplo de fonte */
-      }
-    </style>
-  </head>
-
-  <body class="bg-zinc-950">
     <div
       class="flex flex-col justify-center items-center bg-zinc-950 h-max min-h-[100vh] pb-5"
     >
@@ -224,7 +203,5 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
       que continha 'document.querySelector('#app').innerHTML = ...'
       pois ela não é necessária se este for o seu arquivo HTML principal.
     -->
-  </body>
-</html>
 
 `
