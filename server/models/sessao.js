@@ -1,11 +1,11 @@
 const { getConnection } = require('../db/conn');
 
 //criar sessao
-async function criarSessao(id_user, id_jogos = null){
+async function criarSessao(id_user, sessionId, id_jogos = null){
     const conn = await getConnection();
 
-    const query = `INSERT INTO sessao (id_user_sessao, id_jogos, data_inicio, ultimo_ativo) VALUES (?,?,NOW(),NOW())`;
-    const [result] = await conn.execute(query, [id_user, id_jogos])
+    const query = `INSERT INTO sessao (id_user_sessao, id_jogos, data_inicio, ultimo_ativo, id_sessao_cookie) VALUES (?,?,NOW(),NOW(),?)`;
+    const [result] = await conn.execute(query, [id_user, id_jogos, sessionId])
 
     await conn.end()
     return result.insertId; //retorna id da sessao criada

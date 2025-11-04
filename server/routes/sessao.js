@@ -39,7 +39,7 @@ router.post('/login', async (req, res) => {
         req.session.userId = user.id;
         req.session.email = user.email;
         //criando sessao do user - banco de dados
-        await sessaoModel.criarSessao(user.id);
+        await sessaoModel.criarSessao(user.id, req.sessionID);
 
         //atualizando ultimo login
         const conn2 = await getConnection();

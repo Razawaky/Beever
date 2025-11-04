@@ -40,7 +40,7 @@ cron.schedule('0 0 * * *', async() => {
     console.log(`[CRON] Removido users inativos a mais de 15 dias`)
 })
 
-//chamando as rotas
+//chamando as rotas// 
 app.use('/users', usersRouter)
 app.use('/perfil', perfilRouter)
 app.use('/sessao', sessaoRouter)

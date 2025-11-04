@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getConnection } = require('../db/conn');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+
+const perfilModel = require('../models/perfil');
 
 //verifica se tem sessao do user ativa
 function authMiddleware(req, res, next) {
@@ -10,12 +11,22 @@ function authMiddleware(req, res, next) {
 }
 
 //listar perfis
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/:id_user', authMiddleware, async (req, res) => {
+    const {id_user} = req.params;
+
+    //verifica se é o usuário que está logado no momento
+    if (req.session.userId !== parseInt(id_user)) {
+        return res.status(403).json({ error: 'Acesso negado' });
+    }
+
     try{
-        const conn = await getConnection();
-        const [rows] = await conn.execute('SELECT * FROM perfil');
-        await conn.end();
-        res.json(rows);
+        const result = await perfilModel.listarPerfil(id_user);
+        if (result.length === 0){
+            return res.status(404).json({ error: 'Nenhum perfil encontrado para este usuário' });
+        }
+
+        res.json(result);
+
     } catch(e){
         console.error(e);
         res.status(500).json({error: 'Erro ao buscar perfis'});
@@ -23,25 +34,26 @@ router.get('/', authMiddleware, async (req, res) => {
 })
 
 //criar perfil
-router.post('/', authMiddleware, async (req, res) => {
-    const {id_user, nome_perfil, senha_perfil, data_nasc, avatar_img} = req.body;
-    if(!id_user || !nome_perfil || !senha_perfil || !data_nasc){
+router.post('/:id_user', authMiddleware, async (req, res) => {
+    const {id_user} = req.params;
+    const {nome_perfil, senha_perfil, data_nasc, avatar_img} = req.body;
+
+    //verifica se é o usuário que está logado no momento
+    if (req.session.userId !== parseInt(id_user)) {
+        return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    if(!nome_perfil || !senha_perfil || !data_nasc){
         return res.status(400).json({ error: 'Tem campos vazios a serem preenchidos' });
     }
 
     try{
-        const hash = await bcrypt.hash(senha_perfil, 10);
-        const conn = await getConnection();
-
-        const query = `INSERT INTO perfil (id_user, nome_perfil, senha_perfil, data_nasc, moedas, data_criacao, ultimo_login, avatar_img) VALUES (?,?,?,?,0,NOW(),NULL,?)`;
-
-        const [result] = await conn.execute(query, [id_user,nome_perfil,hash,data_nasc,avatar_img || null]);
-        await conn.end();
+        const idPerfil = await perfilModel.criarPerfil(id_user, nome_perfil, senha_perfil, data_nasc, avatar_img)
 
         res.status(201).json({
-            id: result.insertId, 
+            id: idPerfil, 
             id_user, nome_perfil, data_nasc, 
-            tipo_usuario: avatar_img || null,
+            avatar_img: avatar_img || null,
             moedas: 0
         })
     } catch(e){
@@ -51,33 +63,37 @@ router.post('/', authMiddleware, async (req, res) => {
 })
 
 //login perfil
-router.post('/login', authMiddleware, async (req, res) => {
+router.post('/:id_user/login', authMiddleware, async (req, res) => {
+    const {id_user} = req.params;
     const {nome_perfil, senha_perfil} = req.body;
+
     if(!nome_perfil || !senha_perfil){
         return res.status(400).json({ error: 'Nome e senha obrigatórios' });
     }
 
-    try{
-        const conn = await getConnection();
-        const [rows] =  await conn.execute('SELECT * FROM perfil WHERE nome_perfil = ?', [nome_perfil]);
-        await conn.end();
+    //verifica se é o usuário que está logado no momento
+    if (req.session.userId !== parseInt(id_user)) {
+        return res.status(403).json({ error: 'Acesso negado' });
+    }
 
-        //verifica se user existe
-        if (rows.length === 0){
+    try{
+        const perfil = await perfilModel.buscarPerfilNome(id_user, nome_perfil)
+
+        //verifica se perfil existe
+        if (!perfil){
             return res.status(404).json({error:'Perfil não encontrado'});
         }
 
-        const perfil = rows[0];
         const senhaCorreta = await bcrypt.compare(senha_perfil, perfil.senha_perfil);
 
         if(!senhaCorreta){
             return res.status(401).json({error:'Senha incorreta'});
         }
 
+        //salvando sessao no banco do express
+        req.session.perfilId = perfil.id;
         //atualizando ultimo login
-        const conn2 = await getConnection();
-        await conn2.execute('UPDATE perfil SET ultimo_login = NOW() WHERE id = ?', [perfil.id]);
-        await conn2.end();
+        await perfilModel.atualizarLoginPerfil(perfil.id)
 
         res.json({
             message: 'Logado com sucesso!',
@@ -94,21 +110,17 @@ router.post('/login', authMiddleware, async (req, res) => {
 })
 
 //atualizar perfil
-router.put('/:id', authMiddleware, async (req, res) => {
-    const {id} = req.params;
-    const {nome_perfil, data_nasc} = req.body;
+router.put('/:id_user/:id', authMiddleware, async (req, res) => {
+    const {id_user, id} = req.params;
+    const {nome_perfil, senha_perfil, data_nasc} = req.body;
+
+    //verifica se é o usuário que está logado no momento
+    if (req.session.userId !== parseInt(id_user)) {
+        return res.status(403).json({ error: 'Acesso negado' });
+    }
 
     try{
-        const conn = await getConnection();
-
-        const [result] = await conn.execute(`
-            UPDATE perfil SET 
-            nome_perfil = COALESCE(?, nome_perfil),
-            data_nasc = COALESCE(?, data_nasc)
-            WHERE id = ?`, [nome_perfil, data_nasc, id]
-        );
-
-        await conn.end();
+        const result = await perfilModel.atualizarPerfil(id, nome_perfil, senha_perfil, data_nasc);
 
         if(result.affectedRows === 0){
             return res.status(404).json({error:'Perfil não encontrado'});
@@ -122,25 +134,23 @@ router.put('/:id', authMiddleware, async (req, res) => {
 })
 
 //deletar perfil
-router.delete('/:id', authMiddleware, async (req, res) => {
-    const {id} = req.params;
+router.delete('/:id_user/:id', authMiddleware, async (req, res) => {
+    const {id_user, id} = req.params;
+
+    //verifica se é o usuário que está logado no momento
+    if (req.session.userId !== parseInt(id_user)) {
+        return res.status(403).json({ error: 'Acesso negado' });
+    }
 
     try{
-        const conn = await getConnection();
 
-        //verifica se o perfil existe ou nao
-        const [rows] = await conn.execute(`SELECT * FROM perfil WHERE id = ?`, [id]);
-        if(rows.length === 0){
-            await conn.end();
-            return res.status(404).json({error: 'Perfil não encontrado'});
+        const result = await perfilModel.deletarPerfil(id);
+
+        if (!result){
+            return res.status(404).json({ error: 'Perfil não encontrado' });
         }
-
-        //deletar perfil
-        await conn.execute('DELETE FROM perfil WHERE id = ?', [id])
-
-        await conn.end();
-
         res.json({message: 'Perfil deletado com sucesso'})
+
     } catch(e){
         console.error(e);
         res.status(500).json({error: 'Erro ao deletar perfil'})

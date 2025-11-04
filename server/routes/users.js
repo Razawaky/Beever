@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getConnection } = require('../db/conn');
-const bcrypt = require('bcrypt')
+
+const userModel = require('../models/user');
 
 //verifica se tem sessao do user ativa
 function authMiddleware(req, res, next) {
@@ -12,10 +12,8 @@ function authMiddleware(req, res, next) {
 //listar users
 router.get('/', authMiddleware, async (req, res) => {
     try{
-        const conn = await getConnection();
-        const [rows] = await conn.execute('SELECT * FROM usuario');
-        await conn.end();
-        res.json(rows);
+        const result = userModel.listarUser();
+        res.json(result);
     } catch(e){
         console.error(e);
         res.status(500).json({error: 'Erro ao buscar usuários'});
@@ -30,16 +28,11 @@ router.post('/', async (req, res) => {
     }
 
     try{
-        const hash = await bcrypt.hash(senha, 10);
-        const conn = await getConnection();
-
-        const query = `INSERT INTO usuario (nome, email, data_nasc, senha, data_criacao, ultimo_login, status, tipo_usuario) VALUES (?,?,?,?,NOW(),NULL,'Ativo',?)`;
-
-        const [result] = await conn.execute(query, [nome,email,data_nasc,hash,tipo_usuario || 'Comum']);
-        await conn.end();
+        
+        const userId = await userModel.criarUser(nome, email, data_nasc, senha, tipo_usuario)
 
         res.status(201).json({
-            id: result.insertId, 
+            id: userId, 
             nome, email, 
             tipo_usuario: tipo_usuario || 'Comum'
         })
@@ -52,20 +45,11 @@ router.post('/', async (req, res) => {
 //atualizar user
 router.put('/:id', authMiddleware, async (req, res) => {
     const {id} = req.params;
-    const {nome, email, data_nasc} = req.body;
+    const {nome, email, data_nasc, senha} = req.body;
 
     try{
-        const conn = await getConnection();
-
-        const [result] = await conn.execute(`
-            UPDATE usuario SET 
-            nome = COALESCE(?, nome),
-            email = COALESCE(?, email),
-            data_nasc = COALESCE(?, data_nasc)
-            WHERE id = ?`, [nome, email, data_nasc, id]
-        );
-
-        await conn.end();
+ 
+        const result = await userModel.atualizarUser(id, nome, email, data_nasc, senha);
 
         if(result.affectedRows === 0){
             return res.status(404).json({error:'Usuário não encontrado'});
@@ -84,15 +68,11 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         const {nome, email} = req.body;
 
     try{
-        const conn = await getConnection();
+        const result = await userModel.deletarUser(id, nome, email);
 
-        //atualiza status para inativo
-        await conn.execute(`UPDATE usuario SET status = 'Inativo' WHERE id = ?`, [id]);
-
-        //cria log
-        await conn.execute('INSERT INTO log_user (id_user, nome, email, acao) VALUES (?,?,?,?)', [id, nome, email, 'INATIVADO'])
-
-        await conn.end();
+        if (!result){
+            return res.status(404).json({error: 'Usuário não encontrado'})
+        }
 
         res.json({message: 'Usuário deletado com sucesso'})
     } catch(e){
