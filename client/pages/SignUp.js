@@ -1,4 +1,4 @@
-import '../../main.css'
+import '../main.css'
 
 document.querySelector('#app').innerHTML = `
   <div class="flex flex-col justify-center items-center bg-zinc-950 min-h-screen pb-5">
