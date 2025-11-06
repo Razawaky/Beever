@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<!-- DailyQuestCard.html -->
+<div class="daily-quest-card max-w-sm p-4 bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 rounded-2xl shadow-lg text-gray-800">
+  <div class="flex justify-between items-center mb-3">
+    <h2 class="font-semibold text-lg">Daily Quest</h2>
+    <a href="#" class="text-sm font-medium text-yellow-900 hover:underline">View All</a>
+  </div>
+
+  <div class="flex items-center space-x-3 mb-3">
+    <div class="bg-yellow-500 p-2 rounded-full shadow-md">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m9-9H3" />
+      </svg>
+    </div>
+    <div>
+      <p class="font-medium quest-title">Gather Honey</p>
+      <p class="text-xs text-yellow-900 quest-reward">Earn 25 XP</p>
+    </div>
+  </div>
+
+  <div class="relative w-full h-3 bg-yellow-200 rounded-full overflow-hidden mb-2">
+    <div class="progress-bar absolute top-0 left-0 h-full bg-gradient-to-r from-amber-600 to-yellow-400 rounded-full w-1/2 transition-all duration-500"></div>
+    <div class="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.2)_0,rgba(255,255,255,0.2)_2px,transparent_2px,transparent_6px)] rounded-full"></div>
+  </div>
+
+  <p class="text-xs text-right text-yellow-900 quest-progress">2 / 4 completed</p>
+</div>
+
+<!-- Como usar em outro arquivo HTML -->
+<!--
+  <div id="home-container">
+    <div w3-include-html="components/DailyQuestCard.html"></div>
+  </div>
+  <script src="https://www.w3schools.com/lib/w3.js"></script>
+  <script>
+    w3.includeHTML(); // Importa o componente HTML
+  </script>
+-->
+
+<!-- Personalize com CSS ou JS -->
+<!--
+  Você pode alterar o conteúdo via JavaScript assim:
+  document.querySelector('.quest-title').textContent = 'Collect Nectar';
+  document.querySelector('.quest-reward').textContent = 'Earn 50 XP';
+  document.querySelector('.progress-bar').style.width = '75%';
+  document.querySelector('.quest-progress').textContent = '3 / 4 completed';
+-->
+
+
+</body>
+</html>
