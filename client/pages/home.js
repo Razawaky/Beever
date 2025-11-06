@@ -6,7 +6,7 @@ document.querySelector('#app').innerHTML = `
     ${renderSidebar()}
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 p-8  p-8 sm:pl-70 pl-0 transition-all duration-300"> <!-- 👈 esse pl-64 é o segredo -->
+    <main class="flex-1 p-8 sm:pl-70 pl-0 transition-all duration-300"> <!-- 👈 esse pl-64 é o segredo -->
       <section class="bg-gray-800 p-6 rounded-2xl shadow-md mb-8">
         <h3 class="text-yellow-400 font-bold text-xl">Missões do Dia</h3>
         <div class="mt-4 w-full bg-gray-700 rounded-full h-3 overflow-hidden">

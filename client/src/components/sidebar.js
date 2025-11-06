@@ -66,5 +66,5 @@ export function renderSidebar() {
       </ul>
    </div>
 </aside>
-  `
+  `;
 }
