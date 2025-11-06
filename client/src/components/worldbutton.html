@@ -16,15 +16,15 @@
 
    <div class="flex items-center justify-center h-screen bg-gray-900">
   <button
-    class="relative w-24 h-24 rounded-full bg-gradient-to-b from-blue-400 to-blue-600 
+    class="relative w-24 h-24 rounded-full bg-linear-to-b from-blue-400 to-blue-600 
            shadow-[0_6px_0_#1e3a8a] overflow-hidden
-           hover:translate-y-[2px] hover:shadow-[0_3px_0_#1e3a8a]
-           active:translate-y-[4px] active:shadow-[0_1px_0_#1e3a8a]
+           hover:translate-y-0.5 hover:shadow-[0_3px_0_#1e3a8a]
+           active:translate-y-1 active:shadow-[0_1px_0_#1e3a8a]
            transition-all duration-300 cursor-pointer"
   >
     <span
       class="absolute inset-0 before:content-[''] before:absolute before:top-0 before:left-0
-             before:w-[60%] before:h-full before:bg-gradient-to-r before:from-transparent
+             before:w-[60%] before:h-full before:bg-linear-to-r before:from-transparent
              before:via-white/30 before:to-transparent before:skew-x-12
              before:translate-x-[-150%] hover:before:translate-x-[150%]
              before:transition-transform before:duration-700"
@@ -35,7 +35,6 @@
          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke-width="2" stroke="white" class="w-8 h-8 relative z-10">
            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-           <i class="fi fi-bs-bee"></i>
          </svg>
      </div>
   </button>

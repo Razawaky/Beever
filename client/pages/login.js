@@ -5,7 +5,7 @@ document.querySelector('#app').innerHTML = `
       class="flex flex-col justify-center items-center bg-zinc-950 h-max min-h-\[100vh\] pb-5"
     >
       <div
-        class="mx-auto flex w-full flex-col justify-center px-5 pt-0 md:h-[unset] md:max-w-[50%] lg:h-[100vh] min-h-[100vh] lg:max-w-[50%] lg:px-6"
+        class="mx-auto flex w-full flex-col justify-center px-5 pt-0 md:h-[unset] md:max-w-[50%] lg:h-\[100vh\] min-h-\[100vh\] lg:max-w-[50%] lg:px-6"
       >
         <a class="mt-10 w-fit text-white" href="/">
           <div class="flex w-fit items-center lg:pl-0 lg:pt-0 xl:pt-0">
@@ -127,7 +127,7 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
             <div class="relative flex items-center py-1">
               <div class="grow border-t border-zinc-800"></div>
               <!-- Adicionei um texto "OU" no meio -->
-              <span class="mx-4 flex-shrink text-xs text-zinc-400">OU</span>
+              <span class="mx-4 shrink text-xs text-zinc-400">OU</span>
               <div class="grow border-t border-zinc-800"></div>
             </div>
           </div>
