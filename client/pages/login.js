@@ -1,32 +1,11 @@
-import '../../main.css'
+import '../main.css'
 
 document.querySelector('#app').innerHTML = ` 
-
-<!doctype html>
-<html class="bg-zinc-950">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Carregando o Tailwind via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://horizon-ui.com/shadcn-nextjs-boilerplate/_next/static/css/32144b924e2aa5af.css"
-    />
-    <style>
-      /* Estilos personalizados, se necessário */
-      body {
-        font-family: 'Inter', sans-serif; /* Exemplo de fonte */
-      }
-    </style>
-  </head>
-
-  <body class="bg-zinc-950">
     <div
-      class="flex flex-col justify-center items-center bg-zinc-950 h-max min-h-[100vh] pb-5"
+      class="flex flex-col justify-center items-center bg-zinc-950 h-max min-h-\[100vh\] pb-5"
     >
       <div
-        class="mx-auto flex w-full flex-col justify-center px-5 pt-0 md:h-[unset] md:max-w-[50%] lg:h-[100vh] min-h-[100vh] lg:max-w-[50%] lg:px-6"
+        class="mx-auto flex w-full flex-col justify-center px-5 pt-0 md:h-[unset] md:max-w-[50%] lg:h-\[100vh\] min-h-\[100vh\] lg:max-w-[50%] lg:px-6"
       >
         <a class="mt-10 w-fit text-white" href="/">
           <div class="flex w-fit items-center lg:pl-0 lg:pt-0 xl:pt-0">
@@ -35,7 +14,7 @@ document.querySelector('#app').innerHTML = `
               fill="currentColor"
               stroke-width="0"
               viewBox="0 0 320 512"
-              class="mr-3 h-[13px] w-[8px] text-white"
+              class="mr-3 h-[13px] w-\[8px\] text-white"
               height="1em"
               width="1em"
               xmlns="http://www.w3.org/2000/svg"
@@ -148,7 +127,7 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
             <div class="relative flex items-center py-1">
               <div class="grow border-t border-zinc-800"></div>
               <!-- Adicionei um texto "OU" no meio -->
-              <span class="mx-4 flex-shrink text-xs text-zinc-400">OU</span>
+              <span class="mx-4 shrink text-xs text-zinc-400">OU</span>
               <div class="grow border-t border-zinc-800"></div>
             </div>
           </div>
@@ -159,7 +138,7 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
                 <div class="grid gap-1">
                   <label class="text-white" for="email">Email</label
                   ><input
-                    class="mr-2.5 mb-2 h-full min-h-[44px] w-full rounded-lg border bg-zinc-950 text-white border-zinc-800 px-4 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-0 dark:border-zinc-800 dark:bg-transparent dark:text-white dark:placeholder:text-zinc-400"
+                    class="mr-2.5 mb-2 h-full min-h-\[44px\] w-full rounded-lg border bg-zinc-950 text-white border-zinc-800 px-4 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-0 dark:border-zinc-800 dark:bg-transparent dark:text-white dark:placeholder:text-zinc-400"
                     id="email"
                     placeholder="nome@exemplo.com"
                     type="email"
@@ -176,7 +155,7 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
                     placeholder="Senha"
                     type="Senha"
                     autocomplete="current-Senha"
-                    class="mr-2.5 mb-2 h-full min-h-[44px] w-full rounded-lg border bg-zinc-950 text-white border-zinc-800 px-4 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-0 dark:border-zinc-800 dark:bg-transparent dark:text-white dark:placeholder:text-zinc-400"
+                    class="mr-2.5 mb-2 h-full min-h-\[44px\] w-full rounded-lg border bg-zinc-950 text-white border-zinc-800 px-4 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-0 dark:border-zinc-800 dark:bg-transparent dark:text-white dark:placeholder:text-zinc-400"
                     name="Senha"
                   />
                 </div>
@@ -224,7 +203,5 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
       que continha 'document.querySelector('#app').innerHTML = ...'
       pois ela não é necessária se este for o seu arquivo HTML principal.
     -->
-  </body>
-</html>
 
 `

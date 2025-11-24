@@ -1,6 +1,5 @@
 import './style.css'
 import '../main.css'
-import { setupCounter } from './counter.js'
 
 // import Router from './router.js'; 
 // // import renderHome from './pages/home.js'; 
