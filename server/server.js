@@ -1,18 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
-const {getConnection} = require('./db/conn')
+const {getConnection} = require('./db/conn');
 
 //rotas
 const usersRouter = require('./routes/users');
 const perfilRouter = require('./routes/perfil');
+const sessaoRouter = require('./routes/sessao')
 
+//middleware
+const sessaoMiddleware = require('./middleware/sessao')
+
+//porta
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 //configouração dos middleware
 app.use(cors()); //permite requisção de outras origens
 app.use(express.json()) //transforma em JSON as requisições do body
+app.use(sessaoMiddleware) //criando a sessao - middleware global
 
 //node-cron pra poder deletar users após 15 dias, tem que deixar rodando isso, em HIPÓTESE ALGUMA REMOVER ISSO!!!!!!!!!!
 cron.schedule('0 0 * * *', async() => {
@@ -34,9 +40,10 @@ cron.schedule('0 0 * * *', async() => {
     console.log(`[CRON] Removido users inativos a mais de 15 dias`)
 })
 
-//chamando as rotas
-app.use('/users', usersRouter);
+//chamando as rotas// 
+app.use('/users', usersRouter)
 app.use('/perfil', perfilRouter)
+app.use('/sessao', sessaoRouter)
 
 //iniciar server
 app.listen(PORT, () => {
