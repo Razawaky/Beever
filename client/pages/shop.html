@@ -33,15 +33,21 @@
   </head>
   <body class="font-sans">
     <div id="app" class="min-h-screen bg-background pattern-stripes flex flex-col">
+      <div class="flex justify-center pt-4">
+        <h1 class="text-2xl font-bold text-white tracking-tight">Mercado</h1>
+      </div>
+
       <!-- Header -->
       <header class="flex items-center justify-between p-4 pb-6">
-        <button class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors" aria-label="Voltar">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+        <a href="/pages/home.html">
+          <button class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors" aria-label="Voltar">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </a>
 
-        <h1 class="text-2xl font-bold text-white tracking-tight">Loja</h1>
+        
 
         <div class="flex items-center gap-2">
           <!-- Inventory Button -->
@@ -88,7 +94,7 @@
       <footer class="fixed bottom-0 left-0 right-0 p-4 pt-8 bg-gradient-footer">
         <div class="max-w-md mx-auto">
           <!-- Cart Summary -->
-          <div id="cart-summary" class="mb-3 bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-3 flex items-center justify-between hidden animate-bounce-in">
+          <div id="cart-summary" class="mb-3 bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-3 flex items-center justify-between animate-bounce-in">
             <div>
               <p class="text-xs text-white/70">Total Selecionado</p>
               <p id="cart-total" class="text-xl font-bold text-primary">$0</p>
