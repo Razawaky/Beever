@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../main.css">
+    <title>Mercado</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Nunito', 'sans-serif'],
+            },
+            colors: {
+              primary: '#FACC15',
+              background: '#9F55F6',
+            },
+          },
+        },
+      }
+    </script>
+  </head>
+  <body class="font-sans">
+    <div id="app" class="min-h-screen bg-background pattern-stripes flex flex-col">
+      <!-- Header -->
+      <header class="flex items-center justify-between p-4 pb-6">
+        <button class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors" aria-label="Voltar">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <h1 class="text-2xl font-bold text-white tracking-tight">Loja</h1>
+
+        <div class="flex items-center gap-2">
+          <!-- Inventory Button -->
+          <button id="inventory-btn" class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors relative" title="Meus Itens">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <span id="inventory-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-gray-800 text-xs font-bold rounded-full items-center justify-center hidden">0</span>
+          </button>
+
+          <!-- Balance -->
+          <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full flex items-center gap-2">
+            <span class="text-primary text-lg font-bold">$</span>
+            <span id="balance" class="text-white font-bold">999</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Category Navigation -->
+      <div class="px-4 mb-6">
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-2 flex items-center justify-between max-w-md mx-auto">
+          <button id="prev-category" class="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span id="category-name" class="text-white font-bold text-lg">Power-ups</span>
+          <button id="next-category" class="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Shop Grid -->
+      <main class="flex-1 px-4 pb-36 overflow-y-auto">
+        <div id="shop-grid" class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+          <!-- Items will be rendered here -->
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="fixed bottom-0 left-0 right-0 p-4 pt-8 bg-gradient-footer">
+        <div class="max-w-md mx-auto">
+          <!-- Cart Summary -->
+          <div id="cart-summary" class="mb-3 bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-3 flex items-center justify-between hidden animate-bounce-in">
+            <div>
+              <p class="text-xs text-white/70">Total Selecionado</p>
+              <p id="cart-total" class="text-xl font-bold text-primary">$0</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-white/70">Itens</p>
+              <p id="cart-count" class="text-xl font-bold text-white">0</p>
+            </div>
+          </div>
+
+          <!-- Confirm Button -->
+          <button id="confirm-btn" class="w-full h-14 text-lg font-bold bg-primary text-gray-800 rounded-2xl shadow-game hover:shadow-game-hover active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Confirmar
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Purchase Modal -->
+    <div id="purchase-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="modal-backdrop"></div>
+      <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-6" id="modal-content">
+        <!-- Modal content will be rendered here -->
+      </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div id="inventory-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="inventory-backdrop"></div>
+      <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-6" id="inventory-content">
+        <!-- Inventory content will be rendered here -->
+      </div>
+    </div>
+
+    <script type="module" src="../src/shop.js"></script>
+  </body>
+</html>
