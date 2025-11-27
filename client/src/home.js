@@ -1,7 +1,7 @@
 // Importe a função. Verifique se o caminho './sidebar.js' está correto baseada na sua pasta
 import { renderSidebar } from "./components/sidebar.js"; 
-import { renderWorldButton } from "./components/worldbutton.js"; // Supondo que precise do .js no final se for ESM nativo
-
+import { renderWorldButton } from "./components/worldbutton.js"; 
+import { renderQuestCard } from "./components/questcard.js"; 
 // 1. Dados dos Níveis
 const levelsData = [
   { id: 1, status: "completed" },
@@ -20,14 +20,16 @@ function initHome() {
   const sidebarContainer = document.getElementById("sidebar");
   const questCardContainer = document.getElementById("questcard");
 
-  // --- IMPLEMENTAÇÃO DA SIDEBAR AQUI ---
-  // Apenas chamamos a função que retorna a string HTML
+  // --- 1. Renderizar Sidebar ---
   if (sidebarContainer) {
       sidebarContainer.innerHTML = renderSidebar();
   }
 
-  // Renderizar QuestCard (Simulação)
-  questCardContainer.innerHTML = `<div class="bg-slate-800 p-4 rounded-xl text-white shadow-xl border border-slate-700">🎯 Missão Diária: Colete 5 potes de mel</div>`;
+  // --- 2. Renderizar QuestCard (AGORA COM O COMPONENTE REAL) ---
+  if (questCardContainer) {
+      // Chamada da função real para injetar o HTML dinâmico
+      questCardContainer.innerHTML = renderQuestCard();
+  }
 
   // 3. Renderizar o Caminho (Path)
   let htmlContent = "";
