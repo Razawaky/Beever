@@ -36,7 +36,25 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             alert("Usuário criado com sucesso!");
-            window.location.href = "index.html";
+
+            // faz login automático
+            const loginRes = await fetch("http://localhost:3000/sessao/login", {
+                method: "POST",
+                credentials: "include",  // precisa disso para enviar cookie
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, senha })
+            });
+
+            const loginData = await loginRes.json();
+
+            if (!loginRes.ok) {
+                alert("Usuário criado, mas houve erro ao logar automaticamente.");
+                return;
+            }
+
+            // redireciona
+            window.location.href = "perfis.html";
+
         } catch (err) {
             console.error(err);
             alert("Erro ao conectar ao servidor");

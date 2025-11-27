@@ -16,7 +16,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 //configouração dos middleware
-app.use(cors()); //permite requisção de outras origens
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+})); //permite requisção de outras origens
 app.use(express.json()) //transforma em JSON as requisições do body
 app.use(sessaoMiddleware) //criando a sessao - middleware global
 

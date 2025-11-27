@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../main.css">
+    <script src="../js/login.js" defer></script>
     <title>Document</title>
 </head>
 <body class="bg-zinc-950">
@@ -134,7 +135,7 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
           </div>
           <div>
           <!-- [INÍCIO DO FORMULÁRIO DE EMAIL/SENHA] -->
-            <form novalidate="" class="mb-4">
+            <form novalidate="" class="mb-4" id="form-login">
               <div class="grid gap-2">
                 <div class="grid gap-1">
                   <label class="text-white" for="email">Email</label
@@ -152,12 +153,12 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
                     for="Senha"
                     >Senha</label
                   ><input
-                    id="Senha"
+                    id="senha"
                     placeholder="Senha"
-                    type="Senha"
+                    type="password"
                     autocomplete="current-Senha"
                     class="mr-2.5 mb-2 h-full min-h-\[44px\] w-full rounded-lg border bg-zinc-950 text-white border-zinc-800 px-4 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-0 dark:border-zinc-800 dark:bg-transparent dark:text-white dark:placeholder:text-zinc-400"
-                    name="Senha"
+                    name="senha"
                   />
                 </div>
                 <!-- Botão de "Entrar" (Login principal) -->
