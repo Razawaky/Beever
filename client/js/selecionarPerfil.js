@@ -37,58 +37,49 @@ async function carregarPerfis() {
     lista.innerHTML = "";
 
     perfis.forEach(perfil => {
-      const wrapper = document.createElement("div");
-      wrapper.className =
-        "relative p-4 bg-gray-200 rounded-xl flex justify-between items-center hover:bg-gray-300";
+  const wrapper = document.createElement("div");
+  wrapper.className = "relative p-4 bg-gray-200 rounded-xl flex justify-between items-center hover:bg-gray-300 cursor-pointer";
 
-      // conteúdo principal
-      const info = document.createElement("div");
-      info.className = "flex flex-col cursor-pointer";
-      info.innerHTML = `
-        <span class="text-lg font-medium">${perfil.nome_perfil}</span>
-        <span class="text-sm text-gray-600">Moedas: ${perfil.moedas}</span>
-      `;
-      info.addEventListener("click", () => escolherPerfil(perfil));
+  // conteúdo principal
+  const info = document.createElement("div");
+  info.className = "flex flex-col";
+  info.innerHTML = `
+    <span class="text-lg font-medium">${perfil.nome_perfil}</span>
+    <span class="text-sm text-gray-600">Moedas: ${perfil.moedas}</span>
+  `;
 
-      // botão de 3 pontinhos
-      const menuBtn = document.createElement("button");
-      menuBtn.innerHTML = "⋮";
-      menuBtn.className =
-        "text-xl px-2 py-1 rounded hover:bg-gray-400 cursor-pointer select-none";
+  // clique no perfil (wrapper) vai pra escolherPerfil
+  wrapper.addEventListener("click", () => escolherPerfil(perfil));
 
-      // menu suspenso
-      const menu = document.createElement("div");
-      menu.className =
-        "absolute right-4 top-12 bg-white border shadow-lg rounded-xl p-2 hidden";
+  // botão menu
+  const menuBtn = document.createElement("button");
+  menuBtn.innerHTML = "⋮";
+  menuBtn.className = "text-xl px-2 py-1 rounded hover:bg-gray-400 select-none";
 
-      menu.innerHTML = `
-        <button class="text-red-600 hover:bg-red-100 w-full text-left px-3 py-2 rounded">
-          Excluir perfil
-        </button>
-      `;
+  // menu suspenso
+  const menu = document.createElement("div");
+  menu.className = "menu-perfil absolute right-4 top-12 bg-white border shadow-lg rounded-xl p-2 hidden";
+  menu.innerHTML = `
+    <button class="text-red-600 hover:bg-red-100 w-full text-left px-3 py-2 rounded">Excluir perfil</button>
+  `;
 
-      // abrir/fechar menu
-      menuBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // impede abrir o perfil
-        menu.classList.toggle("hidden");
-      });
+  // abrir/fechar menu
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // impede abrir o perfil
+    menu.classList.toggle("hidden");
+  });
 
-      // clicar fora fecha todos os menus
-      document.addEventListener("click", () => {
-        menu.classList.add("hidden");
-      });
+  // ação de excluir
+  menu.querySelector("button").addEventListener("click", (e) => {
+    e.stopPropagation(); // não dispara clique do wrapper
+    excluirPerfil(perfil.id);
+  });
 
-      // ação de excluir
-      menu.querySelector("button").addEventListener("click", () =>
-        excluirPerfil(perfil.id)
-      );
-
-      // montar
-      wrapper.appendChild(info);
-      wrapper.appendChild(menuBtn);
-      wrapper.appendChild(menu);
-      lista.appendChild(wrapper);
-    });
+  wrapper.appendChild(info);
+  wrapper.appendChild(menuBtn);
+  wrapper.appendChild(menu);
+  lista.appendChild(wrapper);
+});
 
 
   } catch (error) {
