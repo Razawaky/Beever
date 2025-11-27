@@ -37,24 +37,94 @@ async function carregarPerfis() {
     lista.innerHTML = "";
 
     perfis.forEach(perfil => {
-      const div = document.createElement("div");
-      div.className =
-        "p-4 bg-gray-200 rounded-xl cursor-pointer hover:bg-gray-300 flex justify-between items-center";
+      const wrapper = document.createElement("div");
+      wrapper.className =
+        "relative p-4 bg-gray-200 rounded-xl flex justify-between items-center hover:bg-gray-300";
 
-      div.innerHTML = `
+      // conteúdo principal
+      const info = document.createElement("div");
+      info.className = "flex flex-col cursor-pointer";
+      info.innerHTML = `
         <span class="text-lg font-medium">${perfil.nome_perfil}</span>
         <span class="text-sm text-gray-600">Moedas: ${perfil.moedas}</span>
       `;
+      info.addEventListener("click", () => escolherPerfil(perfil));
 
-      div.addEventListener("click", () => escolherPerfil(perfil));
-      lista.appendChild(div);
+      // botão de 3 pontinhos
+      const menuBtn = document.createElement("button");
+      menuBtn.innerHTML = "⋮";
+      menuBtn.className =
+        "text-xl px-2 py-1 rounded hover:bg-gray-400 cursor-pointer select-none";
+
+      // menu suspenso
+      const menu = document.createElement("div");
+      menu.className =
+        "absolute right-4 top-12 bg-white border shadow-lg rounded-xl p-2 hidden";
+
+      menu.innerHTML = `
+        <button class="text-red-600 hover:bg-red-100 w-full text-left px-3 py-2 rounded">
+          Excluir perfil
+        </button>
+      `;
+
+      // abrir/fechar menu
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // impede abrir o perfil
+        menu.classList.toggle("hidden");
+      });
+
+      // clicar fora fecha todos os menus
+      document.addEventListener("click", () => {
+        menu.classList.add("hidden");
+      });
+
+      // ação de excluir
+      menu.querySelector("button").addEventListener("click", () =>
+        excluirPerfil(perfil.id)
+      );
+
+      // montar
+      wrapper.appendChild(info);
+      wrapper.appendChild(menuBtn);
+      wrapper.appendChild(menu);
+      lista.appendChild(wrapper);
     });
+
 
   } catch (error) {
     console.error(error);
     lista.innerHTML = "<p>Erro ao carregar perfis</p>";
   }
 }
+
+//EXCLUIR PERFIL
+async function excluirPerfil(perfilId) {
+  const userId = localStorage.getItem("userId");
+
+  if (!confirm("Tem certeza que deseja excluir este perfil?")) return;
+
+  try {
+    const res = await fetch(`http://localhost:3000/perfil/${userId}/${perfilId}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Erro ao excluir perfil");
+      return;
+    }
+
+    alert("Perfil excluído!");
+    carregarPerfis();
+
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao excluir perfil");
+  }
+}
+
 
 // ============================
 // LOGIN DO PERFIL
