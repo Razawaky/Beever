@@ -11,7 +11,7 @@ export function renderWorldButton({ id, status, position }) {
     bgClass = "bg-amber-400 hover:bg-amber-300 cursor-pointer animate-float";
     shadowClass = "shadow-[0_6px_0_#b45309]"; // Sombra escura de mel
     icon = `<i class="fa-solid fa-play text-white text-2xl"></i>`;
-    text = `<div class="absolute -top-12 bg-white text-slate-900 font-bold px-3 py-1 rounded-xl shadow-lg text-sm animate-bounce">Start!</div>`;
+    text = `<div class="absolute -top-12 bg-white text-slate-900 font-bold px-3 py-1 rounded-xl shadow-lg text-sm animate-bounce">Iniciar!</div>`;
   } else if (status === "completed") {
     bgClass = "bg-amber-500 hover:bg-amber-400 cursor-pointer";
     shadowClass = "shadow-[0_6px_0_#b45309]";

@@ -26,10 +26,12 @@ const styles = `
 
 document.head.insertAdjacentHTML('beforeend', styles);
 
+const moedasPerfil = Number(localStorage.getItem("moedas")) || 0;
+
 // --- GERENCIAMENTO DE ESTADO (STATE MANAGEMENT) ---
 const state = {
   currentPage: 'home',
-  balance: 350,
+  balance: moedasPerfil, //moedas do perfil,
   dailyProgress: 40,
   // Controle do Modal sobre a abelha
   activeModal: null, // null ou { title: string, content: string, type: 'info'|'success'|'locked' }
