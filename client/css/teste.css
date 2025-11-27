@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Premium Dark Theme - Beehive/Honey Aesthetic */
+    --background: 222 47% 11%; /* Deep slate */
+    --foreground: 45 100% 95%; /* Warm off-white */
+
+    --card: 222 40% 15%;
+    --card-foreground: 45 100% 95%;
+
+    --popover: 222 40% 15%;
+    --popover-foreground: 45 100% 95%;
+
+    --primary: 45 93% 47%; /* Amber/Gold (honey) */
+    --primary-foreground: 222 47% 11%;
+    --primary-glow: 45 100% 60%;
+
+    --secondary: 30 80% 55%; /* Orange warmth */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 222 30% 25%;
+    --muted-foreground: 45 20% 70%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 45 100% 95%;
+
+    --border: 222 30% 25%;
+    --input: 222 30% 25%;
+    --ring: 45 93% 47%;
+
+    --treasure: 48 96% 53%; /* Bright yellow for treasure */
+    --complete: 142 76% 36%; /* Success green for completed */
+
+    --radius: 0.75rem;
+
+    /* Shadows & Gradients */
+    --shadow-glow: 0 0 20px hsl(45 93% 47% / 0.3);
+    --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    --gradient-honey: linear-gradient(135deg, hsl(45 93% 47%), hsl(38 92% 50%));
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .light {
+    /* Light Mode - Maintains amber/honey accent */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 222 47% 11%; /* Deep slate text */
+
+    --card: 0 0% 98%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 45 93% 47%; /* Keep amber */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 45 100% 40%;
+
+    --secondary: 30 80% 55%; /* Keep orange */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 20% 92%;
+    --muted-foreground: 222 30% 40%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 85%;
+    --input: 220 13% 85%;
+    --ring: 45 93% 47%;
+
+    --treasure: 48 96% 53%;
+    --complete: 142 76% 36%;
+
+    /* Light mode shadows */
+    --shadow-glow: 0 0 20px hsl(45 93% 47% / 0.2);
+    --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-['Quicksand',_sans-serif] antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+  }
+}
+
+@layer components {
+  /* Hexagon Shape */
+  .hexagon {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  /* Node States */
+  .node-active {
+    @apply bg-primary text-primary-foreground shadow-lg;
+    box-shadow: var(--shadow-glow), var(--shadow-inset);
+    border-bottom: 4px solid hsl(var(--primary-glow));
+  }
+
+  .node-complete {
+    @apply bg-complete text-white shadow-md;
+    box-shadow: var(--shadow-inset);
+    border-bottom: 3px solid hsl(142 76% 30%);
+  }
+
+  .node-locked {
+    @apply bg-muted text-muted-foreground shadow-sm opacity-60;
+    box-shadow: var(--shadow-inset);
+    border-bottom: 2px solid hsl(var(--muted));
+  }
+
+  .node-treasure {
+    @apply bg-treasure text-foreground shadow-xl;
+    box-shadow: 0 0 30px hsl(48 96% 53% / 0.5), var(--shadow-inset);
+    border-bottom: 4px solid hsl(48 96% 45%);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Interactive Effects */
+  .hover-lift {
+    @apply transition-all duration-200;
+  }
+
+  .hover-lift:hover:not(:disabled) {
+    @apply -translate-y-1 brightness-110;
+  }
+
+  .hover-lift:active:not(:disabled) {
+    @apply scale-95;
+  }
+
+  /* Glassmorphism */
+  .glass-effect {
+    @apply bg-card/80 backdrop-blur-md border border-border/50;
+  }
+
+  /* Bee Icon - Pure CSS */
+  .bee-icon {
+    position: relative;
+    width: 28px;
+    height: 28px;
+  }
+
+  .bee-body {
+    position: absolute;
+    width: 20px;
+    height: 24px;
+    background: linear-gradient(
+      to bottom,
+      hsl(45 93% 47%) 0%,
+      hsl(45 93% 47%) 30%,
+      hsl(222 47% 11%) 30%,
+      hsl(222 47% 11%) 45%,
+      hsl(45 93% 47%) 45%,
+      hsl(45 93% 47%) 65%,
+      hsl(222 47% 11%) 65%,
+      hsl(222 47% 11%) 80%,
+      hsl(45 93% 47%) 80%
+    );
+    border-radius: 45% 45% 50% 50%;
+    left: 4px;
+    top: 2px;
+  }
+
+  .bee-wing {
+    position: absolute;
+    width: 12px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50% 50% 50% 0;
+    top: 4px;
+  }
+
+  .bee-wing-left {
+    left: -6px;
+    transform: rotate(-25deg);
+    animation: wing-flap 0.3s ease-in-out infinite;
+  }
+
+  .bee-wing-right {
+    right: -6px;
+    transform: rotate(25deg) scaleX(-1);
+    animation: wing-flap 0.3s ease-in-out infinite 0.15s;
+  }
+
+  @keyframes wing-flap {
+    0%, 100% {
+      opacity: 0.6;
+      transform: rotate(-25deg) translateY(0);
+    }
+    50% {
+      opacity: 0.3;
+      transform: rotate(-25deg) translateY(-2px);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 30px hsl(48 96% 53% / 0.5), var(--shadow-inset);
+    }
+    50% {
+      box-shadow: 0 0 40px hsl(48 96% 53% / 0.8), var(--shadow-inset);
+    }
+  }
+}

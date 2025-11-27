@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning Path - Master Your Skills</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/teste.css">
+  </head>
+
+  <body class="bg-background text-foreground min-h-screen">
+    <!-- Fixed Header -->
+    <header class="sticky top-0 z-50 w-full bg-primary shadow-md">
+      <div class="flex items-center justify-between px-4 py-4 gap-2">
+        <button 
+          id="back-button"
+          class="text-primary-foreground hover:bg-primary-glow hover:text-primary-foreground p-2 rounded-md transition-colors"
+          aria-label="Go back"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/>
+            <path d="M19 12H5"/>
+          </svg>
+        </button>
+
+        <div class="text-center flex-1">
+          <h1 class="text-lg font-bold text-primary-foreground">
+            Seção 1: Unidade 1 • Fundamentos
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <button 
+            id="theme-toggle"
+            class="text-primary-foreground hover:bg-primary-glow hover:text-primary-foreground p-2 rounded-md transition-colors"
+            aria-label="Toggle theme"
+          >
+            <svg id="sun-icon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/>
+              <path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/>
+              <path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/>
+              <path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/>
+              <path d="m19.07 4.93-1.41 1.41"/>
+            </svg>
+            <svg id="moon-icon" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          </button>
+
+          <button 
+            class="text-primary-foreground hover:bg-primary-glow hover:text-primary-foreground border-2 border-primary-foreground/30 rounded-full px-3 py-1.5 text-xs font-bold uppercase transition-colors"
+          >
+            <svg class="inline-block h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+            </svg>
+            Guide
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-md">
+      <!-- Section Divider -->
+      <div class="relative py-6 my-8">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t-2 border-dashed border-secondary/30"></div>
+        </div>
+        <div class="relative flex justify-center">
+          <span class="bg-secondary px-4 py-2 rounded-full text-sm font-bold text-secondary-foreground shadow-lg">
+            🍯 Colmeia Um
+          </span>
+        </div>
+      </div>
+
+      <!-- Learning Path -->
+      <div id="learning-path" class="relative flex flex-col gap-y-12">
+        <!-- Nodes will be inserted here by JavaScript -->
+      </div>
+
+      <!-- Navigation Button -->
+      <div class="mt-12 mb-8">
+        <button class="w-full bg-primary hover:bg-primary-glow text-primary-foreground font-bold py-4 px-6 rounded-lg shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+          <span class="text-lg">AVANÇAR PARA A COLMEIA DOIS</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <script type="module" src="../src/teste.js"></script>
+  </body>
+</html>
