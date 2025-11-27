@@ -3,6 +3,7 @@ import { renderSidebar } from '../src/components/sidebar.js';
 import { renderWorldButton } from '../src/components/worldbutton.js';
 import { renderQuestCard } from '../src/components/questcard.js';
 
+
 // Função pra renderizar qualquer componente
 function renderComponent(selector, renderFunction, count = 1) {
   const container = document.querySelector(selector);
@@ -17,3 +18,4 @@ function renderComponent(selector, renderFunction, count = 1) {
 renderComponent('#sidebar', renderSidebar);          // sidebar 
 renderComponent('#worldbutton', renderWorldButton, 5);  // botão
 renderComponent('#questcard', renderQuestCard, 1);   // cards
+

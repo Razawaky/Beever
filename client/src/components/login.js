@@ -1,6 +1,4 @@
-import '../main.css'
-
-document.querySelector('#app').innerHTML = ` 
+document.querySelector('#loginpage').innerHTML = ` 
     <div
       class="flex flex-col justify-center items-center bg-zinc-950 h-max min-h-\[100vh\] pb-5"
     >
@@ -196,12 +194,5 @@ c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.
         >
       </p>
     </div>
-
-    <!-- 
-      O código original em JS estava tentando popular o #app, 
-      mas o HTML já está completo. Removi a tag <script> 
-      que continha 'document.querySelector('#app').innerHTML = ...'
-      pois ela não é necessária se este for o seu arquivo HTML principal.
-    -->
 
 `
