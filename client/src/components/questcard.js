@@ -1,11 +1,16 @@
 export function renderQuestCard() {
   return `
 
-    <!-- DailyQuestCard.html -->
-    <div class="daily-quest-card max-w-sm p-4 bg-linear-to-r from-yellow-300 via-amber-400 to-yellow-500 rounded-2xl shadow-lg text-gray-800">
+    <div class="daily-quest-card max-w-sm p-4 
+                bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 
+                rounded-2xl 
+                shadow-xl shadow-amber-600/40 
+                border border-amber-400 
+                text-black">  
+    
     <div class="flex justify-between items-center mb-3">
-        <h2 class="font-semibold text-lg">Missão Diária</h2>
-        <a href="#" class="text-sm font-medium text-yellow-900 hover:underline">Visualizar</a>
+        <h2 class="font-semibold text-lg text-black">Missão Diária</h2>
+        <a href="#" class="text-sm font-medium text-black hover:underline">Visualizar</a>
     </div>
 
     <div class="flex items-center space-x-3 mb-3">
@@ -22,11 +27,11 @@ export function renderQuestCard() {
     </div>
 
         <div class="relative w-full h-3 bg-yellow-200 rounded-full overflow-hidden mb-2">
-            <div class="progress-bar absolute top-0 left-0 h-full bg-linear-to-r from-amber-600 to-yellow-400 rounded-full w-1/2 transition-all duration-500"></div>
+            <div class="progress-bar absolute top-0 left-0 h-full bg-gradient-to-r from-amber-600 to-yellow-400 rounded-full w-1/2 transition-all duration-500"></div>
             <div class="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.2)_0,rgba(255,255,255,0.2)_2px,transparent_2px,transparent_6px)] rounded-full"></div>
         </div>
 
-        <p class="text-xs text-right text-yellow-900 quest-progress">3 / 5 completo</p>
+        <p class="text-xs text-right text-white/90 quest-progress">3 / 5 completo</p> 
     </div>
 
   `;
