@@ -1,18 +1,11 @@
-// src/router.js
-
-/**
- * Classe Router (Roteador) para gerenciar a navegação em uma SPA (Single-Page Application).
- */
 class Router {
     constructor(rootElementId) {
         this.routes = [];
         this.rootElement = document.getElementById(rootElementId);
         
-        // Liga os listeners de evento ao ser instanciada
         this.addEventListeners();
     }
 
-    // 1. Método para registrar uma nova rota
     get(uri, callback) {
         if (!uri || !callback) {
             throw new Error('A rota (URI) e o callback são obrigatórios.');
@@ -24,7 +17,6 @@ class Router {
         });
     }
 
-    // 2. Método principal para processar e renderizar a rota atual
     async init() {
         const currentPath = window.location.pathname;
         let matched = false;
@@ -47,7 +39,6 @@ class Router {
             }
         }
 
-        // 3. Trata o erro 404
         if (!matched) {
             if (this.rootElement) {
                 this.rootElement.innerHTML = '<h1>404</h1><p>Página não encontrada.</p>';
@@ -55,7 +46,6 @@ class Router {
         }
     }
 
-    // 4. Navega alterando o histórico (History API)
     navigateTo(uri) {
         if (uri !== window.location.pathname) {
             history.pushState(null, null, uri);
@@ -63,24 +53,18 @@ class Router {
         }
     }
 
-    // 5. Adiciona listeners para cliques e para os botões Voltar/Avançar
     addEventListeners() {
-        // A) Listener de Clique (para interceptar navegação de <a>)
         document.addEventListener("click", e => {
-            // Verifica se o clique foi em um <a> e se é um link interno
             const target = e.target.closest('a');
             
-            // target.host === window.location.host garante que não interceptamos links externos
             if (target && target.host === window.location.host) {
-                e.preventDefault(); // Impede o recarregamento da página!
+                e.preventDefault(); 
                 this.navigateTo(target.pathname);
             }
         });
 
-        // B) Listener de popstate (para botões Voltar/Avançar do navegador)
         window.addEventListener('popstate', () => this.init());
     }
 }
 
-// Exporta a classe Router para que ela possa ser instanciada no main.js
 export default Router;

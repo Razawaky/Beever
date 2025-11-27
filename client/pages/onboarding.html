@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configuração do Perfil</title>
+    <link rel="stylesheet" href="../main.css">
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <main class="w-full max-w-md">
+        
+        <div class="mb-8">
+            <div class="flex justify-between text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">
+                <span>Configuração</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                <div id="progress-bar" class="h-full bg-amber-500 transition-all duration-500 ease-out w-0"></div>
+            </div>
+        </div>
+
+        <div id="question-container" class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 min-h-[300px] flex flex-col justify-between">
+            
+            <div id="dynamic-content">
+                </div>
+
+            <div class="flex gap-4 mt-8">
+                <button id="btn-back" class="hidden px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white transition-colors">
+                    Voltar
+                </button>
+                <button id="btn-next" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg">
+                    Continuar
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="../src/onboarding.js"></script>
+</body>
+</html>
