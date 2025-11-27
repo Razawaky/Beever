@@ -26,7 +26,7 @@ export function renderQuestCard() {
             <div class="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.2)_0,rgba(255,255,255,0.2)_2px,transparent_2px,transparent_6px)] rounded-full"></div>
         </div>
 
-        <p class="text-xs text-right text-yellow-900 quest-progress">2 / 4 completo</p>
+        <p class="text-xs text-right text-yellow-900 quest-progress">3 / 5 completo</p>
     </div>
 
   `;

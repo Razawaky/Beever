@@ -1,7 +1,5 @@
-// Estilos CSS injetados dinamicamente para animações e modal
 const styles = `
 <style>
-  /* Animação de voo mais complexa para a abelha */
   @keyframes fly-around {
     0% { transform: translate(0, 0) rotate(0deg); }
     25% { transform: translate(5px, -10px) rotate(5deg); }
@@ -39,8 +37,8 @@ const state = {
     { day: 'DOM', completed: true, fullDate: 'Domingo - Concluído' },
     { day: 'SEG', completed: true, fullDate: 'Segunda - Concluído' },
     { day: 'TER', completed: true, fullDate: 'Terça - Concluído' },
-    { day: 'QUA', completed: false, current: true, fullDate: 'Quarta - Hoje' },
-    { day: 'QUI', completed: false, fullDate: 'Quinta - Bloqueado' },
+    { day: 'QUA', completed: true, fullDate: 'Quarta - Concluído' },
+    { day: 'QUI', completed: false, current: true, fullDate: 'Quinta - Hoje' },
     { day: 'SEX', completed: false, fullDate: 'Sexta - Bloqueado' },
     { day: 'SÁB', completed: false, fullDate: 'Sábado - Bloqueado' },
   ],
@@ -141,11 +139,10 @@ function showToast(type, title, description) {
 function renderHoneyBalance() {
   return `
     <div id="honey-balance" class="fixed top-6 right-6 z-50">
-      <div class="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl px-6 py-3 shadow-md cursor-pointer hover:scale-105 transition-transform">
-        <div class="flex items-center gap-3">
-          <div class="text-2xl">💧</div>
+      <div class="bg-linear-to-br from-amber-500 to-orange-500 rounded-3xl px-6 shadow-md cursor-pointer hover:scale-105 transition-transform">
+        <div class="flex items-center gap-1">
+          <img src="../src/img/Untitled7_20251109214433.png"class="w-16 h-16 object-contain drop-shadow-md"/>
           <div class="text-white">
-            <p class="text-xs font-medium opacity-95">Gotas de Mel</p>
             <p class="text-2xl font-bold">${state.balance}</p>
           </div>
         </div>
@@ -180,7 +177,7 @@ function renderDailyChallenge() {
         
         <div id="daily-progress" class="cursor-pointer hover:scale-[1.02] transition-transform">
           <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-500" style="width: ${state.dailyProgress}%"></div>
+            <div class="h-full bg-linear-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-500" style="width: ${state.dailyProgress}%"></div>
           </div>
         </div>
 
@@ -256,7 +253,7 @@ function renderSpecialChallenges() {
             <div 
               class="p-5 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] ${
                 challenge.unlocked
-                  ? `bg-gradient-to-r ${challenge.color} text-white shadow-sm`
+                  ? `bg-linear-to-r ${challenge.color} text-white shadow-sm`
                   : 'bg-gray-100 opacity-60'
               }"
               data-challenge="${index}"
@@ -317,7 +314,7 @@ function renderShopLink() {
 
         <button
           id="goto-shop"
-          class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white gap-2 px-6 py-3 rounded-2xl font-bold transition-all hover:scale-105 flex items-center shadow-sm"
+          class="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white gap-2 px-6 py-3 rounded-2xl font-bold transition-all hover:scale-105 flex items-center shadow-sm"
         >
           Visitar Loja
           <span>→</span>
@@ -379,7 +376,7 @@ function renderBeeMascot() {
       ${bubbleContent}
 
       <div id="bee-mascot" class="relative cursor-pointer transition-transform animate-fly ml-4">
-        <div class="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full shadow-lg border-4 border-amber-200 relative">
+        <div class="w-24 h-24 bg-linear-to-br from-amber-400 to-orange-400 rounded-full shadow-lg border-4 border-amber-200 relative">
           <div class="absolute top-5 left-2 right-2 h-2.5 bg-gray-800/80 rounded-full"></div>
           <div class="absolute top-11 left-2 right-2 h-2.5 bg-gray-800/80 rounded-full"></div>
           
@@ -443,7 +440,7 @@ function renderShopPage() {
                 <div class="p-5 rounded-2xl bg-gray-50 border border-gray-200 hover:border-amber-300 transition-all">
                   <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-4">
-                      <div class="p-3 rounded-xl bg-gradient-to-br ${item.color} shadow-sm">
+                      <div class="p-3 rounded-xl bg-linear-to-br ${item.color} shadow-sm">
                         <span class="text-2xl">${item.icon}</span>
                       </div>
                       <div>
@@ -463,7 +460,7 @@ function renderShopPage() {
                   <button
                     class="w-full px-4 py-3 rounded-xl font-bold transition-all ${
                       canAfford
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm'
+                        ? 'bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm'
                         : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     }"
                     data-shop-item="${index}"

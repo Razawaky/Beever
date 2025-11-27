@@ -6,7 +6,7 @@ const steps = [
         question: "Como você quer ser chamado?",
         subtitle: "Seu nome ou apelido na colmeia.",
         type: 'text',
-        placeholder: "Ex: Zé da Silva",
+        placeholder: "Ex: beeverzinho",
         buttonText: "Continuar"
     },
     {

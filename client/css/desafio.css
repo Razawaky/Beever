@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @layer base {
   :root {
     /* Soft beige background inspired by the reference */
@@ -65,15 +61,6 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 400;
-  }
-  
   h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
   }
