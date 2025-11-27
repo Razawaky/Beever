@@ -4,25 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="../src/img/beever-icon.png" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../main.css">
-  <title>Home</title>
+  <link rel="stylesheet" href="../css/index.css">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <title>Beever</title>
 </head>
-<body class="bg-slate-900">
-  <div id="sidebar"></div>
+<body class="bg-slate-900 min-h-screen text-white overflow-hidden">
 
-  <main>
-    <div class="container flex justify-center-safe items-center">
-      <div id="worldbutton"></div>
-    </div>
-  </main>
+  <div class="flex h-screen">
+    
+    <aside id="sidebar" class="w-20 lg:w-64 border-r border-slate-800 hidden md:block">
+      </aside>
 
-  <section>
-    <div class="bg-slate-900 min-h-screen flex font-poppins">
-      <div class="absolute right-20 top-20 w-90"> <!-- CARD FIXO À DIREITA -->
-        <div id="questcard" class=""></div>
+    <main class="flex-1 overflow-y-auto relative scroll-smooth">
+      <div class="fixed inset-0 opacity-5 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')]"></div>
+      
+      <div class="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-sm p-4 border-b border-slate-800 flex justify-between items-center max-w-lg mx-auto">
+        <h2 class="font-bold text-amber-500 uppercase tracking-widest">Seção 1: O Bosque</h2>
       </div>
-    </div>
-  </section>
-  <script type="module" src="../pages/gateway.js"></script>
+
+      <div class="py-12 max-w-md mx-auto min-h-screen pb-40">
+        <div id="path-container" class="flex flex-col gap-4">
+           </div>
+        
+        <div class="mt-12 text-center">
+            <button class="px-8 py-3 rounded-xl border-2 border-slate-700 text-slate-500 font-bold hover:bg-slate-800 transition">
+                Próxima Colmeia <i class="fa-solid fa-lock ml-2"></i>
+            </button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="w-80 p-6 hidden lg:block">
+      <div id="questcard" class="sticky top-6">
+        </div>
+    </aside>
+
+  </div>
+
+  <script type="module" src="../src/home.js"></script>
 </body>
 </html>
