@@ -37,49 +37,62 @@ async function carregarPerfis() {
     lista.innerHTML = "";
 
     perfis.forEach(perfil => {
-  const wrapper = document.createElement("div");
-  wrapper.className = "relative p-4 bg-gray-200 rounded-xl flex justify-between items-center hover:bg-gray-300 cursor-pointer";
+      const wrapper = document.createElement("div");
+      wrapper.className = "relative p-4 bg-gray-200 rounded-xl flex justify-between items-center hover:bg-gray-300 cursor-pointer";
 
-  // conteúdo principal
-  const info = document.createElement("div");
-  info.className = "flex flex-col";
-  info.innerHTML = `
-    <span class="text-lg font-medium">${perfil.nome_perfil}</span>
-    <span class="text-sm text-gray-600">Moedas: ${perfil.moedas}</span>
-  `;
+      // 1. Pegar a primeira letra do nome do perfil para a bolinha sem foto
+      const inicial = perfil.nome_perfil ? perfil.nome_perfil.charAt(0).toUpperCase() : "?";
 
-  // clique no perfil (wrapper) vai pra escolherPerfil
-  wrapper.addEventListener("click", () => escolherPerfil(perfil));
+      // 2. Verifica se existe imagem, senão renderiza a bolinha com a inicial
+      const avatarHTML = perfil.avatar_img 
+        ? `<img src="${perfil.avatar_img}" class="w-12 h-12 rounded-full object-cover shrink-0" alt="Avatar">`
+        : `<div class="w-12 h-12 rounded-full bg-amber-400 border border-amber-500 text-zinc-900 font-bold flex items-center justify-center text-lg shrink-0 select-none">
+             ${inicial}
+           </div>`;
 
-  // botão menu
-  const menuBtn = document.createElement("button");
-  menuBtn.innerHTML = "⋮";
-  menuBtn.className = "text-xl px-2 py-1 rounded hover:bg-gray-400 select-none";
+      // conteúdo principal estruturado com Flexbox para alinhar a foto ao lado do texto
+      const info = document.createElement("div");
+      info.className = "flex items-center gap-4"; // Alinha a bola e os textos lado a lado
+      info.innerHTML = `
+        ${avatarHTML}
+        <div class="flex flex-col">
+          <span class="text-lg font-medium leading-tight">${perfil.nome_perfil}</span>
+          <span class="text-sm text-gray-600">Moedas: ${perfil.moedas}</span>
+        </div>
+      `;
 
-  // menu suspenso
-  const menu = document.createElement("div");
-  menu.className = "menu-perfil absolute right-4 top-12 bg-white border shadow-lg rounded-xl p-2 hidden";
-  menu.innerHTML = `
-    <button class="text-red-600 hover:bg-red-100 w-full text-left px-3 py-2 rounded">Excluir perfil</button>
-  `;
+      // clique no perfil (wrapper) vai pra escolherPerfil
+      wrapper.addEventListener("click", () => escolherPerfil(perfil));
 
-  // abrir/fechar menu
-  menuBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // impede abrir o perfil
-    menu.classList.toggle("hidden");
-  });
+      // botão menu
+      const menuBtn = document.createElement("button");
+      menuBtn.innerHTML = "⋮";
+      menuBtn.className = "text-xl px-2 py-1 rounded hover:bg-gray-400 select-none z-10"; // Adicionado z-10 para garantir o clique
 
-  // ação de excluir
-  menu.querySelector("button").addEventListener("click", (e) => {
-    e.stopPropagation(); // não dispara clique do wrapper
-    excluirPerfil(perfil.id);
-  });
+      // menu suspenso
+      const menu = document.createElement("div");
+      menu.className = "menu-perfil absolute right-4 top-14 bg-white border shadow-lg rounded-xl p-2 hidden z-20"; // Subi um pouco o top para ajustar com o novo tamanho
+      menu.innerHTML = `
+        <button class="text-red-600 hover:bg-red-100 w-full text-left px-3 py-2 rounded">Excluir perfil</button>
+      `;
 
-  wrapper.appendChild(info);
-  wrapper.appendChild(menuBtn);
-  wrapper.appendChild(menu);
-  lista.appendChild(wrapper);
-});
+      // abrir/fechar menu
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // impede abrir o perfil
+        menu.classList.toggle("hidden");
+      });
+
+      // ação de excluir
+      menu.querySelector("button").addEventListener("click", (e) => {
+        e.stopPropagation(); // não dispara clique do wrapper
+        excluirPerfil(perfil.id);
+      });
+
+      wrapper.appendChild(info);
+      wrapper.appendChild(menuBtn);
+      wrapper.appendChild(menu);
+      lista.appendChild(wrapper);
+    });
 
 
   } catch (error) {
@@ -151,7 +164,13 @@ async function escolherPerfil(perfil) {
     localStorage.setItem("nomePerfil", data.nome_perfil);
     localStorage.setItem("moedas", data.moedas || 0);
 
-    window.location.href = "home.html";
+    const OnboardingFeito = localStorage.getItem(`onboarding_feito_perfil_${data.id}`);
+
+    if (OnboardingFeito === "true") {
+      window.location.href = "home.html";
+    } else {
+      window.location.href = "onboarding.html";
+    }
 
   } catch (error) {
     console.error(error);

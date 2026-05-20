@@ -169,14 +169,17 @@ function finishOnboarding() {
     btnNext.innerText = "Salvando...";
     btnNext.disabled = true;
 
+    const perfilId = localStorage.getItem("perfilId");
+
     console.log("Dados finais para enviar ao banco:", userAnswers);
 
     // SIMULAÇÃO DE ENVIO PARA O BANCO DE DADOS (API)
     setTimeout(() => {
-        // Aqui você faria um fetch('/api/update-profile', { body: userAnswers ... })
-        
+        if (perfilId) {
+            localStorage.setItem(`onboarding_feito_perfil_${perfilId}`, "true");
+        }
         // Redireciona para a Home / Trilha
-        window.location.href = 'index.html'; 
+        window.location.href = 'home.html'; 
     }, 1500);
 }
 

@@ -4,8 +4,7 @@ export function renderSidebar() {
       <ul class="space-y-2 font-medium">
          <li>
             <a href="#" class="flex items-center p-2 text-white rounded-lg hover:bg-slate-800 group">
-               <img src="../src/img/beever-icon.png" class="w-8 h-8" alt="Beever Logo">
-               <span class="ms-3 font-bold text-amber-500">Beever</span>
+               <img src="../src/img/beever_logo_yellow.png" class="w-48 h-auto" alt="Beever Logo">
             </a>
          </li>
          
@@ -49,7 +48,7 @@ export function renderSidebar() {
          </li>
 
          <li class="mt-auto">
-            <a href="login" class="flex items-center p-2 text-slate-400 rounded-lg hover:bg-red-900/20 hover:text-red-400 group transition-colors">
+            <a href="perfis" class="flex items-center p-2 text-slate-400 rounded-lg hover:bg-red-900/20 hover:text-red-400 group transition-colors">
                <svg class="shrink-0 w-5 h-5 text-slate-500 transition duration-75 group-hover:text-red-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 16">
                   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"/>
                </svg>
