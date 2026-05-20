@@ -157,4 +157,32 @@ router.delete('/:id_user/:id', authMiddleware, async (req, res) => {
     }
 })
 
+//salvar dados do onboarding
+router.put('/:id_user/:id/onboarding', authMiddleware, async (req, res) => {
+    const {id_user, id} = req.params;
+    const {nome_perfil, objetivo, nivel} = req.body;
+
+    //verifica se é o usuário que está logado no momento
+    if (req.session.userId !== parseInt(id_user)) {
+        return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    if (!nome_perfil || !objetivo || !nivel) {
+        return res.status(400).json({ error: 'Dados incompletos' });
+    }
+
+    try{
+        await perfilModel.salvarOnboarding(id, id_user, nome_perfil, objetivo, nivel);
+
+        if(result.affectedRows === 0){
+            return res.status(404).json({error:'Perfil não encontrado'});
+        }
+
+        res.json({message: 'Onboarding salvo com sucesso!'})
+    } catch(e){
+        console.error(e);
+        res.status(500).json({error: 'Erro ao salvar no onboarding'})
+    }
+})
+
 module.exports = router;

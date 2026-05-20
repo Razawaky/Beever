@@ -191,13 +191,12 @@ document.getElementById("btnCancelar").addEventListener("click", () => modal.cla
 // ============================
 
 document.getElementById("btnSalvar").addEventListener("click", async () => {
-  const nome = document.getElementById("nomePerfil").value.trim();
   const senha = document.getElementById("senhaPerfil").value.trim();
   const dataNasc = document.getElementById("dataNasc").value;
 
   const userId = localStorage.getItem("userId");
 
-  if (!nome || !senha || !dataNasc) {
+  if (!senha || !dataNasc) {
     alert("Preencha todos os campos!");
     return;
   }
@@ -208,7 +207,7 @@ document.getElementById("btnSalvar").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
-        nome_perfil: nome,
+        nome_perfil: "novo_perfil",
         senha_perfil: senha,
         data_nasc: dataNasc,
         avatar_img: null
@@ -223,6 +222,10 @@ document.getElementById("btnSalvar").addEventListener("click", async () => {
     }
 
     alert("Perfil criado com sucesso!");
+
+    // Limpar campos
+    document.getElementById("senhaPerfil").value = "";
+    document.getElementById("dataNasc").value = "";
 
     // Fechar modal
     modal.classList.add("hidden");

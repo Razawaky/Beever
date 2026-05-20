@@ -80,11 +80,50 @@ async function deletarPerfil(id_perfil){
     return result;
 }
 
+async function salvarOnboarding(id_perfil, id_user, nome_perfil, objetivo, nivelEscolhido) {
+    const conn = await getConnection();
+
+    try {
+        const sqlPerfil = `UPDATE perfil SET nome_perfil = ? WHERE id = ?`;
+        await conn.execute(sqlPerfil, [nome_perfil, id_perfil]);
+
+
+        let numeroNivel = 1;
+        let xpInicial = 0;
+
+        if (nivelEscolhido === 'intermediate') {
+            numeroNivel = 5;
+            xpInicial = 1000;
+        } else if (nivelEscolhido === 'advanced') {
+            numeroNivel = 10;
+            xpInicial = 3000;
+        }
+
+        // verifica se o usuário já possui uma linha na tabela 'nivel'
+        const [existeNivel] = await conn.execute(`SELECT id FROM nivel WHERE id_user = ?`, [id_user]);
+
+        if (existeNivel.length > 0) {
+            // se já existir, atualiza o nível e o XP
+            const sqlUpdateNivel = `UPDATE nivel SET nivel = ?, xp_atual = ? WHERE id_user = ?`;
+            await conn.execute(sqlUpdateNivel, [numeroNivel, xpInicial, id_user]);
+        } else {
+            // se for o primeiro acesso, cria o registro de nível do usuário
+            const sqlInsertNivel = `INSERT INTO nivel (id_user, nivel, xp_atual, xp_proximo_nivel) VALUES (?, ?, ?, ?)`;
+            await conn.execute(sqlInsertNivel, [id_user, numeroNivel, xpInicial, 1000]);
+        }
+    } catch (error) {
+        throw error;
+    } finally {
+        await conn.end(); 
+    }
+}
+
 module.exports = {
     buscarPerfilNome,
     atualizarLoginPerfil,
     listarPerfil,
     criarPerfil,
     atualizarPerfil,
-    deletarPerfil
+    deletarPerfil,
+    salvarOnboarding
 }
