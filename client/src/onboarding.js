@@ -37,68 +37,86 @@ const steps = [
             { value: 'advanced', label: 'Mestre do mel (Avançado)' }
         ],
         image: "../src/img/beenie_vem.png",
-        secondaryImage: "../src/img/babybee.png",
+        secondaryImage: "../src/img/babybee.png", // CORRIGIDO AQUI
         position: "-bottom-30 left-130 -translate-x-1/2",
         buttonText: "Finalizar Cadastro"
     }
 ];
 
-// 2. Estado da Aplicação
+// 2. Estado da Aplicação (Memória temporária)
 let currentStep = 0;
-const userAnswers = {}; // Aqui ficam salvos os dados: { name: "João", goal: "travel" }
+const userAnswers = {};
 
-// 3. Seletores do DOM
+// 3. Elementos do DOM
 const container = document.getElementById('dynamic-content');
-const progressBar = document.getElementById('progress-bar');
-const progressText = document.getElementById('progress-text');
 const btnNext = document.getElementById('btn-next');
 const btnBack = document.getElementById('btn-back');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
 
-// 4. Função para Renderizar a Tela Atual
+// Preenche o input do nome com o que veio do banco/localStorage se existir
+if (localStorage.getItem("nomePerfil")) {
+    userAnswers['name'] = localStorage.getItem("nomePerfil");
+}
+
+// 4. Função Principal de Renderização
 function renderStep() {
     const step = steps[currentStep];
 
-    // Atualiza Barra de Progresso
-    const progress = ((currentStep + 1) / steps.length) * 100;
-    progressBar.style.width = `${progress}%`;
-    progressText.innerText = `${Math.round(progress)}%`;
+    // Atualiza Botões
+    btnNext.innerText = step.buttonText || "Continuar";
+    if (currentStep === 0) {
+        btnBack.classList.add('hidden');
+    } else {
+        btnBack.classList.remove('hidden');
+    }
 
-    // Gera o HTML do Input baseado no tipo
+    // Atualiza Barra de Progresso
+    const progress = Math.round(((currentStep) / steps.length) * 100);
+    progressBar.style.width = `${progress}%`;
+    progressText.innerText = `${progress}%`;
+
+    // Gera o HTML do Input específico da etapa
     let inputHTML = '';
 
     if (step.type === 'text') {
+        const valueAntigo = userAnswers[step.id] || '';
         inputHTML = `
-            <input 
-                type="text" 
-                id="input-field" 
-                class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-xl focus:border-amber-500 focus:outline-none transition-colors text-lg"
-                placeholder="${step.placeholder}"
-                value="${userAnswers[step.id] || ''}" 
-                autofocus
-            >
+            <input type="text" id="input-${step.id}" 
+                   class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors font-medium text-lg shadow-inner"
+                   placeholder="${step.placeholder}"
+                   value="${valueAntigo}"
+                   autocomplete="off">
         `;
     } else if (step.type === 'select') {
+        const valueAntigo = userAnswers[step.id] || '';
         inputHTML = `
-            <select id="input-field" class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-xl focus:border-amber-500 focus:outline-none text-lg appearance-none cursor-pointer">
-                <option value="" disabled selected>Selecione uma opção...</option>
-                ${step.options.map(opt => `<option value="${opt.value}" ${userAnswers[step.id] === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+            <select id="input-${step.id}" 
+                    class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white focus:outline-none focus:border-amber-500 transition-colors font-medium text-lg appearance-none cursor-pointer shadow-inner">
+                <option value="" disabled ${valueAntigo === '' ? 'selected' : ''}>Selecione uma opção...</option>
+                ${step.options.map(opt => `
+                    <option value="${opt.value}" ${valueAntigo === opt.value ? 'selected' : ''}>${opt.label}</option>
+                `).join('')}
             </select>
         `;
     } else if (step.type === 'radio') {
+        const valueAntigo = userAnswers[step.id] || '';
         inputHTML = `
-            <div class="flex flex-col gap-3" id="radio-group">
+            <div class="grid gap-3">
                 ${step.options.map(opt => `
-                    <label class="cursor-pointer border-2 border-slate-700 bg-slate-900 p-4 rounded-xl hover:border-amber-500 hover:bg-slate-800 transition-all flex items-center gap-3 group ${userAnswers[step.id] === opt.value ? 'border-amber-500 bg-slate-800' : ''}">
-                        <input type="radio" name="radio-option" value="${opt.value}" class="peer hidden" ${userAnswers[step.id] === opt.value ? 'checked' : ''}>
-                        <div class="w-5 h-5 rounded-full border-2 border-slate-500 peer-checked:border-amber-500 peer-checked:bg-amber-500"></div>
-                        <span class="font-semibold text-slate-300 group-hover:text-white">${opt.label}</span>
+                    <label class="flex items-center gap-4 p-4 bg-slate-700/50 border-2 ${valueAntigo === opt.value ? 'border-amber-500 bg-slate-700' : 'border-slate-600'} rounded-xl cursor-pointer hover:bg-slate-700 hover:border-slate-500 transition-all group">
+                        <input type="radio" name="${step.id}" value="${opt.value}" ${valueAntigo === opt.value ? 'checked' : ''} class="hidden">
+                        <div class="w-5 h-5 rounded-full border-2 ${valueAntigo === opt.value ? 'border-amber-500 bg-amber-500' : 'border-slate-400'} flex items-center justify-center transition-all group-hover:border-amber-500">
+                            <div class="w-2 h-2 rounded-full bg-slate-900 ${valueAntigo === opt.value ? 'block' : 'hidden'}"></div>
+                        </div>
+                        <span class="font-medium text-slate-200 group-hover:text-white transition-colors">${opt.label}</span>
                     </label>
                 `).join('')}
             </div>
         `;
     }
 
-    // Injeta o HTML
+    // Injeta o HTML na tela
     container.innerHTML = `
         <div class="animate-fade-in-up">
 
@@ -116,7 +134,8 @@ function renderStep() {
             </div>
 
             ${step.secondaryImage ? `
-                <img src="${step.secondaryImage}" alt="Bebê Abelha" class="absolute top-55 right-98 w-35 h-auto" style="filter: drop-shadow(2px 2px 0px #0f172b) drop-shadow(-2px -2px 0px #0f172b) drop-shadow(2px -2px 0px #0f172b) drop-shadow(-2px 2px 0px #0f172b);/>
+                <img src="${step.secondaryImage}" alt="Bebê Abelha" class="absolute top-55 right-98 w-35 h-auto" 
+                     style="filter: drop-shadow(2px 2px 0px #0f172b) drop-shadow(-2px -2px 0px #0f172b) drop-shadow(2px -2px 0px #0f172b) drop-shadow(-2px 2px 0px #0f172b);">
             ` : ''}
 
             <h2 class="text-3xl font-bold text-white mb-2">${step.question}</h2>
@@ -125,48 +144,49 @@ function renderStep() {
         </div>
     `;
 
-    // Atualiza texto do botão
-    btnNext.innerText = step.buttonText;
-    
-    // Mostra/Esconde botão voltar
-    if (currentStep > 0) {
-        btnBack.classList.remove('hidden');
-    } else {
-        btnBack.classList.add('hidden');
-    }
-
-    // Re-adiciona listeners para opções de radio (clique na div seleciona)
+    // Adiciona listener para atualizar a borda dos cards de rádio ao clicar
     if (step.type === 'radio') {
         const labels = container.querySelectorAll('label');
         labels.forEach(label => {
             label.addEventListener('click', () => {
-                // Remove estilo de todos
+                labels.forEach(l => l.classList.remove('border-amber-500', 'bg-slate-700'));
+                label.classList.add('border-amber-500', 'bg-slate-700');
+                const radio = label.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Marca visualmente a bolinha customizada
                 labels.forEach(l => {
-                    l.classList.remove('border-amber-500', 'bg-slate-800');
-                    l.querySelector('input').checked = false;
+                    const dot = l.querySelector('.w-5 .bg-slate-900');
+                    const wrapperDot = l.querySelector('.w-5');
+                    dot.classList.add('hidden');
+                    wrapperDot.classList.remove('border-amber-500', 'bg-amber-500');
+                    wrapperDot.classList.add('border-slate-400');
                 });
-                // Adiciona no clicado
-                label.classList.add('border-amber-500', 'bg-slate-800');
-                label.querySelector('input').checked = true;
+                label.querySelector('.w-5 .bg-slate-900').classList.remove('hidden');
+                const currentWrapperDot = label.querySelector('.w-5');
+                currentWrapperDot.classList.remove('border-slate-400');
+                currentWrapperDot.classList.add('border-amber-500', 'bg-amber-500');
             });
         });
     }
 }
 
-// 5. Função de Avançar
+// 5. Validação e Captura da Resposta
 function handleNext() {
     const step = steps[currentStep];
-    let value = null;
+    let value = '';
 
-    // Captura o valor dependendo do tipo
     if (step.type === 'text' || step.type === 'select') {
-        const input = document.getElementById('input-field');
-        if (!input.value) return alert('Por favor, preencha o campo!'); // Validação simples
-        value = input.value;
+        value = document.getElementById(`input-${step.id}`).value.trim();
     } else if (step.type === 'radio') {
-        const selected = document.querySelector('input[name="radio-option"]:checked');
-        if (!selected) return alert('Selecione uma opção!');
-        value = selected.value;
+        const selected = container.querySelector(`input[name="${step.id}"]:checked`);
+        if (selected) value = selected.value;
+    }
+
+    // Validação simples: não deixa avançar vazio
+    if (!value) {
+        alert("Por favor, responda para continuar!");
+        return;
     }
 
     // Salva no objeto global
@@ -190,22 +210,59 @@ function handleBack() {
 }
 
 // 7. Finalização (Salvar no Banco)
-function finishOnboarding() {
+async function finishOnboarding() {
     btnNext.innerText = "Salvando...";
     btnNext.disabled = true;
 
+    const userId = localStorage.getItem("userId");
     const perfilId = localStorage.getItem("perfilId");
 
-    console.log("Dados finais para enviar ao banco:", userAnswers);
+    if (!userId || !perfilId) {
+        alert("Sessão expirada ou perfil inválido. Volte à tela de seleção de perfis.");
+        window.location.href = 'perfis.html';
+        return;
+    }
 
-    // SIMULAÇÃO DE ENVIO PARA O BANCO DE DADOS (API)
-    setTimeout(() => {
-        if (perfilId) {
-            localStorage.setItem(`onboarding_feito_perfil_${perfilId}`, "true");
+    const dados = {
+        nome_perfil: userAnswers['name'],
+        objetivo: userAnswers['goal'],
+        nivel: userAnswers['level']
+    };
+
+    try {
+        const response = await fetch(`http://localhost:3000/perfil/${userId}/${perfilId}/onboarding`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dados),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Erro desconhecido ao salvar dados.');
         }
-        // Redireciona para a Home / Trilha
-        window.location.href = 'home.html'; 
-    }, 1500);
+
+        localStorage.setItem(`onboarding_feito_perfil_${perfilId}`, "true");
+        localStorage.setItem("nomePerfil", dados.nome_perfil);
+
+        // Barra de progresso cheia antes de sair
+        progressBar.style.width = `100%`;
+        progressText.innerText = `100%`;
+
+        setTimeout(() => {
+            window.location.href = 'home.html';
+        }, 800);
+
+    } catch (error) {
+        console.error("Erro ao enviar onboarding:", error);
+        alert(`Não foi possível salvar suas respostas: ${error.message}`);
+        
+        btnNext.innerText = "Finalizar Cadastro";
+        btnNext.disabled = false;
+    }
 }
 
 // Event Listeners
@@ -215,7 +272,7 @@ btnBack.addEventListener('click', handleBack);
 // Inicializa
 renderStep();
 
-// CSS Extra para animação de entrada (Adicione no seu CSS ou via style tag)
+// CSS Extra para animação de entrada
 const style = document.createElement('style');
 style.innerHTML = `
     @keyframes fadeInUp {

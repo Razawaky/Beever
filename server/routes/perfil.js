@@ -174,10 +174,6 @@ router.put('/:id_user/:id/onboarding', authMiddleware, async (req, res) => {
     try{
         await perfilModel.salvarOnboarding(id, id_user, nome_perfil, objetivo, nivel);
 
-        if(result.affectedRows === 0){
-            return res.status(404).json({error:'Perfil não encontrado'});
-        }
-
         res.json({message: 'Onboarding salvo com sucesso!'})
     } catch(e){
         console.error(e);
