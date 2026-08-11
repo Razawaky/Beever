@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+
+/* CSS resgatado do client/ antes da remoção: tokens de tema, animações da
+   abelha e o formato hexagonal da trilha de fases. Compilado junto no
+   src/public/css/app.css. */
+@import './tema.css';
+@import './trilha.css';
+
+/* Tailwind v4 é configurado por CSS. Declaramos aqui onde procurar classes,
+   já que os templates são EJS renderizados no servidor. */
+@source '../views/**/*.ejs';
+@source '../public/js/**/*.js';
+
+@theme {
+  /* Paleta Beever — tons de mel e colmeia */
+  --color-mel-50: #fffaeb;
+  --color-mel-100: #fff1c6;
+  --color-mel-200: #ffe088;
+  --color-mel-300: #ffc94a;
+  --color-mel-400: #ffb020;
+  --color-mel-500: #f98d07;
+  --color-mel-600: #dd6702;
+  --color-mel-700: #b74606;
+  --color-mel-800: #94360c;
+  --color-mel-900: #7a2d0d;
+  --color-colmeia-900: #1c1917;
+}

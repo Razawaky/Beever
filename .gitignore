@@ -1,0 +1,35 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente — nunca versionar (ver .env.example)
+.env
+.env.local
+.env.*.local
+
+# CSS gerado pelo Tailwind CLI
+src/public/css/app.css
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Cobertura e artefatos de teste
+coverage/
+.nyc_output/
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+# Added by code-review-graph
+.code-review-graph/
+
+# Instruções de agentes/IA — locais, não sobem pro repo
+.claude/
+.github/
+CLAUDE.md
+AGENTS.md
+.mcp.json

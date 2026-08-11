@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <%- include('../partials/head') %>
+  </head>
+  <body class="min-h-screen bg-white text-colmeia-900 antialiased">
+    <%- include('../partials/header') %>
+
+    <main class="mx-auto max-w-5xl px-6 py-16">
+      <p class="text-sm font-semibold tracking-wide text-mel-600"><%= status %></p>
+      <%# Interpolação escapada: conteúdo vindo do usuário nunca vira HTML %>
+      <h1 class="mt-2 text-3xl font-bold"><%= mensagem %></h1>
+
+      <a href="/" class="mt-8 inline-block text-mel-700 underline">Voltar para o início</a>
+
+      <% if (stack) { %>
+        <pre class="mt-10 overflow-x-auto rounded-lg bg-colmeia-900 p-4 text-xs text-mel-100"><%= stack %></pre>
+      <% } %>
+    </main>
+
+    <%- include('../partials/footer') %>
+  </body>
+</html>

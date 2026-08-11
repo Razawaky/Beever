@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <%- include('../partials/head') %>
+  </head>
+  <body class="min-h-screen bg-white text-colmeia-900 antialiased">
+    <%- include('../partials/header') %>
+
+    <main class="mx-auto max-w-5xl px-6 py-16">
+      <h1 class="text-4xl font-bold text-mel-700">Beever</h1>
+      <p class="mt-4 max-w-2xl text-lg text-colmeia-900/80">
+        Base da aplicação no ar. As telas do produto entram nas próximas fases da
+        reestruturação; por enquanto esta página existe para provar que o
+        servidor, o EJS e o CSS compilado estão funcionando juntos.
+      </p>
+
+      <a
+        href="/health"
+        class="mt-8 inline-flex items-center rounded-lg bg-mel-400 px-5 py-2.5 font-medium text-colmeia-900 transition hover:bg-mel-500"
+      >
+        Ver diagnóstico do sistema
+      </a>
+    </main>
+
+    <%- include('../partials/footer') %>
+  </body>
+</html>
