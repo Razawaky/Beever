@@ -19,7 +19,10 @@ export const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: env.banco.limitePool,
   queueLimit: 0,
-  charset: 'utf8mb4_general_ci',
+  // Mesma collation do schema (migrations/README.md). Divergir aqui produz
+  // "Illegal mix of collations" em join com literal, que é um erro difícil de
+  // ler para um bug que não existe.
+  charset: 'utf8mb4_0900_ai_ci',
   timezone: 'Z',
   // Garante que TODA consulta parametrizada use prepared statements de verdade.
   namedPlaceholders: false,
@@ -31,6 +34,19 @@ export const pool = mysql.createPool({
  */
 export async function consultar(sql, parametros = []) {
   const [linhas] = await pool.execute(sql, parametros);
+  return linhas;
+}
+
+/**
+ * Mesma coisa, mas dentro de uma transação quando houver conexão.
+ *
+ * Existe para o repository poder ser chamado dos dois jeitos — solto ou dentro
+ * de `emTransacao` — sem duplicar cada função. Sem isso, criar uma conta
+ * (usuário + perfil + carteira + nível) não teria como ser tudo ou nada.
+ */
+export async function consultarEm(conexao, sql, parametros = []) {
+  if (!conexao) return consultar(sql, parametros);
+  const [linhas] = await conexao.execute(sql, parametros);
   return linhas;
 }
 
