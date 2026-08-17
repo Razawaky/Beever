@@ -66,6 +66,7 @@ export async function salvarOnboarding(idPerfil, idUsuario, { apelido, objetivo,
   await exigirPosse(idPerfil, idUsuario);
 
   await perfilRepository.atualizar(idPerfil, { apelido });
+  await perfilRepository.marcarOnboardingConcluido(idPerfil);
   const resultadoNivel = await nivelService.definirPontoDePartida(idPerfil, nivel);
 
   await auditoriaRepository.registrar({

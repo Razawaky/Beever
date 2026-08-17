@@ -3,7 +3,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['node_modules/**', 'src/public/css/**', 'docs/legacy/**'],
+    ignores: ['node_modules/**', 'src/public/css/**', 'docs/legacy/**', 'venv/**'],
   },
   js.configs.recommended,
   {
@@ -27,6 +27,12 @@ export default [
     // Scripts de linha de comando podem escrever no stdout.
     files: ['scripts/**/*.js'],
     rules: { 'no-console': 'off' },
+  },
+  {
+    // JS servido para o navegador (interatividade das views EJS): globals de
+    // browser, não de Node.
+    files: ['src/public/js/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
   },
   {
     files: ['test/**/*.js'],

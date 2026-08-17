@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <%- include('../partials/head') %>
+  </head>
+  <body class="min-h-screen bg-white text-tinta antialiased">
+    <div class="flex min-h-screen items-center justify-center p-8">
+      <div class="w-full max-w-sm">
+        <a href="/" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar</a>
+
+        <h1 class="mt-6 text-3xl font-bold">Criar conta</h1>
+        <p class="mt-2 text-tinta-suave">Crie uma conta e comece a aprender se divertindo.</p>
+
+        <form method="POST" action="/users" class="mt-8 space-y-4" id="form-cadastro">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+          <div>
+            <label for="nome" class="mb-1 block text-sm font-medium">Nome</label>
+            <input
+              id="nome"
+              name="nome"
+              type="text"
+              required
+              maxlength="255"
+              autocomplete="name"
+              placeholder="Seu nome"
+              class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+            />
+          </div>
+
+          <div>
+            <label for="data_nasc" class="mb-1 block text-sm font-medium">Data de nascimento</label>
+            <input
+              id="data_nasc"
+              name="data_nasc"
+              type="date"
+              required
+              class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+            />
+          </div>
+
+          <div>
+            <label for="email" class="mb-1 block text-sm font-medium">E-mail</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              placeholder="email@exemplo.com"
+              class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+            />
+          </div>
+
+          <div>
+            <label for="senha" class="mb-1 block text-sm font-medium">Senha</label>
+            <input
+              id="senha"
+              name="senha"
+              type="password"
+              required
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Ao menos 8 caracteres, com letras e números"
+              class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+            />
+          </div>
+
+          <div>
+            <label for="confirmarSenha" class="mb-1 block text-sm font-medium">Confirmar senha</label>
+            <input
+              id="confirmarSenha"
+              name="confirmarSenha"
+              type="password"
+              required
+              autocomplete="new-password"
+              placeholder="Repita a senha"
+              class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full rounded-favo bg-mel px-4 py-3 font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+          >
+            Criar conta
+          </button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-tinta-suave">
+          Já tem uma conta?
+          <a href="/login" class="font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Entrar</a>
+        </p>
+      </div>
+    </div>
+
+    <script src="/js/cadastro.js" defer></script>
+  </body>
+</html>

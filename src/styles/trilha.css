@@ -11,3 +11,10 @@
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+
+/* RNF-26: a flutuação é loop decorativo, some para quem pede menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float {
+    animation: none;
+  }
+}

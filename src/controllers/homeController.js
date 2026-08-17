@@ -1,7 +1,7 @@
-/**
- * Página inicial provisória. Ganha conteúdo de verdade quando as telas forem
- * migradas para EJS.
- */
+/** Landing page pública. Quem já está logado não precisa vê-la de novo. */
 export function mostrar(req, res) {
-  res.render('pages/home', { titulo: 'Beever' });
+  if (req.session?.usuarioId) {
+    return res.redirect(req.session.onboardingConcluido ? '/painel' : '/onboarding');
+  }
+  res.render('pages/home', { titulo: 'Beever — educação financeira para crianças e adolescentes' });
 }

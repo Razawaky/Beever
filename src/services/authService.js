@@ -43,6 +43,7 @@ export async function autenticar({ email, senha }) {
     // sessão e é o que o middleware requireAdmin consulta depois.
     ehAdmin: Boolean(usuario.eh_admin),
     perfilId: perfil?.id ?? null,
+    onboardingConcluido: Boolean(perfil?.onboarding_concluido),
   };
 }
 

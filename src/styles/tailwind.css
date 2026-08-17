@@ -1,8 +1,7 @@
 @import 'tailwindcss';
 
-/* CSS resgatado do client/ antes da remoção: tokens de tema, animações da
-   abelha e o formato hexagonal da trilha de fases. Compilado junto no
-   src/public/css/app.css. */
+/* CSS resgatado do client/ antes da remoção: animações da abelha e o formato
+   hexagonal da trilha de fases. Compilado junto no src/public/css/app.css. */
 @import './tema.css';
 @import './trilha.css';
 
@@ -11,17 +10,42 @@
 @source '../views/**/*.ejs';
 @source '../public/js/**/*.js';
 
+/* Tokens da identidade Beever (DESIGN.md na raiz). Cor fora desta lista está
+   fora da identidade — nunca escrever hex literal em EJS nem em style inline. */
 @theme {
-  /* Paleta Beever — tons de mel e colmeia */
-  --color-mel-50: #fffaeb;
-  --color-mel-100: #fff1c6;
-  --color-mel-200: #ffe088;
-  --color-mel-300: #ffc94a;
-  --color-mel-400: #ffb020;
-  --color-mel-500: #f98d07;
-  --color-mel-600: #dd6702;
-  --color-mel-700: #b74606;
-  --color-mel-800: #94360c;
-  --color-mel-900: #7a2d0d;
-  --color-colmeia-900: #1c1917;
+  /* Mel é luz: superfície de ação, nunca cor de texto sobre fundo claro. */
+  --color-mel: #ffc200;
+  --color-nectar: #ffde00;
+  --color-ambar: #f4b73e;
+
+  /* Cera é a sala: branco quente, porque branco puro vibra ao lado do amarelo. */
+  --color-cera: #fffdf7;
+  --color-breu: #111111;
+  --color-linha: #e8e2d6;
+
+  /* Tinta é a voz. Texto sobre mel é sempre tinta. */
+  --color-tinta: #000000;
+  --color-tinta-suave: #4a4a4a;
+
+  /* Semânticos: sempre acompanhados de ícone + palavra, nunca cor sozinha.
+     Os valores da identidade servem para preenchimento, ícone e borda. Como
+     texto pequeno eles reprovam em AA sobre branco e cera (acerto 3,43:1,
+     atenção 3,01:1, erro 4,47:1 sobre cera), então cada um tem uma variante
+     escurecida só para texto — mesma cor, luminosidade suficiente. */
+  --color-acerto: #2e9e4f;
+  --color-acerto-texto: #268044;
+  --color-atencao: #e07a1f;
+  --color-atencao-texto: #9e5309;
+  --color-erro: #d93a3a;
+  --color-erro-texto: #c42b2b;
+
+  /* Lilita One anuncia (títulos e números de destaque), Nunito explica (todo o
+     resto). As fontes ainda não são servidas pelo projeto: até que sejam
+     auto-hospedadas, os dois papéis caem no system-ui. */
+  --font-sans: Nunito, system-ui, sans-serif;
+  --font-display: 'Lilita One', system-ui, sans-serif;
+
+  /* Favo é o canto padrão de botão e card; pílula é barra, badge e avatar. */
+  --radius-favo: 20px;
+  --radius-pilula: 999px;
 }

@@ -26,5 +26,10 @@ export const salvarOnboarding = assincrono(async (req, res) => {
     objetivo,
     nivel,
   });
-  res.json({ mensagem: 'Onboarding salvo com sucesso', ...resultado });
+  req.session.onboardingConcluido = true;
+
+  if (req.accepts(['html', 'json']) === 'json') {
+    return res.json({ mensagem: 'Onboarding salvo com sucesso', ...resultado });
+  }
+  res.redirect('/painel');
 });

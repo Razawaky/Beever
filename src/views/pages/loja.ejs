@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <%- include('../partials/head') %>
+  </head>
+  <body class="min-h-screen bg-cera text-tinta antialiased">
+    <header class="bg-mel px-6 py-6">
+      <div class="mx-auto flex max-w-5xl items-center justify-between">
+        <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+        <h1 class="text-2xl font-bold">Loja</h1>
+        <p class="font-semibold">🪙 <%= perfil.moedas %> moedas</p>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-6 py-10">
+      <% if (itens.length === 0) { %>
+        <p class="text-tinta-suave">Nenhum item disponível no momento.</p>
+      <% } %>
+
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <% itens.forEach((item) => { %>
+          <% const possuido = possuidos.has(item.id); %>
+          <% const podeComprar = perfil.moedas >= item.preco; %>
+          <article class="flex flex-col justify-between rounded-favo bg-white p-6 shadow-md">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wide text-tinta-suave"><%= item.categoria %></span>
+              <h2 class="mt-1 text-lg font-bold"><%= item.nome %></h2>
+              <p class="mt-2 text-sm text-tinta-suave"><%= item.descricao %></p>
+            </div>
+
+            <div class="mt-6 flex items-center justify-between">
+              <span class="font-semibold">🪙 <%= item.preco %></span>
+
+              <% if (possuido) { %>
+                <span class="rounded-pilula bg-cera px-4 py-2 text-sm font-medium text-tinta-suave">Já possui</span>
+              <% } else { %>
+                <form method="POST" action="/loja/compras">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <input type="hidden" name="idItem" value="<%= item.id %>" />
+                  <button
+                    type="submit"
+                    <%= podeComprar ? '' : 'disabled' %>
+                    class="rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <%= podeComprar ? 'Comprar' : 'Sem moedas' %>
+                  </button>
+                </form>
+              <% } %>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </main>
+  </body>
+</html>

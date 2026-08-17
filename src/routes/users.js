@@ -21,6 +21,10 @@ const regrasCadastro = [
     .withMessage('A senha precisa conter letras')
     .matches(/[0-9]/)
     .withMessage('A senha precisa conter números'),
+  body('confirmarSenha')
+    .optional()
+    .custom((valor, { req }) => valor === req.body.senha)
+    .withMessage('As senhas não coincidem'),
   body('apelido').optional().trim().isLength({ max: 100 }),
 ];
 

@@ -1,22 +1,21 @@
 import * as authService from '../services/authService.js';
 import { assincrono } from '../utils/erros.js';
+import { iniciarSessaoLogin } from '../utils/sessaoLogin.js';
 
 export const login = assincrono(async (req, res) => {
   const { email, senha } = req.body;
   const usuario = await authService.autenticar({ email, senha });
 
-  // Troca o id da sessão no login, pra ninguém conseguir "plantar" um id
-  // conhecido na vítima antes dela logar e depois assumir a conta com ele.
-  await new Promise((resolve, reject) => {
-    req.session.regenerate((erro) => (erro ? reject(erro) : resolve()));
+  await iniciarSessaoLogin(req, {
+    usuarioId: usuario.id,
+    email: usuario.email,
+    ehAdmin: usuario.ehAdmin,
+    perfilId: usuario.perfilId,
+    onboardingConcluido: usuario.onboardingConcluido,
   });
 
-  req.session.usuarioId = usuario.id;
-  req.session.email = usuario.email;
-  req.session.ehAdmin = usuario.ehAdmin;
-  req.session.perfilId = usuario.perfilId;
-
-  res.json(usuario);
+  if (req.accepts(['html', 'json']) === 'json') return res.json(usuario);
+  res.redirect(usuario.onboardingConcluido ? '/painel' : '/onboarding');
 });
 
 export const logout = assincrono(async (req, res) => {
@@ -30,7 +29,10 @@ export const logout = assincrono(async (req, res) => {
   });
 
   res.clearCookie('beever.sid');
-  res.json({ mensagem: 'Logout realizado com sucesso' });
+  if (req.accepts(['html', 'json']) === 'json') {
+    return res.json({ mensagem: 'Logout realizado com sucesso' });
+  }
+  res.redirect('/');
 });
 
 export const sessaoAtual = (req, res) => {
