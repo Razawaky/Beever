@@ -6,6 +6,11 @@ services:
     image: mysql:8.4
     container_name: beever-mysql
     restart: unless-stopped
+    # A migration 008 cria os gatilhos que tornam audit_logs append-only
+    # (RNF-17). Com log binário ligado, criar gatilho exige SUPER — que o
+    # usuário da aplicação não tem e não deve ter. Esta variável permite que o
+    # dono do banco crie os seus próprios gatilhos sem virar superusuário.
+    command: ['--log-bin-trust-function-creators=1']
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${DB_NAME:-beever}

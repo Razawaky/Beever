@@ -103,41 +103,60 @@ UPDATE items filho
    SET filho.upgrade_of_item_id = pai.id
  WHERE filho.slug = 'casa-grande';
 
--- Os requisitos são recriados a cada seed. Diferente do catálogo, esta tabela
--- não tem chave natural — uma linha é a combinação de item, tipo e alvo, toda
--- ela opcional — então sem limpar antes o seed duplicaria os requisitos a cada
--- execução. A tabela é inteira do seed, ninguém mais escreve nela hoje.
-DELETE FROM item_requirements;
+-- RN-033: requisitos de compra. A tabela não tem chave natural — a linha é a
+-- combinação de item, tipo e alvo, quase toda opcional — então o seed precisa
+-- limpar antes de inserir, senão duplica a cada execução.
+--
+-- A limpeza é **restrita aos itens que este arquivo declara**, e não a tabela
+-- inteira: quando a E12 der ao administrador o poder de criar requisito, um
+-- `db:seed` não pode apagar o trabalho dele. A lista de itens mora numa tabela
+-- temporária para o DELETE e os INSERTs lerem da mesma fonte.
+CREATE TEMPORARY TABLE IF NOT EXISTS seed_requisitos (
+  item          VARCHAR(60) NOT NULL,
+  nivel         SMALLINT DEFAULT NULL,
+  prerequisito  VARCHAR(60) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- RN-033: requisitos de compra por nível.
-INSERT IGNORE INTO item_requirements (item_id, requirement_type_id, required_level)
+DELETE FROM seed_requisitos;
+
+INSERT INTO seed_requisitos (item, nivel, prerequisito) VALUES
+  ('casa-pequena',             5, NULL),
+  ('terreno',                  8, NULL),
+  ('skate-eletrico',           4, NULL),
+  ('moto',                     6, NULL),
+  ('carro-popular',            8, NULL),
+  ('carro-esportivo',         12, NULL),
+  ('barraquinha-de-limonada',  3, NULL),
+  ('caixa-de-abelhas',         5, NULL),
+  ('cofrinho-reforcado',       4, NULL),
+  ('quarto-proprio',        NULL, 'cantinho-na-colmeia'),
+  ('casa-media',            NULL, 'casa-pequena'),
+  ('casa-grande',           NULL, 'casa-media'),
+  ('garagem',               NULL, 'casa-pequena'),
+  ('carro-popular',         NULL, 'garagem'),
+  ('loja-de-mel',           NULL, 'caixa-de-abelhas'),
+  ('horta-comunitaria',     NULL, 'terreno');
+
+DELETE requisito
+  FROM item_requirements requisito
+  JOIN items i ON i.id = requisito.item_id
+ WHERE i.slug IN (SELECT item FROM seed_requisitos);
+
+-- Requisitos por nível mínimo.
+INSERT INTO item_requirements (item_id, requirement_type_id, required_level)
 SELECT i.id, t.id, dados.nivel
-  FROM (
-    SELECT 'casa-pequena' AS item, 5 AS nivel
-    UNION ALL SELECT 'terreno', 8
-    UNION ALL SELECT 'skate-eletrico', 4
-    UNION ALL SELECT 'moto', 6
-    UNION ALL SELECT 'carro-popular', 8
-    UNION ALL SELECT 'carro-esportivo', 12
-    UNION ALL SELECT 'barraquinha-de-limonada', 3
-    UNION ALL SELECT 'caixa-de-abelhas', 5
-    UNION ALL SELECT 'cofrinho-reforcado', 4
-  ) AS dados
+  FROM seed_requisitos dados
   JOIN items i ON i.slug = dados.item
-  JOIN item_requirement_types t ON t.slug = 'nivel-minimo';
+  JOIN item_requirement_types t ON t.slug = 'nivel-minimo'
+ WHERE dados.nivel IS NOT NULL;
 
--- RN-033: requisitos por item que a criança já precisa ter.
-INSERT IGNORE INTO item_requirements (item_id, requirement_type_id, required_item_id)
+-- Requisitos por item que a criança já precisa ter.
+INSERT INTO item_requirements (item_id, requirement_type_id, required_item_id)
 SELECT i.id, t.id, pre.id
-  FROM (
-    SELECT 'quarto-proprio' AS item, 'cantinho-na-colmeia' AS prerequisito
-    UNION ALL SELECT 'casa-media', 'casa-pequena'
-    UNION ALL SELECT 'casa-grande', 'casa-media'
-    UNION ALL SELECT 'garagem', 'casa-pequena'
-    UNION ALL SELECT 'carro-popular', 'garagem'
-    UNION ALL SELECT 'loja-de-mel', 'caixa-de-abelhas'
-    UNION ALL SELECT 'horta-comunitaria', 'terreno'
-  ) AS dados
+  FROM seed_requisitos dados
   JOIN items i ON i.slug = dados.item
   JOIN items pre ON pre.slug = dados.prerequisito
-  JOIN item_requirement_types t ON t.slug = 'item-prerequisito';
+  JOIN item_requirement_types t ON t.slug = 'item-prerequisito'
+ WHERE dados.prerequisito IS NOT NULL;
+
+DROP TEMPORARY TABLE IF EXISTS seed_requisitos;

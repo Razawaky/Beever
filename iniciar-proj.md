@@ -70,8 +70,19 @@ npm run db:migrate
 ```
 
 Aplica os arquivos de `migrations/` em ordem e registra o que já rodou na tabela
-`schema_migrations`. É **idempotente**: rodar de novo não reaplica nada e não dá
-erro — deve responder `Nenhuma migration pendente`.
+`schema_migrations`, junto com o checksum de cada arquivo. É **idempotente**:
+rodar de novo não reaplica nada e não dá erro — deve responder
+`Nenhuma migration pendente`.
+
+São oito migrations, que criam 56 tabelas. O schema anterior do projeto está
+arquivado em `migrations/_legacy/` e **não é aplicado** — está lá como
+referência histórica. O modelo completo está explicado em
+[`docs/MODELO-DE-DADOS.md`](docs/MODELO-DE-DADOS.md).
+
+Se o runner recusar com *"Migration já aplicada foi alterada depois"*, é
+proteção: alguém editou um arquivo que o banco já tinha aplicado, o que faria
+ambientes divergirem em silêncio. Ou você cria uma migration nova com a
+correção, ou recria o banco (ver "Recomeçar do zero", mais abaixo).
 
 ## Passo 5 — Popular dados de desenvolvimento
 
@@ -79,8 +90,14 @@ erro — deve responder `Nenhuma migration pendente`.
 npm run db:seed
 ```
 
-Cria duas contas de teste, um perfil e um nível para cada, seis itens de loja,
-um conteúdo e um jogo. Também é idempotente.
+Aplica os arquivos de `scripts/seeds/` em ordem: curva de níveis, tabelas de
+domínio, o catálogo de 37 itens da loja, a configuração de recompensas, dois
+favos de exemplo com oito células, e as duas contas abaixo. Também é
+idempotente — rodar três vezes seguidas deixa o banco igual.
+
+A conta comum nasce **jogável**: primeiro favo concluído, um item no
+inventário, mel no cofre, uma meta em andamento e sequência ativa. É o que
+permite abrir o app e ver algo além de tela vazia.
 
 | Conta | E-mail | Senha |
 |---|---|---|
@@ -89,6 +106,52 @@ um conteúdo e um jogo. Também é idempotente.
 
 O seed se recusa a rodar com `NODE_ENV=production` — as senhas acima são
 públicas.
+
+Para conferir que os saldos batem com os livros:
+
+```bash
+npm run db:reconcile
+```
+
+Os três livros de recompensa (mel, pólen, XP) são a verdade; `wallets`,
+`user_levels` e `vaults` são cache. O script compara os dois lados nas sete
+conferências e sai com erro se algum divergir. Deve responder
+`Livros e saldos em cache batem`.
+
+### Recomeçar do zero
+
+```bash
+npm run db:reset -- --sim
+npm run db:migrate
+npm run db:seed
+```
+
+`db:reset` apaga **todas** as tabelas do banco configurado, sem backup. Recusa
+rodar com `NODE_ENV=production` e recusa sem o `-- --sim`. Use quando uma
+migration já aplicada precisar mudar.
+
+### Backup
+
+```bash
+npm run db:backup
+```
+
+Grava um dump completo em `backups/` (pasta ignorada pelo git, porque contém
+dados reais e hashes de senha) e apaga os anteriores a 7 dias. Ao contrário do
+reset e do seed, **este roda em produção** — é lá que ele importa.
+
+Periodicidade recomendada: **diária, fora do horário de uso, com retenção de 7
+dias**. Em um host com cron:
+
+```
+0 3 * * *  cd /caminho/do/beever && /usr/bin/npm run db:backup >> /var/log/beever-backup.log 2>&1
+```
+
+Ajuste a retenção com `BACKUP_RETENCAO_DIAS`. Para restaurar:
+
+```bash
+docker compose exec -T mysql mysql -uroot -proot < backups/<arquivo>.sql
+```
 
 ## Passo 6 — Compilar o CSS
 
@@ -132,6 +195,9 @@ A resposta deve trazer `"status": "ok"` e `"conectado": true`. Se vier
 | `npm start` | Servidor sem watch (usado em produção) |
 | `npm run db:migrate` | Aplica as migrations pendentes |
 | `npm run db:seed` | Popula dados de desenvolvimento |
+| `npm run db:reset -- --sim` | Apaga todas as tabelas (só desenvolvimento) |
+| `npm run db:reconcile` | Confere se os saldos batem com os livros |
+| `npm run db:backup` | Dump em `backups/`, com retenção de 7 dias |
 | `npm run css:build` | Compila o Tailwind uma vez |
 | `npm run css:watch` | Compila o Tailwind em modo watch |
 | `npm test` | Roda os testes unitários e de integração |

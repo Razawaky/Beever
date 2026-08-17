@@ -14,6 +14,7 @@
     "db:seed": "node scripts/seed.js",
     "db:reset": "node scripts/reset.js",
     "db:reconcile": "node scripts/reconcile.js",
+    "db:backup": "node scripts/backup.js",
     "css:build": "tailwindcss -i src/styles/tailwind.css -o src/public/css/app.css --minify",
     "css:watch": "tailwindcss -i src/styles/tailwind.css -o src/public/css/app.css --watch",
     "lint": "eslint .",

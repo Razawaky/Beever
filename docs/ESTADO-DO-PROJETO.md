@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `4898fa3`
+**Último commit:** `df9dfc9` + o fechamento da E01
 
 ---
 
@@ -13,11 +13,12 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 Se você só tem tempo para esta seção, ela basta. O resto do documento é a
 evidência por trás dela.
 
-**Onde estamos:** E00 (auditoria) e **E01 (banco de dados) concluídas**. O banco
-definitivo existe e roda: 7 migrations versionadas, 56 tabelas, 67 foreign keys,
-39 `CHECK`, 43 `UNIQUE`, seeds com usuário demo jogável, e o ciclo
-`docker compose up` → `db:migrate` → `db:seed` → `db:reconcile` funcionando do
-zero. O schema anterior está arquivado em `migrations/_legacy/`, nada apagado.
+**Onde estamos:** E00 (auditoria) e **E01 (banco de dados) concluídas e
+auditadas**. O banco definitivo existe e roda: 8 migrations versionadas, 56
+tabelas, 67 foreign keys, 39 `CHECK`, 43 `UNIQUE`, auditoria imutável por
+gatilho, seeds com usuário demo jogável, e o ciclo `docker compose up` →
+`db:migrate` → `db:seed` → `db:reconcile` funcionando do zero. O schema anterior
+está arquivado em `migrations/_legacy/`, nada apagado.
 
 **A aplicação está temporariamente fora do ar** — e isso era esperado. Os 12
 repositories ainda consultam as tabelas em português do schema antigo, então o
@@ -29,7 +30,7 @@ a E02/E03. O dump do banco anterior está guardado, caso precise do app de pé
 antes disso.
 
 **O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
-repository), 37 testes passando, `npm audit` limpo, páginas que não consultam o
+repository), 41 testes passando, `npm audit` limpo, páginas que não consultam o
 banco respondendo em menos de 20 ms.
 
 **O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
@@ -59,8 +60,8 @@ não sobe, então toda análise de impacto está sendo manual (R-02).
 |---|---|
 | Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 a ~80% de código escrito, mas desalinhado do schema novo |
 | Endpoints · services · repositories | 26 · 14 · 12 |
-| Testes | 37 passando · 7 services sem teste |
-| Dívida técnica catalogada | 14 itens abertos (DT-02 a DT-15) |
+| Testes | 41 passando · 7 services sem teste |
+| Dívida técnica catalogada | 16 itens abertos (DT-02 a DT-17) |
 | Riscos abertos | 2 (R-01 schema, R-02 grafo) |
 
 ---
@@ -98,10 +99,11 @@ npm run dev
 | `npm run db:migrate` | "Nenhuma migration pendente"; segunda execução idêntica — **idempotente confirmado** |
 | `npm run db:seed` | Aplica os 6 arquivos de `scripts/seeds/`. Três execuções seguidas deixam as mesmas contagens — **idempotente confirmado**. Imprime o estado do banco e as contas de desenvolvimento |
 | `npm run db:reset` | Recusa em produção; recusa sem `-- --sim`; com a confirmação, apagou as 57 tabelas do banco de teste |
-| `npm run db:reconcile` | Confere carteira, pólen, XP e cofre contra os livros. Sai com 1 em caso de divergência, para poder virar passo de CI |
+| `npm run db:reconcile` | Sete conferências: mel, pólen, XP, cofre, nível contra a curva, próximo nível e progresso do favo. Sai com 1 em caso de divergência, para poder virar passo de CI |
+| `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 37 passam, 0 falham |
+| `npm test` | 41 passam, 0 falham |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
 Respostas medidas com o servidor no ar: `/` 18 ms, `/login` 11 ms, `/health`
@@ -121,7 +123,9 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
-| Suíte de testes | `npm test` → **37 passam, 0 falham**, com MySQL no ar |
+| Suíte de testes | `npm test` → **41 passam, 0 falham**, com MySQL no ar |
+| **Auditoria imutável (RNF-17)** | Migration `008` põe dois gatilhos em `audit_logs`. Testado com o usuário da aplicação: `UPDATE` e `DELETE` recusados com mensagem citando a regra, `INSERT` continua funcionando. Não é mais convenção — é o banco recusando |
+| **Requisito de admin sobrevive ao seed** | O `db:seed` limpa apenas os requisitos dos itens que ele próprio declara. Verificado: requisito criado à mão em `skin-dourada` continuou lá depois de reexecutar o seed |
 | **Runner de migrations com checksum** | Editar uma migration já aplicada e rodar `db:migrate` **falha com mensagem clara**, testado de verdade: o arquivo foi alterado, o runner recusou, o arquivo foi restaurado e o runner voltou a passar |
 | **Reconciliação livro × cache** | Uma divergência plantada à mão (carteira 100, livro 40) foi detectada e o script saiu com código 1; corrigido o cache, voltou a sair com 0 |
 | **Seed completo** | Ciclo `db:reset` → `db:migrate` → `db:seed` → `db:reconcile` rodado do zero: 20 níveis, 3 faixas, 6 tipos de jogo, 54 configurações de recompensa, 37 itens, 16 requisitos de compra, 2 favos, 8 células, 8 conteúdos, 2 contas. Três execuções seguidas do seed dão as mesmas contagens |
@@ -182,7 +186,7 @@ antes de abrir a E01.
 
 | Etapa | Situação | O que falta |
 |---|---|---|
-| E01 Banco | **concluída** | T-01.1 a T-01.8 entregues. Os 12 itens do checklist de aceite da seção 8 do documento de banco estão cumpridos e verificados contra MySQL real |
+| E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
 | E02 Núcleo | ~80% feito | `requireOnboarding` como middleware, request-id no logger, decisão sobre `AuditService` |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | **`GoalPlannerService` não existe** — metas são criadas à mão, sem RN-014/015 |
@@ -209,7 +213,7 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-01~~ | ~~Fases 1–3 não commitadas~~ | R-03 | **Resolvido em 2026-08-17**: commits `c428ba3`, `a2e596b`, `a5f5e9b`, `4898fa3`. Working tree limpo |
 | DT-02 | `npm run lint` falha com 3242 erros, **todos** de `.claude/skills/**` e `.github/skills/**` | D-08 | Uma linha de `ignores` no `eslint.config.js`. Bloqueia usar lint como portão de CI |
 | DT-03 | Loop de recompensa cortado: `nivelService.creditarXp` sem chamador, `moedasService` sem `creditar` | M-02, D-03 | E06. Hoje **nenhum XP é creditado** e mel só sai, nunca entra |
-| DT-04 | Valores de regra fixos em código: `XP_POR_NIVEL = 1000`, `PONTOS_DE_PARTIDA`, `PONTOS_POR_TAREFA_CONCLUIDA = 10` | C-03 | Viram linhas de `reward_configs` na E06 |
+| DT-04 | **RN-006 ainda violada no código.** `reward_configs` existe e está semeada com 54 linhas, e `levels` tem a curva — mas `nivelService.js:9` segue com `XP_POR_NIVEL = 1000` e `pontosService.js:10` com `PONTOS_POR_TAREFA_CONCLUIDA = 10`. Criar a tabela não cumpre a regra; falta o service ler dela | C-03, auditoria da E01 (L-03) | **E06, com dono declarado.** Não pode chegar na entrega assim |
 | DT-05 | Negociação de conteúdo copiada 9 vezes em 6 controllers | P-01 | Helper único em `src/utils/`, na E02 |
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
 | DT-07 | Dois guardas de autenticação com a mesma regra; um declarado dentro de `src/routes/index.js` | P-04, C-01 | Unificar e mover para `src/middlewares/`, na E02 |
@@ -220,7 +224,9 @@ Identificadores rastreiam os documentos da E00.
 | DT-12 | Página de edição de perfil não existe; erro 422 de formulário cai na página de erro genérica em vez de voltar ao campo | herdado | E03/E04 |
 | DT-13 | Sem workflow de CI (`.github/` só tem arquivos de plugin) | D-10 | E14 |
 | DT-14 | Sem catálogo administrável de itens (criar/editar); catálogo vem do seed | herdado | E12 |
-| DT-15 | `.env.example` não documenta `DB_ROOT_PASSWORD`, usada pelo `docker-compose.yml:10` | T-00.5 | Uma linha; formalizado na T-14.4 |
+| DT-15 | `.env.example` não documenta `DB_ROOT_PASSWORD`, usada pelo `docker-compose.yml` | T-00.5 | Uma linha; formalizado na T-14.4 |
+| DT-16 | **Nenhum teste automatizado cobre o banco.** As 11 constraints verificadas na E01 foram testadas à mão; a suíte passa com a aplicação quebrada, porque o teste de integração só cobre `/`, headers, `/health` e um 404 | auditoria da E01, L-01 | **Primeira tarefa da E02**, decidido no fechamento da E01 |
+| DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos
 
@@ -278,6 +284,10 @@ Não reabrir sem motivo novo.
   montado duas vezes em `routes/index.js` — hoje `/loja` está, e só funciona
   pela ordem de declaração.
 - `git status` antes de assumir que algo está salvo.
+- **`audit_logs` não aceita `UPDATE` nem `DELETE`** — nem pelo root, sem
+  desabilitar os gatilhos da migration `008` de propósito. É a RNF-17
+  funcionando, mas surpreende na primeira vez: linha de auditoria criada em
+  teste fica lá. Para limpar, só recriando o banco com `db:reset`.
 - **O banco de desenvolvimento foi recriado do zero na E01.** O anterior está em
   `backups/beever-antes-da-E01-*.sql` (pasta ignorada pelo git, porque tem dados
   reais e hashes de senha). Para restaurar e ter o app de pé de novo:
