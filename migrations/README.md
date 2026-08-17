@@ -54,8 +54,8 @@ O dump do banco original está em `../beever.sql` (só estrutura) e
 
 ```
 docker compose up -d mysql
-npm run migrate
-npm run seed
+npm run db:migrate
+npm run db:seed
 ```
 
 Se o banco já tiver as migrations antigas registradas em `schema_migrations`, é

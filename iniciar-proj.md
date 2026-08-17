@@ -66,7 +66,7 @@ docker compose ps
 ## Passo 4 — Criar o schema
 
 ```bash
-npm run migrate
+npm run db:migrate
 ```
 
 Aplica os arquivos de `migrations/` em ordem e registra o que já rodou na tabela
@@ -76,7 +76,7 @@ erro — deve responder `Nenhuma migration pendente`.
 ## Passo 5 — Popular dados de desenvolvimento
 
 ```bash
-npm run seed
+npm run db:seed
 ```
 
 Cria duas contas de teste, um perfil e um nível para cada, seis itens de loja,
@@ -130,8 +130,8 @@ A resposta deve trazer `"status": "ok"` e `"conectado": true`. Se vier
 |---|---|
 | `npm run dev` | Servidor com `node --watch` na porta 3000 |
 | `npm start` | Servidor sem watch (usado em produção) |
-| `npm run migrate` | Aplica as migrations pendentes |
-| `npm run seed` | Popula dados de desenvolvimento |
+| `npm run db:migrate` | Aplica as migrations pendentes |
+| `npm run db:seed` | Popula dados de desenvolvimento |
 | `npm run css:build` | Compila o Tailwind uma vez |
 | `npm run css:watch` | Compila o Tailwind em modo watch |
 | `npm test` | Roda os testes unitários e de integração |
@@ -168,7 +168,7 @@ O MySQL não está acessível. Confira `docker compose ps` e se as credenciais d
 `.env` batem com as do `docker-compose.yml`.
 
 **`ER_NO_SUCH_TABLE` em alguma consulta.**
-As migrations não foram aplicadas nesse banco. Rode `npm run migrate`.
+As migrations não foram aplicadas nesse banco. Rode `npm run db:migrate`.
 
 **Porta 3000 já em uso.**
 Mude `PORT` no `.env`, ou derrube o processo antigo com

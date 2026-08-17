@@ -35,8 +35,9 @@ seção 4.
 chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
 creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
 
-**O que vem agora:** T-01.4 (runner com checksum, `db:reset`, `reconcile.js`),
-T-01.5 (seeds) e T-01.7 (modelo de dados documentado). O risco R-01
+**O que vem agora:** T-01.5 (seeds) e T-01.7 (modelo de dados documentado). O
+runner já falha se uma migration aplicada mudar de conteúdo, e existem
+`db:reset` e `db:reconcile`. O risco R-01
 **materializou-se como previsto**: os 12 repositories consultam tabelas em
 português que não existem mais no schema novo, então a aplicação não sobe contra
 ele até a E02/E03. O roteiro de correção, repository por repository, está em
@@ -50,7 +51,7 @@ não sobe, então toda análise de impacto está sendo manual (R-02).
 |---|---|
 | Etapas do roadmap prontas | 1 de 16 (E00); E02 a ~80%, E03 e E09 parciais |
 | Endpoints · services · repositories | 26 · 14 · 12 |
-| Testes | 22 passando · 7 services sem teste |
+| Testes | 35 passando · 7 services sem teste |
 | Dívida técnica catalogada | 14 itens abertos (DT-02 a DT-15) |
 | Riscos abertos | 2 (R-01 schema, R-02 grafo) |
 
@@ -65,8 +66,8 @@ Passo a passo completo, com pré-requisitos e solução de problemas, em
 npm install
 cp .env.example .env
 docker compose up -d mysql
-npm run migrate
-npm run seed
+npm run db:migrate
+npm run db:seed
 npm run css:build
 npm run dev
 ```
@@ -86,11 +87,13 @@ npm run dev
 |---|---|
 | `npm start` | Sobe na porta 3000; `/health` responde `{"status":"ok","banco":{"conectado":true,"migrationsAplicadas":2}}` em 13 ms |
 | `npm run dev` | Mesmo `start` com `node --watch` (ver armadilha na seção 7) |
-| `npm run migrate` | "Nenhuma migration pendente"; segunda execução idêntica — **idempotente confirmado** |
-| `npm run seed` | Reexecução cria 0 usuários, 0 admins, 0 perfis, 0 itens, 0 conteúdos, 0 jogos — **idempotente confirmado**. Imprime as contas de desenvolvimento |
+| `npm run db:migrate` | "Nenhuma migration pendente"; segunda execução idêntica — **idempotente confirmado** |
+| `npm run db:seed` | Reexecução cria 0 usuários, 0 admins, 0 perfis, 0 itens, 0 conteúdos, 0 jogos — **idempotente confirmado**. Imprime as contas de desenvolvimento |
+| `npm run db:reset` | Recusa em produção; recusa sem `-- --sim`; com a confirmação, apagou as 57 tabelas do banco de teste |
+| `npm run db:reconcile` | Confere carteira, pólen, XP e cofre contra os livros. Sai com 1 em caso de divergência, para poder virar passo de CI |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 22 passam, 0 falham |
+| `npm test` | 35 passam, 0 falham |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
 Respostas medidas com o servidor no ar: `/` 18 ms, `/login` 11 ms, `/health`
@@ -110,7 +113,9 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
-| Suíte de testes | `npm test` → **22 passam, 0 falham**, com MySQL no ar |
+| Suíte de testes | `npm test` → **35 passam, 0 falham**, com MySQL no ar |
+| **Runner de migrations com checksum** | Editar uma migration já aplicada e rodar `db:migrate` **falha com mensagem clara**, testado de verdade: o arquivo foi alterado, o runner recusou, o arquivo foi restaurado e o runner voltou a passar |
+| **Reconciliação livro × cache** | Uma divergência plantada à mão (carteira 100, livro 40) foi detectada e o script saiu com código 1; corrigido o cache, voltou a sair com 0 |
 | Separação de camadas | Zero `SELECT`/`INSERT`/`UPDATE`/`DELETE` fora de `src/repositories/`; nenhum controller importa repository; nenhum repository importa service |
 | Escape nas views | Nenhum `<%- %>` fora de `include` nas 9 páginas EJS |
 | Ausência de `console.log` | Zero em `src/` (as duas ocorrências do grep estão dentro de comentários) |
@@ -169,7 +174,7 @@ antes de abrir a E01.
 
 | Etapa | Situação | O que falta |
 |---|---|---|
-| E01 Banco | **em andamento** | T-01.1 a T-01.3 e T-01.6 feitas. Faltam: T-01.4 (checksum em `schema_migrations`, `db:migrate`/`db:seed`/`db:reset`, `scripts/reconcile.js`), T-01.5 (seeds: níveis, faixas, domínios, catálogo da seção 6, `reward_configs`, admin de teste), T-01.7 (`docs/MODELO-DE-DADOS.md` + diagrama ER), T-01.8 (subir do zero com `docker-compose` de ponta a ponta) |
+| E01 Banco | **em andamento** | T-01.1 a T-01.4 e T-01.6 feitas. Faltam: T-01.5 (seeds: níveis, faixas, domínios, catálogo da seção 6, `reward_configs`, admin de teste), T-01.7 (`docs/MODELO-DE-DADOS.md` + diagrama ER), T-01.8 (subir do zero com `docker-compose` de ponta a ponta). **O `scripts/seed.js` atual ainda popula o schema antigo** e quebra contra o novo — é a T-01.5 |
 | E02 Núcleo | ~80% feito | `requireOnboarding` como middleware, request-id no logger, decisão sobre `AuditService` |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | **`GoalPlannerService` não existe** — metas são criadas à mão, sem RN-014/015 |
