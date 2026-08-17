@@ -30,6 +30,7 @@ Thumbs.db
 # Instruções de agentes/IA — locais, não sobem pro repo
 .claude/
 .github/
+.impeccable/
 CLAUDE.md
 AGENTS.md
 .mcp.json
