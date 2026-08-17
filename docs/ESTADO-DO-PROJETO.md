@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `5891668` (2026-08-11)
+**Último commit:** `4898fa3`
 
 ---
 
@@ -21,9 +21,9 @@ O próximo trabalho de código é a **E01 — banco de dados**, que reestrutura
 `migrations/_legacy/`. Isso vai quebrar temporariamente os repositories, que
 consultam tabelas em português (risco R-01, seção 5).
 
-**Três coisas que mordem se forem esquecidas:** as fases 1–3 (loja, metas,
-views) estão só no working tree, sem commit; `npm run lint` falha por causa de
-scripts de plugin, não do código do projeto; e o servidor MCP do grafo não sobe.
+**Duas coisas que mordem se forem esquecidas:** `npm run lint` falha por causa
+de scripts de plugin, não do código do projeto; e o servidor MCP do grafo não
+sobe.
 
 ---
 
@@ -123,7 +123,7 @@ como confiável, mas reconfirmar antes de declarar entrega:
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Comportamento sob concorrência | O débito atômico foi testado sequencialmente. Nunca houve teste com duas requisições simultâneas de verdade |
-| Compatibilidade das 18 modificações não commitadas | O working tree tem 18 arquivos modificados e 46 novos desde `5891668`; a suíte passa, mas o conjunto nunca foi revisado como um todo |
+| Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
 
 ---
 
@@ -162,7 +162,7 @@ Identificadores rastreiam os documentos da E00.
 
 | ID | Dívida | Origem | Tratamento previsto |
 |---|---|---|---|
-| DT-01 | Fases 1–3 não commitadas: 18 arquivos modificados, 46 novos, 1 removido desde `5891668` | R-03 | Commitar antes de começar a E01 |
+| ~~DT-01~~ | ~~Fases 1–3 não commitadas~~ | R-03 | **Resolvido em 2026-08-17**: commits `c428ba3`, `a2e596b`, `a5f5e9b`, `4898fa3`. Working tree limpo |
 | DT-02 | `npm run lint` falha com 3242 erros, **todos** de `.claude/skills/**` e `.github/skills/**` | D-08 | Uma linha de `ignores` no `eslint.config.js`. Bloqueia usar lint como portão de CI |
 | DT-03 | Loop de recompensa cortado: `nivelService.creditarXp` sem chamador, `moedasService` sem `creditar` | M-02, D-03 | E06. Hoje **nenhum XP é creditado** e mel só sai, nunca entra |
 | DT-04 | Valores de regra fixos em código: `XP_POR_NIVEL = 1000`, `PONTOS_DE_PARTIDA`, `PONTOS_POR_TAREFA_CONCLUIDA = 10` | C-03 | Viram linhas de `reward_configs` na E06 |
@@ -187,8 +187,7 @@ Identificadores rastreiam os documentos da E00.
 - **R-02** — Servidor MCP `code-review-graph` não responde (`.mcp.json` aponta
   para `venv/bin/python3 -m code_review_graph`). Toda análise de impacto está
   sendo manual. Investigar antes das etapas que tocam código compartilhado.
-- **R-03** — Ver DT-01: um `git checkout` acidental apaga o trabalho das fases
-  1–3.
+- ~~**R-03**~~ — Encerrado: as fases 1–3 estão commitadas.
 
 ---
 
