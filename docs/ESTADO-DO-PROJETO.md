@@ -13,9 +13,11 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 Se você só tem tempo para esta seção, ela basta. O resto do documento é a
 evidência por trás dela.
 
-**Onde estamos:** etapa **E00 (auditoria) concluída** — T-00.1 a T-00.5. Nenhum
-código novo foi escrito nela; o que ela produziu foi o retrato honesto do
-repositório. Próxima etapa: **E01 — banco de dados**.
+**Onde estamos:** E00 (auditoria) concluída e **E01 (banco de dados) em
+andamento** — T-01.1, T-01.2 e T-01.3 entregues. O schema definitivo existe:
+7 migrations versionadas, 56 tabelas, 67 foreign keys, 39 `CHECK`, 43 `UNIQUE`,
+aplicadas do zero sem erro e reaplicáveis sem erro. O schema anterior está
+arquivado em `migrations/_legacy/`, nada apagado.
 
 **O que funciona hoje** (verificado contra MySQL real): cadastro, login, sessão,
 onboarding, painel, loja com compra transacional, inventário, e o domínio
@@ -33,10 +35,12 @@ seção 4.
 chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
 creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
 
-**O que vem agora:** a E01 reestrutura `beever.sql` como schema novo e arquiva o
-atual em `migrations/_legacy/`. Isso **quebra temporariamente os repositories**,
-que consultam tabelas em português (risco R-01). O mapa de nomes legado → novo
-já está decidido em [`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md).
+**O que vem agora:** T-01.4 (runner com checksum, `db:reset`, `reconcile.js`),
+T-01.5 (seeds) e T-01.7 (modelo de dados documentado). O risco R-01
+**materializou-se como previsto**: os 12 repositories consultam tabelas em
+português que não existem mais no schema novo, então a aplicação não sobe contra
+ele até a E02/E03. O roteiro de correção, repository por repository, está em
+[`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md), seção 4.
 
 **Duas coisas que mordem:** `npm run lint` falha, mas só por causa de scripts de
 plugin de IA — o código do projeto está limpo (DT-02). E o servidor MCP do grafo
@@ -113,6 +117,8 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 | Auditoria ligada | `auditoriaRepository.registrar` chamado por 7 services, incluindo compra e conclusão de tarefa |
 | Inventário completo | 26 endpoints, 11 controllers, 14 services, 12 repositories, 9 views, 2 migrations, 15 tabelas — em `docs/00-INVENTARIO.md` |
 | Design tokens | Bloco `@theme` em `src/styles/tailwind.css` com paleta, raios e tipografia da identidade |
+| **Schema novo da E01** | Banco criado do zero em MySQL 8.4: 7 migrations aplicadas pelo runner sem erro, e reaplicadas sem erro (idempotência real, não presumida). 56 tabelas, 67 FKs, 39 `CHECK`, 43 `UNIQUE`, nenhuma coluna `FLOAT`/`DOUBLE`, nenhuma tabela fora de `utf8mb4_0900_ai_ci` |
+| **Regras de negócio no banco** | 11 tentativas inválidas testadas contra o banco real, **todas rejeitadas pelo próprio MySQL**: saldo de mel negativo, saldo de cofre negativo, token de sessão repetido, mesmo ciclo econômico duas vezes, XP negativo, dia da semana repetido, total de compra que não bate com preço × quantidade, estrelas fora de 0–3, célula na mesma posição do favo, ledger apontando para usuário inexistente e tempo de sessão fora de 5/10/20. Uma compra válida passou |
 
 Verificado na sessão de 2026-08-12 e **não reexecutado desde então** — tratar
 como confiável, mas reconfirmar antes de declarar entrega:
@@ -163,7 +169,7 @@ antes de abrir a E01.
 
 | Etapa | Situação | O que falta |
 |---|---|---|
-| E01 Banco | refazer | Schema novo a partir de `beever.sql`; faltam `reward_configs`, `economic_cycles`, `idempotency_keys`, favos e células. Runner de migration aproveitável; seed a reescrever |
+| E01 Banco | **em andamento** | T-01.1 a T-01.3 e T-01.6 feitas. Faltam: T-01.4 (checksum em `schema_migrations`, `db:migrate`/`db:seed`/`db:reset`, `scripts/reconcile.js`), T-01.5 (seeds: níveis, faixas, domínios, catálogo da seção 6, `reward_configs`, admin de teste), T-01.7 (`docs/MODELO-DE-DADOS.md` + diagrama ER), T-01.8 (subir do zero com `docker-compose` de ponta a ponta) |
 | E02 Núcleo | ~80% feito | `requireOnboarding` como middleware, request-id no logger, decisão sobre `AuditService` |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | **`GoalPlannerService` não existe** — metas são criadas à mão, sem RN-014/015 |
@@ -205,10 +211,12 @@ Identificadores rastreiam os documentos da E00.
 
 ### Riscos abertos
 
-- **R-01** — A E01 troca o schema; os repositories atuais consultam tabelas em
-  português e vão quebrar. Entre a E01 e o realinhamento das camadas, a
-  aplicação não sobe contra o banco novo. Manter `migrations/_legacy/` intacto
-  e só limpar o banco local depois da migração das camadas.
+- **R-01 — materializado em 2026-08-17.** O schema novo está em `migrations/` e
+  os 12 repositories consultam tabelas que não existem mais nele. A aplicação
+  **não sobe contra o banco novo** até a E02/E03 realinharem as camadas. O banco
+  de desenvolvimento atual continua no schema antigo e a aplicação segue
+  funcionando contra ele — só não migre o banco local antes de estar pronto para
+  parar de usá-la. `migrations/_legacy/` está intacto.
 - **R-02** — Servidor MCP `code-review-graph` não responde (`.mcp.json` aponta
   para `venv/bin/python3 -m code_review_graph`). Toda análise de impacto está
   sendo manual. Investigar antes das etapas que tocam código compartilhado.
