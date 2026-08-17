@@ -8,22 +8,47 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 ---
 
-## Leia isto primeiro
+## Resumo em 2 minutos
 
-O projeto tem uma base em camadas funcionando (autenticação, onboarding, loja e
-metas), mas ela implementa um produto **menor e diferente** do que os
-documentos de escopo `docs/01`–`04` especificam. A **E00 está concluída**:
-T-00.1 a T-00.5 entregues, com o ambiente confirmado por execução real, não por
-leitura.
+Se você só tem tempo para esta seção, ela basta. O resto do documento é a
+evidência por trás dela.
 
-O próximo trabalho de código é a **E01 — banco de dados**, que reestrutura
-`beever.sql` da raiz como schema novo e arquiva o schema atual em
-`migrations/_legacy/`. Isso vai quebrar temporariamente os repositories, que
-consultam tabelas em português (risco R-01, seção 5).
+**Onde estamos:** etapa **E00 (auditoria) concluída** — T-00.1 a T-00.5. Nenhum
+código novo foi escrito nela; o que ela produziu foi o retrato honesto do
+repositório. Próxima etapa: **E01 — banco de dados**.
 
-**Duas coisas que mordem se forem esquecidas:** `npm run lint` falha por causa
-de scripts de plugin, não do código do projeto; e o servidor MCP do grafo não
-sobe.
+**O que funciona hoje** (verificado contra MySQL real): cadastro, login, sessão,
+onboarding, painel, loja com compra transacional, inventário, e o domínio
+cronograma → meta → tarefa com crédito de pontos. Arquitetura em camadas
+respeitada: nenhuma SQL fora de repository. 22 testes passando, `npm audit`
+limpo, páginas respondendo em menos de 20 ms.
+
+**O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
+patrimônio, cofre, ciclos econômicos, sequência (streak), conquistas, área
+administrativa, CI. O código atual implementa um produto **menor e diferente**
+do que os documentos `docs/01`–`04` especificam — o mapa etapa a etapa está na
+seção 4.
+
+**O buraco mais sério:** o loop de recompensa está cortado. `creditarXp` não é
+chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
+creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
+
+**O que vem agora:** a E01 reestrutura `beever.sql` como schema novo e arquiva o
+atual em `migrations/_legacy/`. Isso **quebra temporariamente os repositories**,
+que consultam tabelas em português (risco R-01). O mapa de nomes legado → novo
+já está decidido em [`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md).
+
+**Duas coisas que mordem:** `npm run lint` falha, mas só por causa de scripts de
+plugin de IA — o código do projeto está limpo (DT-02). E o servidor MCP do grafo
+não sobe, então toda análise de impacto está sendo manual (R-02).
+
+| Em números | |
+|---|---|
+| Etapas do roadmap prontas | 1 de 16 (E00); E02 a ~80%, E03 e E09 parciais |
+| Endpoints · services · repositories | 26 · 14 · 12 |
+| Testes | 22 passando · 7 services sem teste |
+| Dívida técnica catalogada | 14 itens abertos (DT-02 a DT-15) |
+| Riscos abertos | 2 (R-01 schema, R-02 grafo) |
 
 ---
 
@@ -198,7 +223,8 @@ Não reabrir sem motivo novo.
 | Decisão | Onde foi registrada |
 |---|---|
 | `beever.sql` da raiz é a base da E01, reestruturado como DBA; `migrations/001` e `002` vão para `migrations/_legacy/` sem serem apagados | T-00.1, D-01 |
-| Identificadores em inglês, comentários/docs/commits em português, termos de produto (`mel`, `pólen`, `favo`, `patrimonio`) preservados — seção 7.1 do `PROMPT-MESTRE`. `CLAUDE.md` será corrigido, não o contrário | T-00.1, decisão 3 |
+| Identificadores em inglês, comentários/docs/commits em português. Termos de produto (`mel`, `pólen`, `favo`, `patrimônio`) ficam no texto da interface e nos comentários, **não** nos nomes de tabela e coluna | T-00.1 decisão 3, detalhado em `00-MAPA-DE-NOMES-LEGADO.md` |
+| Mapa completo `nome legado → nome novo`, tabela e coluna, para a E01 usar | `00-MAPA-DE-NOMES-LEGADO.md` |
 | `docs/PROMPT-MESTRE.md` prevalece sobre `CLAUDE.md` em caso de conflito | esta sessão |
 | Perfil é 1:1 com usuário; a tela de seleção de perfil estilo Netflix não é recriada | sessão de 2026-08-12 |
 | Admin é tabela própria (`admin`), verificada por join, não coluna de tipo no usuário | migration `001` |
@@ -238,5 +264,6 @@ Não reabrir sem motivo novo.
 | `docs/00-AUDITORIA-DIVERGENCIAS.md` | T-00.1 — 14 divergências, 3 riscos, mapa etapa a etapa |
 | `docs/00-INVENTARIO.md` | T-00.2 — rotas, camadas, views, migrations, assets |
 | `docs/00-CODIGO-MORTO-E-DUPLICADO.md` | T-00.3 — código morto, duplicação, desvios de camada |
+| `docs/00-MAPA-DE-NOMES-LEGADO.md` | Decisão de checkpoint — nomes de tabela e coluna, legado → novo |
 
 **Próxima tarefa:** T-00.5 — confirmar versões e scripts, e fechar a E00.
