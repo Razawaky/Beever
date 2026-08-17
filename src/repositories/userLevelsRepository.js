@@ -45,11 +45,21 @@ export async function atualizar(conexao, idUsuario, { nivel, xpTotal, xpProximoN
   return resultado.affectedRows;
 }
 
-/** Lançamento no livro de XP. RN-002: só entra valor positivo, nunca sai. */
+/**
+ * Lançamento no livro de XP. RN-002: só entra valor positivo, nunca sai.
+ *
+ * Motivo desconhecido vira erro em vez de gravar zero linhas em silêncio: o
+ * `xp_total` de `user_levels` é cache do livro, e um crédito sem lançamento
+ * deixaria os dois brigando até o `db:reconcile` acusar, longe da causa.
+ */
 export async function lancarXp(conexao, { idUsuario, quantidade, motivo, referenciaTipo = null, referenciaId = null, saldoDepois }) {
-  await conexao.execute(
+  const [resultado] = await conexao.execute(
     `INSERT INTO xp_ledger (user_id, amount, reason_id, reference_type, reference_id, balance_after)
      SELECT ?, ?, r.id, ?, ?, ? FROM reward_reasons r WHERE r.slug = ?`,
     [idUsuario, quantidade, referenciaTipo, referenciaId, saldoDepois, motivo],
   );
+
+  if (resultado.affectedRows === 0) {
+    throw new Error(`Motivo de recompensa desconhecido: "${motivo}". Nenhum XP foi lançado.`);
+  }
 }

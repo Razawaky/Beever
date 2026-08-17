@@ -31,12 +31,24 @@ async function saldoAtual(conexao, idUsuario, coluna) {
   return linhas[0]?.saldo ?? 0;
 }
 
+/**
+ * O motivo entra por `SELECT ... FROM reward_reasons WHERE slug = ?`, então um
+ * slug que não existe faz o `INSERT` gravar zero linhas em vez de estourar.
+ * Silêncio aqui seria o pior desfecho possível: o saldo já foi mexido, o livro
+ * ficaria sem o lançamento, e a divergência só apareceria no `db:reconcile`
+ * dias depois, sem pista de origem. Por isso a checagem vira erro — dentro de
+ * `emTransacao`, o rollback leva o crédito junto e a carteira não mente.
+ */
 async function lancar(conexao, tabela, { idUsuario, valor, motivo, referenciaTipo, referenciaId, saldoDepois }) {
-  await conexao.execute(
+  const [resultado] = await conexao.execute(
     `INSERT INTO ${tabela} (user_id, amount, reason_id, reference_type, reference_id, balance_after)
      SELECT ?, ?, r.id, ?, ?, ? FROM reward_reasons r WHERE r.slug = ?`,
     [idUsuario, valor, referenciaTipo, referenciaId, saldoDepois, motivo],
   );
+
+  if (resultado.affectedRows === 0) {
+    throw new Error(`Motivo de recompensa desconhecido: "${motivo}". Nenhum lançamento foi gravado em ${tabela}.`);
+  }
 }
 
 /**

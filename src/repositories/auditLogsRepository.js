@@ -1,4 +1,5 @@
 import { consultar } from '../config/database.js';
+import { limiteSeguro } from '../utils/limite.js';
 
 /**
  * Trilha de auditoria (RN-010): quem fez, o quê, em qual entidade, e o estado
@@ -9,8 +10,9 @@ import { consultar } from '../config/database.js';
  * deve continuar.
  *
  * O tipo de ator chega como slug — `usuario`, `admin` ou `sistema` — e é
- * resolvido pelo próprio SQL. Slug inexistente não grava linha nenhuma, o que
- * é melhor do que gravar auditoria com ator errado.
+ * resolvido pelo próprio SQL. Slug inexistente faz o `INSERT` gravar zero
+ * linhas, e isso vira erro: auditoria que some calada é pior do que operação
+ * que falha alto, porque a RNF-17 promete que toda ação crítica deixou rastro.
  */
 
 const ATORES = { usuario: 'usuario', admin: 'admin', sistema: 'sistema' };
@@ -25,7 +27,7 @@ export async function registrar({
   estadoNovo = null,
   ipHash = null,
 }) {
-  await consultar(
+  const resultado = await consultar(
     `INSERT INTO audit_logs (actor_type_id, actor_id, action, entity_type, entity_id, before_state, after_state, ip_hash)
      SELECT t.id, ?, ?, ?, ?, ?, ?, ? FROM audit_actor_types t WHERE t.slug = ?`,
     [
@@ -39,6 +41,10 @@ export async function registrar({
       atorTipo,
     ],
   );
+
+  if (resultado.affectedRows === 0) {
+    throw new Error(`Tipo de ator desconhecido na auditoria: "${atorTipo}". Nada foi registrado.`);
+  }
 }
 
 /** Consulta da tela de auditoria do admin (RF-ADM-04). Usa o índice por entidade. */
@@ -49,8 +55,8 @@ export async function listarPorEntidade(entidade, entidadeId, limite = 50) {
        FROM audit_logs l
        JOIN audit_actor_types t ON t.id = l.actor_type_id
       WHERE l.entity_type = ? AND l.entity_id = ?
-      ORDER BY l.created_at DESC
-      LIMIT ?`,
-    [entidade, entidadeId, limite],
+      ORDER BY l.created_at DESC, l.id DESC
+      LIMIT ${limiteSeguro(limite)}`,
+    [entidade, entidadeId],
   );
 }
