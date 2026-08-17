@@ -33,21 +33,30 @@
 
 ---
 
-## E02 — Núcleo da aplicação
+## E02 — Núcleo da aplicação · **reordenada em 2026-08-17**
 **Objetivo:** infraestrutura que todas as features vão usar.
 
-| Tarefa | Entrega |
-|---|---|
-| T-02.1 | `src/config/`: carregamento e validação de env (falha rápido se faltar variável), pool MySQL singleton |
-| T-02.2 | Logger estruturado (pino) com níveis e request-id |
-| T-02.3 | Error handler global + classes de erro de domínio (`ValidationError`, `NotFoundError`, `InsufficientBalanceError`) |
-| T-02.4 | Middlewares: sessão, `requireAuth`, `requireAdmin`, `requireOnboarding`, rate limit, CSRF, helmet com CSP |
-| T-02.5 | Helper de validação (Joi ou express-validator) padronizado para todas as rotas |
-| T-02.6 | Helper de transação (`withTransaction`) usado por toda operação com saldo |
-| T-02.7 | Serviço de auditoria (`AuditService`) com API única: `record(actor, action, before, after)` |
-| T-02.8 | Layout EJS base + build do Tailwind + healthcheck `/health` |
+> **Por que a lista mudou.** O escopo original desta etapa pedia `src/config/`,
+> logger, error handler, middlewares, helper de validação e helper de transação
+> — **tudo isso já existia** desde a migração para camadas (divergência D-06 da
+> T-00.1). E a E01 trocou o schema, deixando os 12 repositories apontando para
+> tabelas que não existem mais (risco R-01). A etapa passou a ser o
+> realinhamento das camadas, mais o pouco que faltava do escopo original.
+> A lista abaixo foi aprovada no checkpoint de abertura da E02.
 
-**Aceite:** app sobe, `/health` responde, erro proposital retorna JSON/página tratada sem stack trace, log estruturado sai no console.
+| Tarefa | Entrega | Situação |
+|---|---|---|
+| T-02.1 | Arnês de teste com banco real (`test/helpers/banco.js`) + asserções de integridade do schema | **feita** — commit `b9d9f84` |
+| T-02.2 | Realinhar os 12 repositories ao schema novo, com teste de integração para cada. **É o que devolve a aplicação ao ar** | próxima |
+| T-02.3 | Realinhar services e controllers que dependem dos repositories | pendente |
+| T-02.4 | `requireOnboarding` como middleware, em `src/middlewares/`; unificar com `exigirLoginPagina`, hoje declarado dentro de `src/routes/index.js` | pendente |
+| T-02.5 | Request-id no logger estruturado | pendente |
+| T-02.6 | `AuditService` com API única `record(actor, action, before, after)`, gravando em `audit_logs` | pendente |
+| T-02.7 | Layout EJS base — hoje `header`/`footer` são incluídos à mão e só em 2 das 9 páginas | pendente |
+
+**Já existiam antes da etapa, conferidos na T-00.2:** `src/config/{env,database,logger,session}.js`, error handler global com classes de erro em `src/utils/erros.js`, os 7 middlewares, helper de validação com express-validator, `emTransacao` em `src/config/database.js`, e o healthcheck `/health`.
+
+**Aceite:** app sobe contra o schema novo, login funciona ponta a ponta, `/health` responde, erro proposital retorna JSON/página tratada sem stack trace, e a suíte cobre as rotas autenticadas.
 
 ---
 

@@ -8,6 +8,23 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 ---
 
+## Como retomar o trabalho
+
+Se a sessão anterior acabou no meio, comece por aqui:
+
+1. Leia o **Resumo em 2 minutos**, logo abaixo.
+2. `git log --oneline -15` — as mensagens de commit carregam o porquê de cada
+   decisão, não só o quê.
+3. A tabela de tarefas da etapa atual está na **seção 4**. A próxima tarefa não
+   marcada é a próxima a fazer.
+4. As decisões já tomadas estão na **seção 6**. Não reabra sem motivo novo.
+5. `docker compose up -d mysql && npm test` confirma que o ambiente está de pé.
+
+Nada de importante desta sessão vive só na conversa: o que foi decidido está
+neste documento e nos commits; o que foi construído está no repositório.
+
+---
+
 ## Resumo em 2 minutos
 
 Se você só tem tempo para esta seção, ela basta. O resto do documento é a
@@ -182,15 +199,30 @@ como garantia sobre o banco atual:
 
 ### Etapa atual
 
-E00 concluída: T-00.1 a T-00.5 entregues. Falta a auditoria de aceite da etapa
-antes de abrir a E01.
+**E02 — núcleo da aplicação, reordenada.** O roadmap original mandava construir
+config, logger, error handler e middlewares, que já existem desde a migração
+para camadas (divergência D-06). A ordem real, decidida no checkpoint de
+abertura da E02, está na tabela abaixo e também no próprio
+`02-ROADMAP-ETAPAS.md`.
+
+| Tarefa | Situação |
+|---|---|
+| T-02.1 Arnês de teste com banco real + asserções de integridade | **feita** (commit `b9d9f84`) |
+| T-02.2 Realinhar os 12 repositories ao schema novo, com teste de integração para cada | **próxima** |
+| T-02.3 Realinhar services e controllers que dependem deles | pendente |
+| T-02.4 `requireOnboarding` como middleware (hoje é checagem espalhada em controllers) | pendente |
+| T-02.5 Request-id no logger | pendente |
+| T-02.6 `AuditService` com API única, gravando em `audit_logs` | pendente |
+| T-02.7 Layout EJS base, hoje só partials incluídos à mão | pendente |
+
+A T-02.2 é a que devolve a aplicação ao ar.
 
 ### Roadmap (`docs/02-ROADMAP-ETAPAS.md`)
 
 | Etapa | Situação | O que falta |
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
-| E02 Núcleo | ~80% feito | `requireOnboarding` como middleware, request-id no logger, decisão sobre `AuditService` |
+| E02 Núcleo | **em andamento, reordenada** | T-02.1 feita. Ver a tabela de tarefas logo acima — a etapa virou o realinhamento das camadas ao schema novo, mais o pouco que faltava do escopo original |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | **`GoalPlannerService` não existe** — metas são criadas à mão, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
@@ -258,6 +290,12 @@ Não reabrir sem motivo novo.
 | `beever.sql` da raiz é a base da E01, reestruturado como DBA; `migrations/001` e `002` vão para `migrations/_legacy/` sem serem apagados | T-00.1, D-01 |
 | Identificadores em inglês, comentários/docs/commits em português. Termos de produto (`mel`, `pólen`, `favo`, `patrimônio`) ficam no texto da interface e nos comentários, **não** nos nomes de tabela e coluna | T-00.1 decisão 3, detalhado em `00-MAPA-DE-NOMES-LEGADO.md` |
 | Mapa completo `nome legado → nome novo`, tabela e coluna, para a E01 usar | `00-MAPA-DE-NOMES-LEGADO.md` |
+| Nível do usuário fica em `user_levels`, uma linha por usuário; `levels` continua sendo a curva versionada, porque a RN-003 proíbe calcular nível por fórmula | checkpoint da E01 |
+| Conteúdo dos jogos em JSON validado pela aplicação, com `version` no registro — não uma tabela por tipo de jogo | checkpoint da E01 |
+| `purchases.total_price` é armazenado, não derivado: é registro contábil, mesmo motivo de `price_at_purchase` | checkpoint da E01 |
+| Livros append-only são a verdade do saldo; `wallets`, `user_levels` e `vaults` são cache, atualizados na mesma transação e conferidos por `db:reconcile` | E01, resposta ao L-03 da auditoria da E00 |
+| **E02 reordenada**: vira o realinhamento das camadas ao schema novo, porque o escopo original dela já estava construído. Lista aprovada no checkpoint e registrada em `02-ROADMAP-ETAPAS.md` | checkpoint da E02 |
+| Testes de banco pulam sozinhos sem MySQL, mas `TESTES_DE_BANCO=1` (o `npm run test:db`, comando do CI) faz a ausência do banco virar falha | checkpoint da E02 |
 | `docs/PROMPT-MESTRE.md` prevalece sobre `CLAUDE.md` em caso de conflito | esta sessão |
 | Perfil é 1:1 com usuário; a tela de seleção de perfil estilo Netflix não é recriada | sessão de 2026-08-12 |
 | Admin é tabela própria (`admin`), verificada por join, não coluna de tipo no usuário | migration `001` |
