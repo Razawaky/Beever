@@ -198,6 +198,7 @@ A resposta deve trazer `"status": "ok"` e `"conectado": true`. Se vier
 | `npm run db:reset -- --sim` | Apaga todas as tabelas (só desenvolvimento) |
 | `npm run db:reconcile` | Confere se os saldos batem com os livros |
 | `npm run db:backup` | Dump em `backups/`, com retenção de 7 dias |
+| `npm run test:db` | Como `npm test`, mas **exige** MySQL no ar. É o comando do CI |
 | `npm run css:build` | Compila o Tailwind uma vez |
 | `npm run css:watch` | Compila o Tailwind em modo watch |
 | `npm test` | Roda os testes unitários e de integração |
@@ -211,9 +212,22 @@ A resposta deve trazer `"status": "ok"` e `"conectado": true`. Se vier
 npm test
 ```
 
-Os testes de integração **precisam do MySQL no ar com as migrations
-aplicadas** — eles sobem o app de verdade e batem no banco. Sem banco, o teste
-do `/health` falha e os demais passam.
+Os testes de integração precisam do MySQL no ar. **Sem banco, eles se pulam
+sozinhos** com um aviso dizendo o porquê — quem acabou de clonar não leva erro
+incompreensível.
+
+Isso é conveniência local, não permissão para entregar código sem testar o
+banco. No CI, o comando é outro:
+
+```bash
+npm run test:db
+```
+
+Ele exige o banco: se o MySQL não estiver de pé, a suíte falha em vez de pular.
+
+Os testes de banco **não usam o seu banco de desenvolvimento**. O arnês em
+`test/helpers/banco.js` cria um `beever_teste` do zero, aplica migrations e
+seed, roda as asserções e apaga o banco no fim. O `beever` não é tocado.
 
 ---
 

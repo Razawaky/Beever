@@ -30,8 +30,8 @@ a E02/E03. O dump do banco anterior está guardado, caso precise do app de pé
 antes disso.
 
 **O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
-repository), 41 testes passando, `npm audit` limpo, páginas que não consultam o
-banco respondendo em menos de 20 ms.
+repository), 62 testes passando — dos quais 21 batem num banco real —, `npm
+audit` limpo, páginas que não consultam o banco respondendo em menos de 20 ms.
 
 **O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
 patrimônio, cofre, ciclos econômicos, sequência (streak), conquistas, área
@@ -43,8 +43,9 @@ seção 4.
 chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
 creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
 
-**O que vem agora:** **E02 — núcleo da aplicação**, que na prática vira o
-realinhamento das camadas ao schema novo, começando pelos repositories. O modelo
+**O que vem agora:** **E02 em andamento.** A T-02.1 entregou a rede de teste com
+banco real; a próxima tarefa é o realinhamento dos 12 repositories ao schema
+novo, que é o que devolve a aplicação ao ar. O modelo
 está documentado em [`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md) e o mapa de nomes
 em [`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md). O risco R-01
 **materializou-se como previsto**: os 12 repositories consultam tabelas em
@@ -60,8 +61,8 @@ não sobe, então toda análise de impacto está sendo manual (R-02).
 |---|---|
 | Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 a ~80% de código escrito, mas desalinhado do schema novo |
 | Endpoints · services · repositories | 26 · 14 · 12 |
-| Testes | 41 passando · 7 services sem teste |
-| Dívida técnica catalogada | 16 itens abertos (DT-02 a DT-17) |
+| Testes | 62 passando · 7 services sem teste |
+| Dívida técnica catalogada | 15 itens abertos (DT-02 a DT-17, menos a DT-16 resolvida) |
 | Riscos abertos | 2 (R-01 schema, R-02 grafo) |
 
 ---
@@ -103,7 +104,8 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 41 passam, 0 falham |
+| `npm test` | 62 passam, 0 falham. Sem MySQL, os 21 testes de banco se pulam com aviso |
+| `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
 Respostas medidas com o servidor no ar: `/` 18 ms, `/login` 11 ms, `/health`
@@ -123,7 +125,8 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
-| Suíte de testes | `npm test` → **41 passam, 0 falham**, com MySQL no ar |
+| Suíte de testes | `npm test` → **62 passam, 0 falham**, com MySQL no ar |
+| **Integridade do banco, agora automatizada (DT-16)** | 21 testes de integração sobem um banco `beever_teste` do zero, aplicam migrations e seed, e exigem que o MySQL recuse as 13 gravações inválidas da E01. Verificado também o caminho sem banco (pula com aviso) e o do CI (`TESTES_DE_BANCO=1` falha) |
 | **Auditoria imutável (RNF-17)** | Migration `008` põe dois gatilhos em `audit_logs`. Testado com o usuário da aplicação: `UPDATE` e `DELETE` recusados com mensagem citando a regra, `INSERT` continua funcionando. Não é mais convenção — é o banco recusando |
 | **Requisito de admin sobrevive ao seed** | O `db:seed` limpa apenas os requisitos dos itens que ele próprio declara. Verificado: requisito criado à mão em `skin-dourada` continuou lá depois de reexecutar o seed |
 | **Runner de migrations com checksum** | Editar uma migration já aplicada e rodar `db:migrate` **falha com mensagem clara**, testado de verdade: o arquivo foi alterado, o runner recusou, o arquivo foi restaurado e o runner voltou a passar |
@@ -225,7 +228,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-13 | Sem workflow de CI (`.github/` só tem arquivos de plugin) | D-10 | E14 |
 | DT-14 | Sem catálogo administrável de itens (criar/editar); catálogo vem do seed | herdado | E12 |
 | DT-15 | `.env.example` não documenta `DB_ROOT_PASSWORD`, usada pelo `docker-compose.yml` | T-00.5 | Uma linha; formalizado na T-14.4 |
-| DT-16 | **Nenhum teste automatizado cobre o banco.** As 11 constraints verificadas na E01 foram testadas à mão; a suíte passa com a aplicação quebrada, porque o teste de integração só cobre `/`, headers, `/health` e um 404 | auditoria da E01, L-01 | **Primeira tarefa da E02**, decidido no fechamento da E01 |
+| ~~DT-16~~ | ~~Nenhum teste automatizado cobre o banco~~ | auditoria da E01, L-01 | **Resolvido na T-02.1**: 21 testes de integração com banco real. Segue verdade que nenhum teste cobre rota autenticada — isso volta com os repositories |
 | DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos

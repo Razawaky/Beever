@@ -18,7 +18,8 @@
     "css:build": "tailwindcss -i src/styles/tailwind.css -o src/public/css/app.css --minify",
     "css:watch": "tailwindcss -i src/styles/tailwind.css -o src/public/css/app.css --watch",
     "lint": "eslint .",
-    "test": "NODE_ENV=test node --test \"test/**/*.test.js\""
+    "test": "NODE_ENV=test node --test \"test/**/*.test.js\"",
+    "test:db": "TESTES_DE_BANCO=1 NODE_ENV=test node --test \"test/**/*.test.js\""
   },
   "license": "MIT",
   "dependencies": {
