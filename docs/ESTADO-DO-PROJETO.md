@@ -13,17 +13,24 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 Se você só tem tempo para esta seção, ela basta. O resto do documento é a
 evidência por trás dela.
 
-**Onde estamos:** E00 (auditoria) concluída e **E01 (banco de dados) em
-andamento** — T-01.1, T-01.2 e T-01.3 entregues. O schema definitivo existe:
-7 migrations versionadas, 56 tabelas, 67 foreign keys, 39 `CHECK`, 43 `UNIQUE`,
-aplicadas do zero sem erro e reaplicáveis sem erro. O schema anterior está
-arquivado em `migrations/_legacy/`, nada apagado.
+**Onde estamos:** E00 (auditoria) e **E01 (banco de dados) concluídas**. O banco
+definitivo existe e roda: 7 migrations versionadas, 56 tabelas, 67 foreign keys,
+39 `CHECK`, 43 `UNIQUE`, seeds com usuário demo jogável, e o ciclo
+`docker compose up` → `db:migrate` → `db:seed` → `db:reconcile` funcionando do
+zero. O schema anterior está arquivado em `migrations/_legacy/`, nada apagado.
 
-**O que funciona hoje** (verificado contra MySQL real): cadastro, login, sessão,
-onboarding, painel, loja com compra transacional, inventário, e o domínio
-cronograma → meta → tarefa com crédito de pontos. Arquitetura em camadas
-respeitada: nenhuma SQL fora de repository. 22 testes passando, `npm audit`
-limpo, páginas respondendo em menos de 20 ms.
+**A aplicação está temporariamente fora do ar** — e isso era esperado. Os 12
+repositories ainda consultam as tabelas em português do schema antigo, então o
+login devolve 500 com `Table 'beever.usuario' doesn't exist`. É o risco R-01,
+previsto desde a T-00.1 e aceito ao trocar o schema. O código das telas continua
+lá (cadastro, login, onboarding, painel, loja com compra transacional,
+inventário, metas e tarefas); o que falta é apontá-lo para os nomes novos, que é
+a E02/E03. O dump do banco anterior está guardado, caso precise do app de pé
+antes disso.
+
+**O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
+repository), 37 testes passando, `npm audit` limpo, páginas que não consultam o
+banco respondendo em menos de 20 ms.
 
 **O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
 patrimônio, cofre, ciclos econômicos, sequência (streak), conquistas, área
@@ -35,10 +42,10 @@ seção 4.
 chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
 creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
 
-**O que vem agora:** T-01.8, a subida completa do zero, e a E01 fecha. O banco
-novo já sobe, semeia e reconcilia (`db:reset` → `db:migrate` → `db:seed` →
-`db:reconcile` roda limpo) e está documentado em
-[`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md). O risco R-01
+**O que vem agora:** **E02 — núcleo da aplicação**, que na prática vira o
+realinhamento das camadas ao schema novo, começando pelos repositories. O modelo
+está documentado em [`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md) e o mapa de nomes
+em [`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md). O risco R-01
 **materializou-se como previsto**: os 12 repositories consultam tabelas em
 português que não existem mais no schema novo, então a aplicação não sobe contra
 ele até a E02/E03. O roteiro de correção, repository por repository, está em
@@ -50,7 +57,7 @@ não sobe, então toda análise de impacto está sendo manual (R-02).
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 1 de 16 (E00); E02 a ~80%, E03 e E09 parciais |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 a ~80% de código escrito, mas desalinhado do schema novo |
 | Endpoints · services · repositories | 26 · 14 · 12 |
 | Testes | 37 passando · 7 services sem teste |
 | Dívida técnica catalogada | 14 itens abertos (DT-02 a DT-15) |
@@ -86,7 +93,7 @@ npm run dev
 
 | Script | Resultado |
 |---|---|
-| `npm start` | Sobe na porta 3000; `/health` responde `{"status":"ok","banco":{"conectado":true,"migrationsAplicadas":2}}` em 13 ms |
+| `npm start` | Sobe na porta 3000; `/health` responde `{"status":"ok","banco":{"conectado":true,"migrationsAplicadas":7}}`. Rotas que consultam o banco devolvem 500 até a E02/E03 — ver R-01 |
 | `npm run dev` | Mesmo `start` com `node --watch` (ver armadilha na seção 7) |
 | `npm run db:migrate` | "Nenhuma migration pendente"; segunda execução idêntica — **idempotente confirmado** |
 | `npm run db:seed` | Aplica os 6 arquivos de `scripts/seeds/`. Três execuções seguidas deixam as mesmas contagens — **idempotente confirmado**. Imprime o estado do banco e as contas de desenvolvimento |
@@ -128,19 +135,17 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 | **Schema novo da E01** | Banco criado do zero em MySQL 8.4: 7 migrations aplicadas pelo runner sem erro, e reaplicadas sem erro (idempotência real, não presumida). 56 tabelas, 67 FKs, 39 `CHECK`, 43 `UNIQUE`, nenhuma coluna `FLOAT`/`DOUBLE`, nenhuma tabela fora de `utf8mb4_0900_ai_ci` |
 | **Regras de negócio no banco** | 11 tentativas inválidas testadas contra o banco real, **todas rejeitadas pelo próprio MySQL**: saldo de mel negativo, saldo de cofre negativo, token de sessão repetido, mesmo ciclo econômico duas vezes, XP negativo, dia da semana repetido, total de compra que não bate com preço × quantidade, estrelas fora de 0–3, célula na mesma posição do favo, ledger apontando para usuário inexistente e tempo de sessão fora de 5/10/20. Uma compra válida passou |
 
-Verificado na sessão de 2026-08-12 e **não reexecutado desde então** — tratar
-como confiável, mas reconfirmar antes de declarar entrega:
+| **Subida do zero (T-01.8)** | Volume do MySQL apagado e recriado. `docker compose up -d mysql` → `db:migrate` → `db:seed` → `db:reconcile` rodou limpo **sem nenhum `GRANT` manual** — o contêiner criou banco, usuário e permissão sozinho, que é o caminho de quem clona o projeto. 57 tabelas, 7 migrations com checksum registrado |
+| **Exclusão de conta (RN-053)** | Conta descartável criada, apagada e conferida: carteira e disponibilidade foram junto por `CASCADE`, e a linha de `audit_logs` **sobreviveu** — que é exatamente o comportamento que a regra pede |
 
-- Fluxo ponta a ponta via curl contra MySQL real (cookies, CSRF, redirects):
-  cadastro → onboarding → painel → loja → compra → metas → tarefa → pontos
-  creditados.
-- Idempotência das migrations (segunda execução: "Nenhuma migration pendente")
-  e do seed (reexecução cria 0 registros).
-- Débito de moedas atômico: `UPDATE perfil SET moedas = moedas - ? WHERE id = ?
-  AND moedas >= ?`, com compra sem saldo bloqueada em 422 sem gravar nada
-  parcial.
-- Conclusão de tarefa idempotente: `UPDATE ... WHERE progresso < 100` impede
-  crédito duplo em clique repetido.
+Verificado na sessão de 2026-08-12, **contra o schema antigo, que não existe
+mais**. Fica como registro histórico do que funcionou até a E01; nada disso vale
+como garantia sobre o banco atual:
+
+- Fluxo ponta a ponta via curl: cadastro → onboarding → painel → loja → compra
+  → metas → tarefa → pontos creditados.
+- Débito de moedas atômico, com compra sem saldo bloqueada em 422.
+- Conclusão de tarefa idempotente por `UPDATE ... WHERE progresso < 100`.
 
 ### Bugs do código antigo corrigidos na migração (evidência para o TCC)
 
@@ -177,7 +182,7 @@ antes de abrir a E01.
 
 | Etapa | Situação | O que falta |
 |---|---|---|
-| E01 Banco | **em andamento** | T-01.1 a T-01.7 feitas. Falta só a T-01.8: subida completa a partir de `docker-compose up`, num banco limpo de verdade e não só num banco de teste |
+| E01 Banco | **concluída** | T-01.1 a T-01.8 entregues. Os 12 itens do checklist de aceite da seção 8 do documento de banco estão cumpridos e verificados contra MySQL real |
 | E02 Núcleo | ~80% feito | `requireOnboarding` como middleware, request-id no logger, decisão sobre `AuditService` |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | **`GoalPlannerService` não existe** — metas são criadas à mão, sem RN-014/015 |
@@ -219,12 +224,15 @@ Identificadores rastreiam os documentos da E00.
 
 ### Riscos abertos
 
-- **R-01 — materializado em 2026-08-17.** O schema novo está em `migrations/` e
-  os 12 repositories consultam tabelas que não existem mais nele. A aplicação
-  **não sobe contra o banco novo** até a E02/E03 realinharem as camadas. O banco
-  de desenvolvimento atual continua no schema antigo e a aplicação segue
-  funcionando contra ele — só não migre o banco local antes de estar pronto para
-  parar de usá-la. `migrations/_legacy/` está intacto.
+- **R-01 — ativo desde 2026-08-17.** O banco de desenvolvimento foi recriado com
+  o schema novo, e **a aplicação não funciona mais contra ele** até a E02/E03
+  realinharem os 12 repositories. Sintoma medido: `/` e `/login` respondem 200
+  (não consultam o banco), `/health` responde `ok` com 7 migrations, e o login
+  devolve **500** com `Table 'beever.usuario' doesn't exist` no log — sem vazar
+  stack trace para o cliente. O roteiro de correção está em
+  `00-MAPA-DE-NOMES-LEGADO.md`, seção 4.
+  **Para voltar ao app funcionando antes disso:** restaure o dump em
+  `backups/beever-antes-da-E01-*.sql` (ver seção 7).
 - **R-02** — Servidor MCP `code-review-graph` não responde (`.mcp.json` aponta
   para `venv/bin/python3 -m code_review_graph`). Toda análise de impacto está
   sendo manual. Investigar antes das etapas que tocam código compartilhado.
@@ -269,7 +277,13 @@ Não reabrir sem motivo novo.
   Já foi bug real. Ao adicionar rota de página, conferir se o path não está
   montado duas vezes em `routes/index.js` — hoje `/loja` está, e só funciona
   pela ordem de declaração.
-- `git status` antes de assumir que algo está salvo. Ver DT-01.
+- `git status` antes de assumir que algo está salvo.
+- **O banco de desenvolvimento foi recriado do zero na E01.** O anterior está em
+  `backups/beever-antes-da-E01-*.sql` (pasta ignorada pelo git, porque tem dados
+  reais e hashes de senha). Para restaurar e ter o app de pé de novo:
+  `docker compose exec -T mysql mysql -uroot -proot < backups/<arquivo>.sql`.
+  Depois disso, `npm run db:migrate` volta a acusar migration pendente — o banco
+  restaurado tem o histórico antigo em `schema_migrations`.
 
 ---
 

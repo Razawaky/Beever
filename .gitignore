@@ -14,6 +14,9 @@ logs/
 *.log
 npm-debug.log*
 
+# Dumps de banco — contêm dados reais de desenvolvimento e hashes de senha
+backups/
+
 # Cobertura e artefatos de teste
 coverage/
 .nyc_output/
