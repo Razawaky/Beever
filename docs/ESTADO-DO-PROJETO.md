@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `df9dfc9` + o fechamento da E01
+**Último commit:** `2270762` (T-02.2 fechada)
 
 ---
 
@@ -37,17 +37,17 @@ gatilho, seeds com usuário demo jogável, e o ciclo `docker compose up` →
 `db:migrate` → `db:seed` → `db:reconcile` funcionando do zero. O schema anterior
 está arquivado em `migrations/_legacy/`, nada apagado.
 
-**A aplicação está temporariamente fora do ar** — e isso era esperado. Os 12
-repositories ainda consultam as tabelas em português do schema antigo, então o
-login devolve 500 com `Table 'beever.usuario' doesn't exist`. É o risco R-01,
-previsto desde a T-00.1 e aceito ao trocar o schema. O código das telas continua
-lá (cadastro, login, onboarding, painel, loja com compra transacional,
-inventário, metas e tarefas); o que falta é apontá-lo para os nomes novos, que é
-a E02/E03. O dump do banco anterior está guardado, caso precise do app de pé
-antes disso.
+**A aplicação está temporariamente fora do ar** — e isso era esperado. Os 13
+repositories já falam o schema novo desde a T-02.2, mas os 12 services ainda
+importam os nomes antigos, então o servidor **não sobe**:
+`ERR_MODULE_NOT_FOUND`. É o risco R-01, previsto desde a T-00.1 e aceito ao
+trocar o schema. O código das telas continua lá (cadastro, login, onboarding,
+painel, loja com compra transacional, inventário, metas e tarefas); o que falta
+é apontá-lo para os nomes novos, que é a T-02.3. O dump do banco anterior está
+guardado, caso precise do app de pé antes disso.
 
 **O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
-repository), 62 testes passando — dos quais 21 batem num banco real —, `npm
+repository), 138 testes passando — dos quais 114 batem num banco real —, `npm
 audit` limpo, páginas que não consultam o banco respondendo em menos de 20 ms.
 
 **O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
@@ -61,26 +61,34 @@ chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
 creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
 
 **O que vem agora:** **E02 em andamento.** A T-02.1 entregou a rede de teste com
-banco real; a próxima tarefa é o realinhamento dos 12 repositories ao schema
-novo, que é o que devolve a aplicação ao ar. O modelo
-está documentado em [`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md) e o mapa de nomes
-em [`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md). O risco R-01
-**materializou-se como previsto**: os 12 repositories consultam tabelas em
-português que não existem mais no schema novo, então a aplicação não sobe contra
-ele até a E02/E03. O roteiro de correção, repository por repository, está em
-[`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md), seção 4.
+banco real e a **T-02.2 fechou o realinhamento dos 13 repositories**, cada um
+com teste de integração contra banco de verdade — 93 asserções novas. A próxima
+é a **T-02.3**, que realinha services e controllers e é o que **devolve a
+aplicação ao ar**. O modelo está documentado em
+[`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md) e o mapa de nomes em
+[`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md).
 
-**Duas coisas que mordem:** `npm run lint` falha, mas só por causa de scripts de
-plugin de IA — o código do projeto está limpo (DT-02). E o servidor MCP do grafo
-não sobe, então toda análise de impacto está sendo manual (R-02).
+O risco R-01 **materializou-se como previsto** e está sendo pago em duas
+parcelas: a camada de repository já fala o schema novo, a de service ainda não.
+Hoje a aplicação nem sobe — os 12 services importam `usuarioRepository`,
+`nivelRepository` e `auditoriaRepository`, arquivos que não existem mais, e o
+Node falha no carregamento com `ERR_MODULE_NOT_FOUND`. É uma janela vermelha
+maior que a prevista, decidida no checkpoint da T-02.2 para manter a tarefa
+pequena e testável, e ela fecha na T-02.3.
+
+**O que morde:** `npm run lint` falha, mas só por causa de scripts de plugin de
+IA — o código do projeto está limpo (DT-02). O servidor MCP do grafo voltou a
+responder e o grafo foi reconstruído, encerrando o R-02; a lição é que ele
+envelhece calado, então vale reconstruir antes de confiar numa análise de
+impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 a ~80% de código escrito, mas desalinhado do schema novo |
-| Endpoints · services · repositories | 26 · 14 · 12 |
-| Testes | 62 passando · 7 services sem teste |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 2 de 7 tarefas fechadas |
+| Endpoints · services · repositories | 26 · 14 · 13 |
+| Testes | **138 passando, 3 falhando** (`app.test.js`, `nivelService.test.js`, `usuarioService.test.js`, todos por import de service — caem na T-02.3) · 7 services sem teste |
 | Dívida técnica catalogada | 15 itens abertos (DT-02 a DT-17, menos a DT-16 resolvida) |
-| Riscos abertos | 2 (R-01 schema, R-02 grafo) |
+| Riscos abertos | 1 (R-01 schema, na última parcela) |
 
 ---
 
@@ -112,7 +120,7 @@ npm run dev
 
 | Script | Resultado |
 |---|---|
-| `npm start` | Sobe na porta 3000; `/health` responde `{"status":"ok","banco":{"conectado":true,"migrationsAplicadas":7}}`. Rotas que consultam o banco devolvem 500 até a E02/E03 — ver R-01 |
+| `npm start` | **Não sobe desde a T-02.2**: os services importam repositories já renomeados e o Node falha com `ERR_MODULE_NOT_FOUND`. Volta na T-02.3 — ver R-01. Antes disso subia na porta 3000, com `/health` respondendo `{"status":"ok","banco":{"conectado":true,"migrationsAplicadas":7}}` |
 | `npm run dev` | Mesmo `start` com `node --watch` (ver armadilha na seção 7) |
 | `npm run db:migrate` | "Nenhuma migration pendente"; segunda execução idêntica — **idempotente confirmado** |
 | `npm run db:seed` | Aplica os 6 arquivos de `scripts/seeds/`. Três execuções seguidas deixam as mesmas contagens — **idempotente confirmado**. Imprime o estado do banco e as contas de desenvolvimento |
@@ -121,7 +129,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 62 passam, 0 falham. Sem MySQL, os 21 testes de banco se pulam com aviso |
+| `npm test` | 138 passam, 3 falham — as 3 são de service e caem na T-02.3. Sem MySQL, os 114 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -142,7 +150,10 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
-| Suíte de testes | `npm test` → **62 passam, 0 falham**, com MySQL no ar |
+| Suíte de testes | `npm run test:db` → **138 passam, 3 falham**, com MySQL no ar. As 3 são de service e caem na T-02.3 |
+| **Os 13 repositories contra o schema novo (T-02.2)** | 93 testes de integração em `test/integration/repositories/`, um arquivo por repository, batendo em banco real criado do zero. Cobrem o caminho feliz e as recusas do banco: total de compra que não fecha a conta, estrelas acima de 3, dia da semana fora de 0–6, alvo de tarefa zero, valor de inventário negativo, XP negativo e token de partida repetido |
+| **Idempotência onde ela paga recompensa** | Concluir tarefa, concluir meta, fechar partida e vender item duas vezes: a segunda chamada devolve 0 linhas afetadas em todas. A checagem mora no `WHERE`, então não há janela entre ler e gravar |
+| **Livro × cache, no código e não só no script** | Crédito e débito de mel, pólen e XP testados dentro de transação: o saldo e o lançamento andam juntos, e um `throw` no meio desfaz os dois |
 | **Integridade do banco, agora automatizada (DT-16)** | 21 testes de integração sobem um banco `beever_teste` do zero, aplicam migrations e seed, e exigem que o MySQL recuse as 13 gravações inválidas da E01. Verificado também o caminho sem banco (pula com aviso) e o do CI (`TESTES_DE_BANCO=1` falha) |
 | **Auditoria imutável (RNF-17)** | Migration `008` põe dois gatilhos em `audit_logs`. Testado com o usuário da aplicação: `UPDATE` e `DELETE` recusados com mensagem citando a regra, `INSERT` continua funcionando. Não é mais convenção — é o banco recusando |
 | **Requisito de admin sobrevive ao seed** | O `db:seed` limpa apenas os requisitos dos itens que ele próprio declara. Verificado: requisito criado à mão em `skin-dourada` continuou lá depois de reexecutar o seed |
@@ -182,6 +193,21 @@ como garantia sobre o banco atual:
    e senha errada).
 5. `.transition-all` no CSS resgatado sequestrava o utilitário do Tailwind.
 
+### Defeitos encontrados pelos testes da T-02.2 (evidência para o TCC)
+
+Nenhum destes tinha sintoma visível — todos foram achados por teste, que é o
+argumento a favor da rede que a T-02.1 montou.
+
+6. `LIMIT ?` com `execute` do `mysql2` derrubava três consultas: histórico de
+   compras, histórico de partidas e a leitura da auditoria. O código antigo
+   trazia o mesmo defeito em `sessaoJogoRepository`, nunca exercitado.
+7. Crédito de mel, pólen ou XP com motivo inexistente subia o saldo e **não**
+   gravava o lançamento: o `INSERT ... SELECT FROM reward_reasons` simplesmente
+   não encontrava linha. A divergência só apareceria no `db:reconcile`, dias
+   depois e longe da causa. Agora falha alto, e o rollback leva o saldo junto.
+8. Auditoria com tipo de ator desconhecido sumia calada, pelo mesmo motivo —
+   o oposto do que a RNF-17 promete.
+
 ---
 
 ## 3. Feito mas não verificado
@@ -208,14 +234,27 @@ abertura da E02, está na tabela abaixo e também no próprio
 | Tarefa | Situação |
 |---|---|
 | T-02.1 Arnês de teste com banco real + asserções de integridade | **feita** (commit `b9d9f84`) |
-| T-02.2 Realinhar os 12 repositories ao schema novo, com teste de integração para cada | **próxima** |
-| T-02.3 Realinhar services e controllers que dependem deles | pendente |
+| T-02.2 Realinhar os 13 repositories ao schema novo, com teste de integração para cada | **feita** (commits `c061fa7` e `2270762`) |
+| T-02.3 Realinhar services e controllers que dependem deles | **próxima** |
 | T-02.4 `requireOnboarding` como middleware (hoje é checagem espalhada em controllers) | pendente |
 | T-02.5 Request-id no logger | pendente |
 | T-02.6 `AuditService` com API única, gravando em `audit_logs` | pendente |
 | T-02.7 Layout EJS base, hoje só partials incluídos à mão | pendente |
 
-A T-02.2 é a que devolve a aplicação ao ar.
+A T-02.3 é a que devolve a aplicação ao ar.
+
+**O que a T-02.2 mudou de contrato**, e que a T-02.3 vai ter que absorver — não
+é rename, é semântica:
+
+1. **`inventory` perdeu a quantidade.** Uma linha por unidade, porque cada
+   unidade tem valor atual, ciclos em atraso e venda próprios.
+   `adicionarOuIncrementar` deixou de existir; agora é `adicionar`.
+2. **`tasks` não pertence mais a uma meta.** É do usuário e nasce de um
+   `task_type`, que carrega título, alvo e recompensa. Progresso é contagem até
+   o alvo, não porcentagem — some `listarPorMeta`.
+3. **`schedules` mudou de assunto.** Era o balde de metas, virou a
+   disponibilidade semanal (dias 0–6). A meta aponta para o usuário direto, e o
+   `cronogramaService` perde a razão de existir na forma atual.
 
 ### Roadmap (`docs/02-ROADMAP-ETAPAS.md`)
 
@@ -252,7 +291,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-05 | Negociação de conteúdo copiada 9 vezes em 6 controllers | P-01 | Helper único em `src/utils/`, na E02 |
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
 | DT-07 | Dois guardas de autenticação com a mesma regra; um declarado dentro de `src/routes/index.js` | P-04, C-01 | Unificar e mover para `src/middlewares/`, na E02 |
-| DT-08 | Cobertura de testes rasa: sem teste para `compraService`, `tarefaService`, `metaService`, `moedasService`, `pontosService`, `perfilService`, `authService` | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
+| DT-08 | Cobertura de testes rasa **na camada de service**: sem teste para `compraService`, `tarefaService`, `metaService`, `moedasService`, `pontosService`, `perfilService`, `authService`. A camada de repository deixou de ser rasa na T-02.2 (93 testes de integração) | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto da T-02.3 e de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
 | DT-11 | `header.ejs` e `footer.ejs` usados por 2 de 9 páginas; sem motor de layout | T-00.2 | E02/E11 |
@@ -265,18 +304,20 @@ Identificadores rastreiam os documentos da E00.
 
 ### Riscos abertos
 
-- **R-01 — ativo desde 2026-08-17.** O banco de desenvolvimento foi recriado com
-  o schema novo, e **a aplicação não funciona mais contra ele** até a E02/E03
-  realinharem os 12 repositories. Sintoma medido: `/` e `/login` respondem 200
-  (não consultam o banco), `/health` responde `ok` com 7 migrations, e o login
-  devolve **500** com `Table 'beever.usuario' doesn't exist` no log — sem vazar
-  stack trace para o cliente. O roteiro de correção está em
-  `00-MAPA-DE-NOMES-LEGADO.md`, seção 4.
+- **R-01 — ativo desde 2026-08-17, agora na segunda metade.** O banco de
+  desenvolvimento foi recriado com o schema novo e a aplicação não funciona
+  contra ele. Com a T-02.2 fechada, o sintoma **piorou antes de melhorar**: não
+  é mais 500 no login por tabela ausente, é o servidor **não subir**, com
+  `ERR_MODULE_NOT_FOUND` — os services importam os nomes de repository que
+  foram renomeados. Some na T-02.3, que é a última parcela deste risco. O
+  roteiro está em `00-MAPA-DE-NOMES-LEGADO.md`, seção 4.
   **Para voltar ao app funcionando antes disso:** restaure o dump em
   `backups/beever-antes-da-E01-*.sql` (ver seção 7).
-- **R-02** — Servidor MCP `code-review-graph` não responde (`.mcp.json` aponta
-  para `venv/bin/python3 -m code_review_graph`). Toda análise de impacto está
-  sendo manual. Investigar antes das etapas que tocam código compartilhado.
+- ~~**R-02**~~ — Encerrado em 2026-08-17: o servidor MCP `code-review-graph`
+  respondeu normalmente na sessão da T-02.2, e o grafo foi reconstruído do zero
+  (97 arquivos, 437 nós). O que fica de lição: o grafo envelhece em silêncio —
+  ele estava seis dias e vários commits atrás do HEAD, e a resposta não avisa
+  isso na cara. Reconstrua antes de confiar numa análise de impacto.
 - ~~**R-03**~~ — Encerrado: as fases 1–3 estão commitadas.
 
 ---
@@ -324,6 +365,15 @@ Não reabrir sem motivo novo.
   Já foi bug real. Ao adicionar rota de página, conferir se o path não está
   montado duas vezes em `routes/index.js` — hoje `/loja` está, e só funciona
   pela ordem de declaração.
+- **`LIMIT ?` não funciona com `execute` do `mysql2`.** O driver manda o
+  parâmetro como texto e o MySQL responde `Incorrect arguments to
+  mysqld_stmt_execute`. Use `limiteSeguro` de `src/utils/limite.js`, que devolve
+  um inteiro com teto — é o único número que pode ir interpolado no texto do
+  SQL, porque é gerado lá dentro e não vem de fora.
+- **Testes de repository precisam de `test/helpers/ambiente.js` importado
+  antes de qualquer módulo do projeto.** Ele aponta o pool para um banco de
+  teste próprio do arquivo. Se os imports forem reordenados, o teste passa a
+  escrever no banco de desenvolvimento.
 - `git status` antes de assumir que algo está salvo.
 - **`audit_logs` não aceita `UPDATE` nem `DELETE`** — nem pelo root, sem
   desabilitar os gatilhos da migration `008` de propósito. É a RNF-17
@@ -349,4 +399,4 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** T-00.5 — confirmar versões e scripts, e fechar a E00.
+**Próxima tarefa:** T-02.3 — realinhar services e controllers aos repositories novos. É ela que devolve a aplicação ao ar.
