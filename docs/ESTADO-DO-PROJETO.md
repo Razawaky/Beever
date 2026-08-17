@@ -35,9 +35,10 @@ seção 4.
 chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
 creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
 
-**O que vem agora:** T-01.7 (modelo de dados documentado com diagrama ER) e
-T-01.8 (subida completa do zero). O banco novo já sobe, semeia e reconcilia:
-`db:reset` → `db:migrate` → `db:seed` → `db:reconcile` roda limpo. O risco R-01
+**O que vem agora:** T-01.8, a subida completa do zero, e a E01 fecha. O banco
+novo já sobe, semeia e reconcilia (`db:reset` → `db:migrate` → `db:seed` →
+`db:reconcile` roda limpo) e está documentado em
+[`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md). O risco R-01
 **materializou-se como previsto**: os 12 repositories consultam tabelas em
 português que não existem mais no schema novo, então a aplicação não sobe contra
 ele até a E02/E03. O roteiro de correção, repository por repository, está em
@@ -176,7 +177,7 @@ antes de abrir a E01.
 
 | Etapa | Situação | O que falta |
 |---|---|---|
-| E01 Banco | **em andamento** | T-01.1 a T-01.6 feitas. Faltam: T-01.7 (`docs/MODELO-DE-DADOS.md` + diagrama ER) e T-01.8 (subida completa a partir de `docker-compose up`, num banco limpo de verdade e não só num banco de teste) |
+| E01 Banco | **em andamento** | T-01.1 a T-01.7 feitas. Falta só a T-01.8: subida completa a partir de `docker-compose up`, num banco limpo de verdade e não só num banco de teste |
 | E02 Núcleo | ~80% feito | `requireOnboarding` como middleware, request-id no logger, decisão sobre `AuditService` |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | **`GoalPlannerService` não existe** — metas são criadas à mão, sem RN-014/015 |
@@ -280,5 +281,7 @@ Não reabrir sem motivo novo.
 | `docs/00-INVENTARIO.md` | T-00.2 — rotas, camadas, views, migrations, assets |
 | `docs/00-CODIGO-MORTO-E-DUPLICADO.md` | T-00.3 — código morto, duplicação, desvios de camada |
 | `docs/00-MAPA-DE-NOMES-LEGADO.md` | Decisão de checkpoint — nomes de tabela e coluna, legado → novo |
+| `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
+| `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
 **Próxima tarefa:** T-00.5 — confirmar versões e scripts, e fechar a E00.
