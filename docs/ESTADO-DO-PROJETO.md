@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `0bedb04` (T-02.6 fechada)
+**Último commit:** `c687c6f` (E02 com as 7 tarefas fechadas)
 
 ---
 
@@ -59,12 +59,19 @@ concluir tarefa paga mel e pólen de verdade, com os valores vindos de
 `task_types`. O outro lado continua aberto — **nenhum XP é creditado em jogo**,
 porque nenhuma recompensa do MVP declara XP. Isso é o motor da E06.
 
-**O que vem agora:** **E02 em andamento, 6 de 7 tarefas fechadas.** A T-02.1
-entregou a rede de teste com banco real, a T-02.2 realinhou os 13 repositories,
-a T-02.3 realinhou services, controllers e telas — devolvendo a aplicação ao ar
-—, a T-02.4 tirou a checagem de onboarding de dentro dos controllers, a T-02.5
-deu um identificador a cada requisição e a T-02.6 pôs a auditoria atrás de uma
-porta só. Falta a **T-02.7**, o layout EJS base — e a etapa fecha.
+**O que vem agora:** **as 7 tarefas da E02 estão entregues.** A T-02.1 montou a
+rede de teste com banco real, a T-02.2 realinhou os 13 repositories, a T-02.3
+realinhou services, controllers e telas — devolvendo a aplicação ao ar —, a
+T-02.4 tirou a checagem de onboarding de dentro dos controllers, a T-02.5 deu um
+identificador a cada requisição, a T-02.6 pôs a auditoria atrás de uma porta só e
+a T-02.7 deu um layout base às nove páginas.
+
+O próximo passo **não é a E03**: é a auditoria da etapa, do mesmo jeito que a E01
+foi auditada antes de ser dada por concluída. Ela é que decide se a E02 fecha ou
+se sobra lição pendente. Um ponto do aceite ainda não foi exercitado: "erro
+proposital sem stack trace" só vale em produção, e a aplicação nunca subiu com
+`NODE_ENV=production` — o código esconde o stack fora de desenvolvimento, mas
+isso é leitura, não verificação.
 
 O risco R-01 foi pago em duas parcelas e **está encerrado**: repositories na
 T-02.2, camada de cima na T-02.3. O modelo está documentado em
@@ -79,10 +86,10 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 6 de 7 tarefas fechadas |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); **E02 com as 7 tarefas entregues, aguardando auditoria de etapa** |
 | Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **192 passando, 0 falhando** — 130 contra banco real, incluindo o fluxo autenticado ponta a ponta |
-| Dívida técnica catalogada | 11 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3; a DT-07 fechou por inteiro na T-02.4 |
+| Testes | **198 passando, 0 falhando** — 130 contra banco real, incluindo o fluxo autenticado ponta a ponta |
+| Dívida técnica catalogada | 10 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3, a DT-07 na T-02.4 e a DT-11 na T-02.7 |
 | Riscos abertos | nenhum |
 
 ---
@@ -145,6 +152,7 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
+| **Layout base (T-02.7)** | Servidor no ar: as quatro páginas públicas e a de erro saem com doctype, folha de estilo e título próprios; o rodapé aparece só onde deve; o wizard de onboarding continua recebendo `perfil-id` e `csrf-token` pelo dataset do body |
 | **Trilha de auditoria completa (T-02.6)** | Fluxo real percorrido com o servidor no ar: seis ações gravadas em `audit_logs` com ator, `ip_hash` (nunca o IP em claro) e um `request_id` distinto por requisição, que é o que liga a linha de auditoria ao log daquela requisição |
 | **Rastro por requisição (T-02.5)** | Servidor no ar, um 404 provocado: o mesmo id apareceu no header `x-request-id`, no corpo JSON do erro e nas linhas de log da requisição. Com `x-request-id` vindo do cliente, o id do proxy foi preservado ponta a ponta |
 | Suíte de testes | `npm run test:db` → **171 passam, 0 falham**, com MySQL no ar |
@@ -237,7 +245,7 @@ abertura da E02, está na tabela abaixo e também no próprio
 | T-02.4 `requireOnboarding` como middleware | **feita** (commit `4e6020c`) |
 | T-02.5 Request-id no logger | **feita** (commit `8510dd3`) |
 | T-02.6 `AuditService` com API única, gravando em `audit_logs` | **feita** (commit `0bedb04`) |
-| T-02.7 Layout EJS base, hoje só partials incluídos à mão | **próxima** — última da etapa |
+| T-02.7 Layout EJS base | **feita** (commit `c687c6f`) |
 
 A T-02.3 devolveu a aplicação ao ar.
 
@@ -259,7 +267,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | Etapa | Situação | O que falta |
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
-| E02 Núcleo | **em andamento** | T-02.1 a T-02.6 feitas. Falta só a T-02.7, o layout EJS base |
+| E02 Núcleo | **entregue, aguardando auditoria** | T-02.1 a T-02.7 feitas. Falta o aceite da etapa ser conferido de fora |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
@@ -292,7 +300,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-08 | Cobertura de service ainda indireta: `purchasesService`, `tasksService`, `goalsService`, `coinsService`, `pointsService`, `profilesService` e `authService` são exercitados pelo teste de fluxo, mas não têm teste próprio de caso de borda | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
-| DT-11 | `header.ejs` e `footer.ejs` usados por 2 de 9 páginas; sem motor de layout | T-00.2 | **T-02.7**, a próxima |
+| ~~DT-11~~ | ~~`header.ejs` e `footer.ejs` usados por 2 de 9 páginas; sem motor de layout~~ | T-00.2 | **Resolvida na T-02.7**: `views/layout.ejs` monta todas as páginas, sem dependência nova |
 | DT-12 | Página de edição de perfil não existe; erro 422 de formulário cai na página de erro genérica em vez de voltar ao campo | herdado | E03/E04 |
 | DT-13 | Sem workflow de CI (`.github/` só tem arquivos de plugin) | D-10 | E14 |
 | DT-14 | Sem catálogo administrável de itens (criar/editar); catálogo vem do seed | herdado | E12 |
@@ -405,4 +413,4 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** T-02.7 — layout EJS base, hoje com `header` e `footer` incluídos à mão em 2 das 9 páginas. Fecha a E02.
+**Próxima tarefa:** auditoria da E02 (`/auditar-etapa`), antes de abrir a E03.
