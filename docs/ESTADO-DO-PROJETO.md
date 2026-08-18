@@ -263,7 +263,7 @@ marcada. A tabela abaixo é a da E04, na ordem do `02-ROADMAP-ETAPAS.md`.
 | T-04.1 Auditar o onboarding existente e decidir o que reaproveitar | **feita** (commit `07bf3db`) — laudo em `docs/04-AUDITORIA-DO-ONBOARDING.md`, dois bloqueantes corrigidos |
 | T-04.2 Máquina de passos com progresso salvo a cada passo | **feita** (commit `07bf3db`) — passo gravado no servidor, retomada em outro navegador, DT-28 e DT-29 fechadas |
 | T-04.3 Persistir disponibilidade, faixa, tempo de sessão, objetivo e avatar | **feita** (commit `fd37b7f`) — tempo por sessão, som e animação coletados e gravados; avatar e objetivo conferidos contra o catálogo; DT-20 e DT-27 fechadas |
-| T-04.4 `GoalPlannerService` conforme RN-014/015 | **feita** — metas geradas ao concluir o onboarding, repostas ao concluir uma meta e completadas ao abrir o painel; decisão D-4 resolvida com tabela própria |
+| T-04.4 `GoalPlannerService` conforme RN-014/015 | **feita** (commit `a818e70`) — metas geradas ao concluir o onboarding, repostas ao concluir uma meta e completadas ao abrir o painel; decisão D-4 resolvida com tabela própria |
 | T-04.5 `requireOnboarding` bloqueando o app até concluir | **feita na T-02.4** (commit `4e6020c`) |
 | T-04.6 Edição de disponibilidade no perfil, com recálculo (RN-013) | pendente |
 | T-04.7 Testes do planner: 1, 4 e 7 dias, e edição de 5→2 dias com meta em andamento | **parcial** — os casos de 1, 4 e 7 dias vieram na T-04.4 (`test/integration/planejadorDeMetas.test.js`); falta a edição de 5→2 dias, que depende da T-04.6 |
