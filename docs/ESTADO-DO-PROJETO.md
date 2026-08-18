@@ -536,6 +536,7 @@ Não reabrir sem motivo novo.
 | **D-4 resolvida:** "dias da semana → quantas metas ativas" mora em tabela própria (`goal_plan_rules`), não em colunas de `goal_difficulties` nem em constante de código. As duas coisas coincidem hoje, mas respondem perguntas diferentes | checkpoint de abertura da T-04.4 |
 | O alvo da meta é dimensionado pelo tempo que o jogador declarou (dias × minutos × prazo), é absoluto — "chegue a 300 de mel" — e vive preso entre um piso e um teto. Os números moram em `goal_target_rules`, para serem recalibrados depois do playtest sem deploy | checkpoint de abertura da T-04.4, a pedido do usuário, com os parâmetros usados por plataformas infantojuvenis |
 | O planejador sorteia apenas entre tipos de meta que o sistema sabe medir. Abrir o leque conforme E05, E08 e E09 entregarem suas fontes é acrescentar linha em `goal_target_rules`, não mexer no planejador | T-04.4, implementando a RN-015 |
+| Quando o jogador reduz a disponibilidade e passa a ter mais metas do que a faixa nova pede, **as excedentes não são canceladas nem apagadas: ficam ativas até vencer**. Quem não concluiu no prazo não é recompensado — o progresso feito é preservado, e a meta vencida apenas deixa de pagar, sem punição (RN-017). Isso é compatível com a RN-013, que proíbe perder progresso ao editar a semana | decisão do usuário na abertura da T-04.6 |
 
 ---
 
@@ -617,8 +618,15 @@ Não reabrir sem motivo novo.
 **Próxima tarefa:** T-04.6 — edição da disponibilidade no perfil, com recálculo
 das metas preservando o progresso já feito (RN-013, RF-ONB-09). O planejador já
 está pronto do lado que interessa: ele completa o que falta e **nunca apaga meta
-ativa**, então reduzir dias não pode custar progresso. O que falta é a tela e a
-rota que gravam a semana nova fora do onboarding, e decidir o que fazer quando a
-faixa nova pede menos metas do que o jogador tem em andamento — deixar vencer ou
-manter até concluir. Fechada a T-04.6, a T-04.7 acrescenta o último caso que
-falta aos testes do planejador: editar de 5 para 2 dias com meta em andamento.
+ativa**, então reduzir dias não custa progresso.
+
+A única decisão que faltava foi tomada: quando a faixa nova pede menos metas do
+que o jogador tem em andamento, **as excedentes ficam ativas até vencer** e quem
+não concluiu no prazo simplesmente não é recompensado. Isso implica que a
+expiração precise de fato acontecer — `goalsRepository.expirarVencidas` existe e
+hoje **ninguém a chama** —, então a T-04.6 leva junto a expiração preguiçosa,
+quando o jogador abre a tela. A oferta de renovação com prazo estendido e
+recompensa pela metade (RN-017, RF-MET-05) continua fora: é E06.
+
+Fechada a T-04.6, a T-04.7 acrescenta o último caso que falta aos testes do
+planejador: editar de 5 para 2 dias com meta em andamento.
