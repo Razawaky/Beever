@@ -260,6 +260,13 @@ export async function atualizarDisponibilidade(idPerfil, idUsuario, dias) {
 
   await exigirPosse(idPerfil, idUsuario);
 
+  // Tira da frente o que já venceu, antes de contar quantas metas o jogador
+  // tem. Meta fora do prazo continua com status `ativa` no banco até alguém
+  // marcá-la, e a expiração é preguiçosa — sem esta linha, ela entraria na
+  // conta do planejador e a semana nova nasceria com meta a menos, até a
+  // próxima visita ao painel. Mesma ordem do painel e da tela de metas.
+  await goalsService.expirarVencidas(idUsuario);
+
   const antes = await schedulesService.diasDisponiveis(idUsuario);
   const metasAntes = await goalsService.listarAtivas(idUsuario);
 

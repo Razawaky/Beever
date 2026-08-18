@@ -77,6 +77,25 @@ recompensa errada, vaza dado ou deixa entrada sem validação.
 
 ---
 
+## 3.1 O que já foi corrigido
+
+Corrigido na mesma sessão da auditoria, no commit que a acompanha:
+
+- **L-1** — `atualizarDisponibilidade` passou a expirar as vencidas antes de
+  contar as ativas, na mesma ordem do painel e da tela de metas. Teste novo em
+  `disponibilidade.test.js`: "trocar a semana expira as vencidas antes de contar
+  o plano".
+- **L-2** — a renovação da RN-017 virou a **DT-33**, com dono na E06.
+- **L-3** — o aviso da tela de perfil ganhou `role="status"` e
+  `aria-live="polite"`, com teste que confere os dois atributos no HTML servido.
+- **L-7** — a seção "Próxima tarefa" do estado do projeto foi reescrita para a
+  T-05.1.
+
+As quatro restantes (L-4, L-5, L-6, L-8) seguem abertas, com o encaminhamento
+da seção 4.
+
+---
+
 ## 4. Veredito
 
 **Pode avançar.** Zero itens bloqueantes. Os requisitos da E04 estão atendidos e

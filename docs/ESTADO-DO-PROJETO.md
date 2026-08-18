@@ -4,8 +4,8 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-18 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-04.6 e T-04.7 — a semana virou editável no perfil, sem
-custar progresso, e as metas vencidas passaram a expirar de fato
+**Último commit:** auditoria da E04 — a etapa fechou sem bloqueantes, e as três
+lacunas de maior risco do laudo foram corrigidas na mesma sessão
 
 ---
 
@@ -44,7 +44,7 @@ cadastro, onboarding, painel, loja, tarefa, compra, meta, logout — e virou
 teste automatizado, em vez de ficar como print numa conversa.
 
 **O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
-repository), 270 testes passando — 205 deles contra um banco real, incluindo as
+repository), 272 testes passando — 205 deles contra um banco real, incluindo as
 rotas autenticadas, o onboarding retomado em outra sessão, as metas geradas pelo
 planejador e a semana editada sem perder progresso —, `npm audit` limpo,
 `db:reconcile` fechando os quatro livros.
@@ -107,10 +107,10 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | **4 de 16** — E00, E01, E02 e E03, todas auditadas |
+| Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
 | Endpoints · services · repositories | 33 · 17 · 13 |
-| Testes | **270 passando, 0 falhando** (205 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
-| Dívida técnica catalogada | 12 itens abertos — a T-04.4 abriu DT-31 e DT-32 |
+| Testes | **272 passando, 0 falhando** (207 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Dívida técnica catalogada | 13 itens abertos — a T-04.4 abriu DT-31 e DT-32, e a auditoria da E04 abriu DT-33 |
 | Riscos abertos | nenhum |
 
 ---
@@ -152,7 +152,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 270 passam, 0 falham. Sem MySQL, os 205 testes de banco se pulam com aviso |
+| `npm test` | 272 passam, 0 falham. Sem MySQL, os 207 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -457,7 +457,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
-| E04 Onboarding e metas | **tarefas concluídas, auditoria pendente** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues; falta a auditoria da etapa** |
+| E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
@@ -509,6 +509,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-30 | A regra de arredondamento da barra de progresso existe duas vezes: em `src/utils/barraDeProgresso.js`, para as páginas renderizadas no servidor, e em `src/public/js/onboarding.js`, para o wizard. São cinco caracteres de conta, mas duas cópias mesmo assim — o navegador não consegue importar de `src/utils` enquanto não houver bundler ou um módulo servido em `src/public` | T-04.2 | E11, junto do trabalho de front: ou um módulo compartilhado servido como estático, ou a barra do wizard passa a ser montada pelo servidor |
 | DT-31 | A calibragem dos alvos das metas é um chute educado, não medição: `goal_target_rules` diz que uma sessão de 10 minutos vale 25 de mel, e as tarefas de hoje pagam mais ou menos isso — mas quem vai pagar de verdade são as células e os jogos, que ainda não existem. Uma meta escalada (a segunda ou a terceira do mesmo tipo no plano) pode estar acima do que a economia atual permite ganhar no prazo | T-04.4 | E07, quando os jogos pagarem; é editar seed e rodar, sem tocar em código |
 | DT-32 | A meta de "atingir nível" é mensurável mas ainda inalcançável: nenhuma recompensa do MVP credita XP, então o nível não sobe e a meta fica parada. Ela não é meta impossível por desenho — é impossível por falta do motor de XP, que é o buraco conhecido da E06 | T-04.4 | E06, junto do motor de recompensa. Se atrasar, a saída é uma linha a menos em `goal_target_rules` |
+| DT-33 | A RN-017 tem duas metades e só uma existe: a meta vencida entra em `expirada` sem punição, mas **a oferta de renovação — prazo estendido e recompensa reduzida em 50% — não foi construída**. Hoje a meta vencida simplesmente some das ativas e o planejador põe outra no lugar, então o jogador perde o trabalho já feito naquela meta específica sem a chance de retomá-la. É também a RF-MET-05 | auditoria da E04, L-2 | E06, junto do motor de recompensa, que é quem sabe calcular recompensa pela metade |
 | DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos
@@ -637,19 +638,29 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 | `docs/04-AUDITORIA-DO-ONBOARDING.md` | T-04.1 — onboarding requisito a requisito, veredito peça por peça e o contrato do `GoalPlannerService` |
+| `docs/04-AUDITORIA-DA-ETAPA.md` | Auditoria da E04 — RF-ONB-01 a 09 e RN-011 a 018 com arquivo e teste que provam cada um, oito lacunas em ordem de risco, veredito "pode avançar" |
 
-**Próxima tarefa:** T-04.6 — edição da disponibilidade no perfil, com recálculo
-das metas preservando o progresso já feito (RN-013, RF-ONB-09). O planejador já
-está pronto do lado que interessa: ele completa o que falta e **nunca apaga meta
-ativa**, então reduzir dias não custa progresso.
+**Próxima tarefa:** T-05.1 — os repositories de favo, célula, conteúdo e
+progresso, que abrem a **E05 (conteúdo e trilha)**. É a primeira etapa que
+constrói o que o jogador de fato joga: hoje favo e célula não existem em lugar
+nenhum fora do seed.
 
-A única decisão que faltava foi tomada: quando a faixa nova pede menos metas do
-que o jogador tem em andamento, **as excedentes ficam ativas até vencer** e quem
-não concluiu no prazo simplesmente não é recompensado. Isso implica que a
-expiração precise de fato acontecer — `goalsRepository.expirarVencidas` existe e
-hoje **ninguém a chama** —, então a T-04.6 leva junto a expiração preguiçosa,
-quando o jogador abre a tela. A oferta de renovação com prazo estendido e
-recompensa pela metade (RN-017, RF-MET-05) continua fora: é E06.
+A E04 está **concluída e auditada** (`docs/04-AUDITORIA-DA-ETAPA.md`): pode
+avançar, zero bloqueantes. Das oito lacunas do laudo, três foram fechadas na
+mesma sessão — a expiração antes do replanejamento (L-1), o aviso da tela de
+perfil anunciado por leitor de tela (L-3) e a renovação da RN-017, agora
+catalogada como **DT-33** (L-2). As cinco restantes são de risco baixo e têm
+etapa marcada no próprio laudo: a lista de metas que só atualiza ao recarregar,
+o foco de teclado das caixas de dia, a largura da tela de perfil desalinhada do
+cabeçalho, e o tempo por sessão editável sem replanejar (atrelado à DT-12).
 
-Fechada a T-04.6, a T-04.7 acrescenta o último caso que falta aos testes do
-planejador: editar de 5 para 2 dias com meta em andamento.
+Duas coisas que a E05 vai precisar saber sobre o que a E04 deixou pronto:
+
+1. **O planejador pergunta antes de sortear.** Ele só cria meta de tipo que tem
+   régua de alvo em `goal_target_rules` **e** fonte de progresso conhecida em
+   `goalProgressSources`. Quando a E05 entregar favo e célula, o leque abre com
+   uma linha de seed e uma fonte nova — sem tocar no planejador.
+2. **A expiração é preguiçosa**, e acontece quando o jogador abre o painel, a
+   tela de metas ou o perfil, e ao trocar a semana. Não há rotina diária neste
+   MVP; quem depender de status atualizado precisa chamar
+   `goalsService.sincronizarProgresso` ou `expirarVencidas` antes de contar.

@@ -206,4 +206,43 @@ describe('edição da disponibilidade', opcoes, () => {
     assert.equal(resposta.body.metasExcedentes, 0);
     assert.equal((await metasAtivas()).length, 3);
   });
+
+  /**
+   * A expiração é preguiçosa: a meta vencida continua com status `ativa` no
+   * banco até alguém marcá-la. Quem troca a semana sem passar pelo painel antes
+   * precisa que a própria troca faça essa marcação — senão a vencida entraria na
+   * conta do planejador e a semana nova nasceria com meta a menos.
+   */
+  it('trocar a semana expira as vencidas antes de contar o plano', async () => {
+    const antes = await metasAtivas();
+    assert.equal(antes.length, 3);
+
+    await banco.conexao.query(
+      'UPDATE goals SET starts_at = NOW() - INTERVAL 10 DAY, due_at = NOW() - INTERVAL 1 DAY WHERE user_id = ?',
+      [idUsuario],
+    );
+
+    // Direto na rota da disponibilidade, sem abrir o painel no meio.
+    const resposta = await salvarDias(SEMANA_CHEIA).expect(200);
+
+    assert.equal(resposta.body.metasPedidas, 3);
+    assert.equal(resposta.body.metasGeradas, 3, 'as três venceram, então as três são repostas na hora');
+    assert.equal(resposta.body.metasExcedentes, 0);
+
+    const depois = await metasAtivas();
+    assert.equal(depois.length, 3);
+    assert.ok(
+      depois.every((meta) => !antes.some((velha) => Number(velha.id) === Number(meta.id))),
+      'nenhuma das vencidas continuou contando como ativa',
+    );
+  });
+
+  it('o aviso do resultado é anunciado por leitor de tela', async () => {
+    const pagina = await agente.get('/perfil').set('Accept', 'text/html').expect(200);
+    const aviso = /<p\b[^>]*id="aviso-disponibilidade"[^>]*>/.exec(pagina.text);
+
+    assert.ok(aviso, 'o parágrafo de aviso existe na página');
+    assert.match(aviso[0], /role="status"/);
+    assert.match(aviso[0], /aria-live="polite"/);
+  });
 });

@@ -44,7 +44,14 @@
             <% }) %>
           </fieldset>
 
-          <p id="aviso-disponibilidade" class="mt-4 hidden rounded-lg bg-white px-4 py-3 text-sm"></p>
+          <%# O resultado de salvar aparece por JavaScript. Sem `role="status"`,
+              quem usa leitor de tela trocaria a semana sem ouvir o que mudou. %>
+          <p
+            id="aviso-disponibilidade"
+            role="status"
+            aria-live="polite"
+            class="mt-4 hidden rounded-lg bg-white px-4 py-3 text-sm"
+          ></p>
 
           <div class="mt-6 flex items-center gap-4">
             <button
