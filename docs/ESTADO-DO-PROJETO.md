@@ -109,8 +109,8 @@ impacto.
 | Em números | |
 |---|---|
 | Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
-| Endpoints · services · repositories | 32 · 18 · 17 |
-| Testes | **318 passando, 0 falhando** (240 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Endpoints · services · repositories | 32 · 19 · 17 |
+| Testes | **330 passando, 0 falhando** (248 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 15 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33, a correção de escopo abriu DT-34 e a T-05.2 abriu DT-35 |
 | Riscos abertos | nenhum |
 
@@ -153,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 318 passam, 0 falham. Sem MySQL, os 240 testes de banco se pulam com aviso |
+| `npm test` | 330 passam, 0 falham. Sem MySQL, os 248 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -262,7 +262,7 @@ argumento a favor da rede que a T-02.1 montou.
 |---|---|
 | T-05.1 Repositories de favo, célula, conteúdo e progresso | **feita** — `hivesRepository`, `cellsRepository`, `contentsRepository` e `progressRepository`, com 21 testes contra banco real |
 | T-05.2 `ContentService`: favos e células com estado, desbloqueio (RN-026/027/028) | **feita** — trilha, lista de células e abertura de célula, com o pré-requisito conferido no service e não só na tela |
-| T-05.3 `ProgressService`: tentativa, erros, estrelas, tempo, percentual do favo | pendente |
+| T-05.3 `ProgressService`: tentativa, erros, estrelas, percentual do favo | **feita** — RN-030 com dono único, tentativa e percentual na mesma transação, sem pagar nada |
 | T-05.4 Views da trilha e da lista de células | pendente |
 | T-05.5 Filtro por faixa de idade | pendente — depende de semear as faixas B e C (DT-17) |
 | T-05.6 Testes: célula travada não abre; 80% libera o favo seguinte; patrimônio respeitado | pendente |
@@ -320,6 +320,31 @@ prática exige uso do cofre", e o cofre é E09: quando ele existir, a soma passa
 vir de dois lugares e o service tem de perguntar aos dois. É a **DT-35**. Nenhum
 favo semeado exige patrimônio, então o caminho está testado com favo montado no
 teste, não em produção às cegas.
+
+**O que a T-05.3 entregou.** O `progressService` transforma "errou 2, concluiu"
+em estrelas (RN-030), grava a tentativa e recalcula o percentual do favo na mesma
+transação. Ele **não paga nada**: XP, mel e pólen são do motor de recompensas
+(E06), e toda função aceita conexão de fora justamente para a E06 chamá-las de
+dentro da transação que credita.
+
+**A fronteira com a T-06.5 foi decidida aqui, e vale registrar.** O roadmap dá
+"calcula estrelas" às duas tarefas. A regra da RN-030 ficou com este service, em
+função pura e testada; a T-06.5 valida as respostas no servidor, descobre quantos
+erros houve e chama daqui. Uma regra, um lugar — duas cópias da tabela de
+estrelas seria a pior coisa a deixar para a etapa seguinte.
+
+Três coisas que valem lembrar:
+
+1. **Mandar resultado para célula travada é recusado.** A conferência da T-05.2
+   protegia a leitura; sem esta, bastava enviar uma conclusão para destravar a
+   trilha inteira. Tem teste com esse nome.
+2. **Repetição é sinalizada, não cobrada.** O retorno traz `ehRepeticao`, que é o
+   que a RN-008 vai usar para pagar 25% de XP e zero mel — a decisão de quanto
+   pagar continua sendo da E06.
+3. **O tempo de partida não entra em `cell_progress`.** A coluna
+   `duration_seconds` já existe em `game_sessions`, junto do token e do
+   `is_replay`, e quem a escreve é o `GameSessionService` (T-06.5). Acrescentar
+   coluna de tempo aqui duplicaria dado que já tem lugar.
 
 
 ---
@@ -528,7 +553,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
-| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio e a recusa de abrir célula travada. Faltam T-05.3 a T-05.6 |
+| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas e recalculando o favo. Faltam T-05.4 a T-05.6 |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |

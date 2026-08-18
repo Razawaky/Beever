@@ -18,8 +18,9 @@ const CONCLUIDA = 'cp.first_completed_at IS NOT NULL AND cp.stars >= 1';
 
 const CELULA_ATIVA = 'c.is_active = 1 AND c.deleted_at IS NULL';
 
-export async function buscarProgressoDaCelula(idUsuario, idCelula) {
-  const linhas = await consultar(
+export async function buscarProgressoDaCelula(idUsuario, idCelula, conexao = null) {
+  const linhas = await consultarEm(
+    conexao,
     `SELECT cp.id, cp.user_id, cp.cell_id, cp.stars, cp.attempts, cp.errors,
             cp.best_score, cp.first_completed_at, cp.last_completed_at
        FROM cell_progress cp
