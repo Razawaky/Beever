@@ -58,6 +58,12 @@
 
 **Aceite:** app sobe contra o schema novo, login funciona ponta a ponta, `/health` responde, erro proposital retorna JSON/página tratada sem stack trace, e a suíte cobre as rotas autenticadas.
 
+**Auditoria da etapa (2026-08-17):** reprovou a primeira versão por dois
+bloqueantes na economia — conclusão de tarefa e de meta pagavam sem exigir que
+o alvo fosse cumprido, e a meta nascia com recompensa zero. Corrigidos no commit
+`27bdc8b`, com o comportamento verificado contra o servidor real. As lacunas não
+bloqueantes viraram as dívidas DT-18 a DT-22, cada uma com etapa marcada.
+
 ---
 
 ## E03 — Autenticação

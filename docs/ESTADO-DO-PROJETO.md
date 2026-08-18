@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `c687c6f` (E02 com as 7 tarefas fechadas)
+**Último commit:** `27bdc8b` (E02 auditada e os bloqueantes corrigidos)
 
 ---
 
@@ -31,7 +31,7 @@ Se você só tem tempo para esta seção, ela basta. O resto do documento é a
 evidência por trás dela.
 
 **Onde estamos:** E00 (auditoria) e **E01 (banco de dados) concluídas e
-auditadas**. O banco definitivo existe e roda: 9 migrations versionadas, 56
+auditadas**. O banco definitivo existe e roda: 10 migrations versionadas, 56
 tabelas, 67 foreign keys, 39 `CHECK`, 43 `UNIQUE`, auditoria imutável por
 gatilho, seeds com usuário demo jogável, e o ciclo `docker compose up` →
 `db:migrate` → `db:seed` → `db:reconcile` funcionando do zero. O schema anterior
@@ -66,12 +66,21 @@ T-02.4 tirou a checagem de onboarding de dentro dos controllers, a T-02.5 deu um
 identificador a cada requisição, a T-02.6 pôs a auditoria atrás de uma porta só e
 a T-02.7 deu um layout base às nove páginas.
 
-O próximo passo **não é a E03**: é a auditoria da etapa, do mesmo jeito que a E01
-foi auditada antes de ser dada por concluída. Ela é que decide se a E02 fecha ou
-se sobra lição pendente. Um ponto do aceite ainda não foi exercitado: "erro
-proposital sem stack trace" só vale em produção, e a aplicação nunca subiu com
-`NODE_ENV=production` — o código esconde o stack fora de desenvolvimento, mas
-isso é leitura, não verificação.
+**A auditoria da etapa aconteceu e reprovou a primeira versão.** Dois
+bloqueantes, os dois na economia do jogo:
+
+1. **Mel infinito.** Criar tarefa e concluir na sequência pagava a recompensa
+   cheia sem cumprir nada, em laço. O teste de fluxo desta própria etapa
+   explorava o buraco sem perceber, para juntar mel antes de comprar.
+2. **Meta que não pagava.** Toda meta nascia com recompensa zero, e a tela
+   chegava a anunciar "rendeu 0 de mel e 0 de pólen". A meta tinha ainda o mesmo
+   atalho da tarefa — concluir sem ter alcançado —, que a auditoria não isolou e
+   apareceu ao corrigir o primeiro.
+
+Ambos corrigidos no commit `27bdc8b`, com o comportamento verificado contra o
+servidor real. O terceiro item — erro sem stack em produção — virou teste
+permanente (`test/integration/erroEmProducao.test.js`) em vez de uma subida
+manual que ninguém repetiria.
 
 O risco R-01 foi pago em duas parcelas e **está encerrado**: repositories na
 T-02.2, camada de cima na T-02.3. O modelo está documentado em
@@ -86,9 +95,9 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); **E02 com as 7 tarefas entregues, aguardando auditoria de etapa** |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); **E02 auditada, com os dois bloqueantes corrigidos** |
 | Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **198 passando, 0 falhando** — 130 contra banco real, incluindo o fluxo autenticado ponta a ponta |
+| Testes | **207 passando, 0 falhando** — incluindo o fluxo autenticado ponta a ponta e o comportamento do erro em produção |
 | Dívida técnica catalogada | 10 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3, a DT-07 na T-02.4 e a DT-11 na T-02.7 |
 | Riscos abertos | nenhum |
 
@@ -246,6 +255,7 @@ abertura da E02, está na tabela abaixo e também no próprio
 | T-02.5 Request-id no logger | **feita** (commit `8510dd3`) |
 | T-02.6 `AuditService` com API única, gravando em `audit_logs` | **feita** (commit `0bedb04`) |
 | T-02.7 Layout EJS base | **feita** (commit `c687c6f`) |
+| Auditoria da etapa + correção dos bloqueantes | **feita** (commit `27bdc8b`) |
 
 A T-02.3 devolveu a aplicação ao ar.
 
@@ -267,7 +277,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | Etapa | Situação | O que falta |
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
-| E02 Núcleo | **entregue, aguardando auditoria** | T-02.1 a T-02.7 feitas. Falta o aceite da etapa ser conferido de fora |
+| E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
@@ -297,6 +307,11 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-05~~ | ~~Negociação de conteúdo copiada 9 vezes em 6 controllers~~ | P-01 | **Resolvido na T-02.3**: `querJson` em `src/utils/resposta.js` |
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
 | ~~DT-07~~ | ~~Dois guardas de autenticação com a mesma regra, um deles dentro de `src/routes/index.js`~~ | P-04, C-01 | **Resolvido por inteiro na T-02.4**: o guarda saiu do arquivo de rotas na T-02.3 e foi absorvido por `requireOnboarding`/`requireOnboardingPendente`, que respondem conforme o cliente — redirecionamento para HTML, código de erro para JSON |
+| DT-18 | Compra não é idempotente: dois cliques rápidos criam duas compras e debitam duas vezes. `idempotency_keys` existe no schema, semeada, e não é usada por ninguém | auditoria da E02 | E06 — é onde o motor de recompensa e a economia ganham dono |
+| DT-19 | `reward_configs` (54 linhas semeadas) não é lida por nenhum service. Ela é indexada por tipo de jogo, faixa e estrelas, então só ganha uso quando a célula existir | auditoria da E02 | E06/E07 |
+| DT-20 | Onboarding não coleta tempo por sessão (5/10/20) nem preferências de som e animação, que a RN-011 e a RN-050 pedem. Ficam no padrão | auditoria da E02 | E04 |
+| DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
+| DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
 | DT-08 | Cobertura de service ainda indireta: `purchasesService`, `tasksService`, `goalsService`, `coinsService`, `pointsService`, `profilesService` e `authService` são exercitados pelo teste de fluxo, mas não têm teste próprio de caso de borda | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
@@ -413,4 +428,4 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** auditoria da E02 (`/auditar-etapa`), antes de abrir a E03.
+**Próxima tarefa:** E03 — autenticação. O que falta lá é consentimento do responsável (RNF-34) e os testes de brute force e sessão expirada.
