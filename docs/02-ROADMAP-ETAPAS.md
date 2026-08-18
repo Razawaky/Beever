@@ -75,8 +75,8 @@ bloqueantes viraram as dívidas DT-18 a DT-22, cada uma com etapa marcada.
 | T-03.2 | `AuthService`: hash bcrypt, validação de senha, criação de usuário + perfil na mesma transação | **já feita** na T-02.3 — a transação cobre conta, perfil, carteira e nível |
 | T-03.3 | Rotas e controllers de registro/login/logout com validação e rate limit | **já feita** na T-02.3 |
 | T-03.4 | Views de registro e login com a identidade visual | **já feita**, dentro do layout base da T-02.7 |
-| T-03.5 | Consentimento do responsável no registro (RNF-34) | pendente — é o que sobra de código nesta etapa |
-| T-03.6 | Testes: senha fraca, e-mail duplicado, credencial errada, sessão expirada, brute force barrado | pendente — nenhum destes cinco tem teste hoje |
+| T-03.5 | Consentimento do responsável no registro (RNF-34) | **feita** — commit `c2f1eab`; prova gravada em `guardian_consents`, com o e-mail do registro e o hash de origem |
+| T-03.6 | Testes: senha fraca, e-mail duplicado, credencial errada, sessão expirada, brute force barrado | **feita** — commit `0a21cc9`, dez casos, incluindo não-enumeração de contas e o acerto de senha que não é barrado junto com o atacante |
 
 **Aceite:** registrar → logar → acessar rota privada → sair. Sem senha em log.
 

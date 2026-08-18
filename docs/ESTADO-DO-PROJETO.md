@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `c2f1eab` (T-03.5 — consentimento do responsável)
+**Último commit:** `0a21cc9` (E03 fechada)
 
 ---
 
@@ -95,9 +95,9 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 auditada e fechada; **E03 com 5 de 6 tarefas** |
+| Etapas do roadmap prontas | **4 de 16** — E00, E01, E02 (auditada) e E03 |
 | Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **215 passando, 0 falhando** — incluindo o fluxo autenticado ponta a ponta e o comportamento do erro em produção |
+| Testes | **225 passando, 0 falhando** — fluxo autenticado ponta a ponta, erro em produção, recusas de autenticação e força bruta |
 | Dívida técnica catalogada | 10 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3, a DT-07 na T-02.4 e a DT-11 na T-02.7 |
 | Riscos abertos | nenhum |
 
@@ -161,6 +161,8 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
+| **Consentimento do responsável (T-03.5)** | Contra o servidor real: criança sem autorização recebe 422 `CONSENTIMENTO_NECESSARIO` e nenhuma linha é criada; com autorização, a conta nasce com a linha em `guardian_consents`, e-mail do responsável e `ip_hash`; adulto se cadastra sem nada disso. Conferido no banco |
+| **Recusas da autenticação (T-03.6)** | Dez casos automatizados: senha fraca nas três formas, e-mail repetido, credencial errada, conta inativa, sessão apagada do store, logout que invalida no servidor e força bruta com o rate limit ligado |
 | **Layout base (T-02.7)** | Servidor no ar: as quatro páginas públicas e a de erro saem com doctype, folha de estilo e título próprios; o rodapé aparece só onde deve; o wizard de onboarding continua recebendo `perfil-id` e `csrf-token` pelo dataset do body |
 | **Trilha de auditoria completa (T-02.6)** | Fluxo real percorrido com o servidor no ar: seis ações gravadas em `audit_logs` com ator, `ip_hash` (nunca o IP em claro) e um `request_id` distinto por requisição, que é o que liga a linha de auditoria ao log daquela requisição |
 | **Rastro por requisição (T-02.5)** | Servidor no ar, um 404 provocado: o mesmo id apareceu no header `x-request-id`, no corpo JSON do erro e nas linhas de log da requisição. Com `x-request-id` vindo do cliente, o id do proxy foi preservado ponta a ponta |
@@ -278,7 +280,7 @@ A T-02.3 devolveu a aplicação ao ar.
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
-| E03 Autenticação | **quase fechada** | T-03.1 a T-03.4 vieram prontas da E02; a T-03.5 (consentimento do responsável, RNF-34) foi entregue no commit `c2f1eab`. Falta só a **T-03.6**: senha fraca, e-mail duplicado, credencial errada, sessão expirada e brute force barrado |
+| E03 Autenticação | **concluída, aguardando auditoria** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam a etapa |
 | E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
@@ -429,6 +431,7 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** T-03.6 — os cinco testes de segurança que fecham a E03:
-senha fraca, e-mail duplicado, credencial errada, sessão expirada e brute force
-barrado. Nenhum existe hoje; o resto da etapa está entregue.
+**Próxima tarefa:** auditoria da E03 (`/auditar-etapa`) e, depois dela, a E04 —
+onboarding e planejador de metas, onde mora o `GoalPlannerService` que ainda não
+existe (RN-014 e RN-015), mais a DT-20 (tempo por sessão e preferências de som e
+animação, que o onboarding ainda não coleta).
