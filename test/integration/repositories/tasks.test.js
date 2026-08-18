@@ -58,6 +58,12 @@ describe('tasksRepository', opcoes, () => {
     return { idUsuario, id };
   }
 
+  /** Leva a tarefa até o alvo, que é a única forma de poder concluí-la. */
+  async function cumprir(id) {
+    const alvo = Number((await tasksRepository.buscarPorId(id)).target_value);
+    await emTransacao((c) => tasksRepository.registrarProgresso(c, id, alvo));
+  }
+
   it('herda alvo e recompensa do tipo quando nada é informado', async () => {
     const { id } = await tarefaNova('padrao');
     const tarefa = await tasksRepository.buscarPorId(id);
@@ -100,8 +106,18 @@ describe('tasksRepository', opcoes, () => {
     );
   });
 
+  it('não conclui tarefa que não foi cumprida', async () => {
+    const { id } = await tarefaNova('sem-progresso');
+
+    const afetadas = await emTransacao((c) => tasksRepository.concluir(c, id));
+
+    assert.equal(afetadas, 0, 'concluir sem cumprir era o atalho do mel infinito');
+    assert.equal((await tasksRepository.buscarPorId(id)).status, 'ativa');
+  });
+
   it('conclui uma vez só (clique duplo não credita duas vezes)', async () => {
     const { id } = await tarefaNova('idempotente');
+    await cumprir(id);
 
     const primeira = await emTransacao((c) => tasksRepository.concluir(c, id));
     const segunda = await emTransacao((c) => tasksRepository.concluir(c, id));
@@ -117,6 +133,7 @@ describe('tasksRepository', opcoes, () => {
 
   it('tarefa concluída não aceita mais progresso', async () => {
     const { id } = await tarefaNova('congelada');
+    await cumprir(id);
     await emTransacao((c) => tasksRepository.concluir(c, id));
 
     const afetadas = await emTransacao((c) => tasksRepository.registrarProgresso(c, id, 5));
@@ -145,6 +162,7 @@ describe('tasksRepository', opcoes, () => {
 
   it('a expiração não mexe em tarefa já concluída', async () => {
     const { id } = await tarefaNova('concluida-vencida', ONTEM);
+    await cumprir(id);
     await emTransacao((c) => tasksRepository.concluir(c, id));
 
     await tasksRepository.expirarVencidas();

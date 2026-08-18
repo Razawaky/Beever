@@ -49,6 +49,9 @@ export const onboarding = (req, res) => {
 };
 
 export const painel = assincrono(async (req, res) => {
+  await tasksService.garantirTarefasDoDia(req.session.usuarioId);
+  await goalsService.sincronizarProgresso(req.session.usuarioId);
+
   const [perfil, inventario, metas, tarefas] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
     inventoryService.listarAgrupadoPorItem(req.session.usuarioId),
@@ -77,10 +80,15 @@ export const loja = assincrono(async (req, res) => {
 });
 
 export const metas = assincrono(async (req, res) => {
-  const [listaDeMetas, tarefas, tiposDeTarefa] = await Promise.all([
+  // As tarefas do dia nascem aqui, quando o jogador entra — geração *lazy*, como
+  // o ciclo econômico —, e o progresso das metas é relido das fontes reais antes
+  // de a tela mostrar qualquer número.
+  await tasksService.garantirTarefasDoDia(req.session.usuarioId);
+  await goalsService.sincronizarProgresso(req.session.usuarioId);
+
+  const [listaDeMetas, tarefas] = await Promise.all([
     goalsService.listarDoUsuario(req.session.usuarioId),
     tasksService.listarDoUsuario(req.session.usuarioId),
-    tasksService.listarTiposDisponiveis(),
   ]);
 
   renderizarPagina(res, 'metas', {
@@ -88,7 +96,6 @@ export const metas = assincrono(async (req, res) => {
     classeBody: FUNDO_CERA,
     metas: listaDeMetas,
     tarefas,
-    tiposDeTarefa,
   });
 });
 

@@ -102,19 +102,29 @@ export async function registrarProgresso(conexao, id, incremento = 1) {
 }
 
 /**
- * Conclui a tarefa. O `AND completed_at IS NULL` faz a checagem e a gravação na
- * mesma instrução, então clicar "concluir" duas vezes rápido não credita
- * recompensa duas vezes: a segunda chamada devolve 0 linhas afetadas e o
- * service sabe que não deve creditar nada.
+ * Conclui a tarefa — e só conclui o que foi de fato cumprido.
+ *
+ * Duas condições no mesmo `WHERE`, cada uma fechando um buraco:
+ *
+ * - `completed_at IS NULL` faz a checagem e a gravação na mesma instrução, então
+ *   clicar "concluir" duas vezes rápido não credita recompensa duas vezes.
+ * - `current_value >= target_value` impede o atalho que a auditoria da E02
+ *   encontrou: criar tarefa e concluir na sequência, sem cumprir nada, pagava a
+ *   recompensa cheia. Em loop, era mel infinito. Quem decide que o alvo foi
+ *   atingido é o progresso registrado pelo servidor, nunca o clique.
+ *
+ * Não se grava mais `current_value = target_value` aqui: o valor já tem que
+ * estar lá. Igualar na conclusão era justamente o que mascarava o abuso.
  */
 export async function concluir(conexao, id) {
   const resultado = await consultarEm(
     conexao,
     `UPDATE tasks
-        SET current_value = target_value,
-            completed_at = NOW(),
+        SET completed_at = NOW(),
             status_id = (SELECT id FROM goal_statuses WHERE slug = 'concluida')
-      WHERE id = ? AND completed_at IS NULL`,
+      WHERE id = ?
+        AND completed_at IS NULL
+        AND current_value >= target_value`,
     [id],
   );
   return resultado.affectedRows;
@@ -145,5 +155,21 @@ export async function listarTipos() {
        JOIN task_scopes sc ON sc.id = tt.scope_id
       WHERE tt.is_active = 1
       ORDER BY sc.slug, tt.name`,
+  );
+}
+
+/**
+ * Tarefas ativas do jogador num escopo (`diaria` ou `semanal`) criadas a partir
+ * de um instante. É o que o gerador consulta para não criar em duplicidade — a
+ * pergunta que ele faz é "já existe tarefa diária de hoje?".
+ */
+export async function listarAtivasPorEscopoDesde(idUsuario, escopo, desde) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM tasks t
+       ${JOINS}
+      WHERE t.user_id = ? AND sc.slug = ? AND st.slug = 'ativa' AND t.created_at >= ?
+      ORDER BY t.id`,
+    [idUsuario, escopo, desde],
   );
 }

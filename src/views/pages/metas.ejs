@@ -104,43 +104,13 @@
       <% }) %>
     </div>
 
-    <section class="mb-10 rounded-favo bg-white p-6 shadow-md">
-      <h2 class="mb-4 text-lg font-semibold">Nova tarefa</h2>
-      <%#
-        O texto da tarefa não é digitado: ele vem do catálogo `task_types`,
-        que já traz o alvo e a recompensa. Assim a colmeia paga o que
-        prometeu, sem ninguém inventar quanto vale.
-      %>
-      <form method="POST" action="/tarefas" class="grid gap-3 sm:grid-cols-2">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-        <select
-          name="tipo"
-          required
-          class="rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta sm:col-span-2"
-        >
-          <% tiposDeTarefa.forEach((tipo) => { %>
-            <option value="<%= tipo.slug %>">
-              <%= tipo.name %> (<%= tipo.scope %>) · <%= tipo.reward_points %> de pólen, <%= tipo.reward_coins %> de mel
-            </option>
-          <% }) %>
-        </select>
-        <div>
-          <label class="mb-1 block text-xs text-tinta-suave">Prazo</label>
-          <input
-            type="date"
-            name="data_prazo"
-            required
-            class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
-          />
-        </div>
-        <button
-          type="submit"
-          class="self-end rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-        >
-          Adicionar tarefa
-        </button>
-      </form>
-    </section>
+    <h2 class="mb-2 text-lg font-semibold">Tarefas de hoje</h2>
+    <%#
+      O jogador não cria tarefa: a colmeia propõe as do dia, respeitando os dias
+      que ele marcou no onboarding. E concluir só funciona depois de cumprir —
+      é isso que impede transformar "criar e concluir" em mel infinito.
+    %>
+    <p class="mb-4 text-sm text-tinta-suave">A colmeia escolhe as tarefas do dia. Avance até completar para receber a recompensa.</p>
 
     <h2 class="mb-4 text-lg font-semibold">Minhas tarefas</h2>
 
@@ -152,6 +122,7 @@
       <% tarefas.forEach((tarefa) => { %>
         <% const concluida = tarefa.status === 'concluida'; %>
         <li class="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm shadow-sm">
+          <% const cumprida = Number(tarefa.current_value) >= Number(tarefa.target_value); %>
           <div>
             <span class="<%= concluida ? 'line-through text-tinta-suave' : '' %> font-medium">
               <%= tarefa.title %>
@@ -159,18 +130,19 @@
             <span class="ml-2 text-xs text-tinta-suave">
               <%= tarefa.current_value %>/<%= tarefa.target_value %> ·
               <%= tarefa.scope %> · prazo <%= new Date(tarefa.due_at).toLocaleDateString('pt-BR') %>
+              · vale <%= tarefa.reward_coins %> de mel e <%= tarefa.reward_points %> de pólen
             </span>
           </div>
           <% if (concluida) { %>
             <span class="text-xs font-semibold text-acerto-texto">Concluída ✓</span>
           <% } else { %>
-            <form method="POST" action="/tarefas/<%= tarefa.id %>/concluir">
+            <form method="POST" action="/tarefas/<%= tarefa.id %>/<%= cumprida ? 'concluir' : 'progresso' %>">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
               <button
                 type="submit"
-                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+                class="rounded-favo <%= cumprida ? 'bg-mel' : 'bg-cera' %> px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
               >
-                Concluir
+                <%= cumprida ? 'Receber recompensa' : 'Avancei um passo' %>
               </button>
             </form>
           <% } %>

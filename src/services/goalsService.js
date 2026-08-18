@@ -3,6 +3,7 @@ import * as goalsRepository from '../repositories/goalsRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
+import * as levelsService from './levelsService.js';
 import * as pointsService from './pointsService.js';
 
 /**
@@ -57,6 +58,12 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
   if (!tipoEscolhido) throw erroValidacao(`Tipo de meta desconhecido: ${tipo}`);
   if (!dificuldadeEscolhida) throw erroValidacao(`Dificuldade desconhecida: ${dificuldade}`);
 
+  // A recompensa é congelada na criação, e vem da dificuldade escolhida — o
+  // mesmo princípio do preço na compra e da recompensa da tarefa: mudar a tabela
+  // amanhã não reescreve o que a meta de hoje prometeu.
+  const recompensaMoedas = Number(dificuldadeEscolhida.reward_coins);
+  const recompensaPontos = Number(dificuldadeEscolhida.reward_points);
+
   const idMeta = await emTransacao((conexao) =>
     goalsRepository.criar(conexao, {
       idUsuario,
@@ -64,6 +71,8 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
       idDificuldade: dificuldadeEscolhida.id,
       titulo,
       alvo: alvoNumero,
+      recompensaMoedas,
+      recompensaPontos,
       prazo,
     }),
   );
@@ -71,12 +80,59 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
   await auditService.registrar(auditService.usuario(idUsuario), 'meta.criada', {
     entidade: 'goal',
     id: idMeta,
-    depois: { titulo, alvo: alvoNumero, prazo, tipo, dificuldade },
+    depois: { titulo, alvo: alvoNumero, prazo, tipo, dificuldade, recompensaMoedas, recompensaPontos },
   });
 
   return idMeta;
 }
 
+/**
+ * Onde cada tipo de meta busca o número que mede o progresso.
+ *
+ * O tipo declara a fonte em `goal_types.progress_source`; aqui está quem sabe
+ * consultá-la. Duas já existem no MVP. As outras — favo, células, sequência,
+ * cofre, patrimônio — só passam a existir nas etapas que as constroem, e até lá
+ * a meta correspondente fica parada em zero. Parada e honesta: melhor do que
+ * deixar concluir sem ter alcançado, que era o que acontecia.
+ */
+const FONTES_DE_PROGRESSO = {
+  // As chaves são os valores de `goal_types.progress_source`, tal como semeados.
+  async coin_balance(idUsuario) {
+    const carteira = await coinsService.obterCarteira(idUsuario);
+    return carteira.mel;
+  },
+  async user_level(idUsuario) {
+    const nivel = await levelsService.obterDoUsuario(idUsuario);
+    return nivel?.nivel ?? 0;
+  },
+};
+
+/**
+ * Recalcula o progresso das metas ativas a partir da fonte de cada tipo.
+ *
+ * É *lazy*, chamada quando o jogador abre a tela: uma meta de "juntar 200 de
+ * mel" não precisa de ninguém observando a carteira: basta olhar o saldo na hora
+ * de mostrar a meta.
+ */
+export async function sincronizarProgresso(idUsuario) {
+  const metas = await goalsRepository.listarAtivasPorUsuario(idUsuario);
+  let sincronizadas = 0;
+
+  for (const meta of metas) {
+    const fonte = FONTES_DE_PROGRESSO[meta.progress_source];
+    if (!fonte) continue;
+
+    const valor = await fonte(idUsuario);
+    if (Number(valor) === Number(meta.current_value)) continue;
+
+    await emTransacao((conexao) => goalsRepository.atualizarProgresso(conexao, meta.id, Number(valor)));
+    sincronizadas += 1;
+  }
+
+  return { sincronizadas };
+}
+
+/** Progresso informado de fora, para as fontes que ainda não têm consulta própria. */
 export async function atualizarProgresso(idMeta, idUsuario, valorAtual) {
   await exigirPosse(idMeta, idUsuario);
   await emTransacao((conexao) => goalsRepository.atualizarProgresso(conexao, idMeta, Number(valorAtual)));
@@ -91,7 +147,16 @@ export async function atualizarProgresso(idMeta, idUsuario, valorAtual) {
  * não pagam duas vezes — o segundo vê zero linhas e sai sem creditar nada.
  */
 export async function concluir(idMeta, idUsuario) {
+  // Sincroniza antes de conferir: quem clica "concluir" pode ter batido o alvo
+  // agora mesmo, numa compra ou numa tarefa da mesma sessão.
+  await sincronizarProgresso(idUsuario);
   const meta = await exigirPosse(idMeta, idUsuario);
+
+  if (Number(meta.current_value) < Number(meta.target_value)) {
+    throw erroValidacao(
+      `Esta meta ainda não foi alcançada: ${meta.current_value} de ${meta.target_value}`,
+    );
+  }
 
   const recompensa = await emTransacao(async (conexao) => {
     const afetadas = await goalsRepository.concluir(conexao, idMeta);

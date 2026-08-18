@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body, param } from 'express-validator';
 
 import * as goalsController from '../controllers/goalsController.js';
+import { limiteRecompensa } from '../middlewares/rateLimiters.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { requireOnboarding } from '../middlewares/requireOnboarding.js';
 import { validate } from '../middlewares/validate.js';
@@ -32,6 +33,6 @@ router.post(
   goalsController.criar,
 );
 
-router.post('/:id/concluir', param('id').isInt({ min: 1 }), validate, goalsController.concluir);
+router.post('/:id/concluir', limiteRecompensa, param('id').isInt({ min: 1 }), validate, goalsController.concluir);
 
 export default router;

@@ -51,20 +51,33 @@ describe('fluxo autenticado', opcoes, () => {
     return achado[1];
   }
 
-  async function concluirUmaTarefa() {
-    const criada = await agente
-      .post('/tarefas')
-      .set('Accept', 'application/json')
-      .send({ tipo: 'concluir-3-celulas', data_prazo: AMANHA, _csrf: csrf })
-      .expect(201);
+  /**
+   * Cumpre uma tarefa do jeito que o jogador cumpre: avançando até o alvo e só
+   * então recebendo. Não há atalho para testar — é o ponto da correção.
+   */
+  async function cumprirTarefa(idTarefa) {
+    // Três passos fecham qualquer tarefa: o tamanho do passo é fração do alvo, e
+    // quem calcula é o servidor.
+    for (let passo = 0; passo < 3; passo += 1) {
+      await agente
+        .post(`/tarefas/${idTarefa}/progresso`)
+        .set('Accept', 'application/json')
+        .send({ _csrf: csrf })
+        .expect(200);
+    }
 
     await agente
-      .post(`/tarefas/${criada.body.id}/concluir`)
+      .post(`/tarefas/${idTarefa}/concluir`)
       .set('Accept', 'application/json')
       .send({ _csrf: csrf })
       .expect(200);
+  }
 
-    return criada.body.id;
+  /** As tarefas do dia, geradas pelo servidor quando o jogador abre a tela. */
+  async function tarefasAtivas() {
+    await agente.get('/metas').set('Accept', 'text/html').expect(200);
+    const lista = await agente.get('/tarefas').set('Accept', 'application/json').expect(200);
+    return lista.body.filter((tarefa) => tarefa.status === 'ativa');
   }
 
   async function melAtual() {
@@ -147,15 +160,49 @@ describe('fluxo autenticado', opcoes, () => {
     assert.ok(Array.isArray(api.body), 'pedindo JSON, a rota de página passa a vez para a API');
   });
 
-  it('concluir tarefa paga mel e pólen, e só na primeira vez', async () => {
+  it('o servidor propõe as tarefas do dia; o jogador não as inventa', async () => {
+    const tarefas = await tarefasAtivas();
+
+    assert.ok(tarefas.length > 0, 'entrar na tela gera as tarefas do dia');
+    assert.ok(tarefas.length <= 3, 'o teto do dia limita quanto dá para ganhar');
+    assert.ok(
+      tarefas.every((tarefa) => Number(tarefa.current_value) === 0),
+      'tarefa nasce por cumprir',
+    );
+
+    // A rota de criação deixou de existir: era por ela que se fabricava mel.
+    await agente
+      .post('/tarefas')
+      .set('Accept', 'application/json')
+      .send({ tipo: 'concluir-3-celulas', data_prazo: AMANHA, _csrf: csrf })
+      .expect(404);
+  });
+
+  it('tarefa não cumprida não paga — era o atalho do mel infinito', async () => {
+    const [tarefa] = await tarefasAtivas();
     const antes = await melAtual();
-    const idTarefa = await concluirUmaTarefa();
+
+    const recusa = await agente
+      .post(`/tarefas/${tarefa.id}/concluir`)
+      .set('Accept', 'application/json')
+      .send({ _csrf: csrf })
+      .expect(422);
+
+    assert.match(recusa.body.erro, /ainda não foi cumprida/);
+    assert.equal(await melAtual(), antes, 'e nada foi creditado');
+  });
+
+  it('cumprir a tarefa paga mel e pólen, e só na primeira vez', async () => {
+    const [tarefa] = await tarefasAtivas();
+    const antes = await melAtual();
+
+    await cumprirTarefa(tarefa.id);
     const depois = await melAtual();
 
-    assert.ok(depois > antes, 'a tarefa concluída precisa creditar mel');
+    assert.equal(depois - antes, Number(tarefa.reward_coins), 'paga exatamente o que a tarefa prometia');
 
     const repetida = await agente
-      .post(`/tarefas/${idTarefa}/concluir`)
+      .post(`/tarefas/${tarefa.id}/concluir`)
       .set('Accept', 'application/json')
       .send({ _csrf: csrf })
       .expect(422);
@@ -167,10 +214,12 @@ describe('fluxo autenticado', opcoes, () => {
     const catalogo = await agente.get('/loja/itens').set('Accept', 'application/json').expect(200);
     const barato = [...catalogo.body].sort((a, b) => Number(a.price) - Number(b.price))[0];
 
-    // Tarefa é a única fonte de mel enquanto o motor de recompensas (E06) não
-    // existe, então junta-se o necessário repetindo-a.
-    while ((await melAtual()) < Number(barato.price)) {
-      await concluirUmaTarefa();
+    // Junta mel cumprindo as tarefas que o servidor propõe. Como o teto diário é
+    // fixo, o jogador de verdade levaria alguns dias — aqui o relógio não anda,
+    // então as tarefas restantes do dia bastam para o item mais barato.
+    for (const tarefa of await tarefasAtivas()) {
+      if ((await melAtual()) >= Number(barato.price)) break;
+      await cumprirTarefa(tarefa.id);
     }
 
     const antes = await melAtual();
@@ -218,6 +267,49 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(metas.body.length, 1);
     assert.equal(Number(metas.body[0].target_value), 200);
     assert.equal(metas.body[0].status, 'ativa');
+  });
+
+  it('meta não alcançada não paga', async () => {
+    const metas = await agente.get('/metas').set('Accept', 'application/json').expect(200);
+    const distante = metas.body.find((meta) => Number(meta.target_value) > Number(meta.current_value));
+    const antes = await melAtual();
+
+    const recusa = await agente
+      .post(`/metas/${distante.id}/concluir`)
+      .set('Accept', 'application/json')
+      .send({ _csrf: csrf })
+      .expect(422);
+
+    assert.match(recusa.body.erro, /ainda não foi alcançada/);
+    assert.equal(await melAtual(), antes);
+  });
+
+  it('meta alcançada paga o que a dificuldade declara', async () => {
+    // Alvo abaixo do saldo atual: o progresso de "acumular mel" é lido da
+    // carteira, então esta meta já nasce cumprida.
+    const alvo = Math.max(1, (await melAtual()) - 1);
+    const criada = await agente
+      .post('/metas')
+      .set('Accept', 'application/json')
+      .send({ titulo: 'Primeira reserva', alvo, data_final: AMANHA, _csrf: csrf })
+      .expect(201);
+
+    // Abrir a tela sincroniza o progresso a partir da fonte real.
+    await agente.get('/metas').set('Accept', 'text/html').expect(200);
+
+    const antes = await melAtual();
+    const recompensa = await agente
+      .post(`/metas/${criada.body.id}/concluir`)
+      .set('Accept', 'application/json')
+      .send({ _csrf: csrf })
+      .expect(200);
+
+    assert.ok(recompensa.body.mel > 0, 'meta concluída precisa pagar — antes pagava zero');
+    assert.equal(await melAtual(), antes + recompensa.body.mel);
+
+    const metas = await agente.get('/metas').set('Accept', 'application/json').expect(200);
+    const concluida = metas.body.find((meta) => Number(meta.id) === Number(criada.body.id));
+    assert.equal(concluida.status, 'concluida');
   });
 
   it('o livro explica o saldo: carteira e ledgers batem no fim do fluxo', async () => {

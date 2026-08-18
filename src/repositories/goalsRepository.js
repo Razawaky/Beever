@@ -96,18 +96,26 @@ export async function atualizarProgresso(conexao, id, valorAtual) {
 }
 
 /**
- * Conclui a meta uma vez só. Mesmo raciocínio da tarefa: a checagem
- * (`completed_at IS NULL`) mora no `WHERE`, então duas chamadas simultâneas
- * não creditam a recompensa duas vezes.
+ * Conclui a meta que foi de fato alcançada, uma vez só.
+ *
+ * As duas condições do `WHERE` são as mesmas da tarefa, pelos mesmos motivos:
+ * `completed_at IS NULL` impede pagar duas vezes, e
+ * `current_value >= target_value` impede pagar sem ter chegado lá. Este segundo
+ * faltava, e a meta era um atalho ainda melhor que a tarefa — bastava criar uma
+ * e concluir em seguida para levar a recompensa cheia.
+ *
+ * Quem move `current_value` é a sincronização do service, que lê a fonte
+ * declarada pelo tipo da meta (mel acumulado, nível). O clique não move nada.
  */
 export async function concluir(conexao, id) {
   const resultado = await consultarEm(
     conexao,
     `UPDATE goals
-        SET current_value = target_value,
-            completed_at = NOW(),
+        SET completed_at = NOW(),
             status_id = (SELECT id FROM goal_statuses WHERE slug = 'concluida')
-      WHERE id = ? AND completed_at IS NULL`,
+      WHERE id = ?
+        AND completed_at IS NULL
+        AND current_value >= target_value`,
     [id],
   );
   return resultado.affectedRows;
@@ -146,7 +154,11 @@ export async function contarAtivas(idUsuario) {
 export async function buscarCatalogo() {
   const [tipos, dificuldades] = await Promise.all([
     consultar('SELECT id, slug, name, progress_source FROM goal_types ORDER BY id'),
-    consultar('SELECT id, slug, name, reward_multiplier, default_days FROM goal_difficulties ORDER BY default_days'),
+    consultar(
+      `SELECT id, slug, name, reward_multiplier, reward_coins, reward_points, default_days
+         FROM goal_difficulties
+        ORDER BY default_days`,
+    ),
   ]);
   return { tipos, dificuldades };
 }

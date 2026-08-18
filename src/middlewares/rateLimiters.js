@@ -32,6 +32,20 @@ export const limiteAutenticacao = rateLimit({
   message: { erro: 'Muitas tentativas de acesso. Aguarde alguns minutos.' },
 });
 
+/**
+ * Rotas que creditam recompensa: progresso e conclusão de tarefa e de meta.
+ *
+ * A regra de negócio já impede ganhar sem cumprir; isto é a rede de baixo — se
+ * algum dia uma checagem escapar, o estrago fica limitado ao que cabe em um
+ * minuto, em vez de ser tão rápido quanto o navegador aguentar.
+ */
+export const limiteRecompensa = rateLimit({
+  ...base,
+  windowMs: 60 * 1000,
+  limit: 30,
+  message: { erro: 'Calma aí! Espere um instante antes de continuar.' },
+});
+
 /** Compras: evita duplo clique virar débito duplo e limita abuso. */
 export const limiteCompra = rateLimit({
   ...base,

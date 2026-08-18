@@ -98,12 +98,18 @@ ON DUPLICATE KEY UPDATE name = novo.name;
 
 -- RN-014: quem tem menos dias disponíveis recebe menos metas, com prazo maior e
 -- recompensa multiplicada. Quem joga todo dia recebe mais metas, mais curtas.
-INSERT INTO goal_difficulties (slug, name, reward_multiplier, default_days) VALUES
-  ('alta',    'Alta',    2.000, 28),
-  ('media',   'Média',   1.500, 14),
-  ('simples', 'Simples', 1.000,  7)
+-- Recompensa por dificuldade: base de 100 de mel e 60 de pólen para a meta
+-- simples, multiplicada pelo fator de cada dificuldade. Mexer no ritmo do jogo é
+-- editar estas linhas e rodar o seed — nenhum destes números vive em código.
+INSERT INTO goal_difficulties (slug, name, reward_multiplier, reward_coins, reward_points, default_days) VALUES
+  ('alta',    'Alta',    2.000, 200, 120, 28),
+  ('media',   'Média',   1.500, 150,  90, 14),
+  ('simples', 'Simples', 1.000, 100,  60,  7)
 AS novo
-ON DUPLICATE KEY UPDATE name = novo.name, reward_multiplier = novo.reward_multiplier, default_days = novo.default_days;
+ON DUPLICATE KEY UPDATE
+  name = novo.name, reward_multiplier = novo.reward_multiplier,
+  reward_coins = novo.reward_coins, reward_points = novo.reward_points,
+  default_days = novo.default_days;
 
 INSERT INTO task_scopes (slug, name) VALUES
   ('diaria',  'Diária'),

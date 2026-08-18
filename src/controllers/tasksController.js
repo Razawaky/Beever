@@ -6,15 +6,14 @@ export const listar = assincrono(async (req, res) => {
   res.json(await tasksService.listarDoUsuario(req.session.usuarioId));
 });
 
-export const criar = assincrono(async (req, res) => {
-  const { tipo, data_prazo: prazo, alvo } = req.body;
-  const idTarefa = await tasksService.criar(req.session.usuarioId, {
-    tipo,
-    prazo,
-    alvo: alvo === undefined || alvo === '' ? null : Number(alvo),
-  });
+/**
+ * Registra um passo cumprido. O tamanho do passo é decidido no service — o
+ * cliente diz que avançou, não quanto.
+ */
+export const avancar = assincrono(async (req, res) => {
+  const tarefa = await tasksService.registrarProgresso(Number(req.params.id), req.session.usuarioId);
 
-  if (querJson(req)) return res.status(201).json({ id: idTarefa });
+  if (querJson(req)) return res.json(tarefa);
   res.redirect('/metas');
 });
 

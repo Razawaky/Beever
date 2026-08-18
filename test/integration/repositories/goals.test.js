@@ -95,8 +95,24 @@ describe('goalsRepository', opcoes, () => {
     );
   });
 
+  /** Leva a meta até o alvo — sem isso ela não pode ser concluída. */
+  async function alcancar(id) {
+    const alvo = Number((await goalsRepository.buscarPorId(id)).target_value);
+    await emTransacao((c) => goalsRepository.atualizarProgresso(c, id, alvo));
+  }
+
+  it('não conclui meta que não foi alcançada', async () => {
+    const { id } = await metaNova('sem-progresso', { alvo: 100 });
+
+    const afetadas = await emTransacao((c) => goalsRepository.concluir(c, id));
+
+    assert.equal(afetadas, 0, 'pagar meta não alcançada era atalho melhor que o da tarefa');
+    assert.equal((await goalsRepository.buscarPorId(id)).status, 'ativa');
+  });
+
   it('conclui uma vez só', async () => {
     const { id } = await metaNova('idempotente');
+    await alcancar(id);
 
     const primeira = await emTransacao((c) => goalsRepository.concluir(c, id));
     const segunda = await emTransacao((c) => goalsRepository.concluir(c, id));
@@ -111,6 +127,7 @@ describe('goalsRepository', opcoes, () => {
 
   it('meta concluída não aceita mais progresso', async () => {
     const { id } = await metaNova('congelada');
+    await alcancar(id);
     await emTransacao((c) => goalsRepository.concluir(c, id));
 
     assert.equal(await emTransacao((c) => goalsRepository.atualizarProgresso(c, id, 10)), 0);
@@ -131,6 +148,7 @@ describe('goalsRepository', opcoes, () => {
 
     assert.equal(await goalsRepository.contarAtivas(idUsuario), 2);
 
+    await alcancar(id);
     await emTransacao((c) => goalsRepository.concluir(c, id));
 
     assert.equal(await goalsRepository.contarAtivas(idUsuario), 1);
