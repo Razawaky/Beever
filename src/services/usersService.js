@@ -7,7 +7,7 @@ import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as userLevelsRepository from '../repositories/userLevelsRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
 import * as walletsRepository from '../repositories/walletsRepository.js';
-import { ErroAplicacao, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
+import { ErroAplicacao, erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 
 /**
@@ -27,6 +27,24 @@ const CUSTO_BCRYPT = 10;
  */
 function quemAgiu(ator) {
   return ator.ehAdmin ? auditService.admin(ator.id) : auditService.usuario(ator.id);
+}
+
+/**
+ * Só o dono da conta mexe na conta — ou um administrador.
+ *
+ * Estar logado dizia quem você é, não sobre quem você pode agir: as rotas de
+ * conta exigiam sessão e paravam aí, e o id da URL entrava direto no `UPDATE`.
+ * Qualquer conta trocava e-mail e senha de qualquer outra, e a auditoria
+ * registrava fielmente o atacante — gravar o fato não é impedi-lo.
+ *
+ * O perfil já fazia a checagem certa (`profilesService.exigirPosse`); aqui ela
+ * faltava. Recusar com 403 e não com 404 é decisão consciente: quem está logado
+ * já sabe que outras contas existem, então esconder a existência não protege
+ * nada e só atrapalha quem tenta entender o erro.
+ */
+function exigirPosse(idAlvo, ator) {
+  if (ator?.ehAdmin) return;
+  if (Number(ator?.id) !== Number(idAlvo)) throw erroAcessoNegado('Você só pode alterar a sua própria conta');
 }
 
 /** Política do documento: mínimo 8 caracteres, com letras e números. */
@@ -175,6 +193,8 @@ export async function criar({ email, dataNasc, senha, apelido, consentimentoResp
 }
 
 export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
+  exigirPosse(id, ator);
+
   const anterior = await obter(id);
 
   let senhaHash = null;
@@ -206,6 +226,8 @@ export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
  * cron, 15 dias depois — dando margem para arrependimento (RN-053).
  */
 export async function inativar(id, ator) {
+  exigirPosse(id, ator);
+
   const usuario = await obter(id);
 
   const afetadas = await usersRepository.inativar(id);

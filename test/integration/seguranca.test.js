@@ -148,7 +148,7 @@ describe('recusas da autenticação', opcoes, () => {
     // refatoração distraída.
     // O `requestId` é a única coisa que muda entre as duas respostas, e muda de
     // propósito: ele identifica a requisição, não a conta.
-    const semRequestId = ({ requestId, ...resto }) => resto;
+    const semRequestId = ({ requestId: _requestId, ...resto }) => resto;
     assert.deepEqual(semRequestId(senhaErrada.body), semRequestId(contaInexistente.body));
     assert.equal(senhaErrada.body.codigo, 'CREDENCIAIS_INVALIDAS');
     assert.equal(senhaErrada.status, contaInexistente.status);
@@ -207,6 +207,82 @@ describe('recusas da autenticação', opcoes, () => {
     assert.ok(depois.length < antes.length, 'a linha da sessão precisa sumir do banco');
     await agente.get('/perfil/meu').set('Accept', 'application/json').expect(401);
 
+    csrf = await tokenDe(agente);
+  });
+
+  it('uma conta não altera nem desativa a conta de outra pessoa', async () => {
+    // O buraco que a auditoria da E03 encontrou: as rotas de conta exigiam
+    // sessão e paravam aí. O id vinha da URL e entrava direto no `UPDATE`, então
+    // qualquer criança cadastrada trocava o e-mail e a senha de qualquer outra e
+    // assumia o lugar dela. A auditoria registrava o atacante com precisão —
+    // gravar o fato nunca foi o mesmo que impedi-lo.
+    const invasor = request.agent(app);
+    let tokenInvasor = await tokenDe(invasor);
+
+    const criacao = await invasor
+      .post('/users')
+      .set('Accept', 'application/json')
+      .send({
+        apelido: 'invasor',
+        email: 'invasor@beever.dev',
+        data_nasc: '2013-05-05',
+        senha: 'beever123',
+        consentimento_responsavel: 'on',
+        _csrf: tokenInvasor,
+      })
+      .expect(201);
+
+    // A conta do invasor existe e está logada; o alvo é a conta do `before`.
+    const [[alvo]] = await banco.conexao.query('SELECT id, email, password_hash FROM users WHERE email = ?', [
+      CONTA.email,
+    ]);
+    assert.notEqual(Number(alvo.id), Number(criacao.body.id), 'o teste precisa de duas contas diferentes');
+
+    tokenInvasor = await tokenDe(invasor, '/painel');
+
+    const alteracao = await invasor
+      .put(`/users/${alvo.id}`)
+      .set('Accept', 'application/json')
+      .send({ email: 'roubada@beever.dev', senha: 'invadida123', _csrf: tokenInvasor })
+      .expect(403);
+    assert.equal(alteracao.body.codigo, 'ACESSO_NEGADO');
+
+    const desativacao = await invasor
+      .delete(`/users/${alvo.id}`)
+      .set('Accept', 'application/json')
+      .send({ _csrf: tokenInvasor })
+      .expect(403);
+    assert.equal(desativacao.body.codigo, 'ACESSO_NEGADO');
+
+    // A recusa vale pelo que o banco continua mostrando, não pelo status.
+    const [[depois]] = await banco.conexao.query('SELECT email, password_hash, is_active FROM users WHERE id = ?', [
+      alvo.id,
+    ]);
+    assert.equal(depois.email, CONTA.email, 'o e-mail do alvo continua o dele');
+    assert.equal(depois.password_hash, alvo.password_hash, 'a senha do alvo não foi trocada');
+    assert.equal(Boolean(depois.is_active), true, 'a conta do alvo continua ativa');
+  });
+
+  it('o dono continua alterando a própria conta', async () => {
+    // A defesa não pode ter passado do ponto: quem é dono precisa continuar
+    // trocando o próprio apelido.
+    await agente
+      .post('/sessao/login')
+      .set('Accept', 'application/json')
+      .send({ email: CONTA.email, senha: CONTA.senha, _csrf: csrf })
+      .expect(200);
+
+    const token = await tokenDe(agente, '/painel');
+    const [[dono]] = await banco.conexao.query('SELECT id FROM users WHERE email = ?', [CONTA.email]);
+
+    const resposta = await agente
+      .put(`/users/${dono.id}`)
+      .set('Accept', 'application/json')
+      .send({ apelido: 'guardiao-renomeado', _csrf: token })
+      .expect(200);
+    assert.equal(resposta.body.nickname, 'guardiao-renomeado');
+
+    await agente.post('/sessao/logout').set('Accept', 'application/json').send({ _csrf: token });
     csrf = await tokenDe(agente);
   });
 });
