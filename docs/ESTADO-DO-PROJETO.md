@@ -109,8 +109,8 @@ impacto.
 | Em números | |
 |---|---|
 | Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
-| Endpoints · services · repositories | 32 · 17 · 13 |
-| Testes | **274 passando, 0 falhando** (209 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Endpoints · services · repositories | 32 · 17 · 17 |
+| Testes | **295 passando, 0 falhando** (230 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 14 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33 e a correção de escopo abriu DT-34 |
 | Riscos abertos | nenhum |
 
@@ -153,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 274 passam, 0 falham. Sem MySQL, os 209 testes de banco se pulam com aviso |
+| `npm test` | 295 passam, 0 falham. Sem MySQL, os 230 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -256,9 +256,50 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E04 — onboarding e planejador de metas.** A E02 e a E03 estão concluídas e
-auditadas; o que ficou delas está na tabela de dívida, cada item com etapa
-marcada. A tabela abaixo é a da E04, na ordem do `02-ROADMAP-ETAPAS.md`.
+**E05 — conteúdo e trilha.** A E04 está fechada e auditada em duas passagens.
+
+| Tarefa | Situação |
+|---|---|
+| T-05.1 Repositories de favo, célula, conteúdo e progresso | **feita** — `hivesRepository`, `cellsRepository`, `contentsRepository` e `progressRepository`, com 21 testes contra banco real |
+| T-05.2 `ContentService`: favos e células com estado, desbloqueio (RN-026/027/028) | pendente |
+| T-05.3 `ProgressService`: tentativa, erros, estrelas, tempo, percentual do favo | pendente |
+| T-05.4 Views da trilha e da lista de células | pendente |
+| T-05.5 Filtro por faixa de idade | pendente — depende de semear as faixas B e C (DT-17) |
+| T-05.6 Testes: célula travada não abre; 80% libera o favo seguinte; patrimônio respeitado | pendente |
+
+**O que a T-05.1 entregou.** As seis tabelas de conteúdo existiam desde a
+migration `002` e nenhuma tinha repository — a trilha era schema sem código.
+Agora são quatro arquivos: favo, célula, conteúdo e progresso, este último com
+`cell_progress` e `hive_progress` juntos, porque registrar uma tentativa mexe nas
+duas e separá-las obrigaria o service a coordenar o que é uma escrita só.
+
+Três decisões que valem lembrar:
+
+1. **O filtro da RN-029 é SQL, não memória.** `listarPorFaixas` recebe as faixas
+   visíveis e devolve só elas; lista vazia devolve lista vazia. Filtrar depois
+   traria o catálogo inteiro para descartar, e vira problema quando as faixas B
+   e C forem semeadas.
+2. **`hive_progress` é cache, e o repository o reconta.** `recalcularFavo` faz
+   `INSERT ... SELECT ... ON DUPLICATE KEY` a partir de `cell_progress`: nada
+   escreve o percentual à mão, e recalcular duas vezes não duplica linha nem move
+   a data de quando o favo fechou. Quando chamar é decisão do `ProgressService`
+   (T-05.3), não do banco — por isso não virou trigger.
+3. **Estrela e melhor pontuação só sobem.** `registrarTentativa` usa `GREATEST`,
+   e a primeira conclusão é gravada uma vez só: é ela que vai separar estreia de
+   repetição na hora de pagar (RN-008). Repetir a célula e ir pior soma tentativa
+   e erros, mas não tira o que já foi conquistado.
+
+Um defeito encontrado pelo próprio teste, e que vale como regra geral: a primeira
+versão de `recalcularFavo` gravava na conexão da transação e lia pelo pool, então
+devolvia `null` — a linha ainda não existia para ninguém de fora. Quem escreve em
+transação e lê em seguida tem de ler pela mesma conexão.
+
+---
+
+**E04 — onboarding e planejador de metas** (concluída e auditada em duas
+passagens, guardada aqui como histórico). A E02 e a E03 também estão concluídas
+e auditadas; o que ficou delas está na tabela de dívida, cada item com etapa
+marcada.
 
 | Tarefa | Situação |
 |---|---|
@@ -459,7 +500,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
-| E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
+| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories de favo, célula, conteúdo e progresso, com teste de integração para cada um. Faltam T-05.2 a T-05.6 |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
