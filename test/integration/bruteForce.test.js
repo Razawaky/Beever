@@ -22,11 +22,16 @@ const { fecharSessionStore } = await import('../../src/config/session.js');
  * O limite existe desde a E02, e nunca havia sido exercitado — um rate limiter
  * mal configurado parece idêntico a um bem configurado até alguém tentar.
  *
- * Duas propriedades importam aqui, e a segunda é a que se esquece: o atacante
- * precisa ser barrado, e **quem acerta a senha não pode ser barrado junto**. O
- * `skipSuccessfulRequests` é o que separa os dois casos; sem ele, uma criança
- * que errou a senha três vezes ficaria de fora do próprio jogo por quinze
- * minutos.
+ * Duas propriedades importam aqui. A primeira é óbvia: o atacante precisa ser
+ * barrado. A segunda é a que a auditoria da E03 encontrou descrita errada — o
+ * bloqueio é por origem e, uma vez estourado o teto, **nem quem acerta a senha
+ * passa**. `skipSuccessfulRequests` só evita *contar* a tentativa bem-sucedida,
+ * de modo que quem entra de primeira não gasta cota; ele não isenta ninguém
+ * depois que o bloqueio começou.
+ *
+ * A consequência de produto está registrada como DT-24: numa sala de aula atrás
+ * de um único IP, dez erros somados entre alunos diferentes trancam a turma por
+ * quinze minutos.
  */
 
 const pular = await motivoParaPular();

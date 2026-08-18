@@ -30,6 +30,24 @@ const opcoes = pular ? { skip: pular } : {};
 
 const AMANHA = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
+/**
+ * A agenda semanal do jogador precisa incluir **hoje**.
+ *
+ * `tasksService` só propõe tarefa em dia marcado na agenda (RN-011), e a agenda
+ * daqui era fixa em segunda, quarta e sexta. O efeito só aparecia no calendário:
+ * a suíte passava nesses três dias e reprovava nos outros quatro, derrubando de
+ * uma vez tarefa, pagamento de mel e pólen, compra, meta e auditoria da compra —
+ * seis testes caindo por um motivo que não tinha nada a ver com o que eles
+ * verificam.
+ *
+ * Três dias alternados a partir de hoje mantêm o mesmo cenário de antes (agenda
+ * parcial, não a semana inteira) sem amarrar o resultado ao dia em que a suíte
+ * roda. O passo 2 garante dias distintos: 7 é ímpar, então 0, 2 e 4 nunca se
+ * repetem ao voltar pelo módulo.
+ */
+const HOJE = new Date().getDay();
+const DIAS_DA_AGENDA = [HOJE, (HOJE + 2) % 7, (HOJE + 4) % 7].map(String);
+
 describe('fluxo autenticado', opcoes, () => {
   let banco;
   let app;
@@ -164,7 +182,7 @@ describe('fluxo autenticado', opcoes, () => {
         avatar: 'beenie-classico',
         objetivo: 'comprar-algo',
         nivel: 'intermediate',
-        dias: ['1', '3', '5'],
+        dias: DIAS_DA_AGENDA,
         _csrf: csrf,
       })
       .expect(200);
@@ -186,6 +204,30 @@ describe('fluxo autenticado', opcoes, () => {
 
     const loja = await agente.get('/loja').set('Accept', 'text/html').expect(200);
     assert.match(loja.text, /Comprar|Sem mel/);
+  });
+
+  it('as barras de progresso sobrevivem à CSP das páginas autenticadas', async () => {
+    // A CSP declara `style-src 'self'` sem `'unsafe-inline'` (RNF-11), e isso
+    // vale também para o atributo `style` de um elemento — não só para a tag
+    // `<style>`. As barras de XP, de tarefa e de meta escreviam a largura ali
+    // dentro e o navegador descartava as três, que apareciam vazias. Nada
+    // acusou porque `curl` e `supertest` não aplicam CSP; este teste passa a
+    // olhar a marcação, que é onde o defeito estava visível o tempo todo.
+    for (const caminho of ['/painel', '/metas']) {
+      const pagina = await agente.get(caminho).set('Accept', 'text/html').expect(200);
+
+      assert.doesNotMatch(
+        pagina.text,
+        /style="/,
+        `${caminho} não pode escrever estilo na marcação: a CSP descarta e o elemento fica sem tamanho`,
+      );
+    }
+
+    // A barra de XP do nível está sempre no painel, com ou sem meta em curso —
+    // é ela que prova que a largura saiu do atributo e virou classe.
+    const painel = await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    assert.match(painel.text, /class="[^"]*barra-\d+/, 'o painel desenha a largura por classe');
+    assert.match(painel.text, /role="progressbar"[\s\S]*?aria-valuenow="\d+"/, 'e anuncia o valor exato');
   });
 
   it('a mesma URL serve página para o navegador e JSON para a API', async () => {
