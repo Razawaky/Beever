@@ -109,9 +109,9 @@ impacto.
 | Em números | |
 |---|---|
 | Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
-| Endpoints · services · repositories | 33 · 17 · 13 |
-| Testes | **273 passando, 0 falhando** (208 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
-| Dívida técnica catalogada | 13 itens abertos — a T-04.4 abriu DT-31 e DT-32, e a auditoria da E04 abriu DT-33 |
+| Endpoints · services · repositories | 32 · 17 · 13 |
+| Testes | **274 passando, 0 falhando** (209 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Dívida técnica catalogada | 14 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33 e a correção de escopo abriu DT-34 |
 | Riscos abertos | nenhum |
 
 ---
@@ -153,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 273 passam, 0 falham. Sem MySQL, os 208 testes de banco se pulam com aviso |
+| `npm test` | 274 passam, 0 falham. Sem MySQL, os 209 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -511,6 +511,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-31 | A calibragem dos alvos das metas é um chute educado, não medição: `goal_target_rules` diz que uma sessão de 10 minutos vale 25 de mel, e as tarefas de hoje pagam mais ou menos isso — mas quem vai pagar de verdade são as células e os jogos, que ainda não existem. Uma meta escalada (a segunda ou a terceira do mesmo tipo no plano) pode estar acima do que a economia atual permite ganhar no prazo | T-04.4 | E07, quando os jogos pagarem; é editar seed e rodar, sem tocar em código |
 | DT-32 | A meta de "atingir nível" é mensurável mas ainda inalcançável: nenhuma recompensa do MVP credita XP, então o nível não sobe e a meta fica parada. Ela não é meta impossível por desenho — é impossível por falta do motor de XP, que é o buraco conhecido da E06 | T-04.4 | E06, junto do motor de recompensa. Se atrasar, a saída é uma linha a menos em `goal_target_rules` |
 | DT-33 | A RN-017 tem duas metades e só uma existe: a meta vencida entra em `expirada` sem punição, mas **a oferta de renovação — prazo estendido e recompensa reduzida em 50% — não foi construída**. Hoje a meta vencida simplesmente some das ativas e o planejador põe outra no lugar, então o jogador perde o trabalho já feito naquela meta específica sem a chance de retomá-la. É também a RF-MET-05 | auditoria da E04, L-2 | E06, junto do motor de recompensa, que é quem sabe calcular recompensa pela metade |
+| DT-34 | O administrador não tem como calibrar o ritmo do jogo: `goal_plan_rules` e `goal_target_rules` só mudam rodando `db:seed`, que é deploy. É o poder que faz sentido dar ao admin sobre metas — **não** criar meta para um jogador específico, o que reabriria o furo da RN-014 pelo painel administrativo. Requisito ainda não escrito em `01-REQUISITOS-E-REGRAS.md` | correção de escopo da E04, 2026-08-18 | E12, junto do resto da área administrativa |
 | DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos
@@ -640,6 +641,18 @@ Não reabrir sem motivo novo.
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 | `docs/04-AUDITORIA-DO-ONBOARDING.md` | T-04.1 — onboarding requisito a requisito, veredito peça por peça e o contrato do `GoalPlannerService` |
 | `docs/04-AUDITORIA-DA-ETAPA.md` | Auditoria da E04 — RF-ONB-01 a 09 e RN-011 a 018 com arquivo e teste que provam cada um, oito lacunas em ordem de risco, veredito "pode avançar" |
+
+**Correção de escopo, 2026-08-18: o jogador não cria mais meta.** A tela de
+metas tinha um formulário "Nova meta" — título, alvo em mel e prazo — herdado da
+fase anterior ao planejador. Nenhum dos sete RF-MET dá esse poder ao jogador: os
+requisitos falam em gerar pela disponibilidade, listar, acompanhar, pagar,
+expirar, recalcular e historiar. Pior, escolher o próprio alvo e prazo furava a
+RN-014 inteira — dificuldade, prazo e recompensa proporcional ao tempo
+declarado. Sumiram o formulário, a rota `POST /metas`, o controller e
+`goalsService.criar`; `goalsRepository.criar` fica, porque é o planejador que
+grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o que
+falta ao administrador é calibrar as regras (DT-34), não criar meta para um
+jogador.
 
 **Próxima tarefa:** T-05.1 — os repositories de favo, célula, conteúdo e
 progresso, que abrem a **E05 (conteúdo e trilha)**. É a primeira etapa que

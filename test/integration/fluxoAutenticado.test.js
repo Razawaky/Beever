@@ -402,22 +402,31 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(await melAtual(), antes, 'compra recusada não pode mexer no saldo');
   });
 
-  it('cria meta com alvo e prazo, e ela volta na listagem', async () => {
+  /**
+   * Nenhum RF-MET dá ao jogador o poder de criar meta: elas são geradas pela
+   * disponibilidade (RF-MET-01). Deixar escolher alvo e prazo furaria a RN-014
+   * inteira — dificuldade, prazo e recompensa proporcional ao tempo declarado.
+   */
+  it('o jogador não cria meta: quem decide é o planejador', async () => {
     await agente
       .post('/metas')
       .set('Accept', 'application/json')
       .send({ titulo: 'Juntar mel para o patinete', alvo: 200, data_final: AMANHA, _csrf: csrf })
-      .expect(201);
+      .expect(404);
 
     const metas = await agente.get('/metas').set('Accept', 'application/json').expect(200);
-    const criada = metas.body.find((meta) => meta.title === 'Juntar mel para o patinete');
-    assert.ok(criada, 'a meta escrita à mão precisa aparecer na listagem');
-    assert.equal(Number(criada.target_value), 200);
-    assert.equal(criada.status, 'ativa');
+    // Esta conta marcou três dias na semana, e a RN-014 dá duas metas à faixa.
+    assert.equal(metas.body.length, 2, 'as metas da listagem são todas do planejador');
+    assert.ok(
+      metas.body.every((meta) => meta.status === 'ativa'),
+      'e nascem ativas',
+    );
+  });
 
-    // As outras duas não foram criadas aqui: são do planejador (T-04.4). Esta
-    // conta marcou três dias na semana, e a RN-014 dá duas metas a essa faixa.
-    assert.equal(metas.body.length, 3, 'a meta manual convive com as que a RN-014 gerou');
+  it('a tela de metas não oferece formulário de criação', async () => {
+    const pagina = await agente.get('/metas').set('Accept', 'text/html').expect(200);
+    assert.doesNotMatch(pagina.text, /Nova meta/);
+    assert.doesNotMatch(pagina.text, /action="\/metas"/);
   });
 
   it('meta não alcançada não paga', async () => {
@@ -436,21 +445,22 @@ describe('fluxo autenticado', opcoes, () => {
   });
 
   it('meta alcançada paga o que a dificuldade declara', async () => {
-    // Alvo abaixo do saldo atual: o progresso de "acumular mel" é lido da
-    // carteira, então esta meta já nasce cumprida.
+    // Pega uma meta de mel do planejador e baixa o alvo para o que o jogador já
+    // tem: o progresso de "acumular mel" é lido da carteira, então ela passa a
+    // estar cumprida sem inventar meta que o jogo não geraria.
+    const lista = await agente.get('/metas').set('Accept', 'application/json').expect(200);
+    const meta = lista.body.find((linha) => linha.progress_source === 'coin_balance' && linha.status === 'ativa');
+    assert.ok(meta, 'o planejador precisa ter dado ao menos uma meta de mel');
+
     const alvo = Math.max(1, (await melAtual()) - 1);
-    const criada = await agente
-      .post('/metas')
-      .set('Accept', 'application/json')
-      .send({ titulo: 'Primeira reserva', alvo, data_final: AMANHA, _csrf: csrf })
-      .expect(201);
+    await banco.conexao.query('UPDATE goals SET target_value = ? WHERE id = ?', [alvo, meta.id]);
 
     // Abrir a tela sincroniza o progresso a partir da fonte real.
     await agente.get('/metas').set('Accept', 'text/html').expect(200);
 
     const antes = await melAtual();
     const recompensa = await agente
-      .post(`/metas/${criada.body.id}/concluir`)
+      .post(`/metas/${meta.id}/concluir`)
       .set('Accept', 'application/json')
       .send({ _csrf: csrf })
       .expect(200);
@@ -459,7 +469,7 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(await melAtual(), antes + recompensa.body.mel);
 
     const metas = await agente.get('/metas').set('Accept', 'application/json').expect(200);
-    const concluida = metas.body.find((meta) => Number(meta.id) === Number(criada.body.id));
+    const concluida = metas.body.find((linha) => Number(linha.id) === Number(meta.id));
     assert.equal(concluida.status, 'concluida');
   });
 

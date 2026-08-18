@@ -12,51 +12,10 @@
       outra: no banco a tarefa pertence ao jogador, não à meta. Meta é onde se
       quer chegar; tarefa é o que a colmeia pede hoje.
     %>
-    <section class="mb-10 rounded-favo bg-white p-6 shadow-md">
-      <h2 class="mb-4 text-lg font-semibold">Nova meta</h2>
-      <form method="POST" action="/metas" class="grid gap-3 sm:grid-cols-2">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-        <input
-          type="text"
-          name="titulo"
-          required
-          maxlength="160"
-          placeholder="O que você quer conquistar"
-          class="rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta sm:col-span-2"
-        />
-        <div>
-          <label class="mb-1 block text-xs text-tinta-suave">Quanto de mel quer juntar</label>
-          <input
-            type="number"
-            name="alvo"
-            required
-            min="1"
-            placeholder="Ex: 200"
-            class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-xs text-tinta-suave">Prazo final</label>
-          <input
-            type="date"
-            name="data_final"
-            required
-            class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
-          />
-        </div>
-        <button
-          type="submit"
-          class="self-end rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta sm:col-span-2"
-        >
-          Criar meta
-        </button>
-      </form>
-    </section>
-
     <h2 class="mb-4 text-lg font-semibold">Minhas metas</h2>
 
     <% if (metas.length === 0) { %>
-      <p class="mb-10 text-tinta-suave">Nenhuma meta ainda. Crie a primeira acima.</p>
+      <p class="mb-10 text-tinta-suave">Suas metas aparecem aqui assim que a colmeia montar seu plano.</p>
     <% } %>
 
     <div class="mb-12 space-y-6">

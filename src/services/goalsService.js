@@ -8,22 +8,14 @@ import * as goalProgressSources from './goalProgressSources.js';
 import * as pointsService from './pointsService.js';
 
 /**
- * Metas do jogador.
+ * Metas do jogador: listar, sincronizar progresso, expirar e pagar ao concluir.
  *
- * A meta pertence ao usuário direto — sumiu o cronograma que só existia para
- * satisfazer uma foreign key. E o progresso virou contagem até um alvo
- * (`current_value` / `target_value`), não mais um percentual derivado das
- * tarefas: cada tipo de meta declara de onde o número vem
- * (`goal_types.progress_source`), e mel guardado não se mede contando tarefas.
+ * O progresso é contagem até um alvo, e cada tipo declara de onde o número vem
+ * (`goal_types.progress_source`).
  *
- * Escolher tipo, dificuldade, alvo e prazo sozinho é trabalho do
- * `goalPlannerService` (RN-014 e RN-015), que entrou na T-04.4. Este service
- * continua atendendo a meta que o jogador cria à mão, com os campos que ele
- * informa, e é quem paga a recompensa ao concluir.
+ * Não cria meta. Quem escolhe tipo, alvo, prazo e dificuldade é o
+ * `goalPlannerService`, pela disponibilidade do jogador (RF-MET-01, RN-014).
  */
-
-const TIPO_PADRAO = 'acumular-mel';
-const DIFICULDADE_PADRAO = 'simples';
 
 export async function listarDoUsuario(idUsuario) {
   return goalsRepository.listarPorUsuario(idUsuario);
@@ -38,53 +30,6 @@ export async function exigirPosse(idMeta, idUsuario) {
   if (!meta) throw erroNaoEncontrado('Meta não encontrada');
   if (Number(meta.user_id) !== Number(idUsuario)) throw erroAcessoNegado();
   return meta;
-}
-
-/**
- * Cria a meta. Tipo e dificuldade têm padrão declarado — "acumular mel, meta
- * simples" — porque é a meta que a maioria das crianças cria, e obrigar a
- * escolher taxonomia antes de escrever o que se quer é atrito à toa. A escolha
- * automática de verdade chega na E04.
- */
-export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO, dificuldade = DIFICULDADE_PADRAO }) {
-  const alvoNumero = Number(alvo);
-  if (!Number.isInteger(alvoNumero) || alvoNumero <= 0) {
-    throw erroValidacao('O alvo da meta precisa ser um número inteiro positivo');
-  }
-
-  const catalogo = await goalsRepository.buscarCatalogo();
-  const tipoEscolhido = catalogo.tipos.find((linha) => linha.slug === tipo);
-  const dificuldadeEscolhida = catalogo.dificuldades.find((linha) => linha.slug === dificuldade);
-
-  if (!tipoEscolhido) throw erroValidacao(`Tipo de meta desconhecido: ${tipo}`);
-  if (!dificuldadeEscolhida) throw erroValidacao(`Dificuldade desconhecida: ${dificuldade}`);
-
-  // A recompensa é congelada na criação, e vem da dificuldade escolhida — o
-  // mesmo princípio do preço na compra e da recompensa da tarefa: mudar a tabela
-  // amanhã não reescreve o que a meta de hoje prometeu.
-  const recompensaMoedas = Number(dificuldadeEscolhida.reward_coins);
-  const recompensaPontos = Number(dificuldadeEscolhida.reward_points);
-
-  const idMeta = await emTransacao((conexao) =>
-    goalsRepository.criar(conexao, {
-      idUsuario,
-      idTipo: tipoEscolhido.id,
-      idDificuldade: dificuldadeEscolhida.id,
-      titulo,
-      alvo: alvoNumero,
-      recompensaMoedas,
-      recompensaPontos,
-      prazo,
-    }),
-  );
-
-  await auditService.registrar(auditService.usuario(idUsuario), 'meta.criada', {
-    entidade: 'goal',
-    id: idMeta,
-    depois: { titulo, alvo: alvoNumero, prazo, tipo, dificuldade, recompensaMoedas, recompensaPontos },
-  });
-
-  return idMeta;
 }
 
 /**

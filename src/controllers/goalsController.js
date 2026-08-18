@@ -8,14 +8,6 @@ export const listar = assincrono(async (req, res) => {
   res.json(await goalsService.listarDoUsuario(req.session.usuarioId));
 });
 
-export const criar = assincrono(async (req, res) => {
-  const { titulo, alvo, data_final: prazo, tipo, dificuldade } = req.body;
-  const idMeta = await goalsService.criar(req.session.usuarioId, { titulo, alvo, prazo, tipo, dificuldade });
-
-  if (querJson(req)) return res.status(201).json({ id: idMeta });
-  res.redirect('/metas');
-});
-
 export const concluir = assincrono(async (req, res) => {
   const recompensa = await goalsService.concluir(Number(req.params.id), req.session.usuarioId);
 

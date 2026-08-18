@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body, param } from 'express-validator';
+import { param } from 'express-validator';
 
 import * as goalsController from '../controllers/goalsController.js';
 import { limiteRecompensa } from '../middlewares/rateLimiters.js';
@@ -20,18 +20,8 @@ router.use(requireAuth, requireOnboarding);
 
 router.get('/', goalsController.listar);
 
-router.post(
-  '/',
-  [
-    body('titulo').trim().notEmpty().withMessage('Informe um título').isLength({ max: 160 }),
-    body('alvo').isInt({ min: 1 }).withMessage('Informe quanto você quer alcançar'),
-    body('data_final').isISO8601().withMessage('Data final inválida'),
-    body('tipo').optional().trim().notEmpty(),
-    body('dificuldade').optional().trim().notEmpty(),
-  ],
-  validate,
-  goalsController.criar,
-);
+// Não há POST aqui: meta é gerada pela disponibilidade (RF-MET-01, RN-014), e
+// deixar o jogador escolher alvo e prazo furaria a regra inteira.
 
 router.post('/:id/concluir', limiteRecompensa, param('id').isInt({ min: 1 }), validate, goalsController.concluir);
 
