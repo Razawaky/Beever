@@ -1,14 +1,15 @@
-import * as inventarioService from '../services/inventarioService.js';
-import * as itemService from '../services/itemService.js';
-import * as metaService from '../services/metaService.js';
-import * as perfilService from '../services/perfilService.js';
+import * as goalsService from '../services/goalsService.js';
+import * as inventoryService from '../services/inventoryService.js';
+import * as itemsService from '../services/itemsService.js';
+import * as profilesService from '../services/profilesService.js';
+import * as tasksService from '../services/tasksService.js';
 import { assincrono } from '../utils/erros.js';
 
 /**
  * Controller só das páginas que renderizam EJS a partir de GET simples —
  * formulário e leitura, sem mudar estado. Ações que mudam dado (login,
- * cadastro, onboarding) continuam nos controllers de domínio, que agora
- * também sabem redirecionar em vez de só responder JSON.
+ * cadastro, onboarding) continuam nos controllers de domínio, que também sabem
+ * redirecionar em vez de só responder JSON.
  */
 
 function redirecionarLogado(req, res) {
@@ -32,24 +33,46 @@ export const onboarding = (req, res) => {
 
 export const painel = assincrono(async (req, res) => {
   if (!req.session.onboardingConcluido) return res.redirect('/onboarding');
-  const [perfil, inventario, metasDoPerfil] = await Promise.all([
-    perfilService.obterDoUsuario(req.session.usuarioId),
-    inventarioService.listarDoPerfil(req.session.perfilId),
-    metaService.listarDoPerfil(req.session.perfilId),
+
+  const [perfil, inventario, metas, tarefas] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    inventoryService.listarAgrupadoPorItem(req.session.usuarioId),
+    goalsService.listarAtivas(req.session.usuarioId),
+    tasksService.listarAtivas(req.session.usuarioId),
   ]);
-  res.render('pages/painel', { titulo: `${perfil.apelido} — Beever`, perfil, inventario, metaPrincipal: metasDoPerfil[0] ?? null });
+
+  res.render('pages/painel', {
+    titulo: `${perfil.apelido} — Beever`,
+    perfil,
+    inventario,
+    metaPrincipal: metas[0] ?? null,
+    tarefas,
+  });
 });
 
 export const loja = assincrono(async (req, res) => {
-  const [perfil, itens, inventario] = await Promise.all([
-    perfilService.obterDoUsuario(req.session.usuarioId),
-    itemService.listarCatalogo(),
-    inventarioService.listarDoPerfil(req.session.perfilId),
+  const [perfil, itens, possuidos] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    itemsService.listarCatalogo(),
+    inventoryService.idsPossuidos(req.session.usuarioId),
   ]);
 
-  const possuidos = new Set(inventario.map((linha) => linha.id_item));
-
   res.render('pages/loja', { titulo: 'Loja — Beever', perfil, itens, possuidos });
+});
+
+export const metas = assincrono(async (req, res) => {
+  const [listaDeMetas, tarefas, tiposDeTarefa] = await Promise.all([
+    goalsService.listarDoUsuario(req.session.usuarioId),
+    tasksService.listarDoUsuario(req.session.usuarioId),
+    tasksService.listarTiposDisponiveis(),
+  ]);
+
+  res.render('pages/metas', {
+    titulo: 'Metas — Beever',
+    metas: listaDeMetas,
+    tarefas,
+    tiposDeTarefa,
+  });
 });
 
 export const manutencao = (req, res) => {

@@ -3,6 +3,8 @@ import { Router } from 'express';
 import * as healthController from '../controllers/healthController.js';
 import * as homeController from '../controllers/homeController.js';
 import * as paginaController from '../controllers/paginaController.js';
+import { exigirLoginPagina } from '../middlewares/exigirLoginPagina.js';
+import { somentePagina } from '../middlewares/somentePagina.js';
 import lojaRouter from './loja.js';
 import metasRouter from './metas.js';
 import perfilRouter from './perfil.js';
@@ -16,20 +18,26 @@ const router = Router();
 router.get('/', homeController.mostrar);
 router.get('/health', healthController.mostrar);
 
-// Sem sessão, uma página protegida manda para o login em vez do 401 de API —
-// diferente do requireAuth usado nas rotas JSON.
-function exigirLoginPagina(req, res, next) {
-  if (req.session?.usuarioId) return next();
-  res.redirect('/login');
-}
-
-// Páginas EJS. Login e cadastro em si (POST) moram em sessao.js e users.js —
-// aqui é só a tela em branco (GET).
+/**
+ * Páginas EJS. Login e cadastro em si (POST) moram em `sessao.js` e `users.js`;
+ * aqui é só a tela (GET).
+ *
+ * **A ordem destas declarações importa.** Uma rota de página e um router de
+ * domínio montados no mesmo caminho se escondem em silêncio: `GET /metas`
+ * declarado aqui e `router.use('/metas', ...)` logo abaixo respondem ao mesmo
+ * path, e quem chega primeiro ganha. Já foi bug real com `/loja`, que estava
+ * montado duas vezes e só funcionava por acidente de ordenação.
+ *
+ * A regra passa a ser explícita: a página vem primeiro e, quando o cliente
+ * pede JSON, o `somentePagina` passa a vez para o router de domínio. Assim o
+ * mesmo caminho serve navegador e API sem que um esconda o outro.
+ */
 router.get('/login', paginaController.login);
 router.get('/cadastro', paginaController.cadastro);
 router.get('/onboarding', exigirLoginPagina, paginaController.onboarding);
 router.get('/painel', exigirLoginPagina, paginaController.painel);
-router.get('/loja', exigirLoginPagina, paginaController.loja);
+router.get('/loja', somentePagina, exigirLoginPagina, paginaController.loja);
+router.get('/metas', somentePagina, exigirLoginPagina, paginaController.metas);
 router.get('/manutencao', paginaController.manutencao);
 
 router.use('/users', usersRouter);

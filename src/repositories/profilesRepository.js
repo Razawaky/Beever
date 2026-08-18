@@ -32,8 +32,13 @@ export async function criar({ idUsuario }, conexao = null) {
  * slug e são resolvidos aqui pelo próprio SQL — o service não precisa saber os
  * ids das tabelas de domínio, e o banco recusa slug que não existe.
  */
-export async function atualizar(id, { faixaEtaria = null, avatar = null, objetivoInicial = null, fuso = null, minutosPorSessao = null }) {
-  const resultado = await consultar(
+export async function atualizar(
+  id,
+  { faixaEtaria = null, avatar = null, objetivoInicial = null, fuso = null, minutosPorSessao = null },
+  conexao = null,
+) {
+  const resultado = await consultarEm(
+    conexao,
     `UPDATE profiles
         SET age_band_id     = COALESCE((SELECT id FROM age_bands     WHERE code = ?), age_band_id),
             avatar_id       = COALESCE((SELECT id FROM avatars       WHERE slug = ?), avatar_id),
@@ -66,4 +71,16 @@ export async function buscarDetalhadoPorUsuario(idUsuario) {
     [idUsuario],
   );
   return linhas[0] ?? null;
+}
+
+/**
+ * Faixas etárias do catálogo (RN-029). A faixa não é decidida em código: as
+ * idades moram em `age_bands`, e quem classifica um jogador lê daqui. Duplicar
+ * os intervalos numa constante seria repetir a dívida que a curva de níveis já
+ * custou uma vez.
+ */
+export async function listarFaixasEtarias() {
+  return consultar(
+    'SELECT id, code, name, min_age, max_age, is_economy_enabled, is_upkeep_enabled FROM age_bands ORDER BY min_age',
+  );
 }

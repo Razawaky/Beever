@@ -48,8 +48,13 @@ export async function criar({ email, apelido, dataNasc, senhaHash }, conexao = n
 }
 
 /** COALESCE mantém o valor atual quando o campo não é enviado. */
-export async function atualizar(id, { apelido = null, email = null, dataNasc = null, senhaHash = null }) {
-  const resultado = await consultar(
+export async function atualizar(
+  id,
+  { apelido = null, email = null, dataNasc = null, senhaHash = null },
+  conexao = null,
+) {
+  const resultado = await consultarEm(
+    conexao,
     `UPDATE users
         SET nickname      = COALESCE(?, nickname),
             email         = COALESCE(?, email),
@@ -69,8 +74,9 @@ export async function atualizarUltimoLogin(id) {
  * Marca o onboarding como concluído gravando *quando* (RN-012). Guardar a data
  * em vez de um booleano custa o mesmo e responde uma pergunta a mais.
  */
-export async function marcarOnboardingConcluido(id) {
-  const resultado = await consultar(
+export async function marcarOnboardingConcluido(id, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
     'UPDATE users SET onboarding_completed_at = UTC_TIMESTAMP() WHERE id = ? AND onboarding_completed_at IS NULL',
     [id],
   );

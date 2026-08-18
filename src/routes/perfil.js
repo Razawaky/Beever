@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
 
-import * as perfilController from '../controllers/perfilController.js';
+import * as profilesController from '../controllers/profilesController.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { validate } from '../middlewares/validate.js';
 
@@ -11,36 +11,42 @@ import { validate } from '../middlewares/validate.js';
  */
 const router = Router();
 
-// Todas as rotas de perfil exigem login.
 router.use(requireAuth);
 
-router.get('/meu', perfilController.meu);
+router.get('/meu', profilesController.meu);
 
 router.put(
   '/:id',
   [
     param('id').isInt({ min: 1 }),
-    body('apelido').optional().trim().notEmpty().isLength({ max: 100 }),
-    body('avatar_img').optional().trim().isLength({ max: 255 }),
+    body('apelido').optional().trim().notEmpty().isLength({ max: 60 }),
+    body('avatar').optional().trim().isLength({ max: 60 }),
+    body('fuso').optional().trim().isLength({ max: 64 }),
+    body('minutos_por_sessao').optional().isInt({ min: 5, max: 60 }),
   ],
   validate,
-  perfilController.atualizar
+  profilesController.atualizar,
 );
 
-router.delete('/:id', param('id').isInt({ min: 1 }), validate, perfilController.remover);
+router.delete('/:id', param('id').isInt({ min: 1 }), validate, profilesController.remover);
 
 router.put(
   '/:id/onboarding',
   [
     param('id').isInt({ min: 1 }),
-    body('apelido').trim().notEmpty().withMessage('Informe como quer ser chamado').isLength({ max: 100 }),
+    body('apelido').trim().notEmpty().withMessage('Informe como quer ser chamado').isLength({ max: 60 }),
+    body('avatar').optional().trim().isLength({ max: 60 }),
     body('objetivo').trim().notEmpty().withMessage('Escolha um objetivo'),
     body('nivel')
       .isIn(['beginner', 'intermediate', 'advanced'])
       .withMessage('Nível inicial inválido'),
+    // Um único dia marcado chega como string, vários chegam como lista — o
+    // wildcard cobre os dois casos sem exigir que a tela mande sempre array.
+    body('dias').optional(),
+    body('dias.*').optional().isInt({ min: 0, max: 6 }).withMessage('Dia da semana inválido'),
   ],
   validate,
-  perfilController.salvarOnboarding
+  profilesController.salvarOnboarding,
 );
 
 export default router;

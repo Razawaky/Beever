@@ -1,12 +1,14 @@
 import cron from 'node-cron';
 
 import { logger } from '../config/logger.js';
-import * as auditoriaRepository from '../repositories/auditoriaRepository.js';
-import * as usuarioRepository from '../repositories/usuarioRepository.js';
+import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
+import * as usersRepository from '../repositories/usersRepository.js';
 
 /**
- * Expurgo de contas inativas. Ver usuarioRepository.listarInativosParaExpurgo:
- * a query tem parênteses de propósito, pra não apagar conta ativa recém-criada.
+ * Expurgo de contas inativas (RN-053). Ver
+ * `usersRepository.listarInativosParaExpurgo`: a consulta tem parênteses de
+ * propósito, para não apagar conta ativa recém-criada — foi bug real uma vez, e
+ * hoje tem teste com nome próprio em `test/integration/repositories/users.test.js`.
  */
 
 const DIAS_ATE_EXPURGO = 15;
@@ -14,20 +16,23 @@ const DIAS_ATE_EXPURGO = 15;
 const AGENDA_DIARIA = '0 0 * * *'; // todo dia à meia-noite
 
 export async function expurgarContasInativas(dias = DIAS_ATE_EXPURGO) {
-  const alvos = await usuarioRepository.listarInativosParaExpurgo(dias);
+  const alvos = await usersRepository.listarInativosParaExpurgo(dias);
   if (alvos.length === 0) return { removidos: 0 };
 
   for (const usuario of alvos) {
-    await auditoriaRepository.registrar({
-      atorTipo: 'Sistema',
-      acao: 'EXPURGAR_CONTA_INATIVA',
-      entidade: 'usuario',
+    // A linha de auditoria sobrevive ao expurgo: `audit_logs` não tem foreign
+    // key para `users` justamente para que apagar a conta não apague o rastro
+    // de que ela existiu (RN-053).
+    await auditLogsRepository.registrar({
+      atorTipo: 'sistema',
+      acao: 'conta.expurgada',
+      entidade: 'user',
       entidadeId: usuario.id,
-      estadoAnterior: { nome: usuario.nome, email: usuario.email, diasInativo: dias },
+      estadoAnterior: { apelido: usuario.nickname, email: usuario.email, diasInativo: dias },
     });
   }
 
-  const removidos = await usuarioRepository.removerPorIds(alvos.map((usuario) => usuario.id));
+  const removidos = await usersRepository.removerPorIds(alvos.map((usuario) => usuario.id));
   return { removidos };
 }
 

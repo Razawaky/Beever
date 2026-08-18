@@ -1,35 +1,64 @@
 // Wizard de onboarding. Interatividade em JS puro na página, como o resto dos
 // jogos — sem framework, sem localStorage: o estado da resposta some se a
 // aba fechar antes de terminar, e tudo bem, é só um formulário de 3 passos.
+// As opções não são inventadas aqui: `objetivo`, `avatar` e `nivel` viajam
+// como slug e o servidor os resolve contra `initial_goals`, `avatars` e a curva
+// de `levels`. Slug que não existe no banco é recusado lá, não escondido aqui.
 const etapas = [
   {
     id: 'apelido',
     pergunta: 'Como você quer ser chamado?',
-    subtitulo: 'Seu nome ou apelido na colmeia.',
+    subtitulo: 'Seu apelido na colmeia.',
     tipo: 'texto',
     placeholder: 'Ex: beeverzinho',
   },
   {
+    id: 'avatar',
+    pergunta: 'Escolha sua abelha',
+    subtitulo: 'Dá para trocar depois, no perfil.',
+    tipo: 'radio',
+    opcoes: [
+      { valor: 'beenie-classico', rotulo: 'Beenie clássico' },
+      { valor: 'beenie-explorador', rotulo: 'Beenie explorador' },
+      { valor: 'beenie-dourado', rotulo: 'Beenie dourado' },
+      { valor: 'babybee', rotulo: 'Abelhinha' },
+    ],
+  },
+  {
     id: 'objetivo',
-    pergunta: 'Qual seu objetivo principal?',
-    subtitulo: 'Isso ajuda a personalizar as aulas.',
+    pergunta: 'O que você quer conseguir?',
+    subtitulo: 'Isso ajuda a escolher suas primeiras metas.',
     tipo: 'select',
     opcoes: [
-      { valor: 'career', rotulo: 'Impulsionar carreira' },
-      { valor: 'travel', rotulo: 'Viajar o mundo' },
-      { valor: 'hobby', rotulo: 'Apenas por hobby' },
-      { valor: 'school', rotulo: 'Reforço escolar' },
+      { valor: 'comprar-algo', rotulo: 'Quero comprar algo' },
+      { valor: 'aprender-a-guardar', rotulo: 'Quero aprender a guardar' },
+      { valor: 'entender-juros', rotulo: 'Quero entender juros' },
     ],
   },
   {
     id: 'nivel',
-    pergunta: 'Quanto você já sabe sobre finanças?',
+    pergunta: 'Quanto você já sabe sobre dinheiro?',
     subtitulo: 'Seja sincero, não vamos julgar!',
     tipo: 'radio',
     opcoes: [
       { valor: 'beginner', rotulo: 'Recém chegado na colmeia (zero)' },
       { valor: 'intermediate', rotulo: 'Já sei voar um pouco (básico)' },
       { valor: 'advanced', rotulo: 'Mestre do mel (avançado)' },
+    ],
+  },
+  {
+    id: 'dias',
+    pergunta: 'Em que dias você vai jogar?',
+    subtitulo: 'A colmeia só cobra presença nos dias que você escolher.',
+    tipo: 'multipla',
+    opcoes: [
+      { valor: '1', rotulo: 'Segunda' },
+      { valor: '2', rotulo: 'Terça' },
+      { valor: '3', rotulo: 'Quarta' },
+      { valor: '4', rotulo: 'Quinta' },
+      { valor: '5', rotulo: 'Sexta' },
+      { valor: '6', rotulo: 'Sábado' },
+      { valor: '0', rotulo: 'Domingo' },
     ],
   },
 ];
@@ -67,6 +96,20 @@ function renderizarEtapa() {
       <option value="" disabled ${valorAtual ? '' : 'selected'}>Selecione uma opção...</option>
       ${etapa.opcoes.map((o) => `<option value="${o.valor}" ${valorAtual === o.valor ? 'selected' : ''}>${o.rotulo}</option>`).join('')}
     </select>`;
+  } else if (etapa.tipo === 'multipla') {
+    const marcados = Array.isArray(valorAtual) ? valorAtual : [];
+    html += `<div class="grid gap-3 sm:grid-cols-2">
+      ${etapa.opcoes
+        .map(
+          (o) => `<label class="flex cursor-pointer items-center gap-3 rounded-favo border-2 p-4 ${
+            marcados.includes(o.valor) ? 'border-mel bg-cera' : 'border-linha'
+          } hover:border-ambar">
+        <input type="checkbox" name="campo-etapa" value="${o.valor}" ${marcados.includes(o.valor) ? 'checked' : ''} class="h-4 w-4" />
+        <span class="font-medium">${o.rotulo}</span>
+      </label>`
+        )
+        .join('')}
+    </div>`;
   } else if (etapa.tipo === 'radio') {
     html += `<div class="grid gap-3">
       ${etapa.opcoes
@@ -87,6 +130,9 @@ function renderizarEtapa() {
 
 function lerValorEtapa() {
   const etapa = etapas[etapaAtual];
+  if (etapa.tipo === 'multipla') {
+    return [...conteudo.querySelectorAll('input[name="campo-etapa"]:checked')].map((campo) => campo.value);
+  }
   if (etapa.tipo === 'radio') {
     return conteudo.querySelector('input[name="campo-etapa"]:checked')?.value ?? '';
   }
@@ -140,7 +186,10 @@ document.getElementById('form-onboarding').addEventListener('submit', (evento) =
   esconderErro();
 
   const valor = lerValorEtapa();
-  if (!valor) {
+  // Lista vazia também conta como "não respondeu": os dias da semana chegam
+  // como array, e `Boolean([])` é `true`.
+  const respondeu = Array.isArray(valor) ? valor.length > 0 : Boolean(valor);
+  if (!respondeu) {
     mostrarErro('Responda para continuar.');
     return;
   }

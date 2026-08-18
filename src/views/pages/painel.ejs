@@ -17,16 +17,23 @@
         </div>
 
         <div class="text-left sm:text-right">
-          <p class="text-lg font-semibold">🪙 <%= perfil.moedas %> moedas</p>
-          <% const xpAtual = perfil.nivel?.xp_atual ?? 0; %>
-          <% const xpProximo = perfil.nivel?.xp_proximo_nivel ?? 1000; %>
+          <p class="text-lg font-semibold">🍯 <%= perfil.mel %> de mel</p>
+          <p class="text-sm text-tinta-suave">🌼 <%= perfil.polen %> de pólen</p>
+          <%# O progresso dentro do nível vem calculado do service: a curva mora
+              em `levels` e a conta não se repete na view. %>
           <div class="mt-2 h-3 w-56 overflow-hidden rounded-pilula bg-white/40">
             <div
               class="h-full rounded-pilula bg-breu"
-              style="width: <%= Math.min(100, Math.round((xpAtual / xpProximo) * 100)) %>%"
+              style="width: <%= perfil.nivel?.progressoPercentual ?? 0 %>%"
             ></div>
           </div>
-          <p class="mt-1 text-xs text-tinta-suave"><%= xpAtual %> / <%= xpProximo %> XP</p>
+          <p class="mt-1 text-xs text-tinta-suave">
+            <% if (perfil.nivel?.noTopo) { %>
+              Nível máximo alcançado
+            <% } else { %>
+              faltam <%= perfil.nivel?.xpParaSubir ?? 0 %> XP para o nível <%= (perfil.nivel?.nivel ?? 1) + 1 %>
+            <% } %>
+          </p>
         </div>
       </div>
 
@@ -62,13 +69,18 @@
               Você ainda não criou nenhuma meta.
             </div>
           <% } else { %>
+            <%# Progresso é contagem até o alvo, não percentual guardado: a meta
+                sabe onde está (`current_value`) e aonde quer chegar (`target_value`). %>
+            <% const atual = Number(metaPrincipal.current_value); %>
+            <% const alvo = Number(metaPrincipal.target_value); %>
+            <% const percentual = alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)); %>
             <div class="rounded-lg bg-white p-4">
-              <p class="font-semibold"><%= metaPrincipal.titulo %></p>
-              <p class="mt-1 text-sm text-tinta-suave"><%= metaPrincipal.descricao %></p>
+              <p class="font-semibold"><%= metaPrincipal.title %></p>
+              <p class="mt-1 text-sm text-tinta-suave"><%= atual %> de <%= alvo %></p>
               <div class="mt-4 h-3 w-full overflow-hidden rounded-pilula bg-linha">
-                <div class="h-3 rounded-pilula bg-mel" style="width: <%= metaPrincipal.progresso %>%"></div>
+                <div class="h-3 rounded-pilula bg-mel" style="width: <%= percentual %>%"></div>
               </div>
-              <p class="mt-1 text-sm text-tinta-suave"><%= metaPrincipal.progresso %>% concluído</p>
+              <p class="mt-1 text-sm text-tinta-suave"><%= percentual %>% concluído</p>
             </div>
           <% } %>
         </section>

@@ -14,8 +14,8 @@ import * as usersRepository from '../../../src/repositories/usersRepository.js';
  *
  * A RN-003 proíbe calcular nível por fórmula: a curva mora em `levels`, uma
  * linha por nível, e o service tem que ler dela. O teste da curva existe para
- * que ninguém volte a inventar um `XP_POR_NIVEL = 1000` em constante — é a
- * dívida DT-04, ainda aberta no `nivelService`.
+ * que ninguém volte a inventar um `XP_POR_NIVEL = 1000` em constante — foi a
+ * dívida DT-04, fechada na T-02.3 junto com o `levelsService`.
  *
  * `user_levels` é cache do `xp_ledger`, então vale a mesma regra da carteira:
  * atualizar o cache sem lançar no livro é divergência esperando para acontecer.

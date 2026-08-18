@@ -137,3 +137,16 @@ export async function contarAtivas(idUsuario) {
   );
   return Number(linhas[0]?.total ?? 0);
 }
+
+/**
+ * Tipos e dificuldades disponíveis. Vêm do banco porque é lá que eles são
+ * declarados e versionados pelo seed — uma lista equivalente escrita em
+ * JavaScript sairia do ar no dia em que alguém acrescentasse um tipo.
+ */
+export async function buscarCatalogo() {
+  const [tipos, dificuldades] = await Promise.all([
+    consultar('SELECT id, slug, name, progress_source FROM goal_types ORDER BY id'),
+    consultar('SELECT id, slug, name, reward_multiplier, default_days FROM goal_difficulties ORDER BY default_days'),
+  ]);
+  return { tipos, dificuldades };
+}

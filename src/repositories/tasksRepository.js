@@ -132,3 +132,18 @@ export async function expirarVencidas(conexao = null) {
   );
   return resultado.affectedRows;
 }
+
+/**
+ * Catálogo de tipos de tarefa. É de onde saem o texto, o alvo padrão e a
+ * recompensa de cada tarefa criada — o service não inventa nenhum dos três.
+ */
+export async function listarTipos() {
+  return consultar(
+    `SELECT tt.id, tt.slug, tt.name, tt.progress_source, tt.default_target,
+            tt.reward_points, tt.reward_coins, sc.slug AS scope
+       FROM task_types tt
+       JOIN task_scopes sc ON sc.id = tt.scope_id
+      WHERE tt.is_active = 1
+      ORDER BY sc.slug, tt.name`,
+  );
+}

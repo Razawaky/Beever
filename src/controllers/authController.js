@@ -1,5 +1,6 @@
 import * as authService from '../services/authService.js';
 import { assincrono } from '../utils/erros.js';
+import { querJson } from '../utils/resposta.js';
 import { iniciarSessaoLogin } from '../utils/sessaoLogin.js';
 
 export const login = assincrono(async (req, res) => {
@@ -14,7 +15,7 @@ export const login = assincrono(async (req, res) => {
     onboardingConcluido: usuario.onboardingConcluido,
   });
 
-  if (req.accepts(['html', 'json']) === 'json') return res.json(usuario);
+  if (querJson(req)) return res.json(usuario);
   res.redirect(usuario.onboardingConcluido ? '/painel' : '/onboarding');
 });
 
@@ -29,9 +30,7 @@ export const logout = assincrono(async (req, res) => {
   });
 
   res.clearCookie('beever.sid');
-  if (req.accepts(['html', 'json']) === 'json') {
-    return res.json({ mensagem: 'Logout realizado com sucesso' });
-  }
+  if (querJson(req)) return res.json({ mensagem: 'Logout realizado com sucesso' });
   res.redirect('/');
 });
 

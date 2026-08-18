@@ -1,40 +1,36 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
 
-import * as metaController from '../controllers/metaController.js';
-import * as tarefaController from '../controllers/tarefaController.js';
+import * as goalsController from '../controllers/goalsController.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { validate } from '../middlewares/validate.js';
 
-/** Rotas de meta e, aninhada, criação de tarefa dentro de uma meta. */
+/**
+ * Rotas de meta.
+ *
+ * A criação de tarefa saiu daqui. Ela era aninhada (`/metas/:idMeta/tarefas`)
+ * porque no schema antigo a tarefa pendurava numa meta; hoje a tarefa é do
+ * usuário e nasce de um tipo do catálogo, então mora em `/tarefas`.
+ */
 const router = Router();
 
 router.use(requireAuth);
 
-router.get('/', metaController.listar);
+router.get('/', goalsController.listar);
 
 router.post(
   '/',
   [
-    body('titulo').trim().notEmpty().withMessage('Informe um título').isLength({ max: 255 }),
-    body('descricao').trim().notEmpty().withMessage('Informe uma descrição').isLength({ max: 500 }),
+    body('titulo').trim().notEmpty().withMessage('Informe um título').isLength({ max: 160 }),
+    body('alvo').isInt({ min: 1 }).withMessage('Informe quanto você quer alcançar'),
     body('data_final').isISO8601().withMessage('Data final inválida'),
+    body('tipo').optional().trim().notEmpty(),
+    body('dificuldade').optional().trim().notEmpty(),
   ],
   validate,
-  metaController.criar
+  goalsController.criar,
 );
 
-router.post(
-  '/:idMeta/tarefas',
-  [
-    param('idMeta').isInt({ min: 1 }),
-    body('titulo').trim().notEmpty().withMessage('Informe um título').isLength({ max: 255 }),
-    body('descricao').trim().notEmpty().withMessage('Informe uma descrição').isLength({ max: 500 }),
-    body('data_prazo').isISO8601().withMessage('Prazo inválido'),
-    body('prioridade').isIn(['Baixa', 'Media', 'Alta']).withMessage('Prioridade inválida'),
-  ],
-  validate,
-  tarefaController.criar
-);
+router.post('/:id/concluir', param('id').isInt({ min: 1 }), validate, goalsController.concluir);
 
 export default router;
