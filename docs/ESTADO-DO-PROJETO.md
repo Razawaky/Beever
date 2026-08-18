@@ -109,8 +109,8 @@ impacto.
 | Em números | |
 |---|---|
 | Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
-| Endpoints · services · repositories | 32 · 19 · 17 |
-| Testes | **330 passando, 0 falhando** (248 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Endpoints · services · repositories | 34 · 19 · 17 |
+| Testes | **337 passando, 0 falhando** (255 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 15 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33, a correção de escopo abriu DT-34 e a T-05.2 abriu DT-35 |
 | Riscos abertos | nenhum |
 
@@ -151,9 +151,9 @@ npm run dev
 | `npm run db:reset` | Recusa em produção; recusa sem `-- --sim`; com a confirmação, apagou as 57 tabelas do banco de teste |
 | `npm run db:reconcile` | Sete conferências: mel, pólen, XP, cofre, nível contra a curva, próximo nível e progresso do favo. Sai com 1 em caso de divergência, para poder virar passo de CI |
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
-| `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
+| `npm run css:build` | Gera `src/public/css/app.css` (26,9 KB) em cerca de 150 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 330 passam, 0 falham. Sem MySQL, os 248 testes de banco se pulam com aviso |
+| `npm test` | 337 passam, 0 falham. Sem MySQL, os 255 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -263,7 +263,7 @@ argumento a favor da rede que a T-02.1 montou.
 | T-05.1 Repositories de favo, célula, conteúdo e progresso | **feita** — `hivesRepository`, `cellsRepository`, `contentsRepository` e `progressRepository`, com 21 testes contra banco real |
 | T-05.2 `ContentService`: favos e células com estado, desbloqueio (RN-026/027/028) | **feita** — trilha, lista de células e abertura de célula, com o pré-requisito conferido no service e não só na tela |
 | T-05.3 `ProgressService`: tentativa, erros, estrelas, percentual do favo | **feita** — RN-030 com dono único, tentativa e percentual na mesma transação, sem pagar nada |
-| T-05.4 Views da trilha e da lista de células | pendente |
+| T-05.4 Views da trilha e da lista de células | **feita** — `/trilha` e `/trilha/:id`, hexágonos serpenteantes, favo travado com o motivo escrito |
 | T-05.5 Filtro por faixa de idade | pendente — depende de semear as faixas B e C (DT-17) |
 | T-05.6 Testes: célula travada não abre; 80% libera o favo seguinte; patrimônio respeitado | pendente |
 
@@ -346,6 +346,39 @@ Três coisas que valem lembrar:
    `is_replay`, e quem a escreve é o `GameSessionService` (T-06.5). Acrescentar
    coluna de tempo aqui duplicaria dado que já tem lugar.
 
+
+**O que a T-05.4 entregou.** A trilha tem tela: `/trilha` mostra os favos em
+hexágonos serpenteantes e `/trilha/:id` lista as células do favo. A Colmeia
+ganhou a porta de entrada, que não existia — a trilha estava pronta no back-end e
+inalcançável pelo navegador.
+
+Três escolhas de desenho:
+
+1. **Favo travado aparece, e diz o que falta.** "Conclua 80% do favo anterior",
+   "você precisa de 500 de patrimônio". Esconder tiraria a régua de progresso, e
+   o design system já manda isso na loja: item bloqueado mostra o que falta,
+   nunca só cadeado. Vale a RNF-25 junto — estado é ícone e palavra, não a cor
+   cinza sozinha.
+2. **O desktop tem composição própria.** Acima de `md` a trilha divide a tela com
+   um painel fixo do favo atual, em vez do layout de celular centralizado que a
+   L-6 da auditoria da E04 apontou na tela de perfil. No celular, o "Continuar"
+   é um botão flutuante, para não se perder no fim da rolagem.
+3. **Não havia ícone de cadeado nem de estrela** em `src/public/img/`. Foram
+   desenhados em SVG inline, no traço do sistema — o documento proíbe substituir
+   asset por emoji. Se o time trouxer arte própria, a troca é no
+   `favo-card.ejs` e no `favo.ejs`.
+
+**O que ficou de fora, e por quê:** a RF-CON-05 (tela de resultado com estrelas,
+XP, mel e pólen) está na mesma seção de requisitos, mas XP e mel só existem
+depois da E06, e a tela de jogo é E07. Entregar uma tela de resultado agora seria
+mostrar zero em três dos quatro números. O link "Jogar" aponta para
+`/trilha/:id/celula/:id`, que é onde a E07 vai montar o jogo.
+
+**O que não foi verificado:** as telas não foram abertas em navegador real. O
+checklist visual foi conferido por leitura — tokens, foco de teclado,
+`prefers-reduced-motion`, ícone junto de cor —, mas 320 px sem rolagem
+horizontal e contraste medido pedem navegador, e isso fica para a auditoria da
+etapa.
 
 ---
 
@@ -553,7 +586,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
-| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas e recalculando o favo. Faltam T-05.4 a T-05.6 |
+| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha, com porta de entrada na Colmeia. Faltam T-05.5 e T-05.6 |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |

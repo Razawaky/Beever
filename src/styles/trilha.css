@@ -18,3 +18,22 @@
     animation: none;
   }
 }
+/* Hexágono dos favos e das células da trilha (T-05.4).
+   A forma é a assinatura do produto, então ela é classe própria e não um
+   `clip-path` repetido em cada template. */
+.favo-hexagono {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+/* A trilha serpenteia: os passos pares se deslocam para a direita, como a
+   trilha de fases que a criança já conhece de outros jogos. O deslocamento é
+   pequeno no celular para não empurrar o texto para fora da tela. */
+.favo-trilha > li:nth-child(even) .favo-passo {
+  margin-left: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .favo-trilha > li:nth-child(even) .favo-passo {
+    margin-left: 3.5rem;
+  }
+}

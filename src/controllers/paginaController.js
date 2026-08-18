@@ -1,3 +1,4 @@
+import * as contentService from '../services/contentService.js';
 import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
 import * as inventoryService from '../services/inventoryService.js';
@@ -142,6 +143,34 @@ export const perfil = assincrono(async (req, res) => {
     metas,
     dadosBody: { 'csrf-token': res.locals.csrfToken },
     scripts: ['/js/perfil.js'],
+  });
+});
+
+/**
+ * A trilha (RF-CON-01). O favo "atual" é o primeiro aberto e não concluído — é
+ * ele que o botão "Continuar" abre.
+ */
+export const trilha = assincrono(async (req, res) => {
+  const trilha = await contentService.listarTrilha(req.session.usuarioId);
+  const favoAtual = trilha.find((favo) => favo.estado === 'disponivel' && !favo.concluido) ?? null;
+
+  renderizarPagina(res, 'trilha', {
+    titulo: 'Minha trilha — Beever',
+    classeBody: FUNDO_CERA,
+    trilha,
+    favoAtual,
+  });
+});
+
+/** As células de um favo (RF-CON-02). Favo travado nem lista: quem barra é o service. */
+export const favo = assincrono(async (req, res) => {
+  const { favo, celulas } = await contentService.listarCelulasDoFavo(req.session.usuarioId, Number(req.params.id));
+
+  renderizarPagina(res, 'favo', {
+    titulo: `${favo.title} — Beever`,
+    classeBody: FUNDO_CERA,
+    favo,
+    celulas,
   });
 });
 
