@@ -96,7 +96,7 @@ da seção 4.
 
 ---
 
-## 4. Veredito
+## 4. Veredito da primeira passagem *(revogado — ver seção 5)*
 
 **Pode avançar.** Zero itens bloqueantes. Os requisitos da E04 estão atendidos e
 testados, o critério de aceite da etapa está coberto por teste com banco real, e
@@ -111,3 +111,113 @@ Encaminhamento sugerido para as lacunas:
   telas internas.
 - **L-7** é higiene de documento.
 - **L-8** fica atrelado à DT-12, quando a tela de perfil ganhar os outros campos.
+
+---
+
+## 5. Segunda passagem — 2026-08-18, commit `54f539f`
+
+Reauditoria depois das correções da seção 3.1. O motivo de repetir: as três
+correções foram escritas pela mesma sessão que fez o laudo, e revisar o próprio
+conserto no mesmo fôlego é como conferir a própria prova. Desta vez a conferência
+não parou na leitura do código — a corrida abaixo foi **reproduzida**.
+
+### 5.1 As correções da seção 3.1 se sustentam
+
+| Lacuna | Confere? |
+|---|---|
+| L-1 | **sim** — `goalsService.expirarVencidas` roda antes de `listarAtivas` em `profilesService.js:263`, e o teste "trocar a semana expira as vencidas antes de contar o plano" falha se a linha sair |
+| L-2 | **sim** — DT-33 na tabela de dívida, com dono na E06. Vale registrar que a coluna `goals.renewed_from_goal_id` já existe desde a migration `004`: a renovação tem onde se apoiar quando a E06 chegar |
+| L-3 | **sim** — `role="status"` e `aria-live="polite"` no HTML servido, com teste que lê os dois atributos |
+
+### 5.2 O que a primeira passagem deixou passar
+
+**L-9 (bloqueante) — o planejador tem corrida, e ela cria metas duplicadas que
+pagam a mesma conquista mais de uma vez.**
+
+`montarPlano` lê quantas metas ativas existem, decide quantas faltam e só então
+grava. Entre a leitura e a gravação não há trava, e a tabela `goals` não tem
+chave única que impeça duplicata (migration `004`: só `idx_goals_user_status_due`,
+que é índice, não restrição). Duas execuções simultâneas leem o mesmo "faltam 3"
+e criam 3 cada uma.
+
+Reproduzido, com banco real e o app de pé:
+
+```
+plano vazio, faixa de 5 dias (pede 3 metas)
+4 requisições simultâneas  ->  12 metas ativas
+títulos: "Chegue a 125 de mel" x4, "Chegue ao nível 2" x4, "Chegue a 250 de mel" x3, ...
+```
+
+O mesmo resultado saiu por dois caminhos diferentes: quatro `PUT
+/perfil/:id/disponibilidade` em paralelo, e quatro `GET /painel` em paralelo.
+O segundo é o grave — **não exige abuso nenhum**: o painel chama
+`garantirMetasAtivas` a cada visita, então dois cliques rápidos, duas abas
+abertas ou um recarregamento em conexão ruim bastam.
+
+Por que é bloqueante, e não mais um item de lista: as duplicatas nascem com
+**alvo idêntico** ("Chegue a 125 de mel" quatro vezes). O progresso das metas é
+lido do saldo, então um único acúmulo de 125 de mel completa as quatro, e cada
+uma paga `reward_coins` e `reward_points` inteiros. Uma conquista, quatro
+pagamentos — a RN-016 diz "recompensa creditada uma única vez", e a proteção que
+existe (`completed_at IS NULL` no `WHERE`) protege a meta individual, não a
+conquista. A economia da E06 e da E09 vai ser calibrada em cima desse número.
+
+**L-10 (médio) — a semana é gravada fora de transação na rota do perfil.**
+`profilesService.atualizarDisponibilidade` chama
+`schedulesService.definirSemana(null, ...)`, e o repository grava **um dia de
+cada vez, sete instruções autocommitadas**. Falha na quarta deixa a semana
+metade nova, metade velha — e o planejador, logo em seguida, planeja em cima
+dessa semana inconsistente. O onboarding não tem o problema: `salvarOnboarding`
+passa a conexão da transação. A rota do perfil é a única que passa `null`.
+
+**L-11 (médio) — a rota que cria metas não tem limitador.**
+`PUT /perfil/:id/disponibilidade` dispara criação de metas, que carregam
+promessa de recompensa, e é a única rota desse tipo sem `limiteRecompensa` —
+`POST /metas/:id/concluir` e as duas de tarefa têm. A RNF pede limite nos
+endpoints de recompensa. Sozinho seria baixo; junto da L-9, é o que transforma
+a corrida em algo que se dispara de propósito, em vez de por acidente.
+
+### 5.3 Veredito da segunda passagem *(atendido — ver 5.4)*
+
+**Não pode avançar. 1 item bloqueante: L-9.**
+
+A E05 vai construir favo e célula, que são **fontes de progresso novas para o
+planejador** — mais tipos sorteáveis significa mais metas por plano e mais
+superfície para a duplicata. Consertar depois custa mais, e custa dado sujo em
+banco de teste e de desenvolvimento.
+
+Encaminhamento sugerido, em ordem:
+
+1. **L-9** — a correção honesta é fazer a leitura e a criação acontecerem sob a
+   mesma trava. As duas saídas plausíveis: `SELECT ... FOR UPDATE` nas metas
+   ativas do usuário dentro da transação que cria, ou uma chave única que
+   descreva "uma meta ativa por tipo e alvo por usuário" e deixe o banco recusar
+   a segunda. A segunda é mais barata de provar e sobrevive a mais de um processo
+   de aplicação — que é o cenário do `docker-compose` com réplicas.
+2. **L-10** — passar a conexão da transação para `definirSemana`, como o
+   onboarding já faz, e fechar semana e plano no mesmo `emTransacao`.
+3. **L-11** — `limiteRecompensa` na rota da disponibilidade.
+
+As lacunas L-4, L-5, L-6 e L-8 da primeira passagem seguem abertas e continuam
+não bloqueantes.
+
+### 5.4 Correções da segunda passagem
+
+Feitas no commit que fecha a E04:
+
+- **L-9** — `garantirMetasAtivas` passou a trancar a linha do usuário
+  (`usersRepository.travarPorId`, `SELECT ... FOR UPDATE`), reler as metas ativas
+  na mesma conexão e criar só o que ainda falta. O plano continua sendo montado
+  fora da transação, para não segurar conexão do pool enquanto consulta.
+  Teste: "requisições simultâneas não criam meta além do que a faixa pede", com
+  quatro `GET /painel` e quatro `PUT` em paralelo. **Verificado que o teste
+  falha sem a trava** — 12 metas em vez de 3.
+- **L-10** — a semana passou a ser gravada dentro de `emTransacao`, como no
+  onboarding. Sem teste automatizado: provar exigiria injetar falha na quarta das
+  sete gravações, e o arnês não tem esse recurso. Verificado por leitura.
+- **L-11** — `limiteRecompensa` na rota da disponibilidade. Sem teste: os
+  limitadores são desligados em teste (`skip: () => env.teste`), decisão que já
+  valia para as outras rotas limitadas.
+
+**Veredito final da E04: pode avançar.** Seguem abertas as não bloqueantes da
+primeira passagem: L-4, L-5, L-6 e L-8.

@@ -36,8 +36,9 @@ export async function listarPorUsuario(idUsuario) {
   );
 }
 
-export async function listarAtivasPorUsuario(idUsuario) {
-  return consultar(
+export async function listarAtivasPorUsuario(idUsuario, conexao = null) {
+  return consultarEm(
+    conexao,
     `SELECT ${CAMPOS}
        FROM goals g
        ${JOINS}

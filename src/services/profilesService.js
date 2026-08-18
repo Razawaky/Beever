@@ -241,18 +241,11 @@ export async function atualizar(
 }
 
 /**
- * Troca os dias da semana em que o jogador pretende jogar, depois do onboarding
- * (RF-ONB-09, RN-013).
+ * Troca os dias da semana depois do onboarding (RF-ONB-09, RN-013).
  *
- * **Nada de progresso se perde.** A semana nova muda quantas metas a RN-014
- * pede, e o planejador reage completando o que falta — mas ele nunca apaga meta
- * ativa. Quem reduziu os dias e ficou com mais metas do que a faixa nova pede
- * mantém as excedentes até elas vencerem: o trabalho já feito continua valendo,
- * e quem não concluir no prazo apenas não é recompensado, sem punição (RN-017).
- * Foi decisão de produto, registrada na abertura da T-04.6.
- *
- * Devolve o antes e o depois porque a tela precisa dizer o que mudou — "você
- * jogava 5 dias e agora joga 2; suas metas em andamento continuam lá".
+ * Nada de progresso se perde: o planejador completa o que falta e nunca apaga
+ * meta ativa, então quem reduz os dias mantém as excedentes até vencerem.
+ * Devolve o antes e o depois para a tela poder explicar o que mudou.
  */
 export async function atualizarDisponibilidade(idPerfil, idUsuario, dias) {
   const escolhidos = [].concat(dias ?? []).filter((dia) => dia !== '' && dia !== null && dia !== undefined);
@@ -260,22 +253,20 @@ export async function atualizarDisponibilidade(idPerfil, idUsuario, dias) {
 
   await exigirPosse(idPerfil, idUsuario);
 
-  // Tira da frente o que já venceu, antes de contar quantas metas o jogador
-  // tem. Meta fora do prazo continua com status `ativa` no banco até alguém
-  // marcá-la, e a expiração é preguiçosa — sem esta linha, ela entraria na
-  // conta do planejador e a semana nova nasceria com meta a menos, até a
-  // próxima visita ao painel. Mesma ordem do painel e da tela de metas.
+  // A expiração é preguiçosa: sem esta linha, a meta vencida ainda contaria
+  // como ativa e a semana nova nasceria com meta a menos.
   await goalsService.expirarVencidas(idUsuario);
 
   const antes = await schedulesService.diasDisponiveis(idUsuario);
   const metasAntes = await goalsService.listarAtivas(idUsuario);
 
-  await schedulesService.definirSemana(null, idUsuario, escolhidos);
+  // São sete gravações, uma por dia. Numa transação só: falha no meio não deixa
+  // a semana metade nova, metade velha.
+  await emTransacao((conexao) => schedulesService.definirSemana(conexao, idUsuario, escolhidos));
   const depois = await schedulesService.diasDisponiveis(idUsuario);
 
-  // O planejador completa o plano quando a faixa nova pede mais metas. Quando
-  // pede menos, ele não faz nada — e é justamente esse "nada" que preserva o
-  // que estava em andamento.
+  // Pede mais metas: completa. Pede menos: não faz nada — e é esse "nada" que
+  // preserva o que estava em andamento.
   const planejadas = await goalPlannerService.garantirMetasAtivas(idUsuario);
   const metasDepois = await goalsService.listarAtivas(idUsuario);
 
@@ -290,8 +281,8 @@ export async function atualizarDisponibilidade(idPerfil, idUsuario, dias) {
     dias: depois,
     metasAtivas: metasDepois.length,
     metasGeradas: planejadas.criadas,
-    // Quantas sobraram além do que a faixa nova pede. A tela usa para explicar
-    // que elas ficam até vencer, em vez de o jogador achar que virou bagunça.
+    // Quantas sobraram além do que a faixa pede. A tela explica que ficam até
+    // vencer.
     metasPedidas: Number(planejadas.metasPedidas),
     metasExcedentes: Math.max(0, metasDepois.length - Number(planejadas.metasPedidas)),
   };

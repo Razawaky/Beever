@@ -83,6 +83,15 @@ export async function marcarOnboardingConcluido(id, conexao = null) {
   return resultado.affectedRows;
 }
 
+/**
+ * Tranca a linha do usuário até o fim da transação. Duas requisições que
+ * planejam metas ao mesmo tempo passam uma de cada vez.
+ */
+export async function travarPorId(conexao, id) {
+  const linhas = await consultarEm(conexao, 'SELECT id FROM users WHERE id = ? FOR UPDATE', [id]);
+  return linhas[0] ?? null;
+}
+
 /** Exclusão é lógica: a conta é desativada e só some no expurgo do cron. */
 export async function inativar(id) {
   const resultado = await consultar('UPDATE users SET is_active = 0 WHERE id = ?', [id]);

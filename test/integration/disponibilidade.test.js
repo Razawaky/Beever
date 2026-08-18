@@ -237,6 +237,31 @@ describe('edição da disponibilidade', opcoes, () => {
     );
   });
 
+  /**
+   * O planejador lê quantas metas faltam e depois cria. Sem trava, duas
+   * requisições simultâneas leem o mesmo "faltam 3" e criam 3 cada uma — metas
+   * duplicadas, com o mesmo alvo, pagando a mesma conquista duas vezes. Quatro
+   * visitas ao painel ao mesmo tempo é o que dois cliques rápidos fazem.
+   */
+  it('requisições simultâneas não criam meta além do que a faixa pede', async () => {
+    await banco.conexao.query(
+      `UPDATE goals SET status_id = (SELECT id FROM goal_statuses WHERE slug = 'expirada') WHERE user_id = ?`,
+      [idUsuario],
+    );
+
+    await Promise.all([1, 2, 3, 4].map(() => agente.get('/painel').set('Accept', 'text/html').expect(200)));
+    assert.equal((await metasAtivas()).length, 3, 'quatro painéis em paralelo, e o plano é um só');
+
+    await banco.conexao.query(
+      `UPDATE goals SET status_id = (SELECT id FROM goal_statuses WHERE slug = 'expirada') WHERE user_id = ?`,
+      [idUsuario],
+    );
+
+    csrf = await lerToken('/painel');
+    await Promise.all([1, 2, 3, 4].map(() => salvarDias(SEMANA_CHEIA).expect(200)));
+    assert.equal((await metasAtivas()).length, 3, 'o mesmo pela rota da disponibilidade');
+  });
+
   it('o aviso do resultado é anunciado por leitor de tela', async () => {
     const pagina = await agente.get('/perfil').set('Accept', 'text/html').expect(200);
     const aviso = /<p\b[^>]*id="aviso-disponibilidade"[^>]*>/.exec(pagina.text);

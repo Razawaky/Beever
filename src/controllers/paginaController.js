@@ -120,9 +120,8 @@ export const metas = assincrono(async (req, res) => {
 });
 
 /**
- * Perfil do jogador. Hoje ela existe por causa de uma coisa só: editar os dias
- * da semana (RF-ONB-09). O resto — trocar avatar, apelido, tempo de sessão — tem
- * rota pronta e ainda não tem tela, e continua sendo a DT-12.
+ * Perfil do jogador. Existe para editar os dias da semana (RF-ONB-09); os outros
+ * campos têm rota e ainda não têm tela (DT-12).
  */
 export const perfil = assincrono(async (req, res) => {
   // Mesma ordem do painel: expira o que venceu, completa o plano e só então lê.

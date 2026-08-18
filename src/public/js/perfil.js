@@ -1,10 +1,7 @@
-// Edição da disponibilidade semanal (RF-ONB-09). JS puro na página, como o
-// resto do jogo — sem framework, sem bundler.
+// Edição da disponibilidade semanal (RF-ONB-09). JS puro na página.
 //
-// A gravação é um PUT porque a rota é a mesma que um cliente futuro usaria; o
-// token de CSRF viaja no cabeçalho, e não num campo escondido, porque o corpo
-// vai em JSON. A tela não some nem recarrega: quem acabou de trocar os dias quer
-// ler o que mudou nas metas, e é isso que o servidor devolve.
+// O corpo vai em JSON, então o token de CSRF viaja no cabeçalho. A tela não
+// recarrega: quem trocou os dias quer ler o que mudou nas metas.
 const formulario = document.getElementById('form-disponibilidade');
 const aviso = document.getElementById('aviso-disponibilidade');
 const botao = document.getElementById('btn-salvar-dias');
@@ -18,12 +15,8 @@ function mostrar(mensagem, erro = false) {
 }
 
 /**
- * O texto que o jogador lê depois de salvar.
- *
- * Ele precisa dizer três coisas quando elas acontecem: quantos dias ficaram,
- * quantas metas nasceram e — o caso que mais confunde — que as metas que
- * sobraram da semana antiga continuam ativas até vencer, porque a decisão de
- * produto é não cancelar o que já está em andamento.
+ * O texto que o jogador lê depois de salvar: quantos dias ficaram, quantas metas
+ * nasceram e que as excedentes continuam valendo até vencer.
  */
 function resumir(resultado) {
   const partes = [`Agora você joga ${resultado.dias.length} dia(s) por semana.`];

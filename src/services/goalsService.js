@@ -88,17 +88,11 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
 }
 
 /**
- * Expira as metas que passaram do prazo (RN-017).
+ * Expira as metas fora do prazo (RN-017). Preguiçosa: acontece quando o jogador
+ * abre a tela, porque não há rotina diária neste MVP.
  *
- * Preguiçosa, como as tarefas do dia: acontece quando o jogador abre a tela, e
- * não numa rotina que este MVP não tem. Vencer **não é punição** — nada é
- * removido do jogador, o progresso feito continua registrado e a meta apenas
- * deixa de valer recompensa. É por isso que reduzir a disponibilidade pode
- * deixar metas sobrando: elas ficam até vencer, e quem não concluiu a tempo
- * simplesmente não é recompensado.
- *
- * A oferta de renovação com prazo estendido e recompensa pela metade, que a
- * RN-017 também descreve, é da E06 e ainda não existe.
+ * Vencer não é punição — nada é removido, a meta só deixa de valer recompensa.
+ * A oferta de renovação da RN-017 é da E06 (DT-33).
  */
 export async function expirarVencidas(idUsuario) {
   const vencidas = await goalsRepository.listarVencidasPorUsuario(idUsuario);

@@ -4,8 +4,9 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-18 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** auditoria da E04 — a etapa fechou sem bloqueantes, e as três
-lacunas de maior risco do laudo foram corrigidas na mesma sessão
+**Último commit:** corrida do planejador fechada — a segunda passagem da
+auditoria da E04 achou metas duplicadas pagando a mesma conquista, e a trava
+entrou com teste que falha sem ela
 
 ---
 
@@ -109,7 +110,7 @@ impacto.
 |---|---|
 | Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
 | Endpoints · services · repositories | 33 · 17 · 13 |
-| Testes | **272 passando, 0 falhando** (207 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Testes | **273 passando, 0 falhando** (208 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 13 itens abertos — a T-04.4 abriu DT-31 e DT-32, e a auditoria da E04 abriu DT-33 |
 | Riscos abertos | nenhum |
 
@@ -152,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 272 passam, 0 falham. Sem MySQL, os 207 testes de banco se pulam com aviso |
+| `npm test` | 273 passam, 0 falham. Sem MySQL, os 208 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -645,14 +646,25 @@ progresso, que abrem a **E05 (conteúdo e trilha)**. É a primeira etapa que
 constrói o que o jogador de fato joga: hoje favo e célula não existem em lugar
 nenhum fora do seed.
 
-A E04 está **concluída e auditada** (`docs/04-AUDITORIA-DA-ETAPA.md`): pode
-avançar, zero bloqueantes. Das oito lacunas do laudo, três foram fechadas na
-mesma sessão — a expiração antes do replanejamento (L-1), o aviso da tela de
-perfil anunciado por leitor de tela (L-3) e a renovação da RN-017, agora
-catalogada como **DT-33** (L-2). As cinco restantes são de risco baixo e têm
-etapa marcada no próprio laudo: a lista de metas que só atualiza ao recarregar,
-o foco de teclado das caixas de dia, a largura da tela de perfil desalinhada do
-cabeçalho, e o tempo por sessão editável sem replanejar (atrelado à DT-12).
+A E04 está **concluída e auditada** (`docs/04-AUDITORIA-DA-ETAPA.md`), em duas
+passagens. A primeira aprovou com oito lacunas; a segunda, feita depois das
+correções e desta vez reproduzindo o defeito em vez de só ler o código, achou um
+**bloqueante que a primeira deixou passar**: o planejador tinha corrida.
+
+Vale guardar o defeito, porque o padrão vai se repetir na E05: `montarPlano` lia
+quantas metas faltavam e só depois criava, sem trava entre as duas coisas. Quatro
+visitas simultâneas ao painel — dois cliques rápidos bastam — criavam 12 metas em
+vez de 3, várias com **alvo idêntico**. Como o progresso é lido do saldo, um
+único acúmulo de 125 de mel completava as quatro cópias e cada uma pagava
+recompensa inteira: uma conquista, quatro pagamentos, contra a RN-016. A correção
+é `SELECT ... FOR UPDATE` na linha do usuário, releitura das ativas na mesma
+conexão e criação só do que ainda falta.
+
+As onze lacunas das duas passagens: sete corrigidas (L-1, L-2 como DT-33, L-3,
+L-9, L-10, L-11 e a higiene do L-7) e quatro abertas, todas de risco baixo e com
+etapa marcada no laudo — a lista de metas que só atualiza ao recarregar, o foco
+de teclado das caixas de dia, a largura da tela de perfil desalinhada do
+cabeçalho e o tempo por sessão editável sem replanejar (atrelado à DT-12).
 
 Duas coisas que a E05 vai precisar saber sobre o que a E04 deixou pronto:
 

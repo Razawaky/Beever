@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body, param } from 'express-validator';
 
 import * as profilesController from '../controllers/profilesController.js';
+import { limiteRecompensa } from '../middlewares/rateLimiters.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { validate } from '../middlewares/validate.js';
@@ -51,6 +52,9 @@ router.put(
 router.put(
   '/:id/disponibilidade',
   requireOnboarding,
+  // Cria metas, e meta carrega promessa de recompensa: mesmo limite das rotas
+  // que creditam.
+  limiteRecompensa,
   [
     param('id').isInt({ min: 1 }),
     body('dias').custom((valor) => {
