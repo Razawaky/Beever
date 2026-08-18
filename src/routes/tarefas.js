@@ -3,6 +3,7 @@ import { body, param } from 'express-validator';
 
 import * as tasksController from '../controllers/tasksController.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
+import { requireOnboarding } from '../middlewares/requireOnboarding.js';
 import { validate } from '../middlewares/validate.js';
 
 /**
@@ -11,7 +12,7 @@ import { validate } from '../middlewares/validate.js';
  */
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireOnboarding);
 
 router.get('/', tasksController.listar);
 

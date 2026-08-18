@@ -251,4 +251,108 @@ describe('fluxo autenticado', opcoes, () => {
 
     await agente.get('/perfil/meu').set('Accept', 'application/json').expect(401);
   });
+
+  /**
+   * Conta recém-criada que tenta pular a configuração do perfil.
+   *
+   * Vale a pena o segundo agente: a regra do onboarding só se testa com uma
+   * conta que ainda não passou por ele, e a do bloco de cima já passou no
+   * segundo teste. Antes da T-02.4 esta bateria não existia — a checagem morava
+   * dentro de dois controllers de página, e as rotas JSON de loja, metas e
+   * tarefas simplesmente não checavam nada.
+   */
+  describe('quem ainda não concluiu o onboarding', () => {
+    let novato;
+    let tokenNovato;
+    let perfilNovato;
+
+    before(async () => {
+      novato = request.agent(app);
+
+      const paginaLogin = await novato.get('/login').set('Accept', 'text/html');
+      tokenNovato = /name="_csrf" value="([^"]+)"/.exec(paginaLogin.text)[1];
+
+      const cadastro = await novato
+        .post('/users')
+        .set('Accept', 'application/json')
+        .send({
+          apelido: 'novato',
+          email: 'novato@beever.dev',
+          data_nasc: '2015-01-10',
+          senha: 'beever123',
+          _csrf: tokenNovato,
+        })
+        .expect(201);
+
+      perfilNovato = cadastro.body.idPerfil;
+
+      const paginaOnboarding = await novato.get('/onboarding').set('Accept', 'text/html');
+      tokenNovato = /data-csrf-token="([^"]+)"/.exec(paginaOnboarding.text)[1];
+    });
+
+    it('é mandado de volta ao onboarding ao abrir painel, loja ou metas', async () => {
+      for (const caminho of ['/painel', '/loja', '/metas']) {
+        const resposta = await novato.get(caminho).set('Accept', 'text/html').expect(302);
+        assert.equal(resposta.headers.location, '/onboarding', `${caminho} deveria redirecionar`);
+      }
+    });
+
+    it('recebe 403 com código nas rotas JSON de jogo, em vez de HTML', async () => {
+      for (const caminho of ['/loja/itens', '/metas', '/tarefas']) {
+        const resposta = await novato.get(caminho).set('Accept', 'application/json').expect(403);
+        assert.equal(resposta.body.codigo, 'ONBOARDING_PENDENTE', `${caminho} deveria barrar`);
+      }
+    });
+
+    it('não consegue comprar antes de configurar o perfil', async () => {
+      const resposta = await novato
+        .post('/loja/compras')
+        .set('Accept', 'application/json')
+        .send({ idItem: 1, _csrf: tokenNovato })
+        .expect(403);
+
+      assert.equal(resposta.body.codigo, 'ONBOARDING_PENDENTE');
+    });
+
+    it('depois de concluir, passa a entrar normalmente', async () => {
+      await novato
+        .put(`/perfil/${perfilNovato}/onboarding`)
+        .set('Accept', 'application/json')
+        .send({
+          apelido: 'novato',
+          avatar: 'babybee',
+          objetivo: 'aprender-a-guardar',
+          nivel: 'beginner',
+          dias: ['2', '4'],
+          _csrf: tokenNovato,
+        })
+        .expect(200);
+
+      await novato.get('/painel').set('Accept', 'text/html').expect(200);
+      await novato.get('/loja/itens').set('Accept', 'application/json').expect(200);
+    });
+
+    it('e não consegue refazer o onboarding para reescrever o ponto de partida', async () => {
+      const resposta = await novato
+        .put(`/perfil/${perfilNovato}/onboarding`)
+        .set('Accept', 'application/json')
+        .send({
+          apelido: 'novato',
+          avatar: 'babybee',
+          objetivo: 'entender-juros',
+          nivel: 'advanced',
+          dias: ['1'],
+          _csrf: tokenNovato,
+        })
+        .expect(409);
+
+      assert.equal(resposta.body.codigo, 'ONBOARDING_JA_CONCLUIDO');
+
+      const perfil = await novato.get('/perfil/meu').set('Accept', 'application/json').expect(200);
+      assert.equal(perfil.body.nivel.nivel, 1, 'o nível inicial escolhido da primeira vez continua valendo');
+
+      const paginaOnboarding = await novato.get('/onboarding').set('Accept', 'text/html').expect(302);
+      assert.equal(paginaOnboarding.headers.location, '/painel', 'a própria tela também deixa de ser acessível');
+    });
+  });
 });

@@ -3,7 +3,7 @@ import { Router } from 'express';
 import * as healthController from '../controllers/healthController.js';
 import * as homeController from '../controllers/homeController.js';
 import * as paginaController from '../controllers/paginaController.js';
-import { exigirLoginPagina } from '../middlewares/exigirLoginPagina.js';
+import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { somentePagina } from '../middlewares/somentePagina.js';
 import lojaRouter from './loja.js';
 import metasRouter from './metas.js';
@@ -34,10 +34,10 @@ router.get('/health', healthController.mostrar);
  */
 router.get('/login', paginaController.login);
 router.get('/cadastro', paginaController.cadastro);
-router.get('/onboarding', exigirLoginPagina, paginaController.onboarding);
-router.get('/painel', exigirLoginPagina, paginaController.painel);
-router.get('/loja', somentePagina, exigirLoginPagina, paginaController.loja);
-router.get('/metas', somentePagina, exigirLoginPagina, paginaController.metas);
+router.get('/onboarding', requireOnboardingPendente, paginaController.onboarding);
+router.get('/painel', requireOnboarding, paginaController.painel);
+router.get('/loja', somentePagina, requireOnboarding, paginaController.loja);
+router.get('/metas', somentePagina, requireOnboarding, paginaController.metas);
 router.get('/manutencao', paginaController.manutencao);
 
 router.use('/users', usersRouter);

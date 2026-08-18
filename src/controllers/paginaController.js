@@ -26,14 +26,13 @@ export const cadastro = (req, res) => {
   res.render('pages/cadastro', { titulo: 'Criar conta — Beever' });
 };
 
+// Quem pode ver esta tela é decidido pelo `requireOnboardingPendente` na
+// rota, não por um `if` aqui dentro.
 export const onboarding = (req, res) => {
-  if (req.session.onboardingConcluido) return res.redirect('/painel');
   res.render('pages/onboarding', { titulo: 'Configurar perfil — Beever', perfilId: req.session.perfilId });
 };
 
 export const painel = assincrono(async (req, res) => {
-  if (!req.session.onboardingConcluido) return res.redirect('/onboarding');
-
   const [perfil, inventario, metas, tarefas] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
     inventoryService.listarAgrupadoPorItem(req.session.usuarioId),

@@ -3,6 +3,7 @@ import { body, param } from 'express-validator';
 
 import * as profilesController from '../controllers/profilesController.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
+import { requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { validate } from '../middlewares/validate.js';
 
 /**
@@ -30,8 +31,11 @@ router.put(
 
 router.delete('/:id', param('id').isInt({ min: 1 }), validate, profilesController.remover);
 
+// Só quem ainda não concluiu pode gravar: refazer o onboarding reescreveria
+// o ponto de partida do XP de uma conta que já está jogando.
 router.put(
   '/:id/onboarding',
+  requireOnboardingPendente,
   [
     param('id').isInt({ min: 1 }),
     body('apelido').trim().notEmpty().withMessage('Informe como quer ser chamado').isLength({ max: 60 }),
