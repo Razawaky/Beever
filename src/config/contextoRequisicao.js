@@ -31,3 +31,14 @@ export function executarComContexto(contexto, callback) {
 export function idDaRequisicao() {
   return armazenamento.getStore()?.requestId;
 }
+
+/**
+ * Hash do IP de origem, ou `undefined` fora de uma requisição.
+ *
+ * Guardamos o hash e nunca o endereço: a auditoria precisa saber se duas ações
+ * vieram do mesmo lugar, não de onde elas vieram. Como o produto é usado por
+ * crianças, a diferença não é detalhe — é a RNF de proteção de dado pessoal.
+ */
+export function hashDoIpDaRequisicao() {
+  return armazenamento.getStore()?.ipHash;
+}

@@ -1,7 +1,7 @@
 import { emTransacao } from '../config/database.js';
-import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
 import * as goalsRepository from '../repositories/goalsRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
+import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as pointsService from './pointsService.js';
 
@@ -68,13 +68,10 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
     }),
   );
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'meta.criada',
+  await auditService.registrar(auditService.usuario(idUsuario), 'meta.criada', {
     entidade: 'goal',
-    entidadeId: idMeta,
-    estadoNovo: { titulo, alvo: alvoNumero, prazo, tipo, dificuldade },
+    id: idMeta,
+    depois: { titulo, alvo: alvoNumero, prazo, tipo, dificuldade },
   });
 
   return idMeta;
@@ -121,14 +118,11 @@ export async function concluir(idMeta, idUsuario) {
     return { mel, polen };
   });
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'meta.concluida',
+  await auditService.registrar(auditService.usuario(idUsuario), 'meta.concluida', {
     entidade: 'goal',
-    entidadeId: idMeta,
-    estadoAnterior: { status: meta.status, progresso: Number(meta.current_value) },
-    estadoNovo: { status: 'concluida', melGanho: recompensa.mel, polenGanho: recompensa.polen },
+    id: idMeta,
+    antes: { status: meta.status, progresso: Number(meta.current_value) },
+    depois: { status: 'concluida', melGanho: recompensa.mel, polenGanho: recompensa.polen },
   });
 
   return recompensa;

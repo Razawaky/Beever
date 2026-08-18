@@ -1,8 +1,8 @@
 import { emTransacao } from '../config/database.js';
-import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
 import * as inventoryRepository from '../repositories/inventoryRepository.js';
 import * as purchasesRepository from '../repositories/purchasesRepository.js';
 import { ErroAplicacao } from '../utils/erros.js';
+import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as itemsService from './itemsService.js';
 
@@ -61,13 +61,10 @@ export async function comprar(idUsuario, idItem) {
     return compra;
   });
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'compra.realizada',
+  await auditService.registrar(auditService.usuario(idUsuario), 'compra.realizada', {
     entidade: 'purchase',
-    entidadeId: idCompra,
-    estadoNovo: { idItem, item: item.name, precoTotal: preco },
+    id: idCompra,
+    depois: { idItem, item: item.name, precoTotal: preco },
   });
 
   return { idCompra, item, precoPago: preco, avisos: pendencias.filter((p) => p.naoVerificavelAinda) };

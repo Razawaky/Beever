@@ -1,7 +1,7 @@
 import { emTransacao } from '../config/database.js';
-import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
 import * as tasksRepository from '../repositories/tasksRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
+import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as pointsService from './pointsService.js';
 
@@ -51,13 +51,10 @@ export async function criar(idUsuario, { tipo, prazo, alvo = null }) {
     tasksRepository.criar(conexao, { idUsuario, idTipo: escolhido.id, alvo, prazo }),
   );
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'tarefa.criada',
+  await auditService.registrar(auditService.usuario(idUsuario), 'tarefa.criada', {
     entidade: 'task',
-    entidadeId: idTarefa,
-    estadoNovo: { tipo, prazo, alvo: alvo ?? Number(escolhido.default_target) },
+    id: idTarefa,
+    depois: { tipo, prazo, alvo: alvo ?? Number(escolhido.default_target) },
   });
 
   return idTarefa;
@@ -109,14 +106,11 @@ export async function concluir(idTarefa, idUsuario) {
     return { polen, mel };
   });
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'tarefa.concluida',
+  await auditService.registrar(auditService.usuario(idUsuario), 'tarefa.concluida', {
     entidade: 'task',
-    entidadeId: idTarefa,
-    estadoAnterior: { status: tarefa.status, progresso: Number(tarefa.current_value) },
-    estadoNovo: { status: 'concluida', polenGanho: recompensa.polen, melGanho: recompensa.mel },
+    id: idTarefa,
+    antes: { status: tarefa.status, progresso: Number(tarefa.current_value) },
+    depois: { status: 'concluida', polenGanho: recompensa.polen, melGanho: recompensa.mel },
   });
 
   return recompensa;

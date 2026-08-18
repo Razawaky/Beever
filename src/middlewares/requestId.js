@@ -1,6 +1,7 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 import { executarComContexto } from '../config/contextoRequisicao.js';
+import { env } from '../config/env.js';
 
 /**
  * Dá um identificador a cada requisição e o mantém disponível até o fim dela.
@@ -22,6 +23,21 @@ const FORMATO_ACEITO = /^[A-Za-z0-9._-]{1,128}$/;
 
 export const CABECALHO = 'x-request-id';
 
+/**
+ * O IP vira hash antes de sair daqui, e nunca é guardado em claro.
+ *
+ * A auditoria precisa responder "estas duas ações vieram do mesmo lugar?", e
+ * para isso o hash basta. Endereço de IP de uma criança é dado pessoal, e o
+ * schema reservou `ip_hash`, não `ip`, justamente por isso.
+ *
+ * O `SESSION_SECRET` entra como tempero: sem ele, o espaço de IPs é pequeno o
+ * bastante para alguém com a tabela em mãos testar todos e desfazer o hash.
+ */
+function anonimizarIp(ip) {
+  if (!ip) return undefined;
+  return createHash('sha256').update(`${env.sessao.segredo}:${ip}`).digest('hex');
+}
+
 export function requestId(req, res, next) {
   // Atrás de um proxy que já identifica a requisição, reaproveita-se o id dele:
   // assim o rastro atravessa nginx e aplicação sem trocar de nome no meio.
@@ -31,5 +47,5 @@ export function requestId(req, res, next) {
   req.id = id;
   res.setHeader(CABECALHO, id);
 
-  executarComContexto({ requestId: id }, next);
+  executarComContexto({ requestId: id, ipHash: anonimizarIp(req.ip) }, next);
 }

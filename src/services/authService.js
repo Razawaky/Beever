@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt';
 
-import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
 import { ErroAplicacao } from '../utils/erros.js';
+import * as auditService from './auditService.js';
 
 /** Autenticação de conta. Sem login de perfil separado: com perfil 1:1, não faria sentido. */
 
@@ -27,13 +27,8 @@ export async function autenticar({ email, senha }) {
 
   const perfil = await profilesRepository.buscarPorUsuario(usuario.id);
 
-  await auditLogsRepository.registrar({
-    atorTipo: usuario.eh_admin ? 'admin' : 'usuario',
-    atorId: usuario.id,
-    acao: 'sessao.login',
-    entidade: 'user',
-    entidadeId: usuario.id,
-  });
+  const ator = usuario.eh_admin ? auditService.admin(usuario.id) : auditService.usuario(usuario.id);
+  await auditService.registrar(ator, 'sessao.login', { entidade: 'user', id: usuario.id });
 
   return {
     id: usuario.id,
@@ -50,11 +45,6 @@ export async function autenticar({ email, senha }) {
 }
 
 export async function registrarLogout(usuarioId, ehAdmin) {
-  await auditLogsRepository.registrar({
-    atorTipo: ehAdmin ? 'admin' : 'usuario',
-    atorId: usuarioId,
-    acao: 'sessao.logout',
-    entidade: 'user',
-    entidadeId: usuarioId,
-  });
+  const ator = ehAdmin ? auditService.admin(usuarioId) : auditService.usuario(usuarioId);
+  await auditService.registrar(ator, 'sessao.logout', { entidade: 'user', id: usuarioId });
 }

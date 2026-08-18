@@ -1,12 +1,12 @@
 import bcrypt from 'bcrypt';
 
 import { emTransacao } from '../config/database.js';
-import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as userLevelsRepository from '../repositories/userLevelsRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
 import * as walletsRepository from '../repositories/walletsRepository.js';
 import { ErroAplicacao, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
+import * as auditService from './auditService.js';
 
 /**
  * Regra de negócio de contas. Zero SQL aqui — tudo passa pelos repositories.
@@ -18,6 +18,14 @@ import { ErroAplicacao, erroNaoEncontrado, erroValidacao } from '../utils/erros.
  */
 
 const CUSTO_BCRYPT = 10;
+
+/**
+ * O ator pode ser o dono da conta ou um administrador agindo sobre ela — a
+ * diferença muda quem responde pela ação na trilha de auditoria.
+ */
+function quemAgiu(ator) {
+  return ator.ehAdmin ? auditService.admin(ator.id) : auditService.usuario(ator.id);
+}
 
 /** Política do documento: mínimo 8 caracteres, com letras e números. */
 export function senhaValida(senha) {
@@ -102,13 +110,10 @@ export async function criar({ email, dataNasc, senha, apelido }) {
   // grande.
   await profilesRepository.atualizar(idPerfil, { faixaEtaria: faixa.code });
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'conta.criada',
+  await auditService.registrar(auditService.usuario(idUsuario), 'conta.criada', {
     entidade: 'user',
-    entidadeId: idUsuario,
-    estadoNovo: { email, apelido: apelidoLimpo, faixaEtaria: faixa.code },
+    id: idUsuario,
+    depois: { email, apelido: apelidoLimpo, faixaEtaria: faixa.code },
   });
 
   return { id: idUsuario, email, apelido: apelidoLimpo, idPerfil, faixaEtaria: faixa.code };
@@ -126,15 +131,12 @@ export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
   const afetadas = await usersRepository.atualizar(id, { apelido, email, dataNasc, senhaHash });
   if (afetadas === 0) throw erroNaoEncontrado('Usuário não encontrado');
 
-  await auditLogsRepository.registrar({
-    atorTipo: ator.ehAdmin ? 'admin' : 'usuario',
-    atorId: ator.id,
-    acao: 'conta.atualizada',
+  await auditService.registrar(quemAgiu(ator), 'conta.atualizada', {
     entidade: 'user',
-    entidadeId: id,
-    estadoAnterior: { apelido: anterior.nickname, email: anterior.email },
+    id,
+    antes: { apelido: anterior.nickname, email: anterior.email },
     // A senha nova nunca entra na auditoria, só o fato de ter mudado.
-    estadoNovo: {
+    depois: {
       apelido: apelido ?? anterior.nickname,
       email: email ?? anterior.email,
       senhaAlterada: Boolean(senha),
@@ -154,13 +156,10 @@ export async function inativar(id, ator) {
   const afetadas = await usersRepository.inativar(id);
   if (afetadas === 0) throw erroNaoEncontrado('Usuário não encontrado');
 
-  await auditLogsRepository.registrar({
-    atorTipo: ator.ehAdmin ? 'admin' : 'usuario',
-    atorId: ator.id,
-    acao: 'conta.inativada',
+  await auditService.registrar(quemAgiu(ator), 'conta.inativada', {
     entidade: 'user',
-    entidadeId: id,
-    estadoAnterior: { ativa: Boolean(usuario.is_active) },
-    estadoNovo: { ativa: false },
+    id,
+    antes: { ativa: Boolean(usuario.is_active) },
+    depois: { ativa: false },
   });
 }

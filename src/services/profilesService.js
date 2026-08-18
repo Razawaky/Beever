@@ -1,8 +1,8 @@
 import { emTransacao } from '../config/database.js';
-import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado } from '../utils/erros.js';
+import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as levelsService from './levelsService.js';
 import * as schedulesService from './schedulesService.js';
@@ -58,14 +58,11 @@ export async function atualizar(idPerfil, idUsuario, { apelido, avatar, fuso, mi
   if (apelido) await usersRepository.atualizar(idUsuario, { apelido });
   await profilesRepository.atualizar(idPerfil, { avatar, fuso, minutosPorSessao });
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'perfil.atualizado',
+  await auditService.registrar(auditService.usuario(idUsuario), 'perfil.atualizado', {
     entidade: 'profile',
-    entidadeId: idPerfil,
-    estadoAnterior: { apelido: usuarioAnterior?.nickname, avatar: anterior?.avatar },
-    estadoNovo: { apelido: apelido ?? usuarioAnterior?.nickname, avatar: avatar ?? anterior?.avatar },
+    id: idPerfil,
+    antes: { apelido: usuarioAnterior?.nickname, avatar: anterior?.avatar },
+    depois: { apelido: apelido ?? usuarioAnterior?.nickname, avatar: avatar ?? anterior?.avatar },
   });
 
   return obterDoUsuario(idUsuario);
@@ -75,12 +72,9 @@ export async function remover(idPerfil, idUsuario) {
   await exigirPosse(idPerfil, idUsuario);
   await profilesRepository.remover(idPerfil);
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'perfil.removido',
+  await auditService.registrar(auditService.usuario(idUsuario), 'perfil.removido', {
     entidade: 'profile',
-    entidadeId: idPerfil,
+    id: idPerfil,
   });
 }
 
@@ -112,13 +106,10 @@ export async function salvarOnboarding(idPerfil, idUsuario, { apelido, avatar, o
     return { nivelInicial, diasMarcados };
   });
 
-  await auditLogsRepository.registrar({
-    atorTipo: 'usuario',
-    atorId: idUsuario,
-    acao: 'onboarding.concluido',
+  await auditService.registrar(auditService.usuario(idUsuario), 'onboarding.concluido', {
     entidade: 'profile',
-    entidadeId: idPerfil,
-    estadoNovo: {
+    id: idPerfil,
+    depois: {
       apelido,
       avatar,
       objetivo,

@@ -246,6 +246,30 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(Number(nivel.xp_total), Number(xp.total), 'XP: idem, inclusive o ponto de partida');
   });
 
+  it('a auditoria registra a compra com ator, requisição e origem', async () => {
+    const conexao = banco.conexao;
+    const [[registro]] = await conexao.query(
+      `SELECT t.slug AS ator, l.action, l.entity_type, l.after_state, l.ip_hash, l.request_id
+         FROM audit_logs l
+         JOIN audit_actor_types t ON t.id = l.actor_type_id
+        WHERE l.action = 'compra.realizada'
+        ORDER BY l.id DESC
+        LIMIT 1`,
+    );
+
+    assert.ok(registro, 'toda compra precisa deixar rastro (RN-010)');
+    assert.equal(registro.ator, 'usuario');
+    assert.equal(registro.entity_type, 'purchase');
+
+    // Preenchidos pelo AuditService a partir do contexto da requisição: nenhum
+    // service conhece o `req`, e mesmo assim a linha sai completa.
+    assert.match(registro.ip_hash, /^[0-9a-f]{64}$/, 'o IP entra como hash, nunca em claro');
+    assert.match(registro.request_id, /^[0-9a-f-]{36}$/, 'a linha aponta para a requisição que a gerou');
+
+    const depois = typeof registro.after_state === 'string' ? JSON.parse(registro.after_state) : registro.after_state;
+    assert.ok(depois.precoTotal > 0);
+  });
+
   it('o logout encerra a sessão e a rota privada volta a exigir login', async () => {
     await agente.post('/sessao/logout').set('Accept', 'application/json').send({ _csrf: csrf }).expect(200);
 

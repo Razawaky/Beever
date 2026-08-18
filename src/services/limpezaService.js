@@ -1,8 +1,8 @@
 import cron from 'node-cron';
 
 import { logger } from '../config/logger.js';
-import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
+import * as auditService from './auditService.js';
 
 /**
  * Expurgo de contas inativas (RN-053). Ver
@@ -23,12 +23,10 @@ export async function expurgarContasInativas(dias = DIAS_ATE_EXPURGO) {
     // A linha de auditoria sobrevive ao expurgo: `audit_logs` não tem foreign
     // key para `users` justamente para que apagar a conta não apague o rastro
     // de que ela existiu (RN-053).
-    await auditLogsRepository.registrar({
-      atorTipo: 'sistema',
-      acao: 'conta.expurgada',
+    await auditService.registrar(auditService.sistema(), 'conta.expurgada', {
       entidade: 'user',
-      entidadeId: usuario.id,
-      estadoAnterior: { apelido: usuario.nickname, email: usuario.email, diasInativo: dias },
+      id: usuario.id,
+      antes: { apelido: usuario.nickname, email: usuario.email, diasInativo: dias },
     });
   }
 
