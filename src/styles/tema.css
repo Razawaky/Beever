@@ -122,3 +122,38 @@
     animation: none;
   }
 }
+
+/* Barras de progresso — largura por classe, nunca por atributo `style`.
+   
+   A CSP da aplicação declara `style-src 'self'` sem `'unsafe-inline'` (RNF-11),
+   e isso vale também para o atributo `style` de um elemento, não só para a tag
+   `<style>`. As barras de XP, de tarefa e de meta escreviam a largura ali
+   dentro, então o navegador simplesmente descartava a regra e as três
+   apareciam vazias — defeito que nenhum teste pegou porque toda verificação era
+   por `curl` e `supertest`, que não aplicam CSP.
+
+   A largura passa a ser uma classe de passo de 5%. Cinco pontos percentuais são
+   menos de dois pixels numa barra de 224 px: ninguém enxerga a diferença, e o
+   número exato continua escrito ao lado e no `aria-valuenow`, que é onde ele
+   precisa ser exato. */
+.barra-0 { width: 0%; }
+.barra-5 { width: 5%; }
+.barra-10 { width: 10%; }
+.barra-15 { width: 15%; }
+.barra-20 { width: 20%; }
+.barra-25 { width: 25%; }
+.barra-30 { width: 30%; }
+.barra-35 { width: 35%; }
+.barra-40 { width: 40%; }
+.barra-45 { width: 45%; }
+.barra-50 { width: 50%; }
+.barra-55 { width: 55%; }
+.barra-60 { width: 60%; }
+.barra-65 { width: 65%; }
+.barra-70 { width: 70%; }
+.barra-75 { width: 75%; }
+.barra-80 { width: 80%; }
+.barra-85 { width: 85%; }
+.barra-90 { width: 90%; }
+.barra-95 { width: 95%; }
+.barra-100 { width: 100%; }

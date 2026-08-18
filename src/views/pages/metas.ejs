@@ -79,8 +79,15 @@
             </div>
             <div class="w-24 text-right">
               <span class="text-sm font-semibold"><%= percentual %>%</span>
-              <div class="mt-1 h-2 overflow-hidden rounded-pilula bg-linha">
-                <div class="h-full bg-mel" style="width: <%= percentual %>%"></div>
+              <div
+                class="mt-1 h-2 overflow-hidden rounded-pilula bg-linha"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="<%= percentual %>"
+                aria-label="Progresso da meta"
+              >
+                <div class="h-full bg-mel <%= classeDaBarra(percentual) %>"></div>
               </div>
             </div>
           </div>

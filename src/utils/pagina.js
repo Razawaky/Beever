@@ -1,3 +1,5 @@
+import { classeDaBarra } from './barraDeProgresso.js';
+
 /**
  * Renderiza uma página dentro do layout base.
  *
@@ -21,6 +23,9 @@ export function renderizarPagina(res, pagina, dados = {}) {
 
   return res.render('layout', {
     pagina: `pages/${pagina}`,
+    // Disponível em toda página: barra de progresso aparece no painel e nas
+    // metas, e nenhuma das duas pode escrever largura em atributo `style`.
+    classeDaBarra,
     classeBody,
     comCabecalho,
     comRodape,

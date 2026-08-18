@@ -15,11 +15,16 @@
         <p class="text-sm text-tinta-suave">🌼 <%= perfil.polen %> de pólen</p>
         <%# O progresso dentro do nível vem calculado do service: a curva mora
             em `levels` e a conta não se repete na view. %>
-        <div class="mt-2 h-3 w-56 overflow-hidden rounded-pilula bg-white/40">
-          <div
-            class="h-full rounded-pilula bg-breu"
-            style="width: <%= perfil.nivel?.progressoPercentual ?? 0 %>%"
-          ></div>
+        <% const progressoNivel = perfil.nivel?.progressoPercentual ?? 0; %>
+        <div
+          class="mt-2 h-3 w-56 overflow-hidden rounded-pilula bg-white/40"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="<%= progressoNivel %>"
+          aria-label="Progresso até o próximo nível"
+        >
+          <div class="h-full rounded-pilula bg-breu <%= classeDaBarra(progressoNivel) %>"></div>
         </div>
         <p class="mt-1 text-xs text-tinta-suave">
           <% if (perfil.nivel?.noTopo) { %>
@@ -71,8 +76,15 @@
           <div class="rounded-lg bg-white p-4">
             <p class="font-semibold"><%= metaPrincipal.title %></p>
             <p class="mt-1 text-sm text-tinta-suave"><%= atual %> de <%= alvo %></p>
-            <div class="mt-4 h-3 w-full overflow-hidden rounded-pilula bg-linha">
-              <div class="h-3 rounded-pilula bg-mel" style="width: <%= percentual %>%"></div>
+            <div
+              class="mt-4 h-3 w-full overflow-hidden rounded-pilula bg-linha"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="<%= percentual %>"
+              aria-label="Progresso da meta"
+            >
+              <div class="h-3 rounded-pilula bg-mel <%= classeDaBarra(percentual) %>"></div>
             </div>
             <p class="mt-1 text-sm text-tinta-suave"><%= percentual %>% concluído</p>
           </div>
