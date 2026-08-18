@@ -109,9 +109,9 @@ impacto.
 | Em números | |
 |---|---|
 | Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
-| Endpoints · services · repositories | 32 · 17 · 17 |
-| Testes | **295 passando, 0 falhando** (230 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
-| Dívida técnica catalogada | 14 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33 e a correção de escopo abriu DT-34 |
+| Endpoints · services · repositories | 32 · 18 · 17 |
+| Testes | **318 passando, 0 falhando** (240 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Dívida técnica catalogada | 15 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33, a correção de escopo abriu DT-34 e a T-05.2 abriu DT-35 |
 | Riscos abertos | nenhum |
 
 ---
@@ -153,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 295 passam, 0 falham. Sem MySQL, os 230 testes de banco se pulam com aviso |
+| `npm test` | 318 passam, 0 falham. Sem MySQL, os 240 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -261,7 +261,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Tarefa | Situação |
 |---|---|
 | T-05.1 Repositories de favo, célula, conteúdo e progresso | **feita** — `hivesRepository`, `cellsRepository`, `contentsRepository` e `progressRepository`, com 21 testes contra banco real |
-| T-05.2 `ContentService`: favos e células com estado, desbloqueio (RN-026/027/028) | pendente |
+| T-05.2 `ContentService`: favos e células com estado, desbloqueio (RN-026/027/028) | **feita** — trilha, lista de células e abertura de célula, com o pré-requisito conferido no service e não só na tela |
 | T-05.3 `ProgressService`: tentativa, erros, estrelas, tempo, percentual do favo | pendente |
 | T-05.4 Views da trilha e da lista de células | pendente |
 | T-05.5 Filtro por faixa de idade | pendente — depende de semear as faixas B e C (DT-17) |
@@ -293,6 +293,34 @@ Um defeito encontrado pelo próprio teste, e que vale como regra geral: a primei
 versão de `recalcularFavo` gravava na conexão da transação e lia pelo pool, então
 devolvia `null` — a linha ainda não existia para ninguém de fora. Quem escreve em
 transação e lê em seguida tem de ler pela mesma conexão.
+**O que a T-05.2 entregou.** O `contentService` responde o que o jogador pode
+abrir e por que não pode o resto. Cada favo e cada célula voltam com `estado` e
+`motivo` prontos — `disponivel`, `concluido`, `travado-por-celula-anterior`,
+`travado-por-percentual`, `travado-por-item`, `travado-por-patrimonio` —, então a
+view da T-05.4 escolhe ícone e texto sem refazer regra, e a mesma resposta serve
+para JSON.
+
+Três decisões que valem lembrar:
+
+1. **A sequência da RN-027 é dentro da faixa.** O primeiro favo de cada faixa
+   visível abre livre, e o `unlock_percent` só olha o vizinho da mesma faixa.
+   Sequência global prenderia quem entra na faixa C atrás de conteúdo infantil, e
+   o schema já modela assim (`idx_hives_order (age_band_id, order_index)`).
+2. **O pré-requisito é conferido no service, não na tela.** `abrirCelula` recusa
+   célula travada mesmo quando o pedido chega direto, sem passar pela lista — é o
+   critério de aceite da etapa ("impossível burlar pré-requisito via URL") e tem
+   teste com esse nome.
+3. **A ordem das checagens tem motivo.** Primeiro o percentual, depois item e
+   patrimônio: quem ainda não jogou o favo anterior é avisado disso, e não de que
+   lhe falta um item que ele nem precisaria comprar ainda.
+
+**Patrimônio hoje conta só itens** — `inventoryRepository.valorTotalEmPatrimonio`
+soma o inventário que a regra manda contar. A RN-045 diz que patrimônio "na
+prática exige uso do cofre", e o cofre é E09: quando ele existir, a soma passa a
+vir de dois lugares e o service tem de perguntar aos dois. É a **DT-35**. Nenhum
+favo semeado exige patrimônio, então o caminho está testado com favo montado no
+teste, não em produção às cegas.
+
 
 ---
 
@@ -500,7 +528,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
-| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories de favo, célula, conteúdo e progresso, com teste de integração para cada um. Faltam T-05.2 a T-05.6 |
+| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio e a recusa de abrir célula travada. Faltam T-05.3 a T-05.6 |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
@@ -553,6 +581,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-32 | A meta de "atingir nível" é mensurável mas ainda inalcançável: nenhuma recompensa do MVP credita XP, então o nível não sobe e a meta fica parada. Ela não é meta impossível por desenho — é impossível por falta do motor de XP, que é o buraco conhecido da E06 | T-04.4 | E06, junto do motor de recompensa. Se atrasar, a saída é uma linha a menos em `goal_target_rules` |
 | DT-33 | A RN-017 tem duas metades e só uma existe: a meta vencida entra em `expirada` sem punição, mas **a oferta de renovação — prazo estendido e recompensa reduzida em 50% — não foi construída**. Hoje a meta vencida simplesmente some das ativas e o planejador põe outra no lugar, então o jogador perde o trabalho já feito naquela meta específica sem a chance de retomá-la. É também a RF-MET-05 | auditoria da E04, L-2 | E06, junto do motor de recompensa, que é quem sabe calcular recompensa pela metade |
 | DT-34 | O administrador não tem como calibrar o ritmo do jogo: `goal_plan_rules` e `goal_target_rules` só mudam rodando `db:seed`, que é deploy. É o poder que faz sentido dar ao admin sobre metas — **não** criar meta para um jogador específico, o que reabriria o furo da RN-014 pelo painel administrativo. Requisito ainda não escrito em `01-REQUISITOS-E-REGRAS.md` | correção de escopo da E04, 2026-08-18 | E12, junto do resto da área administrativa |
+| DT-35 | O patrimônio que destrava favo (RN-028) conta só o inventário. A RN-045 diz que ele "na prática exige uso do cofre", e o cofre não existe: quando existir, `contentService` precisa somar as duas fontes, e um favo calibrado hoje ficará fácil demais | T-05.2 | E09, junto do cofre. A soma tem um lugar só — `contextoDoJogador` — então é mudança de uma linha |
 | DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos
