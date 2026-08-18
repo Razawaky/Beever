@@ -260,8 +260,8 @@ marcada. A tabela abaixo é a da E04, na ordem do `02-ROADMAP-ETAPAS.md`.
 
 | Tarefa | Situação |
 |---|---|
-| T-04.1 Auditar o onboarding existente e decidir o que reaproveitar | **feita** (commit `9a3e01d`) — laudo em `docs/04-AUDITORIA-DO-ONBOARDING.md`, dois bloqueantes corrigidos |
-| T-04.2 Máquina de passos com progresso salvo a cada passo | **feita** (commit `9a3e01d`) — passo gravado no servidor, retomada em outro navegador, DT-28 e DT-29 fechadas |
+| T-04.1 Auditar o onboarding existente e decidir o que reaproveitar | **feita** (commit `07bf3db`) — laudo em `docs/04-AUDITORIA-DO-ONBOARDING.md`, dois bloqueantes corrigidos |
+| T-04.2 Máquina de passos com progresso salvo a cada passo | **feita** (commit `07bf3db`) — passo gravado no servidor, retomada em outro navegador, DT-28 e DT-29 fechadas |
 | T-04.3 Persistir disponibilidade, faixa, tempo de sessão, objetivo e avatar | pendente |
 | T-04.4 `GoalPlannerService` conforme RN-014/015 | pendente |
 | T-04.5 `requireOnboarding` bloqueando o app até concluir | **feita na T-02.4** (commit `4e6020c`) |
