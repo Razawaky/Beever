@@ -95,7 +95,7 @@ Seguem abertas L-2, L-4, L-5, L-6 e L-7, com o encaminhamento da seção 4.
 
 ---
 
-## 4. Veredito
+## 4. Veredito da primeira passagem *(mantido — ver seção 5)*
 
 **Pode avançar para a E06. Zero bloqueantes técnicos.**
 
@@ -118,3 +118,76 @@ Encaminhamento sugerido:
 - **L-4** some ou ganha o filtro, na mesma passada da L-1.
 - **L-5, L-6, L-7** para a E10/E11, com o resto do trabalho de front — e a L-7
   precisa acontecer antes da entrega, não depois.
+
+---
+
+## 5. Segunda passagem — 2026-08-18, commit `299ef80`
+
+Reauditoria depois das correções da seção 3.1, e desta vez com o checklist de
+banco aplicado — a primeira passagem **pulou o passo 6 do roteiro de auditoria**,
+embora a E05 tenha mexido em seed. Também é a passagem que finalmente olhou para
+o que a tela escreve, e não só para o que o código decide.
+
+### 5.1 O checklist de banco, que a primeira passagem não aplicou
+
+A E05 não criou migration — só semeou conteúdo. O item que importa aqui é a
+idempotência do seed, e ela foi **medida**: rodando `db:seed` duas vezes contra o
+mesmo banco, as contagens ficam iguais — 6 favos, 24 células, 24 conteúdos antes
+e depois. As `ON DUPLICATE KEY UPDATE` novas se apoiam em chaves que já existiam
+(`uq_hives_slug`, `uq_cells_hive_order`, `uq_contents_cell_version`), e o
+`INSERT` de conteúdo-placeholder é condicionado a `WHERE existente.id IS NULL`.
+
+Nenhum valor monetário novo, nenhum saldo, nenhuma tabela nova: os demais itens
+do checklist da seção 8 do documento de banco não se aplicam a esta etapa.
+
+### 5.2 As correções da seção 3.1 se sustentam
+
+| Lacuna | Confere? |
+|---|---|
+| L-1 | **sim** — a página do favo não contém `/celula/` em lugar nenhum, e a constante `JOGO_DISPONIVEL` deixa a volta para a E07 num ponto só |
+| L-3 | **sim** — `/trilha/abc` e `/trilha/0` são recusados na rota |
+
+### 5.3 O que as duas passagens anteriores deixaram passar
+
+**L-8 (médio) — a trilha diz "0 de ? células" para todo favo nunca jogado.**
+É a primeira coisa que um jogador novo lê. O texto sai de
+`favo.celulasTotais || '?'`, e `celulasTotais` vem de `hive_progress`, que **só
+ganha linha depois da primeira tentativa**. O número existe e é conhecido — o
+favo tem quatro células no catálogo —, mas a tela pergunta em vez de dizer.
+Capturado com a página renderizada de uma conta recém-criada:
+
+```
+0 de ? células · 0%
+```
+
+A tela do favo não tem o defeito, porque lá há um segundo caminho
+(`|| celulas.length`). A trilha e o painel de desktop têm.
+
+**L-9 (médio-baixo) — endereço inválido responde "Verifique os campos
+preenchidos", com status 422.** A correção da L-3 pendurou o validador de campo
+numa rota de página, e a mensagem que ele produz fala de formulário. Quem digita
+`/trilha/abc` no navegador lê um recado sobre campos que ele não preencheu, com
+um status que descreve entidade inválida em vez de endereço inexistente — 404
+seria a resposta honesta. É dívida que a própria correção criou, e vale registrar
+como tal.
+
+### 5.4 Veredito da segunda passagem
+
+**Pode avançar para a E06. Zero bloqueantes.**
+
+As duas lacunas novas são de interface e não afetam regra, dado ou segurança —
+mas as duas são visíveis para o jogador, e a L-8 aparece na primeira tela da
+trilha. Encaminhamento sugerido:
+
+1. **L-8** — a trilha já tem como saber o total: `cellsRepository.contarDoFavo`
+   existe, sobra sem uso (é a L-4) e resolve as duas lacunas de uma vez, se
+   ganhar o filtro de faixa que a L-4 pede.
+2. **L-9** — rota de página com id inválido devia terminar em 404, não em 422 de
+   formulário.
+3. As demais — L-2, L-5, L-6, L-7 — seguem como estavam.
+
+A lição desta passagem, para as auditorias seguintes: **o roteiro tem sete
+passos, e pular um deles é como a primeira passagem quase deixou o seed sem
+conferência.** E olhar o HTML renderizado acha em minutos o que a leitura do
+código não acha — as duas lacunas novas saíram de imprimir a página, não de reler
+o service.
