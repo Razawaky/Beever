@@ -4,9 +4,9 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-18 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** corrida do planejador fechada — a segunda passagem da
-auditoria da E04 achou metas duplicadas pagando a mesma conquista, e a trava
-entrou com teste que falha sem ela
+**Último commit:** `264b656` — E05 concluída e auditada em duas passagens, com
+cinco das nove lacunas corrigidas. Árvore limpa, 349 testes passando.
+**Próximo passo: T-06.1**, que abre o motor de recompensas
 
 ---
 
@@ -848,3 +848,52 @@ Três coisas que a E06 vai precisar saber sobre o que a E05 deixou pronto:
 3. **A tela de jogo é a chave do botão "em breve".** A constante
    `JOGO_DISPONIVEL`, em `paginaController`, vira `true` quando a E07 entregar a
    rota `/trilha/:idFavo/celula/:idCelula`.
+
+
+---
+
+## 9. Onde paramos — sessão de 2026-08-18
+
+Sessão encerrada com a **árvore limpa** e tudo commitado em
+`refactor/arquitetura-em-camadas`. Para retomar, basta
+`docker compose up -d mysql && npm test` — devem passar 349, zero falhas.
+
+**O que esta sessão fez, em ordem:** fechou a E04 (T-04.6 e T-04.7 estavam
+escritas mas não commitadas), auditou-a em duas passagens, tirou do jogador a
+criação manual de meta — que nenhum RF-MET autoriza — e entregou a E05 inteira,
+das seis tarefas à auditoria, também em duas passagens.
+
+**Commits desta sessão**, do mais antigo ao mais novo:
+
+| Commit | O que é |
+|---|---|
+| `d72b18d` | T-04.6 e T-04.7 — edição da disponibilidade no perfil |
+| `54f539f` | Corrida do planejador: trava, transação da semana, limitador |
+| `2f66c22` | Meta é gerada, não digitada — some a criação manual |
+| `220e2d2` | T-05.1 — os quatro repositories da trilha |
+| `4382f93` | T-05.2 — `contentService` e os estados de desbloqueio |
+| `d443f9a` | T-05.3 — `progressService`, erros viram estrelas |
+| `39925a7` | T-05.4 — telas da trilha e da lista de células |
+| `16a86a5` | T-05.5 — conteúdo nas três faixas, filtro também na célula |
+| `84aa1fa` | T-05.6 — aceite da etapa, com os 80% enfim exercidos |
+| `264b656` | Últimas correções do laudo da E05 |
+
+Mais os `docs:` de auditoria e de estado no meio do caminho.
+
+**Como retomar:** `/proxima-tarefa` já cai na T-06.1. Antes de escrever código,
+vale ler as três notas da seção anterior sobre o que a E05 deixou pronto — em
+especial que a **regra das estrelas (RN-030) já tem dono** e não deve ser
+reescrita na T-06.5.
+
+**O que ficou aberto, e onde está escrito:**
+
+| Item | Onde |
+|---|---|
+| Quatro lacunas baixas da E05 (tempo da RF-CON-04, página de erro do favo travado, leitura repetida de perfil/faixas, checklist visual em navegador) | `docs/05-AUDITORIA-DA-ETAPA.md`, seções 3 e 5 |
+| Quatro lacunas baixas da E04 (lista de metas que não atualiza, foco de teclado, largura da tela de perfil, tempo por sessão sem replanejar) | `docs/04-AUDITORIA-DA-ETAPA.md` |
+| 15 itens de dívida catalogada, com etapa marcada | seção 5 deste documento |
+
+**A única coisa que exige atenção antes da entrega, e não da E06:** o checklist
+visual nunca foi conferido em navegador de verdade. Nenhuma das telas novas foi
+aberta em um — 320 px sem rolagem horizontal e contraste medido pedem isso, e é
+o tipo de coisa que só aparece na apresentação.
