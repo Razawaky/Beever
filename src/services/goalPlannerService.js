@@ -102,13 +102,13 @@ export function calcularAlvo({ regraDeAlvo, valorAtual, dias, minutosPorSessao, 
 }
 
 /**
- * Monta o plano sem gravar nada: quantas metas faltam, de que tipo, com que
- * alvo e até quando.
+ * Monta o plano sem gravar nada: quantas metas a faixa pede, quantas faltam, de
+ * que tipo, com que alvo e até quando.
  *
- * Devolve `null` quando não há o que planejar — semana vazia (que a RF-ONB-03
- * impede, mas conta antiga pode ter) ou plano já completo. Assim quem chama a
- * cada visita ao painel não paga uma transação para descobrir que não há
- * trabalho.
+ * `pedidas` volta mesmo quando não há nada a criar, porque quem edita a
+ * disponibilidade precisa saber quantas metas a faixa nova pede para explicar as
+ * que sobraram. `metas` vazia quer dizer "não há o que criar" — plano completo,
+ * ou semana vazia, que a RF-ONB-03 impede mas conta antiga pode ter.
  */
 async function montarPlano(idUsuario) {
   const [dias, perfil, regras, ativas] = await Promise.all([
@@ -118,13 +118,14 @@ async function montarPlano(idUsuario) {
     goalsRepository.listarAtivasPorUsuario(idUsuario),
   ]);
 
-  if (dias.length === 0) return null;
+  if (dias.length === 0) return { dias: 0, pedidas: 0, metas: [] };
 
   const plano = escolherPlano(regras, dias.length);
   if (!plano) throw erroValidacao(`Não há regra de plano de metas para ${dias.length} dia(s) na semana`);
 
-  const faltam = Number(plano.active_goals) - ativas.length;
-  if (faltam <= 0) return null;
+  const pedidas = Number(plano.active_goals);
+  const faltam = pedidas - ativas.length;
+  if (faltam <= 0) return { dias: dias.length, pedidas, metas: [] };
 
   // RN-015: só entra no sorteio o tipo que tem régua de alvo **e** fonte de
   // progresso que alguém sabe medir. É esta interseção que impede o planejador
@@ -134,7 +135,7 @@ async function montarPlano(idUsuario) {
   const candidatos = (await goalsRepository.listarRegrasDeAlvo()).filter((tipo) =>
     mensuraveis.has(tipo.progress_source),
   );
-  if (candidatos.length === 0) return null;
+  if (candidatos.length === 0) return { dias: dias.length, pedidas, metas: [] };
 
   const minutosPorSessao = Number(perfil?.session_minutes ?? MINUTOS_DE_REFERENCIA);
   const diasDePrazo = Number(plano.default_days);
@@ -175,7 +176,7 @@ async function montarPlano(idUsuario) {
     });
   }
 
-  return { dias: dias.length, plano, metas };
+  return { dias: dias.length, pedidas, plano, metas };
 }
 
 /** Sorteio simples. A RN-015 pede sorteio, não rodízio: duas contas iguais não recebem o mesmo par. */
@@ -194,7 +195,7 @@ function sortear(lista) {
  */
 export async function garantirMetasAtivas(idUsuario) {
   const plano = await montarPlano(idUsuario);
-  if (!plano) return { criadas: 0, metas: [] };
+  if (plano.metas.length === 0) return { criadas: 0, metas: [], metasPedidas: plano.pedidas };
 
   const criadas = await emTransacao(async (conexao) => {
     const ids = [];
@@ -222,5 +223,5 @@ export async function garantirMetasAtivas(idUsuario) {
     });
   }
 
-  return { criadas: criadas.length, metas: plano.metas };
+  return { criadas: criadas.length, metas: plano.metas, metasPedidas: plano.pedidas };
 }

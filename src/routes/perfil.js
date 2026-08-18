@@ -3,7 +3,7 @@ import { body, param } from 'express-validator';
 
 import * as profilesController from '../controllers/profilesController.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
-import { requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
+import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { validate } from '../middlewares/validate.js';
 
 /**
@@ -41,6 +41,27 @@ router.put(
   ],
   validate,
   profilesController.atualizar,
+);
+
+/**
+ * RF-ONB-09 e RN-013: a semana é editável depois do onboarding, e editar não
+ * pode custar progresso. Só quem já concluiu chega aqui — durante o onboarding
+ * quem grava os dias é o passo do wizard.
+ */
+router.put(
+  '/:id/disponibilidade',
+  requireOnboarding,
+  [
+    param('id').isInt({ min: 1 }),
+    body('dias').custom((valor) => {
+      const lista = valor === undefined ? [] : [].concat(valor);
+      if (lista.length === 0) throw new Error('Escolha pelo menos um dia da semana');
+      return true;
+    }),
+    body('dias.*').isInt({ min: 0, max: 6 }).withMessage('Dia da semana inválido'),
+  ],
+  validate,
+  profilesController.atualizarDisponibilidade,
 );
 
 router.delete('/:id', param('id').isInt({ min: 1 }), validate, profilesController.remover);

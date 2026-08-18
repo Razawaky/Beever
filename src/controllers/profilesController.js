@@ -38,6 +38,23 @@ export const atualizar = assincrono(async (req, res) => {
   res.json(perfil);
 });
 
+/**
+ * A semana nova (RF-ONB-09). Devolve o que mudou — quantas metas a faixa pede
+ * agora, quantas nasceram e quantas sobraram — para a tela poder explicar em vez
+ * de o jogador descobrir sozinho.
+ */
+export const atualizarDisponibilidade = assincrono(async (req, res) => {
+  const dias = req.body.dias === undefined ? [] : [].concat(req.body.dias);
+  const resultado = await profilesService.atualizarDisponibilidade(
+    Number(req.params.id),
+    req.session.usuarioId,
+    dias,
+  );
+
+  if (querJson(req)) return res.json({ mensagem: 'Disponibilidade atualizada', ...resultado });
+  res.redirect('/perfil');
+});
+
 export const remover = assincrono(async (req, res) => {
   await profilesService.remover(Number(req.params.id), req.session.usuarioId);
   res.json({ mensagem: 'Perfil removido com sucesso' });

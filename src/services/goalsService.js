@@ -88,6 +88,37 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
 }
 
 /**
+ * Expira as metas que passaram do prazo (RN-017).
+ *
+ * Preguiçosa, como as tarefas do dia: acontece quando o jogador abre a tela, e
+ * não numa rotina que este MVP não tem. Vencer **não é punição** — nada é
+ * removido do jogador, o progresso feito continua registrado e a meta apenas
+ * deixa de valer recompensa. É por isso que reduzir a disponibilidade pode
+ * deixar metas sobrando: elas ficam até vencer, e quem não concluiu a tempo
+ * simplesmente não é recompensado.
+ *
+ * A oferta de renovação com prazo estendido e recompensa pela metade, que a
+ * RN-017 também descreve, é da E06 e ainda não existe.
+ */
+export async function expirarVencidas(idUsuario) {
+  const vencidas = await goalsRepository.listarVencidasPorUsuario(idUsuario);
+  if (vencidas.length === 0) return { expiradas: 0 };
+
+  await emTransacao((conexao) => goalsRepository.expirarVencidasDoUsuario(conexao, idUsuario));
+
+  for (const meta of vencidas) {
+    await auditService.registrar(auditService.usuario(idUsuario), 'meta.expirada', {
+      entidade: 'goal',
+      id: meta.id,
+      antes: { status: 'ativa', progresso: Number(meta.current_value), alvo: Number(meta.target_value) },
+      depois: { status: 'expirada', recompensaPaga: 0 },
+    });
+  }
+
+  return { expiradas: vencidas.length };
+}
+
+/**
  * Recalcula o progresso das metas ativas a partir da fonte de cada tipo.
  *
  * É *lazy*, chamada quando o jogador abre a tela: uma meta de "juntar 200 de
@@ -95,6 +126,10 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
  * de mostrar a meta.
  */
 export async function sincronizarProgresso(idUsuario) {
+  // Antes de reler qualquer número, tira da frente o que já venceu: meta fora do
+  // prazo não recebe progresso novo nem entra na conta do planejador.
+  await expirarVencidas(idUsuario);
+
   const metas = await goalsRepository.listarAtivasPorUsuario(idUsuario);
   let sincronizadas = 0;
 

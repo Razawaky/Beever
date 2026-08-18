@@ -121,7 +121,45 @@ export async function concluir(conexao, id) {
   return resultado.affectedRows;
 }
 
-/** Metas ativas com prazo vencido. O cron diário usa isto para expirar e oferecer renovação. */
+/**
+ * As metas deste jogador que passaram do prazo e ainda constam como ativas.
+ *
+ * Existe para a expiração poder ser auditada: quem expira precisa saber o que
+ * expirou, e um `UPDATE` só devolve quantas linhas mudaram.
+ */
+export async function listarVencidasPorUsuario(idUsuario) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM goals g
+       ${JOINS}
+      WHERE g.user_id = ? AND st.slug = 'ativa' AND g.completed_at IS NULL AND g.due_at < NOW()
+      ORDER BY g.due_at`,
+    [idUsuario],
+  );
+}
+
+/**
+ * Expira as metas vencidas de um jogador só.
+ *
+ * A versão global existe para uma rotina diária que ainda não há. Esta é a que o
+ * jogo usa: a expiração acontece quando o jogador abre a tela, do mesmo jeito
+ * preguiçoso das tarefas do dia e do ciclo econômico.
+ */
+export async function expirarVencidasDoUsuario(conexao, idUsuario) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE goals
+        SET status_id = (SELECT id FROM goal_statuses WHERE slug = 'expirada')
+      WHERE user_id = ?
+        AND completed_at IS NULL
+        AND due_at < NOW()
+        AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
+    [idUsuario],
+  );
+  return resultado.affectedRows;
+}
+
+/** Metas ativas com prazo vencido, de todo mundo. Para uma rotina diária, quando houver. */
 export async function expirarVencidas(conexao = null) {
   const resultado = await consultarEm(
     conexao,

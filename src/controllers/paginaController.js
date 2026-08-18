@@ -3,6 +3,7 @@ import * as goalsService from '../services/goalsService.js';
 import * as inventoryService from '../services/inventoryService.js';
 import * as itemsService from '../services/itemsService.js';
 import * as profilesService from '../services/profilesService.js';
+import * as schedulesService from '../services/schedulesService.js';
 import * as tasksService from '../services/tasksService.js';
 import { assincrono } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
@@ -61,12 +62,14 @@ export const onboarding = assincrono(async (req, res) => {
 
 export const painel = assincrono(async (req, res) => {
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
-  // RN-018: sempre existe pelo menos uma meta ativa enquanto houver o que
-  // planejar. O planejador completa o que falta para a quantidade da faixa e não
-  // faz nada quando o plano já está cheio, então chamar aqui é barato e conserta
-  // sozinho a conta que ficou sem meta — inclusive a que concluiu todas.
-  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
+  // A ordem importa: sincronizar expira o que venceu (RN-017), e só então o
+  // planejador conta quantas metas ativas restam. Invertido, a meta vencida
+  // ainda contaria como ativa e o jogador passaria um dia a menos com o plano
+  // cheio. O planejador completa o que falta e não faz nada quando já está
+  // cheio, então chamar aqui é barato e conserta sozinho a conta que ficou sem
+  // meta — inclusive a que concluiu todas (RN-018).
   await goalsService.sincronizarProgresso(req.session.usuarioId);
+  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
 
   const [perfil, inventario, metas, tarefas] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
@@ -100,8 +103,8 @@ export const metas = assincrono(async (req, res) => {
   // o ciclo econômico —, e o progresso das metas é relido das fontes reais antes
   // de a tela mostrar qualquer número.
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
-  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
   await goalsService.sincronizarProgresso(req.session.usuarioId);
+  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
 
   const [listaDeMetas, tarefas] = await Promise.all([
     goalsService.listarDoUsuario(req.session.usuarioId),
@@ -113,6 +116,33 @@ export const metas = assincrono(async (req, res) => {
     classeBody: FUNDO_CERA,
     metas: listaDeMetas,
     tarefas,
+  });
+});
+
+/**
+ * Perfil do jogador. Hoje ela existe por causa de uma coisa só: editar os dias
+ * da semana (RF-ONB-09). O resto — trocar avatar, apelido, tempo de sessão — tem
+ * rota pronta e ainda não tem tela, e continua sendo a DT-12.
+ */
+export const perfil = assincrono(async (req, res) => {
+  // Mesma ordem do painel: expira o que venceu, completa o plano e só então lê.
+  await goalsService.sincronizarProgresso(req.session.usuarioId);
+  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
+
+  const [dados, semana, metas] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    schedulesService.obterSemana(req.session.usuarioId),
+    goalsService.listarAtivas(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'perfil', {
+    titulo: `${dados.apelido} — Beever`,
+    classeBody: FUNDO_CERA,
+    perfil: dados,
+    semana,
+    metas,
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
+    scripts: ['/js/perfil.js'],
   });
 });
 

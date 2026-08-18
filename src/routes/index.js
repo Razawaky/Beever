@@ -38,6 +38,7 @@ router.get('/onboarding', requireOnboardingPendente, paginaController.onboarding
 router.get('/painel', requireOnboarding, paginaController.painel);
 router.get('/loja', somentePagina, requireOnboarding, paginaController.loja);
 router.get('/metas', somentePagina, requireOnboarding, paginaController.metas);
+router.get('/perfil', somentePagina, requireOnboarding, paginaController.perfil);
 router.get('/manutencao', paginaController.manutencao);
 
 router.use('/users', usersRouter);

@@ -6,6 +6,7 @@ import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/err
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as goalPlannerService from './goalPlannerService.js';
+import * as goalsService from './goalsService.js';
 import * as levelsService from './levelsService.js';
 import * as schedulesService from './schedulesService.js';
 
@@ -237,6 +238,56 @@ export async function atualizar(
   });
 
   return obterDoUsuario(idUsuario);
+}
+
+/**
+ * Troca os dias da semana em que o jogador pretende jogar, depois do onboarding
+ * (RF-ONB-09, RN-013).
+ *
+ * **Nada de progresso se perde.** A semana nova muda quantas metas a RN-014
+ * pede, e o planejador reage completando o que falta — mas ele nunca apaga meta
+ * ativa. Quem reduziu os dias e ficou com mais metas do que a faixa nova pede
+ * mantém as excedentes até elas vencerem: o trabalho já feito continua valendo,
+ * e quem não concluir no prazo apenas não é recompensado, sem punição (RN-017).
+ * Foi decisão de produto, registrada na abertura da T-04.6.
+ *
+ * Devolve o antes e o depois porque a tela precisa dizer o que mudou — "você
+ * jogava 5 dias e agora joga 2; suas metas em andamento continuam lá".
+ */
+export async function atualizarDisponibilidade(idPerfil, idUsuario, dias) {
+  const escolhidos = [].concat(dias ?? []).filter((dia) => dia !== '' && dia !== null && dia !== undefined);
+  if (escolhidos.length === 0) throw erroValidacao(ERRO_SEM_DIAS);
+
+  await exigirPosse(idPerfil, idUsuario);
+
+  const antes = await schedulesService.diasDisponiveis(idUsuario);
+  const metasAntes = await goalsService.listarAtivas(idUsuario);
+
+  await schedulesService.definirSemana(null, idUsuario, escolhidos);
+  const depois = await schedulesService.diasDisponiveis(idUsuario);
+
+  // O planejador completa o plano quando a faixa nova pede mais metas. Quando
+  // pede menos, ele não faz nada — e é justamente esse "nada" que preserva o
+  // que estava em andamento.
+  const planejadas = await goalPlannerService.garantirMetasAtivas(idUsuario);
+  const metasDepois = await goalsService.listarAtivas(idUsuario);
+
+  await auditService.registrar(auditService.usuario(idUsuario), 'perfil.disponibilidade-alterada', {
+    entidade: 'profile',
+    id: idPerfil,
+    antes: { dias: antes, metasAtivas: metasAntes.length },
+    depois: { dias: depois, metasAtivas: metasDepois.length, metasGeradas: planejadas.criadas },
+  });
+
+  return {
+    dias: depois,
+    metasAtivas: metasDepois.length,
+    metasGeradas: planejadas.criadas,
+    // Quantas sobraram além do que a faixa nova pede. A tela usa para explicar
+    // que elas ficam até vencer, em vez de o jogador achar que virou bagunça.
+    metasPedidas: Number(planejadas.metasPedidas),
+    metasExcedentes: Math.max(0, metasDepois.length - Number(planejadas.metasPedidas)),
+  };
 }
 
 export async function remover(idPerfil, idUsuario) {
