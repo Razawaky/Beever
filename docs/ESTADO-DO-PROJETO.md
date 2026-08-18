@@ -108,9 +108,9 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
+| Etapas do roadmap prontas | **6 de 16** — E00, E01, E02, E03, E04 e E05, todas auditadas |
 | Endpoints · services · repositories | 34 · 19 · 17 |
-| Testes | **347 passando, 0 falhando** (265 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Testes | **348 passando, 0 falhando** (266 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 15 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33, a correção de escopo abriu DT-34 e a T-05.2 abriu DT-35 |
 | Riscos abertos | nenhum |
 
@@ -153,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (26,9 KB) em cerca de 150 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 347 passam, 0 falham. Sem MySQL, os 265 testes de banco se pulam com aviso |
+| `npm test` | 348 passam, 0 falham. Sem MySQL, os 266 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -614,7 +614,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
-| E05 Conteúdo e trilha | **tarefas concluídas, auditoria pendente** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. **Tarefas concluídas, auditoria pendente** |
+| E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
@@ -810,38 +810,31 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-05.1 — os repositories de favo, célula, conteúdo e
-progresso, que abrem a **E05 (conteúdo e trilha)**. É a primeira etapa que
-constrói o que o jogador de fato joga: hoje favo e célula não existem em lugar
-nenhum fora do seed.
+**Próxima tarefa:** T-06.1 — `reward_configs` em banco e repository, abrindo a
+**E06 (motor de recompensas)**. O roadmap manda fazê-la **antes** dos jogos, para
+que todo jogo use o mesmo contrato de recompensa.
 
-A E04 está **concluída e auditada** (`docs/04-AUDITORIA-DA-ETAPA.md`), em duas
-passagens. A primeira aprovou com oito lacunas; a segunda, feita depois das
-correções e desta vez reproduzindo o defeito em vez de só ler o código, achou um
-**bloqueante que a primeira deixou passar**: o planejador tinha corrida.
+A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
+avançar, zero bloqueantes. Das sete lacunas do laudo, duas foram corrigidas na
+mesma sessão — o botão "Jogar" que levava a 404 (L-1) e a rota `/trilha/:id` sem
+validação de parâmetro (L-3). Ficam abertas cinco, de risco médio para baixo, com
+encaminhamento escrito no laudo.
 
-Vale guardar o defeito, porque o padrão vai se repetir na E05: `montarPlano` lia
-quantas metas faltavam e só depois criava, sem trava entre as duas coisas. Quatro
-visitas simultâneas ao painel — dois cliques rápidos bastam — criavam 12 metas em
-vez de 3, várias com **alvo idêntico**. Como o progresso é lido do saldo, um
-único acúmulo de 125 de mel completava as quatro cópias e cada uma pagava
-recompensa inteira: uma conquista, quatro pagamentos, contra a RN-016. A correção
-é `SELECT ... FOR UPDATE` na linha do usuário, releitura das ativas na mesma
-conexão e criação só do que ainda falta.
+**Uma suspeita que a auditoria mediu e descartou**, e que vale lembrar antes de
+otimizar qualquer coisa na E06: o caminho de `registrarTentativa` dispara mais de
+uma dúzia de consultas, o que parecia risco de desempenho. Medido com banco real:
+6,3 ms para montar a trilha e 21,7 ms para registrar uma tentativa. É
+redundância, não lentidão.
 
-As onze lacunas das duas passagens: sete corrigidas (L-1, L-2 como DT-33, L-3,
-L-9, L-10, L-11 e a higiene do L-7) e quatro abertas, todas de risco baixo e com
-etapa marcada no laudo — a lista de metas que só atualiza ao recarregar, o foco
-de teclado das caixas de dia, a largura da tela de perfil desalinhada do
-cabeçalho e o tempo por sessão editável sem replanejar (atrelado à DT-12).
+Três coisas que a E06 vai precisar saber sobre o que a E05 deixou pronto:
 
-Duas coisas que a E05 vai precisar saber sobre o que a E04 deixou pronto:
-
-1. **O planejador pergunta antes de sortear.** Ele só cria meta de tipo que tem
-   régua de alvo em `goal_target_rules` **e** fonte de progresso conhecida em
-   `goalProgressSources`. Quando a E05 entregar favo e célula, o leque abre com
-   uma linha de seed e uma fonte nova — sem tocar no planejador.
-2. **A expiração é preguiçosa**, e acontece quando o jogador abre o painel, a
-   tela de metas ou o perfil, e ao trocar a semana. Não há rotina diária neste
-   MVP; quem depender de status atualizado precisa chamar
-   `goalsService.sincronizarProgresso` ou `expirarVencidas` antes de contar.
+1. **`progressService.registrarTentativa` aceita conexão de fora** e devolve
+   `estrelas`, `ehRepeticao` e o progresso do favo. É por ele que a T-06.5 grava
+   o resultado dentro da transação que credita — a regra da RN-030 já tem dono e
+   não deve ser reescrita lá.
+2. **O tempo de partida continua sem quem o grave** (L-2 do laudo). A coluna
+   `game_sessions.duration_seconds` existe desde a migration `003`, e é a T-06.5
+   que a preenche; a RF-CON-04 só fecha então.
+3. **A tela de jogo é a chave do botão "em breve".** A constante
+   `JOGO_DISPONIVEL`, em `paginaController`, vira `true` quando a E07 entregar a
+   rota `/trilha/:idFavo/celula/:idCelula`.
