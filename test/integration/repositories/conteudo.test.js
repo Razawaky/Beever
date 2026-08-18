@@ -55,12 +55,19 @@ describe('repositories de conteúdo', opcoes, () => {
     assert.equal(Number(favos[0].unlock_percent), 80, 'o percentual da RN-027 vem junto');
   });
 
-  it('não devolve favo de faixa que o jogador não pode ver (RN-029)', async () => {
-    assert.equal((await hivesRepository.listarPorFaixas(['B'])).length, 0, 'a faixa B ainda não tem favo semeado');
+  it('cada faixa recebe só os seus favos, e as faixas somam (RN-029)', async () => {
     assert.equal((await hivesRepository.listarPorFaixas([])).length, 0, 'sem faixa, sem trilha');
+    assert.equal((await hivesRepository.listarPorFaixas(['B'])).length, 2, 'a faixa B tem dois favos');
 
     const duasFaixas = await hivesRepository.listarPorFaixas(['A', 'B']);
-    assert.equal(duasFaixas.length, 2, 'quem vê A e B recebe o que existe em A');
+    assert.equal(duasFaixas.length, 4, 'quem vê A e B recebe os quatro');
+    assert.deepEqual(
+      duasFaixas.map((favo) => favo.age_band_code),
+      ['A', 'A', 'B', 'B'],
+      'a ordem é por faixa e depois por posição — a trilha começa no conteúdo mais novo',
+    );
+
+    assert.equal((await hivesRepository.listarPorFaixas(['A', 'B', 'C'])).length, 6);
   });
 
   it('favo inativo some da trilha', async () => {
@@ -81,7 +88,7 @@ describe('repositories de conteúdo', opcoes, () => {
 
   it('as células do favo vêm em ordem, com o progresso zerado de quem nunca jogou', async () => {
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
-    const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario);
+    const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
 
     assert.equal(celulas.length, 4);
     assert.deepEqual(
@@ -96,7 +103,7 @@ describe('repositories de conteúdo', opcoes, () => {
 
   it('a célula anterior é a de ordem imediatamente menor no mesmo favo', async () => {
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
-    const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario);
+    const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
 
     assert.equal(await cellsRepository.buscarAnterior(celulas[0]), null, 'a primeira célula abre sem pré-requisito');
     assert.equal(
@@ -128,7 +135,7 @@ describe('repositories de conteúdo', opcoes, () => {
 
   it('o conteúdo vem na versão mais recente da célula', async () => {
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
-    const [primeira] = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario);
+    const [primeira] = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
 
     const conteudo = await contentsRepository.buscarAtualDaCelula(primeira.id);
     assert.ok(conteudo, 'a primeira célula do seed tem conteúdo');
@@ -146,7 +153,7 @@ describe('repositories de conteúdo', opcoes, () => {
 
   it('diz quais células já têm conteúdo, para a trilha não abrir célula vazia', async () => {
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
-    const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario);
+    const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
     const ids = celulas.map((celula) => Number(celula.id));
 
     const comConteudo = await contentsRepository.listarCelulasComConteudo(ids);

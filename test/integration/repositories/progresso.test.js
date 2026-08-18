@@ -42,7 +42,7 @@ describe('progressRepository', opcoes, () => {
     });
 
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
-    celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario);
+    celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
   });
 
   after(async () => {

@@ -84,7 +84,7 @@ describe('telas da trilha', opcoes, () => {
 
     primeiroFavo = await hivesRepository.buscarPorSlug('primeiros-passos');
     segundoFavo = await hivesRepository.buscarPorSlug('guardar-e-gastar');
-    celulas = await cellsRepository.listarDoFavoComProgresso(primeiroFavo.id, idUsuario);
+    celulas = await cellsRepository.listarDoFavoComProgresso(primeiroFavo.id, idUsuario, ['A']);
   });
 
   after(async () => {

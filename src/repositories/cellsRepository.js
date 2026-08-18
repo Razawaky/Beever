@@ -30,16 +30,29 @@ const PROGRESSO = `COALESCE(cp.stars, 0) AS stars,
 
 const JOIN_PROGRESSO = 'LEFT JOIN cell_progress cp ON cp.cell_id = c.id AND cp.user_id = ?';
 
-/** As células do favo, em ordem, com o que este jogador já fez em cada uma. */
-export async function listarDoFavoComProgresso(idFavo, idUsuario) {
+/** Lista de interrogações para um `IN (?)`, porque `execute` não expande array. */
+function marcadores(quantidade) {
+  return Array(quantidade).fill('?').join(', ');
+}
+
+/**
+ * As células do favo, em ordem, com o que este jogador já fez em cada uma.
+ *
+ * `codigosDeFaixa` filtra pela RN-029, que fala de célula e não só de favo: o
+ * schema permite célula de faixa diferente da do favo, e sem este filtro ela
+ * apareceria para quem é mais novo.
+ */
+export async function listarDoFavoComProgresso(idFavo, idUsuario, codigosDeFaixa = []) {
+  if (codigosDeFaixa.length === 0) return [];
+
   return consultar(
     `SELECT ${CAMPOS}, ${PROGRESSO}
        FROM cells c
        ${JOINS}
        ${JOIN_PROGRESSO}
-      WHERE c.hive_id = ? AND ${ATIVO}
+      WHERE c.hive_id = ? AND ${ATIVO} AND ab.code IN (${marcadores(codigosDeFaixa.length)})
       ORDER BY c.order_index, c.id`,
-    [idUsuario, idFavo],
+    [idUsuario, idFavo, ...codigosDeFaixa],
   );
 }
 

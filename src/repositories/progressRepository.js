@@ -18,6 +18,21 @@ const CONCLUIDA = 'cp.first_completed_at IS NOT NULL AND cp.stars >= 1';
 
 const CELULA_ATIVA = 'c.is_active = 1 AND c.deleted_at IS NULL';
 
+/**
+ * Recorte de faixa para as contagens (RN-029). Lista vazia conta todas as
+ * células — é o que os testes de repository usam, e o que vale quando quem
+ * chama não tem jogador em mãos.
+ */
+function recorteDeFaixa(codigosDeFaixa) {
+  if (codigosDeFaixa.length === 0) return { sql: '', parametros: [] };
+
+  const marcadores = Array(codigosDeFaixa.length).fill('?').join(', ');
+  return {
+    sql: `AND EXISTS (SELECT 1 FROM age_bands ab WHERE ab.id = c.age_band_id AND ab.code IN (${marcadores}))`,
+    parametros: codigosDeFaixa,
+  };
+}
+
 export async function buscarProgressoDaCelula(idUsuario, idCelula, conexao = null) {
   const linhas = await consultarEm(
     conexao,
@@ -61,15 +76,16 @@ export async function registrarTentativa(
   return resultado.affectedRows;
 }
 
-/** Quantas células do favo este jogador já concluiu, e quantas o favo tem. */
-export async function contarCelulasDoFavo(idUsuario, idFavo) {
+/** Quantas células do favo este jogador já concluiu, e quantas ele enxerga. */
+export async function contarCelulasDoFavo(idUsuario, idFavo, codigosDeFaixa = []) {
+  const faixa = recorteDeFaixa(codigosDeFaixa);
   const linhas = await consultar(
     `SELECT COUNT(*) AS total,
             SUM(CASE WHEN ${CONCLUIDA} THEN 1 ELSE 0 END) AS concluidas
        FROM cells c
        LEFT JOIN cell_progress cp ON cp.cell_id = c.id AND cp.user_id = ?
-      WHERE c.hive_id = ? AND ${CELULA_ATIVA}`,
-    [idUsuario, idFavo],
+      WHERE c.hive_id = ? AND ${CELULA_ATIVA} ${faixa.sql}`,
+    [idUsuario, idFavo, ...faixa.parametros],
   );
   return { total: Number(linhas[0].total), concluidas: Number(linhas[0].concluidas ?? 0) };
 }
@@ -82,9 +98,12 @@ export async function contarCelulasDoFavo(idUsuario, idFavo) {
  * só se apaga se o favo deixar de estar completo — o que acontece quando alguém
  * acrescenta uma célula nova a um favo que já estava fechado.
  */
-export async function recalcularFavo(conexao, idUsuario, idFavo) {
+export async function recalcularFavo(conexao, idUsuario, idFavo, codigosDeFaixa = []) {
   const percentual = 'CASE WHEN d.total = 0 THEN 0 ELSE FLOOR(d.concluidas * 100 / d.total) END';
   const completo = 'd.total > 0 AND d.concluidas = d.total';
+  // Conta só o que o jogador enxerga: um favo com célula de faixa acima nunca
+  // chegaria a 100% para quem é mais novo, e travaria o favo seguinte (RN-027).
+  const faixa = recorteDeFaixa(codigosDeFaixa);
 
   await consultarEm(
     conexao,
@@ -98,7 +117,7 @@ export async function recalcularFavo(conexao, idUsuario, idFavo) {
                 SUM(CASE WHEN ${CONCLUIDA} THEN 1 ELSE 0 END) AS concluidas
            FROM cells c
            LEFT JOIN cell_progress cp ON cp.cell_id = c.id AND cp.user_id = ?
-          WHERE c.hive_id = ? AND ${CELULA_ATIVA}
+          WHERE c.hive_id = ? AND ${CELULA_ATIVA} ${faixa.sql}
           GROUP BY c.hive_id
        ) AS d
      ON DUPLICATE KEY UPDATE
@@ -106,7 +125,7 @@ export async function recalcularFavo(conexao, idUsuario, idFavo) {
         total_cells = d.total,
         percent = ${percentual},
         completed_at = CASE WHEN ${completo} THEN COALESCE(hive_progress.completed_at, NOW()) ELSE NULL END`,
-    [idUsuario, idUsuario, idFavo],
+    [idUsuario, idUsuario, idFavo, ...faixa.parametros],
   );
 
   // Lê pela mesma conexão: fora dela, a linha recém-gravada ainda não existe

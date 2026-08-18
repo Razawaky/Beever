@@ -59,6 +59,7 @@ export async function registrarTentativa(idUsuario, idCelula, { erros = 0, pontu
   // Confere o pré-requisito, não o estado atual: célula já concluída pode ser
   // repetida, célula travada não pode ser jogada.
   const { celula } = await contentService.abrirCelula(idUsuario, idCelula);
+  const codigosDeFaixa = await contentService.faixasDoJogador(idUsuario);
 
   const estrelas = estrelasPara(errosNumero, concluiu);
   const gravar = async (c) => {
@@ -74,7 +75,7 @@ export async function registrarTentativa(idUsuario, idCelula, { erros = 0, pontu
     // O percentual do favo é recalculado junto: `hive_progress` é cache, e a
     // RN-027 decide desbloqueio com ele. Cache que atualiza depois é cache que
     // mente na tela seguinte.
-    const favo = await progressRepository.recalcularFavo(c, idUsuario, celula.hive_id);
+    const favo = await progressRepository.recalcularFavo(c, idUsuario, celula.hive_id, codigosDeFaixa);
     const progressoDaCelula = await progressRepository.buscarProgressoDaCelula(idUsuario, idCelula, c);
 
     return { favo, progressoDaCelula };
@@ -96,13 +97,16 @@ export async function registrarTentativa(idUsuario, idCelula, { erros = 0, pontu
 
 /** O percentual do favo, recontado das células. Útil quando o cache pode estar velho. */
 export async function recalcularFavo(idUsuario, idFavo, conexao = null) {
-  if (conexao) return progressRepository.recalcularFavo(conexao, idUsuario, idFavo);
-  return emTransacao((c) => progressRepository.recalcularFavo(c, idUsuario, idFavo));
+  const codigosDeFaixa = await contentService.faixasDoJogador(idUsuario);
+
+  if (conexao) return progressRepository.recalcularFavo(conexao, idUsuario, idFavo, codigosDeFaixa);
+  return emTransacao((c) => progressRepository.recalcularFavo(c, idUsuario, idFavo, codigosDeFaixa));
 }
 
 /** Quanto do favo já foi feito, sem escrever no cache. */
 export async function resumoDoFavo(idUsuario, idFavo) {
-  const contagem = await progressRepository.contarCelulasDoFavo(idUsuario, idFavo);
+  const codigosDeFaixa = await contentService.faixasDoJogador(idUsuario);
+  const contagem = await progressRepository.contarCelulasDoFavo(idUsuario, idFavo, codigosDeFaixa);
   const percentual = contagem.total === 0 ? 0 : Math.floor((contagem.concluidas * 100) / contagem.total);
 
   return { ...contagem, percentual };

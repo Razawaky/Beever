@@ -108,6 +108,16 @@ export function estadosDasCelulas(celulas) {
   });
 }
 
+/** As faixas que este jogador enxerga hoje (RN-029). Quem filtra célula precisa delas. */
+export async function faixasDoJogador(idUsuario) {
+  const [perfil, faixas] = await Promise.all([
+    profilesRepository.buscarDetalhadoPorUsuario(idUsuario),
+    profilesRepository.listarFaixasEtarias(),
+  ]);
+
+  return faixasVisiveis(faixas, perfil?.faixa_etaria);
+}
+
 /** Junta o que as regras de favo precisam saber sobre o jogador. */
 async function contextoDoJogador(idUsuario) {
   const [perfil, faixas, progressos, patrimonio, itensPossuidos] = await Promise.all([
@@ -184,7 +194,8 @@ export async function listarCelulasDoFavo(idUsuario, idFavo) {
   const favo = await exigirFavoVisivel(idUsuario, idFavo);
   if (favo.estado !== ESTADOS.disponivel) throw erroAcessoNegado(favo.motivo);
 
-  const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario);
+  const codigosDeFaixa = await faixasDoJogador(idUsuario);
+  const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, codigosDeFaixa);
   const comConteudo = new Set(await contentsRepository.listarCelulasComConteudo(celulas.map((c) => c.id)));
 
   return {
