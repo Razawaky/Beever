@@ -4,8 +4,8 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-18 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-04.4 — o `GoalPlannerService`: as metas passaram a nascer
-sozinhas conforme a RN-014, dimensionadas pelo tempo que o jogador disse ter
+**Último commit:** T-04.6 e T-04.7 — a semana virou editável no perfil, sem
+custar progresso, e as metas vencidas passaram a expirar de fato
 
 ---
 
@@ -44,9 +44,10 @@ cadastro, onboarding, painel, loja, tarefa, compra, meta, logout — e virou
 teste automatizado, em vez de ficar como print numa conversa.
 
 **O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
-repository), 265 testes passando — 200 deles contra um banco real, incluindo as
-rotas autenticadas, o onboarding retomado em outra sessão e as metas geradas pelo
-planejador —, `npm audit` limpo, `db:reconcile` fechando os quatro livros.
+repository), 270 testes passando — 205 deles contra um banco real, incluindo as
+rotas autenticadas, o onboarding retomado em outra sessão, as metas geradas pelo
+planejador e a semana editada sem perder progresso —, `npm audit` limpo,
+`db:reconcile` fechando os quatro livros.
 
 **O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
 patrimônio, cofre, ciclos econômicos, sequência (streak), conquistas, área
@@ -107,8 +108,8 @@ impacto.
 | Em números | |
 |---|---|
 | Etapas do roadmap prontas | **4 de 16** — E00, E01, E02 e E03, todas auditadas |
-| Endpoints · services · repositories | 29 · 14 · 13 |
-| Testes | **265 passando, 0 falhando** (200 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Endpoints · services · repositories | 33 · 17 · 13 |
+| Testes | **270 passando, 0 falhando** (205 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 12 itens abertos — a T-04.4 abriu DT-31 e DT-32 |
 | Riscos abertos | nenhum |
 
@@ -151,7 +152,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 265 passam, 0 falham. Sem MySQL, os 200 testes de banco se pulam com aviso |
+| `npm test` | 270 passam, 0 falham. Sem MySQL, os 205 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -265,8 +266,8 @@ marcada. A tabela abaixo é a da E04, na ordem do `02-ROADMAP-ETAPAS.md`.
 | T-04.3 Persistir disponibilidade, faixa, tempo de sessão, objetivo e avatar | **feita** (commit `fd37b7f`) — tempo por sessão, som e animação coletados e gravados; avatar e objetivo conferidos contra o catálogo; DT-20 e DT-27 fechadas |
 | T-04.4 `GoalPlannerService` conforme RN-014/015 | **feita** (commit `a818e70`) — metas geradas ao concluir o onboarding, repostas ao concluir uma meta e completadas ao abrir o painel; decisão D-4 resolvida com tabela própria |
 | T-04.5 `requireOnboarding` bloqueando o app até concluir | **feita na T-02.4** (commit `4e6020c`) |
-| T-04.6 Edição de disponibilidade no perfil, com recálculo (RN-013) | pendente |
-| T-04.7 Testes do planner: 1, 4 e 7 dias, e edição de 5→2 dias com meta em andamento | **parcial** — os casos de 1, 4 e 7 dias vieram na T-04.4 (`test/integration/planejadorDeMetas.test.js`); falta a edição de 5→2 dias, que depende da T-04.6 |
+| T-04.6 Edição de disponibilidade no perfil, com recálculo (RN-013) | **feita** (commit `d72b18d`) — tela de perfil com os dias da semana, recálculo pelo planejador e expiração preguiçosa das metas vencidas |
+| T-04.7 Testes do planner: 1, 4 e 7 dias, e edição de 5→2 dias com meta em andamento | **feita** (commit `d72b18d`) — 1, 4 e 7 dias em `test/integration/planejadorDeMetas.test.js`; a edição de 5→2 dias com meta em andamento em `test/integration/disponibilidade.test.js` |
 
 **O que a T-04.1 achou e corrigiu na hora:** o servidor aceitava concluir o
 onboarding com a semana inteira vazia, contra a RF-ONB-03 — e semana vazia é a
@@ -394,6 +395,28 @@ calibragem dos alvos é um chute educado enquanto a economia de verdade (E06 e
 E07) não existir — **DT-31** —, e a meta de nível só se torna alcançável quando
 a E06 creditar XP em jogo, porque hoje nada credita — **DT-32**.
 
+**O que a T-04.6 e a T-04.7 entregaram.** A semana deixou de ser uma resposta
+dada uma vez só no onboarding. A tela `/perfil` mostra os dias marcados e as
+metas de agora, e salvar uma semana nova passa pelo planejador (RF-ONB-09,
+RN-013, RN-017). O caso que faltava nos testes do planner — reduzir de cinco
+para dois dias com meta em andamento — está coberto em
+`test/integration/disponibilidade.test.js`, junto com a tela renderizando, a
+recusa de semana vazia, a meta vencida expirando sem pagar e o plano se
+recompondo quando o jogador volta a marcar dias.
+
+Duas decisões que o código carrega:
+
+1. **Reduzir os dias não cancela meta nenhuma.** O jogador fica com mais metas do
+   que a faixa nova pede, e elas seguem ativas, com o progresso intacto, até
+   vencer; quem não concluir no prazo apenas não é recompensado. Cancelar seria
+   punir quem mudou de ideia sobre a própria agenda, que é exatamente o que a
+   RN-013 proíbe. Aumentar os dias completa o plano na hora.
+2. **A expiração é a outra metade dessa decisão.** Sem ela, a meta excedente
+   ficaria ativa para sempre e o plano nunca voltaria ao tamanho da faixa.
+   `expirarVencidas` roda de forma preguiçosa — na visita ao painel e ao perfil,
+   antes de o plano ser completado — em vez de depender de um agendador que o
+   MVP não tem.
+
 ---
 
 **E02 — núcleo da aplicação, reordenada** (concluída e auditada, guardada aqui
@@ -434,7 +457,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
-| E04 Onboarding e metas | **em andamento** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. Faltam a edição de disponibilidade (T-04.6) e o último caso dos testes do planner (T-04.7) |
+| E04 Onboarding e metas | **tarefas concluídas, auditoria pendente** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues; falta a auditoria da etapa** |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
