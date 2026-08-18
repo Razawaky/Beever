@@ -4,7 +4,8 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-18 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** E03 auditada e os bloqueantes corrigidos
+**Último commit:** T-04.1 e T-04.2 — auditoria do onboarding, correção dos
+bloqueantes e máquina de passos com progresso salvo no servidor
 
 ---
 
@@ -31,7 +32,7 @@ Se você só tem tempo para esta seção, ela basta. O resto do documento é a
 evidência por trás dela.
 
 **Onde estamos:** E00 (auditoria) e **E01 (banco de dados) concluídas e
-auditadas**. O banco definitivo existe e roda: 10 migrations versionadas, 56
+auditadas**. O banco definitivo existe e roda: 11 migrations versionadas, 56
 tabelas, 67 foreign keys, 39 `CHECK`, 43 `UNIQUE`, auditoria imutável por
 gatilho, seeds com usuário demo jogável, e o ciclo `docker compose up` →
 `db:migrate` → `db:seed` → `db:reconcile` funcionando do zero. O schema anterior
@@ -43,9 +44,9 @@ cadastro, onboarding, painel, loja, tarefa, compra, meta, logout — e virou
 teste automatizado, em vez de ficar como print numa conversa.
 
 **O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
-repository), 171 testes passando — dos quais 124 batem num banco real, incluindo
-as rotas autenticadas —, `npm audit` limpo, `db:reconcile` fechando os quatro
-livros.
+repository), 243 testes passando — dos quais 132 batem num banco real, incluindo
+as rotas autenticadas e o onboarding retomado em outra sessão —, `npm audit`
+limpo, `db:reconcile` fechando os quatro livros.
 
 **O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
 patrimônio, cofre, ciclos econômicos, sequência (streak), conquistas, área
@@ -106,9 +107,9 @@ impacto.
 | Em números | |
 |---|---|
 | Etapas do roadmap prontas | **4 de 16** — E00, E01, E02 e E03, todas auditadas |
-| Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **228 passando, 0 falhando** — fluxo autenticado ponta a ponta, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
-| Dívida técnica catalogada | 13 itens abertos — a auditoria da E03 acrescentou DT-24, DT-25 e DT-26 |
+| Endpoints · services · repositories | 29 · 14 · 13 |
+| Testes | **243 passando, 0 falhando** — fluxo autenticado ponta a ponta, onboarding retomado em outro navegador, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Dívida técnica catalogada | 12 itens abertos — a T-04.2 fechou DT-28 e DT-29 e abriu DT-30 |
 | Riscos abertos | nenhum |
 
 ---
@@ -243,6 +244,7 @@ argumento a favor da rede que a T-02.1 montou.
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
+| Wizard de onboarding em navegador real (T-04.2) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, barra com `.barra-N` e `aria-valuenow` na marcação. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
 | Comportamento sob concorrência | O débito atômico foi testado sequencialmente. Nunca houve teste com duas requisições simultâneas de verdade |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
 
@@ -252,11 +254,67 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E02 — núcleo da aplicação, reordenada.** O roadmap original mandava construir
-config, logger, error handler e middlewares, que já existem desde a migração
-para camadas (divergência D-06). A ordem real, decidida no checkpoint de
-abertura da E02, está na tabela abaixo e também no próprio
-`02-ROADMAP-ETAPAS.md`.
+**E04 — onboarding e planejador de metas.** A E02 e a E03 estão concluídas e
+auditadas; o que ficou delas está na tabela de dívida, cada item com etapa
+marcada. A tabela abaixo é a da E04, na ordem do `02-ROADMAP-ETAPAS.md`.
+
+| Tarefa | Situação |
+|---|---|
+| T-04.1 Auditar o onboarding existente e decidir o que reaproveitar | **feita** (commit `9a3e01d`) — laudo em `docs/04-AUDITORIA-DO-ONBOARDING.md`, dois bloqueantes corrigidos |
+| T-04.2 Máquina de passos com progresso salvo a cada passo | **feita** (commit `9a3e01d`) — passo gravado no servidor, retomada em outro navegador, DT-28 e DT-29 fechadas |
+| T-04.3 Persistir disponibilidade, faixa, tempo de sessão, objetivo e avatar | pendente |
+| T-04.4 `GoalPlannerService` conforme RN-014/015 | pendente |
+| T-04.5 `requireOnboarding` bloqueando o app até concluir | **feita na T-02.4** (commit `4e6020c`) |
+| T-04.6 Edição de disponibilidade no perfil, com recálculo (RN-013) | pendente |
+| T-04.7 Testes do planner: 1, 4 e 7 dias, e edição de 5→2 dias com meta em andamento | pendente |
+
+**O que a T-04.1 achou e corrigiu na hora:** o servidor aceitava concluir o
+onboarding com a semana inteira vazia, contra a RF-ONB-03 — e semana vazia é a
+entrada da RN-014, que não tem faixa para zero dias. E `PUT /perfil/:id` aceitava
+tempo de sessão de 5 a 60 minutos, enquanto o banco só admite 5, 10 ou 20
+(`ck_profiles_session_minutes`): erro de formulário chegava ao jogador como 500.
+As duas correções têm regra no service, barreira na rota e teste.
+
+**O que a T-04.1 achou e deixou como dívida:** DT-27 (slug inválido de avatar ou
+objetivo aceito em silêncio), DT-28 (o wizard monta HTML com valor do usuário
+sem escapar) e DT-29 (barra de progresso fora do padrão `.barra-N` e sem
+`role="progressbar"`). **A T-04.2 fechou a DT-28 e a DT-29**; a DT-27 continua
+aberta, com dono na T-04.3. A decisão D-4 do laudo — onde mora a tabela "dias da
+semana → quantas metas ativas" — precisa ser tomada na abertura da T-04.4, antes
+de a implementação começar.
+
+**O que a T-04.2 entregou.** O wizard virou máquina de passos de verdade: cada
+resposta vai para o servidor assim que é dada, e a coluna
+`profiles.onboarding_step` (migration 011) guarda onde o jogador parou. Fechar a
+aba deixou de custar o começo de novo — e, porque o rascunho mora no servidor e
+não no navegador (decisão D-2 do laudo), quem começa no computador da escola
+retoma em casa, no passo certo e com as respostas anteriores preenchidas. Há
+teste para exatamente esse cenário, com um segundo navegador logando do zero.
+
+Três escolhas de desenho que valem lembrar:
+
+1. **O nível inicial não tem gravação por passo.** Ele lança XP no livro e é
+   irreversível, então gravá-lo antes do fim deixaria contas com nível e sem
+   agenda se o jogador desistisse. É o passo final, e quem o grava é a transação
+   de `salvarOnboarding`, como antes.
+2. **Gravar passo não marca a conta como configurada.** A marca continua em
+   `users.onboarding_completed_at`, escrita só na conclusão, então
+   `requireOnboarding` segue barrando o app durante o preenchimento — que é o
+   comportamento certo para um onboarding pela metade.
+3. **O marcador só anda para frente** (`GREATEST` no `UPDATE`): revisar uma
+   resposta com o botão "Voltar" regrava o campo, mas não devolve o jogador ao
+   começo na próxima vez que ele abrir a tela.
+
+A ordem dos passos passou a ser a da RN-011 — apelido, dias, objetivo, mascote,
+nível —, sem faixa etária (decisão D-1: ela vem da data de nascimento) e com o
+nível no fim (decisão D-3).
+
+---
+
+**E02 — núcleo da aplicação, reordenada** (concluída e auditada, guardada aqui
+como histórico). O roadmap original mandava construir config, logger, error
+handler e middlewares, que já existem desde a migração para camadas (divergência
+D-06). A ordem real foi decidida no checkpoint de abertura da E02.
 
 | Tarefa | Situação |
 |---|---|
@@ -291,7 +349,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
-| E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
+| E04 Onboarding e metas | **em andamento** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.5 já veio pronta da T-02.4. Faltam os campos que a RN-011 pede e ninguém coleta (T-04.3), o **`GoalPlannerService`** (T-04.4), a edição de disponibilidade (T-04.6) e os testes do planner (T-04.7) |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
@@ -321,7 +379,7 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-07~~ | ~~Dois guardas de autenticação com a mesma regra, um deles dentro de `src/routes/index.js`~~ | P-04, C-01 | **Resolvido por inteiro na T-02.4**: o guarda saiu do arquivo de rotas na T-02.3 e foi absorvido por `requireOnboarding`/`requireOnboardingPendente`, que respondem conforme o cliente — redirecionamento para HTML, código de erro para JSON |
 | DT-18 | Compra não é idempotente: dois cliques rápidos criam duas compras e debitam duas vezes. `idempotency_keys` existe no schema, semeada, e não é usada por ninguém | auditoria da E02 | E06 — é onde o motor de recompensa e a economia ganham dono |
 | DT-19 | `reward_configs` (54 linhas semeadas) não é lida por nenhum service. Ela é indexada por tipo de jogo, faixa e estrelas, então só ganha uso quando a célula existir | auditoria da E02 | E06/E07 |
-| DT-20 | Onboarding não coleta tempo por sessão (5/10/20) nem preferências de som e animação, que a RN-011 e a RN-050 pedem. Ficam no padrão | auditoria da E02 | E04 |
+| DT-20 | Onboarding não coleta tempo por sessão (5/10/20) nem preferências de som e animação, que a RN-011 e a RN-050 pedem. Ficam no padrão | auditoria da E02 | **T-04.3**, passo e persistência juntos. O laudo da T-04.1 previa os passos na T-04.2, mas o checkpoint de abertura da T-04.2 preferiu manter a tarefa só na máquina de passos, para não abrir rota, validação e transação duas vezes no mesmo dia |
 | DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
 | DT-23 | A virada do dia usa o relógio do servidor: `tasksService.garantirTarefasDoDia` chama `new Date()` cru, enquanto a RN-024 manda usar o fuso do perfil (`profiles.timezone`, já gravado no onboarding). Quem estiver em fuso diferente recebe as tarefas do dia na hora errada — e a sequência vai herdar o mesmo defeito, porque a RN-021 depende da mesma virada | dúvida levantada na revisão da E02 | **E08**, junto da sequência: as duas dependem da mesma noção de "dia do jogador" e devem ser resolvidas de uma vez |
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
@@ -337,6 +395,10 @@ Identificadores rastreiam os documentos da E00.
 | DT-24 | Rate limit de autenticação é por IP: numa sala de aula atrás de um IP só, dez erros de senha somados entre alunos diferentes trancam a turma por 15 minutos. O roadmap e o cabeçalho de `bruteForce.test.js` ainda descrevem `skipSuccessfulRequests` como se ele deixasse passar quem acerta a senha, e o próprio teste do arquivo prova o contrário | auditoria da E03 | E14 — junto do endurecimento; o texto errado sobre segurança sai antes |
 | DT-25 | `PUT /users/:id` deixa o dono trocar senha e e-mail sem informar a senha atual. Uma sessão esquecida no computador da escola deixa de ser "mexeram no meu jogo" e vira "perdi a conta" | auditoria da E03 | E04 — junto da tela de edição de perfil (DT-12) |
 | DT-26 | `normalizeEmail()` remove pontos e sufixos `+` de endereços do Gmail: dois e-mails reais e distintos podem colidir no 409 de duplicado, e o `guardian_email` guardado como prova de consentimento pode não ser o que o responsável digitou | auditoria da E03 | E14 |
+| DT-27 | `profilesRepository.atualizar` resolve avatar e objetivo por slug com `COALESCE`: slug inexistente na primeira gravação deixa a coluna `NULL` e o onboarding termina "com sucesso" sem avatar nem objetivo. `avatar` ainda é opcional na rota, embora a RF-ONB-06 seja obrigatória, e o comentário do repository afirma que o banco recusa slug inválido — ele ignora | auditoria do onboarding (T-04.1) | T-04.3 |
+| ~~DT-28~~ | ~~O wizard monta cada passo com `innerHTML` interpolando o valor digitado~~ | auditoria do onboarding (T-04.1) | **Resolvida na T-04.2**: a tela é montada com a API do DOM (`createElement`, `textContent`, `setAttribute`), então o apelido digitado é texto e nunca marcação. Quem segura passou a ser o código, com a CSP atrás |
+| ~~DT-29~~ | ~~A barra de progresso do onboarding é a única fora do padrão `.barra-N`, e sem `role="progressbar"`~~ | auditoria do onboarding (T-04.1) | **Resolvida na T-04.2**: a barra usa as classes `.barra-N` e anuncia `role="progressbar"`, `aria-valuenow`, `aria-valuemin` e `aria-valuemax`. Sobra a regra de arredondamento repetida no cliente, porque o navegador não importa `src/utils/barraDeProgresso.js` sem bundler — ver DT-30 |
+| DT-30 | A regra de arredondamento da barra de progresso existe duas vezes: em `src/utils/barraDeProgresso.js`, para as páginas renderizadas no servidor, e em `src/public/js/onboarding.js`, para o wizard. São cinco caracteres de conta, mas duas cópias mesmo assim — o navegador não consegue importar de `src/utils` enquanto não houver bundler ou um módulo servido em `src/public` | T-04.2 | E11, junto do trabalho de front: ou um módulo compartilhado servido como estático, ou a barra do wizard passa a ser montada pelo servidor |
 | DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos
@@ -379,6 +441,9 @@ Não reabrir sem motivo novo.
 | `compra` guarda `preco_unitario` e `preco_total` do momento da compra; nunca recalcula | migration `001` |
 | Sem ORM: runner de migration próprio, prepared statements na mão | `CLAUDE.md` |
 | Código morto com destino conhecido (`sessaoJogoRepository`, `creditarXp`, assets do mascote) fica onde está | T-00.3 |
+| O rascunho do onboarding mora no servidor (`profiles.onboarding_step` mais as colunas de cada campo), não em `localStorage`: rascunho no navegador não sobrevive a trocar de aparelho | T-04.1 decisão D-2, implementada na T-04.2 |
+| A faixa etária **não** é passo do onboarding — vem da data de nascimento, porque decide regra econômica (RN-038) e segmentação de conteúdo (RN-029) e não pode ser autodeclarada | T-04.1 decisão D-1 |
+| O passo "nível inicial" fica, embora a RN-011 não o preveja; quem precisa mudar é o documento de requisitos | T-04.1 decisão D-3 |
 
 ---
 
@@ -388,6 +453,18 @@ Não reabrir sem motivo novo.
   diretório falha com "Cannot find module".
 - `src/public/css/app.css` é **gerado** e está no `.gitignore`. Sem
   `npm run css:build`, as páginas vêm sem estilo.
+- **Nunca interrompa a suíte de banco com `kill -9`.** Aconteceu na T-04.2: o
+  `node --test` foi morto no meio de um `CREATE DATABASE`, e o MySQL ficou com
+  seis diretórios de schema em `/var/lib/mysql/beever_teste_*` sem registro no
+  dicionário de dados. A partir daí, toda execução travava por minutos e
+  terminava em `ER_SCHEMA_DIR_UNKNOWN` — "schema does not exist, but schema
+  directory was found. This must be resolved manually". Dois agravantes: matar o
+  processo pai deixa os **filhos** vivos (um por arquivo de teste), segurando os
+  bancos; e o sintoma não parece erro, parece lentidão. Prefira `Ctrl+C`. Se já
+  aconteceu, mate os filhos também
+  (`ps -eo pid,cmd | grep "node test/"`) e remova as cascas vazias com
+  `docker exec beever-mysql sh -c 'cd /var/lib/mysql && rmdir beever_teste_*'` —
+  `rmdir`, nunca `rm -rf`, porque ele se recusa a apagar diretório com conteúdo.
 - O seed se recusa a rodar com `NODE_ENV=production`.
 - Migration nova deve ser pequena: o MySQL faz commit implícito em DDL, então o
   rollback do runner não desfaz tabelas já criadas.
@@ -443,9 +520,10 @@ Não reabrir sem motivo novo.
 | `docs/00-MAPA-DE-NOMES-LEGADO.md` | Decisão de checkpoint — nomes de tabela e coluna, legado → novo |
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
+| `docs/04-AUDITORIA-DO-ONBOARDING.md` | T-04.1 — onboarding requisito a requisito, veredito peça por peça e o contrato do `GoalPlannerService` |
 
-**Próxima tarefa:** T-04.1 — auditar o onboarding existente e decidir o que
-reaproveitar. A E04 é onde mora o `GoalPlannerService`, que ainda não existe
-(RN-014 e RN-015), mais a DT-20 (tempo por sessão e preferências de som e
-animação, que o onboarding ainda não coleta) e a DT-25 (troca de senha sem
-confirmar a senha atual).
+**Próxima tarefa:** T-04.2 — máquina de passos do onboarding com progresso
+salvo a cada passo. O laudo da T-04.1 (`docs/04-AUDITORIA-DO-ONBOARDING.md`) diz
+o que reaproveitar e o que reescrever, e a decisão D-2 já está tomada: o passo é
+salvo no servidor, não em `localStorage`. Levar junto a DT-28 e a DT-29, que
+moram no mesmo arquivo que será reescrito.

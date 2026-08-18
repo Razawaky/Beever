@@ -1,11 +1,22 @@
 <main class="w-full max-w-md">
   <div class="mb-8">
     <div class="mb-2 flex justify-between text-xs font-bold uppercase tracking-wide text-tinta-suave">
-      <span>Configuração</span>
+      <span id="progress-label">Configuração</span>
       <span id="progress-text">0%</span>
     </div>
+    <%# A largura vem das classes `.barra-N`, nunca de atributo `style`: a CSP %>
+    <%# descarta estilo escrito na marcação (RNF-11). O `role` e o `aria-valuenow` %>
+    <%# são o que faz o leitor de tela anunciar o progresso que a RF-ONB-01 promete. %>
     <div class="h-3 overflow-hidden rounded-pilula bg-white">
-      <div id="progress-bar" class="h-full w-0 bg-mel transition-all duration-500 ease-out"></div>
+      <div
+        id="progress-bar"
+        class="barra-0 h-full bg-mel transition-all duration-500 ease-out"
+        role="progressbar"
+        aria-labelledby="progress-label"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      ></div>
     </div>
   </div>
 

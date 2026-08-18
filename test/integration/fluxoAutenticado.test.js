@@ -171,6 +171,34 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(resposta.body.faixaEtaria, 'C');
   });
 
+  /**
+   * A tela impede semana vazia desabilitando o botão, mas quem fala com a API
+   * direto não passa pela tela. A RF-ONB-03 exige pelo menos um dia, e sem esta
+   * recusa dava para concluir o onboarding sem nenhum: a RN-014 não tem faixa
+   * para zero dias, e a agenda vazia derrubaria a geração de tarefas depois.
+   */
+  it('o onboarding recusa uma semana sem nenhum dia marcado', async () => {
+    csrf = await lerToken('/onboarding');
+
+    const resposta = await agente
+      .put(`/perfil/${perfilId}/onboarding`)
+      .set('Accept', 'application/json')
+      .send({
+        apelido: 'jogadora',
+        avatar: 'beenie-classico',
+        objetivo: 'comprar-algo',
+        nivel: 'intermediate',
+        dias: [],
+        _csrf: csrf,
+      })
+      .expect(422);
+
+    assert.match(JSON.stringify(resposta.body), /dia da semana/i);
+
+    const perfil = await agente.get('/perfil/meu').set('Accept', 'application/json').expect(200);
+    assert.equal(perfil.body.onboardingConcluido, false, 'recusa não pode marcar a conta como configurada');
+  });
+
   it('o onboarding grava nível inicial, agenda e marca a conta', async () => {
     csrf = await lerToken('/onboarding');
 
@@ -195,6 +223,27 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(perfil.body.objetivo_inicial, 'comprar-algo');
     assert.equal(perfil.body.onboardingConcluido, true);
     assert.equal(perfil.body.nivel.nivel, 5);
+  });
+
+  /**
+   * RN-011 conhece três durações de sessão, e o banco repete a lista num CHECK.
+   * O validador aceitava de 5 a 60, então 30 passava pela rota e só morria no
+   * MySQL — erro de formulário chegando ao jogador como falha do servidor.
+   */
+  it('o perfil recusa tempo de sessão fora de 5, 10 ou 20 minutos', async () => {
+    csrf = await lerToken('/painel');
+
+    await agente
+      .put(`/perfil/${perfilId}`)
+      .set('Accept', 'application/json')
+      .send({ minutos_por_sessao: 30, _csrf: csrf })
+      .expect(422);
+
+    await agente
+      .put(`/perfil/${perfilId}`)
+      .set('Accept', 'application/json')
+      .send({ minutos_por_sessao: 20, _csrf: csrf })
+      .expect(200);
   });
 
   it('o painel e a loja renderizam com os dados da sessão', async () => {

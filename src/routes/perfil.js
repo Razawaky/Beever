@@ -23,13 +23,39 @@ router.put(
     body('apelido').optional().trim().notEmpty().isLength({ max: 60 }),
     body('avatar').optional().trim().isLength({ max: 60 }),
     body('fuso').optional().trim().isLength({ max: 64 }),
-    body('minutos_por_sessao').optional().isInt({ min: 5, max: 60 }),
+    // RN-011 só reconhece três durações, e o banco as repete em
+    // `ck_profiles_session_minutes`. Aceitar 5 a 60 aqui deixava passar valores
+    // como 30, que o CHECK derrubava depois — erro de formulário virando 500.
+    // `isIn` compararia texto contra número e recusaria até o valor certo; a
+    // conversão explícita aceita tanto `20` quanto `"20"`, que é como os dois
+    // clientes mandam.
+    body('minutos_por_sessao')
+      .optional()
+      .custom((valor) => [5, 10, 20].includes(Number(valor)))
+      .withMessage('Tempo por sessão inválido: use 5, 10 ou 20'),
   ],
   validate,
   profilesController.atualizar,
 );
 
 router.delete('/:id', param('id').isInt({ min: 1 }), validate, profilesController.remover);
+
+// RF-ONB-01: cada passo respondido é gravado na hora, para que fechar a aba no
+// meio não custe o começo de novo. A lista de passos válidos não é repetida
+// aqui: ela é regra de produto e mora em `profilesService.PASSOS_DO_ONBOARDING`,
+// que recusa passo desconhecido com o mesmo 422 que este validador daria — e a
+// rota não conhece service, só controller.
+router.put(
+  '/:id/onboarding/passo',
+  requireOnboardingPendente,
+  [
+    param('id').isInt({ min: 1 }),
+    body('passo').trim().notEmpty().withMessage('Informe qual passo está sendo salvo').isLength({ max: 40 }),
+    body('resposta').exists().withMessage('Responda para continuar'),
+  ],
+  validate,
+  profilesController.salvarPassoDoOnboarding,
+);
 
 // Só quem ainda não concluiu pode gravar: refazer o onboarding reescreveria
 // o ponto de partida do XP de uma conta que já está jogando.
@@ -46,7 +72,13 @@ router.put(
       .withMessage('Nível inicial inválido'),
     // Um único dia marcado chega como string, vários chegam como lista — o
     // wildcard cobre os dois casos sem exigir que a tela mande sempre array.
-    body('dias').optional(),
+    // A RF-ONB-03 exige pelo menos um dia: a tela já cobrava, o servidor não,
+    // e sem isso dava para concluir o onboarding com a semana inteira vazia.
+    body('dias').custom((valor) => {
+      const lista = valor === undefined ? [] : [].concat(valor);
+      if (lista.length === 0) throw new Error('Escolha pelo menos um dia da semana');
+      return true;
+    }),
     body('dias.*').optional().isInt({ min: 0, max: 6 }).withMessage('Dia da semana inválido'),
   ],
   validate,

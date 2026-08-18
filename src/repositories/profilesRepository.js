@@ -10,7 +10,7 @@ import { consultar, consultarEm } from '../config/database.js';
  */
 
 const CAMPOS =
-  'id, user_id, age_band_id, avatar_id, initial_goal_id, timezone, session_minutes, is_sound_enabled, has_reduced_motion, created_at';
+  'id, user_id, age_band_id, avatar_id, initial_goal_id, onboarding_step, timezone, session_minutes, is_sound_enabled, has_reduced_motion, created_at';
 
 export async function buscarPorUsuario(idUsuario) {
   const linhas = await consultar(`SELECT ${CAMPOS} FROM profiles WHERE user_id = ?`, [idUsuario]);
@@ -51,6 +51,22 @@ export async function atualizar(
   return resultado.affectedRows;
 }
 
+/**
+ * Move o marcador de passo do onboarding para frente, nunca para trás.
+ *
+ * O `GREATEST` existe por causa do botão "Voltar": revisar uma resposta já dada
+ * regrava o campo, mas não pode devolver o jogador ao começo da próxima vez que
+ * ele abrir o wizard.
+ */
+export async function avancarPasso(id, passo, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    'UPDATE profiles SET onboarding_step = GREATEST(onboarding_step, ?) WHERE id = ?',
+    [passo, id],
+  );
+  return resultado.affectedRows;
+}
+
 export async function remover(id) {
   const resultado = await consultar('DELETE FROM profiles WHERE id = ?', [id]);
   return resultado.affectedRows;
@@ -59,7 +75,7 @@ export async function remover(id) {
 /** Leitura completa para telas: junta os rótulos das tabelas de domínio. */
 export async function buscarDetalhadoPorUsuario(idUsuario) {
   const linhas = await consultar(
-    `SELECT p.id, p.user_id, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion,
+    `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
             a.slug AS avatar, a.image_path AS avatar_imagem,
             o.slug AS objetivo_inicial, o.label AS objetivo_inicial_rotulo

@@ -22,6 +22,19 @@ export const remover = assincrono(async (req, res) => {
   res.json({ mensagem: 'Perfil removido com sucesso' });
 });
 
+/**
+ * Um passo respondido. Devolve sempre o rascunho inteiro, e não só um "ok",
+ * para que a tela não precise adivinhar em que passo o servidor acha que ela
+ * está — quem manda no progresso é o servidor.
+ */
+export const salvarPassoDoOnboarding = assincrono(async (req, res) => {
+  const rascunho = await profilesService.salvarPassoDoOnboarding(Number(req.params.id), req.session.usuarioId, {
+    passo: req.body.passo,
+    resposta: req.body.resposta,
+  });
+  res.json(rascunho);
+});
+
 export const salvarOnboarding = assincrono(async (req, res) => {
   const { apelido, avatar, objetivo, nivel } = req.body;
   // Um único dia marcado chega como string; a normalização de verdade é do

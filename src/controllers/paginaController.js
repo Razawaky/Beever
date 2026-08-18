@@ -38,15 +38,25 @@ export const cadastro = (req, res) => {
 
 // Quem pode ver esta tela é decidido pelo `requireOnboardingPendente` na rota,
 // não por um `if` aqui dentro.
-export const onboarding = (req, res) => {
+export const onboarding = assincrono(async (req, res) => {
+  // O que já foi respondido volta do servidor, não do navegador: quem começa no
+  // computador da escola precisa poder terminar em casa (decisão D-2 da T-04.1).
+  const rascunho = await profilesService.obterRascunhoDoOnboarding(req.session.usuarioId);
+
   renderizarPagina(res, 'onboarding', {
     titulo: 'Configurar perfil — Beever',
     classeBody: 'flex min-h-screen flex-col items-center justify-center bg-cera p-4 text-tinta antialiased',
-    // O wizard é montado em JavaScript e lê estes dois do `dataset` do body.
-    dadosBody: { 'perfil-id': req.session.perfilId, 'csrf-token': res.locals.csrfToken },
+    // O wizard é montado em JavaScript e lê estes três do `dataset` do body. O
+    // rascunho viaja como JSON num atributo, que o EJS escapa como qualquer
+    // outro valor — a CSP não permite script embutido na página (RNF-11).
+    dadosBody: {
+      'perfil-id': req.session.perfilId,
+      'csrf-token': res.locals.csrfToken,
+      onboarding: JSON.stringify(rascunho),
+    },
     scripts: ['/js/onboarding.js'],
   });
-};
+});
 
 export const painel = assincrono(async (req, res) => {
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
