@@ -3,8 +3,8 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `0a21cc9` (E03 fechada)
+**Atualizado em:** 2026-08-18 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** E03 auditada e os bloqueantes corrigidos
 
 ---
 
@@ -82,6 +82,16 @@ servidor real. O terceiro item — erro sem stack em produção — virou teste
 permanente (`test/integration/erroEmProducao.test.js`) em vez de uma subida
 manual que ninguém repetiria.
 
+**A E03 também foi auditada, e também reprovou na primeira versão.** Dois
+bloqueantes e um alto, todos corrigidos no mesmo dia: qualquer conta logada
+trocava e-mail e senha de qualquer outra por `PUT /users/:id` (autorização
+faltando, não autenticação — a sessão era exigida, a posse não), a suíte
+dependia do dia da semana e só passava às segundas, quartas e sextas, e as
+barras de progresso do painel e das metas eram apagadas no navegador pela CSP,
+porque escreviam a largura em atributo `style`. As três correções vieram com
+teste que impede a volta. O relatório está em
+[`03-AUDITORIA-DA-ETAPA.md`](03-AUDITORIA-DA-ETAPA.md).
+
 O risco R-01 foi pago em duas parcelas e **está encerrado**: repositories na
 T-02.2, camada de cima na T-02.3. O modelo está documentado em
 [`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md) e o mapa de nomes em
@@ -95,10 +105,10 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | **4 de 16** — E00, E01, E02 (auditada) e E03 |
+| Etapas do roadmap prontas | **4 de 16** — E00, E01, E02 e E03, todas auditadas |
 | Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **225 passando, 0 falhando** — fluxo autenticado ponta a ponta, erro em produção, recusas de autenticação e força bruta |
-| Dívida técnica catalogada | 10 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3, a DT-07 na T-02.4 e a DT-11 na T-02.7 |
+| Testes | **228 passando, 0 falhando** — fluxo autenticado ponta a ponta, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Dívida técnica catalogada | 13 itens abertos — a auditoria da E03 acrescentou DT-24, DT-25 e DT-26 |
 | Riscos abertos | nenhum |
 
 ---
@@ -280,7 +290,7 @@ A T-02.3 devolveu a aplicação ao ar.
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
-| E03 Autenticação | **concluída, aguardando auditoria** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam a etapa |
+| E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
@@ -324,6 +334,9 @@ Identificadores rastreiam os documentos da E00.
 | DT-14 | Sem catálogo administrável de itens (criar/editar); catálogo vem do seed | herdado | E12 |
 | DT-15 | `.env.example` não documenta `DB_ROOT_PASSWORD`, usada pelo `docker-compose.yml` | T-00.5 | Uma linha; formalizado na T-14.4 |
 | ~~DT-16~~ | ~~Nenhum teste automatizado cobre o banco~~ | auditoria da E01, L-01 | **Resolvido por inteiro**: 21 testes de schema na T-02.1, 93 de repository na T-02.2 e o fluxo autenticado na T-02.3 |
+| DT-24 | Rate limit de autenticação é por IP: numa sala de aula atrás de um IP só, dez erros de senha somados entre alunos diferentes trancam a turma por 15 minutos. O roadmap e o cabeçalho de `bruteForce.test.js` ainda descrevem `skipSuccessfulRequests` como se ele deixasse passar quem acerta a senha, e o próprio teste do arquivo prova o contrário | auditoria da E03 | E14 — junto do endurecimento; o texto errado sobre segurança sai antes |
+| DT-25 | `PUT /users/:id` deixa o dono trocar senha e e-mail sem informar a senha atual. Uma sessão esquecida no computador da escola deixa de ser "mexeram no meu jogo" e vira "perdi a conta" | auditoria da E03 | E04 — junto da tela de edição de perfil (DT-12) |
+| DT-26 | `normalizeEmail()` remove pontos e sufixos `+` de endereços do Gmail: dois e-mails reais e distintos podem colidir no 409 de duplicado, e o `guardian_email` guardado como prova de consentimento pode não ser o que o responsável digitou | auditoria da E03 | E14 |
 | DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos
@@ -431,7 +444,8 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** auditoria da E03 (`/auditar-etapa`) e, depois dela, a E04 —
-onboarding e planejador de metas, onde mora o `GoalPlannerService` que ainda não
-existe (RN-014 e RN-015), mais a DT-20 (tempo por sessão e preferências de som e
-animação, que o onboarding ainda não coleta).
+**Próxima tarefa:** T-04.1 — auditar o onboarding existente e decidir o que
+reaproveitar. A E04 é onde mora o `GoalPlannerService`, que ainda não existe
+(RN-014 e RN-015), mais a DT-20 (tempo por sessão e preferências de som e
+animação, que o onboarding ainda não coleta) e a DT-25 (troca de senha sem
+confirmar a senha atual).

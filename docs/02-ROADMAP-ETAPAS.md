@@ -76,9 +76,15 @@ bloqueantes viraram as dívidas DT-18 a DT-22, cada uma com etapa marcada.
 | T-03.3 | Rotas e controllers de registro/login/logout com validação e rate limit | **já feita** na T-02.3 |
 | T-03.4 | Views de registro e login com a identidade visual | **já feita**, dentro do layout base da T-02.7 |
 | T-03.5 | Consentimento do responsável no registro (RNF-34) | **feita** — commit `c2f1eab`; prova gravada em `guardian_consents`, com o e-mail do registro e o hash de origem |
-| T-03.6 | Testes: senha fraca, e-mail duplicado, credencial errada, sessão expirada, brute force barrado | **feita** — commit `0a21cc9`, dez casos, incluindo não-enumeração de contas e o acerto de senha que não é barrado junto com o atacante |
+| T-03.6 | Testes: senha fraca, e-mail duplicado, credencial errada, sessão expirada, brute force barrado | **feita** — commit `0a21cc9`, dez casos, incluindo não-enumeração de contas. O bloqueio é por origem e vale para todos: depois que o teto estoura, nem quem acerta a senha passa. `skipSuccessfulRequests` evita **contar** o acerto, não isenta quem chega depois do bloqueio (DT-24) |
 
 **Aceite:** registrar → logar → acessar rota privada → sair. Sem senha em log.
+
+**Auditada em 2026-08-18** (`docs/03-AUDITORIA-DA-ETAPA.md`): reprovou a primeira
+versão com dois bloqueantes — qualquer conta logada alterava e desativava
+qualquer outra por `PUT`/`DELETE /users/:id`, e a suíte dependia do dia da
+semana — mais um item alto, as barras de progresso apagadas pela CSP. Os três
+foram corrigidos; o que sobrou virou DT-24, DT-25 e DT-26.
 
 ---
 
