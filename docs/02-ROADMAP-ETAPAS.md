@@ -51,8 +51,8 @@
 | T-02.3 | Realinhar services e controllers que dependem dos repositories. **Devolveu a aplicação ao ar** | **feita** — commit `3680c31`, com teste de fluxo autenticado ponta a ponta |
 | T-02.4 | `requireOnboarding` como middleware, em `src/middlewares/` | **feita** — commit `4e6020c`; passou a valer também nas rotas JSON, que não checavam nada |
 | T-02.5 | Request-id no logger estruturado | **feita** — commit `8510dd3`; propagado por `AsyncLocalStorage`, sem levar o `req` camada abaixo |
-| T-02.6 | `AuditService` com API única `record(actor, action, before, after)`, gravando em `audit_logs` | próxima |
-| T-02.7 | Layout EJS base — hoje `header`/`footer` são incluídos à mão e só em 2 das 9 páginas | pendente |
+| T-02.6 | `AuditService` com porta única, gravando em `audit_logs` | **feita** — commit `0bedb04`. A assinatura ficou `registrar(ator, acao, alvo)`, em português como o resto do código, e não `record(actor, action, before, after)` como este documento previa: misturar um verbo em inglês no meio de `registrar`/`buscar`/`listar` custaria mais do que a literalidade valeria. `ip_hash` e `request_id` passaram a ser preenchidos automaticamente |
+| T-02.7 | Layout EJS base — hoje `header`/`footer` são incluídos à mão e só em 2 das 9 páginas | próxima — fecha a etapa |
 
 **Já existiam antes da etapa, conferidos na T-00.2:** `src/config/{env,database,logger,session}.js`, error handler global com classes de erro em `src/utils/erros.js`, os 7 middlewares, helper de validação com express-validator, `emTransacao` em `src/config/database.js`, e o healthcheck `/health`.
 
