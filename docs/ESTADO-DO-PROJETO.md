@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `3680c31` (T-02.3 fechada — aplicação no ar de novo)
+**Último commit:** `4e6020c` (T-02.4 fechada)
 
 ---
 
@@ -59,10 +59,11 @@ concluir tarefa paga mel e pólen de verdade, com os valores vindos de
 `task_types`. O outro lado continua aberto — **nenhum XP é creditado em jogo**,
 porque nenhuma recompensa do MVP declara XP. Isso é o motor da E06.
 
-**O que vem agora:** **E02 em andamento, 3 de 7 tarefas fechadas.** A T-02.1
-entregou a rede de teste com banco real, a T-02.2 realinhou os 13 repositories e
-a T-02.3 realinhou services, controllers e telas — que é o que devolveu a
-aplicação ao ar. A próxima é a **T-02.4**, `requireOnboarding` como middleware.
+**O que vem agora:** **E02 em andamento, 4 de 7 tarefas fechadas.** A T-02.1
+entregou a rede de teste com banco real, a T-02.2 realinhou os 13 repositories,
+a T-02.3 realinhou services, controllers e telas — devolvendo a aplicação ao ar
+— e a T-02.4 tirou a checagem de onboarding de dentro dos controllers. A
+próxima é a **T-02.5**, request-id no logger estruturado.
 
 O risco R-01 foi pago em duas parcelas e **está encerrado**: repositories na
 T-02.2, camada de cima na T-02.3. O modelo está documentado em
@@ -77,10 +78,10 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 3 de 7 tarefas fechadas |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 4 de 7 tarefas fechadas |
 | Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **171 passando, 0 falhando** — 124 contra banco real, incluindo o fluxo autenticado ponta a ponta |
-| Dívida técnica catalogada | 11 itens abertos — a T-02.3 fechou DT-04, DT-05, DT-07 e o resto da DT-16 |
+| Testes | **176 passando, 0 falhando** — 129 contra banco real, incluindo o fluxo autenticado ponta a ponta |
+| Dívida técnica catalogada | 11 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3; a DT-07 fechou por inteiro na T-02.4 |
 | Riscos abertos | nenhum |
 
 ---
@@ -230,8 +231,8 @@ abertura da E02, está na tabela abaixo e também no próprio
 | T-02.1 Arnês de teste com banco real + asserções de integridade | **feita** (commit `b9d9f84`) |
 | T-02.2 Realinhar os 13 repositories ao schema novo, com teste de integração para cada | **feita** (commits `c061fa7` e `2270762`) |
 | T-02.3 Realinhar services e controllers que dependem deles | **feita** (commit `3680c31`) |
-| T-02.4 `requireOnboarding` como middleware (hoje é checagem espalhada em controllers) | **próxima** — o `exigirLoginPagina` já saiu do arquivo de rotas na T-02.3 |
-| T-02.5 Request-id no logger | pendente |
+| T-02.4 `requireOnboarding` como middleware | **feita** (commit `4e6020c`) |
+| T-02.5 Request-id no logger | **próxima** |
 | T-02.6 `AuditService` com API única, gravando em `audit_logs` | pendente |
 | T-02.7 Layout EJS base, hoje só partials incluídos à mão | pendente |
 
@@ -255,7 +256,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | Etapa | Situação | O que falta |
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
-| E02 Núcleo | **em andamento** | T-02.1, T-02.2 e T-02.3 feitas. Falta T-02.4 a T-02.7 — middleware de onboarding, request-id no logger, `AuditService` e layout EJS base |
+| E02 Núcleo | **em andamento** | T-02.1 a T-02.4 feitas. Falta T-02.5 a T-02.7 — request-id no logger, `AuditService` e layout EJS base |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
@@ -284,7 +285,7 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-04~~ | ~~`XP_POR_NIVEL = 1000` e `PONTOS_POR_TAREFA_CONCLUIDA = 10` em constante~~ | C-03, auditoria da E01 (L-03) | **Resolvido na T-02.3**: a curva de nível é lida de `levels` e a recompensa da tarefa vem de `task_types`. Nenhuma das duas constantes existe mais. Falta ainda o consumo de `reward_configs` pelo motor de recompensas (E06) |
 | ~~DT-05~~ | ~~Negociação de conteúdo copiada 9 vezes em 6 controllers~~ | P-01 | **Resolvido na T-02.3**: `querJson` em `src/utils/resposta.js` |
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
-| ~~DT-07~~ | ~~Guarda de autenticação declarado dentro de `src/routes/index.js`~~ | P-04, C-01 | **Resolvido na T-02.3**: virou `src/middlewares/exigirLoginPagina.js`. Ele e o `requireAuth` continuam separados de propósito — página redireciona, API devolve 401 |
+| ~~DT-07~~ | ~~Dois guardas de autenticação com a mesma regra, um deles dentro de `src/routes/index.js`~~ | P-04, C-01 | **Resolvido por inteiro na T-02.4**: o guarda saiu do arquivo de rotas na T-02.3 e foi absorvido por `requireOnboarding`/`requireOnboardingPendente`, que respondem conforme o cliente — redirecionamento para HTML, código de erro para JSON |
 | DT-08 | Cobertura de service ainda indireta: `purchasesService`, `tasksService`, `goalsService`, `coinsService`, `pointsService`, `profilesService` e `authService` são exercitados pelo teste de fluxo, mas não têm teste próprio de caso de borda | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
@@ -401,4 +402,4 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** T-02.4 — `requireOnboarding` como middleware, hoje espalhado como checagem dentro dos controllers de página.
+**Próxima tarefa:** T-02.5 — request-id no logger estruturado, para uma requisição poder ser seguida de ponta a ponta no log.

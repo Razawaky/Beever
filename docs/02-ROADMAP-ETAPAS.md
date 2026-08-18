@@ -49,8 +49,8 @@
 | T-02.1 | Arnês de teste com banco real (`test/helpers/banco.js`) + asserções de integridade do schema | **feita** — commit `b9d9f84` |
 | T-02.2 | Realinhar os 13 repositories ao schema novo, com teste de integração para cada | **feita** — commits `c061fa7` e `2270762`, 93 testes de integração |
 | T-02.3 | Realinhar services e controllers que dependem dos repositories. **Devolveu a aplicação ao ar** | **feita** — commit `3680c31`, com teste de fluxo autenticado ponta a ponta |
-| T-02.4 | `requireOnboarding` como middleware, em `src/middlewares/`. O `exigirLoginPagina` já saiu do arquivo de rotas na T-02.3 | próxima |
-| T-02.5 | Request-id no logger estruturado | pendente |
+| T-02.4 | `requireOnboarding` como middleware, em `src/middlewares/` | **feita** — commit `4e6020c`; passou a valer também nas rotas JSON, que não checavam nada |
+| T-02.5 | Request-id no logger estruturado | próxima |
 | T-02.6 | `AuditService` com API única `record(actor, action, before, after)`, gravando em `audit_logs` | pendente |
 | T-02.7 | Layout EJS base — hoje `header`/`footer` são incluídos à mão e só em 2 das 9 páginas | pendente |
 
