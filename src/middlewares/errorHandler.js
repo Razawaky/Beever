@@ -1,4 +1,5 @@
 import { env } from '../config/env.js';
+import { logger } from '../config/logger.js';
 import { ErroAplicacao } from '../utils/erros.js';
 
 /**
@@ -6,6 +7,11 @@ import { ErroAplicacao } from '../utils/erros.js';
  * Nunca vaza stack trace para o cliente em produção e responde JSON ou HTML
  * conforme o que o cliente pediu — é o que permite que os mesmos controllers
  * sirvam telas EJS hoje e uma SPA amanhã.
+ *
+ * A resposta leva o id da requisição junto. Ele não é dado sensível — é um
+ * número aleatório sem significado fora do log — e é o que transforma "deu erro
+ * na loja ontem" numa linha exata de arquivo. Em produção, onde o stack trace
+ * some, ele é a única pista que a pessoa consegue passar adiante.
  */
 export function errorHandler(erro, req, res, next) {
   // Se a resposta já começou a ser enviada (por exemplo, uma falha no store de
@@ -16,7 +22,7 @@ export function errorHandler(erro, req, res, next) {
   const esperado = erro instanceof ErroAplicacao;
   const status = esperado ? erro.status : 500;
 
-  const log = req.log ?? console;
+  const log = req.log ?? logger;
   if (status >= 500) {
     log.error({ erro, url: req.originalUrl, metodo: req.method }, 'Erro não tratado');
   } else {
@@ -29,6 +35,7 @@ export function errorHandler(erro, req, res, next) {
     return res.status(status).json({
       erro: mensagem,
       codigo: esperado ? erro.codigo : 'ERRO_INTERNO',
+      requestId: req.id,
       ...(esperado && erro.detalhes ? { detalhes: erro.detalhes } : {}),
     });
   }
@@ -37,6 +44,7 @@ export function errorHandler(erro, req, res, next) {
     titulo: `Erro ${status}`,
     status,
     mensagem,
+    requestId: req.id,
     // Stack só em desenvolvimento, para depuração local.
     stack: env.producao ? null : erro.stack,
   });

@@ -12,6 +12,7 @@ import { csrf } from './middlewares/csrf.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFound } from './middlewares/notFound.js';
 import { limiteGlobal } from './middlewares/rateLimiters.js';
+import { requestId } from './middlewares/requestId.js';
 import rotas from './routes/index.js';
 
 const diretorioAtual = path.dirname(fileURLToPath(import.meta.url));
@@ -42,7 +43,18 @@ export function criarApp() {
     })
   );
 
-  app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/health' } }));
+  // Antes do logger: é ele quem cria o id que o `pino-http` vai reaproveitar e
+  // que todo log da requisição vai carregar.
+  app.use(requestId);
+  app.use(
+    pinoHttp({
+      logger,
+      // Sem isto o pino-http inventaria um contador próprio por processo, e o
+      // log teria dois identificadores diferentes para a mesma requisição.
+      genReqId: (req) => req.id,
+      autoLogging: { ignore: (req) => req.url === '/health' },
+    }),
+  );
 
   app.set('view engine', 'ejs');
   app.set('views', path.join(diretorioAtual, 'views'));

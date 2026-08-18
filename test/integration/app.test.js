@@ -64,4 +64,56 @@ describe('aplicação', () => {
   it('serve os arquivos estáticos de src/public', async () => {
     await request(app).get('/img/beever-icon.png').expect(200);
   });
+
+  describe('identificação da requisição', () => {
+    it('devolve um id em toda resposta', async () => {
+      const resposta = await request(app).get('/').expect(200);
+      assert.match(
+        resposta.headers['x-request-id'],
+        /^[0-9a-f-]{36}$/,
+        'sem id no header, quem vê o erro não tem o que informar',
+      );
+    });
+
+    it('cada requisição recebe o seu', async () => {
+      const primeira = await request(app).get('/');
+      const segunda = await request(app).get('/');
+      assert.notEqual(primeira.headers['x-request-id'], segunda.headers['x-request-id']);
+    });
+
+    it('reaproveita o id que o proxy já atribuiu', async () => {
+      const resposta = await request(app).get('/').set('x-request-id', 'nginx-abc.123_XYZ');
+      assert.equal(resposta.headers['x-request-id'], 'nginx-abc.123_XYZ');
+    });
+
+    it('recusa id malformado e gera um limpo no lugar', async () => {
+      // O id termina escrito em arquivo de log. Aceitar texto livre de um header
+      // seria deixar quem chama decidir o que aparece lá.
+      const sujo = 'requestId=x; nivel: falso "forjado"';
+      const comprido = 'a'.repeat(200);
+
+      for (const enviado of [sujo, comprido]) {
+        const resposta = await request(app).get('/').set('x-request-id', enviado);
+        assert.notEqual(resposta.headers['x-request-id'], enviado);
+        assert.match(resposta.headers['x-request-id'], /^[0-9a-f-]{36}$/);
+      }
+    });
+
+    it('o erro em JSON carrega o mesmo id do header', async () => {
+      const resposta = await request(app)
+        .get('/rota-que-nao-existe')
+        .set('Accept', 'application/json')
+        .expect(404);
+
+      assert.equal(resposta.body.requestId, resposta.headers['x-request-id']);
+    });
+
+    it('a página de erro mostra o id para a pessoa poder citá-lo', async () => {
+      const resposta = await request(app).get('/rota-que-nao-existe').set('Accept', 'text/html').expect(404);
+      assert.ok(
+        resposta.text.includes(resposta.headers['x-request-id']),
+        'o id precisa aparecer na tela, não só no header',
+      );
+    });
+  });
 });
