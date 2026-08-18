@@ -98,6 +98,29 @@ describe('fluxo autenticado', opcoes, () => {
     if (banco) await banco.encerrar();
   });
 
+  it('recusa o cadastro de criança sem autorização do responsável', async () => {
+    const resposta = await agente
+      .post('/users')
+      .set('Accept', 'application/json')
+      .send({
+        apelido: 'semautorizacao',
+        email: 'sem-consentimento@beever.dev',
+        data_nasc: '2014-05-20',
+        senha: 'beever123',
+        _csrf: csrf,
+      })
+      .expect(422);
+
+    assert.equal(resposta.body.codigo, 'CONSENTIMENTO_NECESSARIO');
+
+    // E não pode ter sobrado meia conta: a recusa acontece antes de qualquer
+    // escrita, inclusive antes do hash da senha.
+    const [linhas] = await banco.conexao.query('SELECT id FROM users WHERE email = ?', [
+      'sem-consentimento@beever.dev',
+    ]);
+    assert.equal(linhas.length, 0);
+  });
+
   it('cadastra a conta e já entra logado', async () => {
     const resposta = await agente
       .post('/users')
@@ -107,9 +130,22 @@ describe('fluxo autenticado', opcoes, () => {
         email: 'fluxo@beever.dev',
         data_nasc: '2014-05-20',
         senha: 'beever123',
+        consentimento_responsavel: 'on',
         _csrf: csrf,
       })
       .expect(201);
+
+    assert.equal(resposta.body.consentimentoDeResponsavel, true);
+
+    const [[consentimento]] = await banco.conexao.query(
+      `SELECT g.guardian_email, g.ip_hash
+         FROM guardian_consents g
+         JOIN users u ON u.id = g.user_id
+        WHERE u.email = ?`,
+      ['fluxo@beever.dev'],
+    );
+    assert.equal(consentimento.guardian_email, 'fluxo@beever.dev', 'o e-mail do registro é o do responsável');
+    assert.match(consentimento.ip_hash, /^[0-9a-f]{64}$/, 'a origem fica registrada como hash');
 
     perfilId = resposta.body.idPerfil;
     assert.ok(perfilId, 'o cadastro devolve o perfil criado junto da conta');
@@ -396,6 +432,7 @@ describe('fluxo autenticado', opcoes, () => {
           email: 'novato@beever.dev',
           data_nasc: '2015-01-10',
           senha: 'beever123',
+          consentimento_responsavel: 'on',
           _csrf: tokenNovato,
         })
         .expect(201);

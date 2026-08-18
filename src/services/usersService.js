@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 
+import { hashDoIpDaRequisicao } from '../config/contextoRequisicao.js';
 import { emTransacao } from '../config/database.js';
+import * as guardianConsentsRepository from '../repositories/guardianConsentsRepository.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as userLevelsRepository from '../repositories/userLevelsRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
@@ -37,6 +39,16 @@ function exigirSenhaValida(senha) {
     throw erroValidacao('A senha precisa ter ao menos 8 caracteres, com letras e números');
   }
 }
+
+/**
+ * Idade a partir da qual a pessoa responde por si.
+ *
+ * Na prática o público inteiro do Beever é menor (6 a 15), então o
+ * consentimento vale para todo mundo. A regra fica escrita assim mesmo assim:
+ * quando um adulto criar conta para acompanhar, ela se comporta certo sozinha,
+ * em vez de pedir autorização de responsável a um pai de família.
+ */
+const MAIORIDADE = 18;
 
 /** Idade em anos completos na data de referência. */
 export function idadeEm(dataNasc, referencia = new Date()) {
@@ -82,11 +94,24 @@ export async function obter(id) {
  * recompensa. Por isso a transação: no schema antigo isso eram três chamadas
  * soltas que podiam falhar no meio e deixar conta pela metade.
  */
-export async function criar({ email, dataNasc, senha, apelido }) {
+export async function criar({ email, dataNasc, senha, apelido, consentimentoResponsavel = false }) {
   exigirSenhaValida(senha);
 
   const apelidoLimpo = apelido?.trim();
   if (!apelidoLimpo) throw erroValidacao('Informe como você quer ser chamado');
+
+  const idade = idadeEm(dataNasc);
+  const precisaDeConsentimento = idade < MAIORIDADE;
+
+  // A checagem vem antes de tudo o que custa: nem hash de senha, nem consulta de
+  // faixa etária, nem linha nenhuma no banco. Conta de criança sem autorização
+  // de responsável não deve nem começar a existir.
+  if (precisaDeConsentimento && !consentimentoResponsavel) {
+    throw new ErroAplicacao(
+      'É preciso que um responsável autorize a criação desta conta',
+      { status: 422, codigo: 'CONSENTIMENTO_NECESSARIO' },
+    );
+  }
 
   if (await usersRepository.emailJaUsado(email)) {
     throw new ErroAplicacao('Este e-mail já está cadastrado', { status: 409, codigo: 'EMAIL_EM_USO' });
@@ -94,13 +119,28 @@ export async function criar({ email, dataNasc, senha, apelido }) {
 
   const senhaHash = await bcrypt.hash(senha, CUSTO_BCRYPT);
   const faixas = await profilesRepository.listarFaixasEtarias();
-  const faixa = faixaParaIdade(faixas, idadeEm(dataNasc));
+  const faixa = faixaParaIdade(faixas, idade);
 
   const { idUsuario, idPerfil } = await emTransacao(async (conexao) => {
     const usuario = await usersRepository.criar({ email, apelido: apelidoLimpo, dataNasc, senhaHash }, conexao);
     const perfil = await profilesRepository.criar({ idUsuario: usuario }, conexao);
     await walletsRepository.criar(usuario, conexao);
     await userLevelsRepository.criar(usuario, conexao);
+
+    // O consentimento entra na mesma transação da conta. Consentimento perdido
+    // com conta criada é o pior desfecho possível: a criança fica cadastrada e a
+    // prova de que alguém autorizou, não.
+    if (precisaDeConsentimento) {
+      await guardianConsentsRepository.registrar(conexao, {
+        idUsuario: usuario,
+        // O e-mail do registro é o do responsável quando a conta é de menor
+        // (RN-048). Copiar aqui não é redundância: se o e-mail de login mudar
+        // amanhã, a prova continua dizendo a quem o consentimento foi dado.
+        emailResponsavel: email,
+        ipHash: hashDoIpDaRequisicao() ?? null,
+      });
+    }
+
     return { idUsuario: usuario, idPerfil: perfil };
   });
 
@@ -113,10 +153,25 @@ export async function criar({ email, dataNasc, senha, apelido }) {
   await auditService.registrar(auditService.usuario(idUsuario), 'conta.criada', {
     entidade: 'user',
     id: idUsuario,
-    depois: { email, apelido: apelidoLimpo, faixaEtaria: faixa.code },
+    depois: { email, apelido: apelidoLimpo, faixaEtaria: faixa.code, consentimentoDeResponsavel: precisaDeConsentimento },
   });
 
-  return { id: idUsuario, email, apelido: apelidoLimpo, idPerfil, faixaEtaria: faixa.code };
+  if (precisaDeConsentimento) {
+    await auditService.registrar(auditService.usuario(idUsuario), 'consentimento.registrado', {
+      entidade: 'user',
+      id: idUsuario,
+      depois: { emailResponsavel: email, idade },
+    });
+  }
+
+  return {
+    id: idUsuario,
+    email,
+    apelido: apelidoLimpo,
+    idPerfil,
+    faixaEtaria: faixa.code,
+    consentimentoDeResponsavel: precisaDeConsentimento,
+  };
 }
 
 export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {

@@ -32,6 +32,13 @@ const regrasCadastro = [
     .optional()
     .custom((valor, { req }) => valor === req.body.senha)
     .withMessage('As senhas não coincidem'),
+  // Quem decide se o consentimento é obrigatório é o service, que conhece a
+  // idade. Aqui só se garante que o valor tenha forma de "sim ou não" — um
+  // texto qualquer no lugar do checkbox não pode virar autorização.
+  body('consentimento_responsavel')
+    .optional()
+    .isIn(['on', 'true', '1', true, 'false', '0', false])
+    .withMessage('Confirmação de responsável inválida'),
 ];
 
 const regrasAtualizacao = [

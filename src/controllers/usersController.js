@@ -11,7 +11,10 @@ export const listar = assincrono(async (req, res) => {
 
 export const criar = assincrono(async (req, res) => {
   const { email, data_nasc: dataNasc, senha, apelido } = req.body;
-  const usuario = await usersService.criar({ email, dataNasc, senha, apelido });
+  // Checkbox marcado chega como 'on' pelo formulário e como true pelo JSON.
+  const consentimentoResponsavel = Boolean(req.body.consentimento_responsavel);
+
+  const usuario = await usersService.criar({ email, dataNasc, senha, apelido, consentimentoResponsavel });
 
   // Conta recém-criada nunca passou pelo onboarding: loga direto, sem exigir
   // um segundo formulário de login.

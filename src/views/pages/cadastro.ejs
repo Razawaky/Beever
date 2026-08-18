@@ -75,6 +75,31 @@
           />
         </div>
 
+        <%#
+          Consentimento do responsável (RNF-34, LGPD Art. 14). O e-mail acima é o
+          do responsável quando a conta é de criança, então aqui basta a
+          declaração — não se pede o mesmo endereço duas vezes.
+
+          O aviso sobre moeda fictícia mora junto porque este é o momento em que
+          um adulto está lendo a tela (RNF-35).
+        %>
+        <label class="flex cursor-pointer gap-3 rounded-favo border border-linha bg-cera p-4 text-sm">
+          <input
+            type="checkbox"
+            id="consentimento_responsavel"
+            name="consentimento_responsavel"
+            required
+            class="mt-0.5 h-5 w-5 shrink-0 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+          />
+          <span>
+            Sou o responsável por esta criança e autorizo a criação da conta.
+            <span class="mt-1 block text-tinta-suave">
+              O Beever coleta apenas apelido e avatar, nunca nome completo, endereço ou telefone.
+              O mel do jogo é fictício: não existe compra com dinheiro de verdade.
+            </span>
+          </span>
+        </label>
+
         <button
           type="submit"
           class="w-full rounded-favo bg-mel px-4 py-3 font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"

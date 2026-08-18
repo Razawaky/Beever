@@ -54,3 +54,13 @@ describe('usersService.faixaParaIdade', () => {
     assert.equal(faixaParaIdade(FAIXAS, 40).code, 'C');
   });
 });
+
+describe('usersService — consentimento do responsável', () => {
+  it('a maioridade é a fronteira: 17 precisa, 18 não', () => {
+    // A regra é escrita em cima de `idadeEm`, então o teste cobre a fronteira
+    // pela idade, sem precisar de banco. Na prática o público inteiro do Beever
+    // é menor — a regra existe para o dia em que um adulto criar conta.
+    assert.equal(idadeEm('2009-03-10', new Date('2026-03-09')) < 18, true);
+    assert.equal(idadeEm('2008-03-10', new Date('2026-03-10')) < 18, false);
+  });
+});
