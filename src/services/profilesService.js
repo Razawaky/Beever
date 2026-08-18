@@ -1,9 +1,11 @@
 import { emTransacao } from '../config/database.js';
+import { logger } from '../config/logger.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
+import * as goalPlannerService from './goalPlannerService.js';
 import * as levelsService from './levelsService.js';
 import * as schedulesService from './schedulesService.js';
 
@@ -322,7 +324,31 @@ export async function salvarOnboarding(
     },
   });
 
-  return { apelido, avatar, objetivo, ...resultado.nivelInicial, diasDisponiveis: resultado.diasMarcados };
+  // RF-ONB-07: as primeiras metas nascem aqui, conforme a RN-014.
+  //
+  // Fora da transação, e de propósito. O planejador lê o nível e o saldo para
+  // dimensionar o alvo, e leituras feitas de outra conexão não enxergariam o que
+  // esta transação ainda não confirmou — o nível inicial sairia como zero e a
+  // meta nasceria errada. Como o planejador é idempotente e o painel completa o
+  // plano a cada visita, uma falha aqui custa a primeira tela sem meta, não uma
+  // conta quebrada: por isso ela é registrada e não derruba o onboarding, que
+  // já está concluído e pago.
+  let metasGeradas = 0;
+  try {
+    const planejadas = await goalPlannerService.garantirMetasAtivas(idUsuario);
+    metasGeradas = planejadas.criadas;
+  } catch (erro) {
+    logger.error({ erro, idUsuario }, 'Falha ao gerar as metas iniciais do onboarding');
+  }
+
+  return {
+    apelido,
+    avatar,
+    objetivo,
+    ...resultado.nivelInicial,
+    diasDisponiveis: resultado.diasMarcados,
+    metasGeradas,
+  };
 }
 
 /**

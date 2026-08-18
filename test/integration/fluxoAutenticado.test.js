@@ -410,9 +410,14 @@ describe('fluxo autenticado', opcoes, () => {
       .expect(201);
 
     const metas = await agente.get('/metas').set('Accept', 'application/json').expect(200);
-    assert.equal(metas.body.length, 1);
-    assert.equal(Number(metas.body[0].target_value), 200);
-    assert.equal(metas.body[0].status, 'ativa');
+    const criada = metas.body.find((meta) => meta.title === 'Juntar mel para o patinete');
+    assert.ok(criada, 'a meta escrita à mão precisa aparecer na listagem');
+    assert.equal(Number(criada.target_value), 200);
+    assert.equal(criada.status, 'ativa');
+
+    // As outras duas não foram criadas aqui: são do planejador (T-04.4). Esta
+    // conta marcou três dias na semana, e a RN-014 dá duas metas a essa faixa.
+    assert.equal(metas.body.length, 3, 'a meta manual convive com as que a RN-014 gerou');
   });
 
   it('meta não alcançada não paga', async () => {

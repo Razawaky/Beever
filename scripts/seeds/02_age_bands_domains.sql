@@ -111,6 +111,57 @@ ON DUPLICATE KEY UPDATE
   reward_coins = novo.reward_coins, reward_points = novo.reward_points,
   default_days = novo.default_days;
 
+-- RN-014, a outra metade: quantas metas ativas cada faixa de dias recebe. O
+-- prazo e a recompensa vêm da dificuldade apontada aqui, então esta tabela diz
+-- só duas coisas — a faixa de dias e o número de metas. Semana vazia não tem
+-- linha de propósito: a RF-ONB-03 exige pelo menos um dia, e semana sem dia é
+-- erro de preenchimento, não um plano de jogo.
+INSERT INTO goal_plan_rules (min_weekdays, max_weekdays, active_goals, difficulty_id)
+SELECT dados.minimo, dados.maximo, dados.metas, dificuldade.id
+  FROM (
+    SELECT 1 AS minimo, 2 AS maximo, 1 AS metas, 'alta'    AS dificuldade
+    UNION ALL SELECT 3, 4, 2, 'media'
+    UNION ALL SELECT 5, 7, 3, 'simples'
+  ) AS dados
+  JOIN goal_difficulties dificuldade ON dificuldade.slug = dados.dificuldade
+ON DUPLICATE KEY UPDATE
+  active_goals = dados.metas, difficulty_id = dificuldade.id;
+
+-- RN-015: o tamanho do alvo de cada tipo de meta.
+--
+-- A conta é `base_per_session x (minutos_por_sessao / 10) x dias x semanas do
+-- prazo`, arredondada para `rounding_step` e presa entre o mínimo e o máximo. A
+-- sessão de referência é de 10 minutos, que é o padrão do perfil.
+--
+-- Só os tipos que o MVP consegue medir aparecem aqui: mel acumulado e nível.
+-- Patrimônio, favo, células, sequência e cofre entram quando as etapas que os
+-- constroem existirem (E05, E08, E09) — e o planner passa a sorteá-los sozinho,
+-- sem alteração de código, porque ele pergunta quais tipos têm régua.
+--
+-- Os números são calibragem inicial, não medição: 25 de mel por sessão de 10
+-- minutos é da ordem do que duas tarefas do dia pagam hoje. O teto do mel é
+-- deliberadamente baixo perto do que a fórmula produziria numa semana cheia de
+-- sessões longas, porque o jogo ainda não tem de onde pagar tanto — a economia
+-- de verdade é a E06 e a E07.
+--
+-- O nível pede um degrau por meta — dois, no máximo, quando o tipo se repete no
+-- mesmo plano: a curva de XP é lenta nos primeiros níveis, e uma meta de "suba
+-- três níveis nesta semana" seria impossível por construção.
+-- Enquanto a E06 não creditar XP em jogo, a meta de nível fica parada — está na
+-- dívida técnica, com dono naquela etapa.
+--
+-- Ajustar isto depois do playtest é editar estas linhas e rodar o seed.
+INSERT INTO goal_target_rules (goal_type_id, base_per_session, min_increment, max_increment, rounding_step)
+SELECT tipo.id, dados.base, dados.minimo, dados.maximo, dados.passo
+  FROM (
+    SELECT 'acumular-mel' AS tipo, 25.000 AS base,  50 AS minimo, 500 AS maximo, 25 AS passo
+    UNION ALL SELECT 'atingir-nivel',      0.100,       1,          1,           1
+  ) AS dados
+  JOIN goal_types tipo ON tipo.slug = dados.tipo
+ON DUPLICATE KEY UPDATE
+  base_per_session = dados.base, min_increment = dados.minimo,
+  max_increment = dados.maximo, rounding_step = dados.passo;
+
 INSERT INTO task_scopes (slug, name) VALUES
   ('diaria',  'Diária'),
   ('semanal', 'Semanal')

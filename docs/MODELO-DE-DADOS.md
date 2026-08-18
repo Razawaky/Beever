@@ -346,6 +346,8 @@ erDiagram
 |---|---|---|
 | `goals` | Meta com tipo e alvo numérico, para o planner gerar sozinho e o sistema fechar por evento. `renewed_from_goal_id` guarda a corrente de renovações | RN-014 a RN-018 |
 | `goal_difficulties` | O multiplicador de recompensa por disponibilidade é dado: 1–2 dias → 2,0× e 28 dias de prazo; 5–7 dias → 1,0× e 7 dias | RN-014 |
+| `goal_plan_rules` | A outra metade da RN-014, que faltava: quantas metas ativas cada faixa de dias recebe, e com que dificuldade. Criada na T-04.4 (migration `013`), em tabela própria porque "o que a dificuldade vale" e "que ritmo de jogo ela atende" são perguntas diferentes | RN-014 |
+| `goal_target_rules` | O tamanho do alvo por tipo de meta: quanto se espera avançar numa sessão de referência, com piso, teto e arredondamento. Ter linha aqui é o que autoriza o planejador a sortear o tipo — é assim que a RN-015 ("nunca gera meta impossível") vira dado em vez de `if` | RN-015 |
 | `tasks` | Compromissos curtos fora da trilha. Progresso é contagem inteira, não porcentagem | RN-046, RN-047 |
 | `streaks` | `last_evaluated_at` sustenta a avaliação preguiçosa, sem cron. `CHECK (shields_available <= 2)` põe o limite de escudos no banco | RN-021, RN-022 |
 | `streak_events` | Fonte de verdade do calendário. Dia neutro é **evento registrado**, não ausência de registro — o calendário precisa mostrar a diferença. `UNIQUE(user_id, event_date)` é a idempotência da avaliação diária | RN-019 a RN-021 |
@@ -555,8 +557,8 @@ uma consulta real:
 | RN-008 repetição vale menos | `cell_progress` + `game_sessions.is_replay` |
 | RN-009 idempotência | `uq_game_sessions_token`, `idempotency_keys` |
 | RN-010 auditoria de tudo | `audit_logs` + os três livros |
-| RN-011 a RN-014 onboarding e metas | `schedules`, `profiles`, `goal_difficulties` |
-| RN-015 a RN-018 ciclo de vida da meta | `goal_types`, `goal_statuses`, `goals.renewed_from_goal_id` |
+| RN-011 a RN-014 onboarding e metas | `schedules`, `profiles`, `goal_difficulties`, `goal_plan_rules` |
+| RN-015 a RN-018 ciclo de vida da meta | `goal_types`, `goal_target_rules`, `goal_statuses`, `goals.renewed_from_goal_id` |
 | RN-019 a RN-024 sequência | `streaks`, `streak_events`, `profiles.timezone` |
 | RN-025 a RN-031 trilha | `hives`, `cells`, `contents`, `cell_progress` |
 | RN-032 a RN-041 loja e patrimônio | `items`, `purchases`, `inventory`, `item_behaviors_map` |

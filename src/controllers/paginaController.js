@@ -1,3 +1,4 @@
+import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
 import * as inventoryService from '../services/inventoryService.js';
 import * as itemsService from '../services/itemsService.js';
@@ -60,6 +61,11 @@ export const onboarding = assincrono(async (req, res) => {
 
 export const painel = assincrono(async (req, res) => {
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
+  // RN-018: sempre existe pelo menos uma meta ativa enquanto houver o que
+  // planejar. O planejador completa o que falta para a quantidade da faixa e não
+  // faz nada quando o plano já está cheio, então chamar aqui é barato e conserta
+  // sozinho a conta que ficou sem meta — inclusive a que concluiu todas.
+  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
   await goalsService.sincronizarProgresso(req.session.usuarioId);
 
   const [perfil, inventario, metas, tarefas] = await Promise.all([
@@ -94,6 +100,7 @@ export const metas = assincrono(async (req, res) => {
   // o ciclo econômico —, e o progresso das metas é relido das fontes reais antes
   // de a tela mostrar qualquer número.
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
+  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
   await goalsService.sincronizarProgresso(req.session.usuarioId);
 
   const [listaDeMetas, tarefas] = await Promise.all([

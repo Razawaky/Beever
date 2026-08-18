@@ -3,7 +3,8 @@ import * as goalsRepository from '../repositories/goalsRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
-import * as levelsService from './levelsService.js';
+import * as goalPlannerService from './goalPlannerService.js';
+import * as goalProgressSources from './goalProgressSources.js';
 import * as pointsService from './pointsService.js';
 
 /**
@@ -15,10 +16,10 @@ import * as pointsService from './pointsService.js';
  * tarefas: cada tipo de meta declara de onde o número vem
  * (`goal_types.progress_source`), e mel guardado não se mede contando tarefas.
  *
- * **O que ainda não é feito aqui:** escolher tipo, dificuldade e alvo por conta
- * própria a partir do que o jogador quer, com prazo derivado da faixa etária —
- * isso é o `GoalPlannerService` da E04 (RN-014 e RN-015). Até lá o formulário
- * informa esses campos, e este service se limita a validar e persistir.
+ * Escolher tipo, dificuldade, alvo e prazo sozinho é trabalho do
+ * `goalPlannerService` (RN-014 e RN-015), que entrou na T-04.4. Este service
+ * continua atendendo a meta que o jogador cria à mão, com os campos que ele
+ * informa, e é quem paga a recompensa ao concluir.
  */
 
 const TIPO_PADRAO = 'acumular-mel';
@@ -87,27 +88,6 @@ export async function criar(idUsuario, { titulo, alvo, prazo, tipo = TIPO_PADRAO
 }
 
 /**
- * Onde cada tipo de meta busca o número que mede o progresso.
- *
- * O tipo declara a fonte em `goal_types.progress_source`; aqui está quem sabe
- * consultá-la. Duas já existem no MVP. As outras — favo, células, sequência,
- * cofre, patrimônio — só passam a existir nas etapas que as constroem, e até lá
- * a meta correspondente fica parada em zero. Parada e honesta: melhor do que
- * deixar concluir sem ter alcançado, que era o que acontecia.
- */
-const FONTES_DE_PROGRESSO = {
-  // As chaves são os valores de `goal_types.progress_source`, tal como semeados.
-  async coin_balance(idUsuario) {
-    const carteira = await coinsService.obterCarteira(idUsuario);
-    return carteira.mel;
-  },
-  async user_level(idUsuario) {
-    const nivel = await levelsService.obterDoUsuario(idUsuario);
-    return nivel?.nivel ?? 0;
-  },
-};
-
-/**
  * Recalcula o progresso das metas ativas a partir da fonte de cada tipo.
  *
  * É *lazy*, chamada quando o jogador abre a tela: uma meta de "juntar 200 de
@@ -119,11 +99,9 @@ export async function sincronizarProgresso(idUsuario) {
   let sincronizadas = 0;
 
   for (const meta of metas) {
-    const fonte = FONTES_DE_PROGRESSO[meta.progress_source];
-    if (!fonte) continue;
-
-    const valor = await fonte(idUsuario);
-    if (Number(valor) === Number(meta.current_value)) continue;
+    const valor = await goalProgressSources.medir(meta.progress_source, idUsuario);
+    if (valor === null) continue;
+    if (valor === Number(meta.current_value)) continue;
 
     await emTransacao((conexao) => goalsRepository.atualizarProgresso(conexao, meta.id, Number(valor)));
     sincronizadas += 1;
@@ -189,6 +167,12 @@ export async function concluir(idMeta, idUsuario) {
     antes: { status: meta.status, progresso: Number(meta.current_value) },
     depois: { status: 'concluida', melGanho: recompensa.mel, polenGanho: recompensa.polen },
   });
+
+  // RN-016: meta concluída dá lugar a outra, e a RN-018 exige que sempre exista
+  // pelo menos uma ativa. Fora da transação de propósito — a recompensa já está
+  // paga e registrada, e o planejador é idempotente: se falhar aqui, o painel
+  // completa o plano na próxima visita, sem gerar meta a mais.
+  await goalPlannerService.garantirMetasAtivas(idUsuario);
 
   return recompensa;
 }

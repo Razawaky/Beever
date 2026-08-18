@@ -147,6 +147,44 @@ export async function contarAtivas(idUsuario) {
 }
 
 /**
+ * As três linhas da RN-014: faixa de dias por semana, quantas metas ativas ela
+ * recebe e com que dificuldade — e, pela dificuldade, com que prazo e que
+ * recompensa. Vêm todas, e quem escolhe a faixa é o planejador, para que essa
+ * escolha possa ser testada sem banco.
+ *
+ * Semana vazia não tem linha, de propósito: é erro de preenchimento
+ * (RF-ONB-03), não um plano de jogo.
+ */
+export async function listarRegrasDePlano() {
+  return consultar(
+    `SELECT r.id, r.min_weekdays, r.max_weekdays, r.active_goals,
+            d.id AS difficulty_id, d.slug AS difficulty, d.default_days,
+            d.reward_coins, d.reward_points, d.reward_multiplier
+       FROM goal_plan_rules r
+       JOIN goal_difficulties d ON d.id = r.difficulty_id
+      ORDER BY r.min_weekdays`,
+  );
+}
+
+/**
+ * Os tipos de meta que têm régua de alvo, com a régua junto.
+ *
+ * Ter linha aqui é condição para o tipo ser sorteado, mas não é a única: o
+ * planejador ainda confere se existe consulta capaz de medir a
+ * `progress_source` do tipo. Uma coisa é saber o tamanho do alvo, outra é saber
+ * dizer quanto o jogador já andou.
+ */
+export async function listarRegrasDeAlvo() {
+  return consultar(
+    `SELECT t.id AS goal_type_id, t.slug, t.name, t.progress_source,
+            r.base_per_session, r.min_increment, r.max_increment, r.rounding_step
+       FROM goal_target_rules r
+       JOIN goal_types t ON t.id = r.goal_type_id
+      ORDER BY t.id`,
+  );
+}
+
+/**
  * Tipos e dificuldades disponíveis. Vêm do banco porque é lá que eles são
  * declarados e versionados pelo seed — uma lista equivalente escrita em
  * JavaScript sairia do ar no dia em que alguém acrescentasse um tipo.
