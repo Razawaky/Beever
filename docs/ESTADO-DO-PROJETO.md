@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `27bdc8b` (E02 auditada e os bloqueantes corrigidos)
+**Último commit:** `c2f1eab` (T-03.5 — consentimento do responsável)
 
 ---
 
@@ -95,9 +95,9 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); **E02 auditada, com os dois bloqueantes corrigidos** |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 auditada e fechada; **E03 com 5 de 6 tarefas** |
 | Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **207 passando, 0 falhando** — incluindo o fluxo autenticado ponta a ponta e o comportamento do erro em produção |
+| Testes | **215 passando, 0 falhando** — incluindo o fluxo autenticado ponta a ponta e o comportamento do erro em produção |
 | Dívida técnica catalogada | 10 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3, a DT-07 na T-02.4 e a DT-11 na T-02.7 |
 | Riscos abertos | nenhum |
 
@@ -278,7 +278,7 @@ A T-02.3 devolveu a aplicação ao ar.
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
-| E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
+| E03 Autenticação | **quase fechada** | T-03.1 a T-03.4 vieram prontas da E02; a T-03.5 (consentimento do responsável, RNF-34) foi entregue no commit `c2f1eab`. Falta só a **T-03.6**: senha fraca, e-mail duplicado, credencial errada, sessão expirada e brute force barrado |
 | E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
@@ -429,4 +429,6 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** E03 — autenticação. O que falta lá é consentimento do responsável (RNF-34) e os testes de brute force e sessão expirada.
+**Próxima tarefa:** T-03.6 — os cinco testes de segurança que fecham a E03:
+senha fraca, e-mail duplicado, credencial errada, sessão expirada e brute force
+barrado. Nenhum existe hoje; o resto da etapa está entregue.
