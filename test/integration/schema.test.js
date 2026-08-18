@@ -178,11 +178,16 @@ describe('integridade do schema', opcoes, () => {
       );
     });
 
-    it('recusa tempo de sessão fora de 5, 10 ou 20 minutos', async () => {
+    // A lista cresceu na T-04.3 (migration 012): 30 e 45 minutos passaram a
+    // valer, por decisão de produto. 7 nunca esteve nela.
+    it('recusa tempo de sessão fora de 5, 10, 20, 30 ou 45 minutos', async () => {
       await assert.rejects(
-        conexao.query('UPDATE profiles SET session_minutes = 45 WHERE user_id = ?', [demo]),
+        conexao.query('UPDATE profiles SET session_minutes = 7 WHERE user_id = ?', [demo]),
         /ck_profiles_session_minutes/,
       );
+
+      await conexao.query('UPDATE profiles SET session_minutes = 45 WHERE user_id = ?', [demo]);
+      await conexao.query('UPDATE profiles SET session_minutes = 10 WHERE user_id = ?', [demo]);
     });
   });
 

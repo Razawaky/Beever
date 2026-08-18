@@ -14,11 +14,9 @@ import * as profilesService from '../../src/services/profilesService.js';
  */
 
 describe('profilesService — recusas que não dependem do banco', () => {
-  it('recusa tempo de sessão fora das três durações da RN-011', async () => {
-    await assert.rejects(
-      () => profilesService.atualizar(1, 1, { minutosPorSessao: 30 }),
-      /Tempo por sessão inválido/,
-    );
+  // 30 e 45 passaram a valer na T-04.3; 7 nunca esteve na lista da RN-011.
+  it('recusa tempo de sessão fora das durações da RN-011', async () => {
+    await assert.rejects(() => profilesService.atualizar(1, 1, { minutosPorSessao: 7 }), /Tempo por sessão inválido/);
   });
 
   it('recusa concluir o onboarding sem nenhum dia marcado (RF-ONB-03)', async () => {
@@ -48,6 +46,14 @@ describe('profilesService — recusas que não dependem do banco', () => {
   });
 
   it('mantém a ordem de passos da RN-011, sem faixa etária e com nível no fim', () => {
-    assert.deepEqual(profilesService.PASSOS_DO_ONBOARDING, ['apelido', 'dias', 'objetivo', 'avatar', 'nivel']);
+    assert.deepEqual(profilesService.PASSOS_DO_ONBOARDING, [
+      'apelido',
+      'dias',
+      'tempo',
+      'objetivo',
+      'avatar',
+      'preferencias',
+      'nivel',
+    ]);
   });
 });

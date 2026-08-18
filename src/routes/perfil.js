@@ -23,16 +23,21 @@ router.put(
     body('apelido').optional().trim().notEmpty().isLength({ max: 60 }),
     body('avatar').optional().trim().isLength({ max: 60 }),
     body('fuso').optional().trim().isLength({ max: 64 }),
-    // RN-011 só reconhece três durações, e o banco as repete em
+    // RN-011 reconhece cinco durações, e o banco as repete em
     // `ck_profiles_session_minutes`. Aceitar 5 a 60 aqui deixava passar valores
-    // como 30, que o CHECK derrubava depois — erro de formulário virando 500.
-    // `isIn` compararia texto contra número e recusaria até o valor certo; a
-    // conversão explícita aceita tanto `20` quanto `"20"`, que é como os dois
+    // fora da lista, que o CHECK derrubava depois — erro de formulário virando
+    // 500. `isIn` compararia texto contra número e recusaria até o valor certo;
+    // a conversão explícita aceita tanto `20` quanto `"20"`, que é como os dois
     // clientes mandam.
     body('minutos_por_sessao')
       .optional()
-      .custom((valor) => [5, 10, 20].includes(Number(valor)))
-      .withMessage('Tempo por sessão inválido: use 5, 10 ou 20'),
+      .custom((valor) => [5, 10, 20, 30, 45].includes(Number(valor)))
+      .withMessage('Tempo por sessão inválido: use 5, 10, 20, 30 ou 45'),
+    // RN-050: interruptores de som e de animação. Caixa marcada chega como
+    // `"on"` do formulário e como `true` do JSON; a rota aceita as duas formas e
+    // quem normaliza é o controller.
+    body('som_ativo').optional().isIn([true, false, 'true', 'false', 'on', '1', '0']),
+    body('animacao_reduzida').optional().isIn([true, false, 'true', 'false', 'on', '1', '0']),
   ],
   validate,
   profilesController.atualizar,
@@ -65,8 +70,19 @@ router.put(
   [
     param('id').isInt({ min: 1 }),
     body('apelido').trim().notEmpty().withMessage('Informe como quer ser chamado').isLength({ max: 60 }),
-    body('avatar').optional().trim().isLength({ max: 60 }),
+    // RF-ONB-06 é obrigatória, e até a T-04.3 esta linha era `optional()`:
+    // dava para concluir o onboarding sem mascote nenhum. Que o slug exista no
+    // catálogo é o service que confere, contra a tabela `avatars`.
+    body('avatar').trim().notEmpty().withMessage('Escolha sua abelha').isLength({ max: 60 }),
     body('objetivo').trim().notEmpty().withMessage('Escolha um objetivo'),
+    // O corpo da conclusão traz uma chave por passo do wizard: `tempo` e
+    // `preferencias` vêm com o nome do passo. Ambos são opcionais porque quem
+    // veio passo a passo já os gravou.
+    body('tempo')
+      .optional()
+      .custom((valor) => [5, 10, 20, 30, 45].includes(Number(valor)))
+      .withMessage('Tempo por sessão inválido: use 5, 10, 20, 30 ou 45'),
+    body('preferencias.*').optional().isString().isLength({ max: 40 }),
     body('nivel')
       .isIn(['beginner', 'intermediate', 'advanced'])
       .withMessage('Nível inicial inválido'),

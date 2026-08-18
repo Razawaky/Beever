@@ -27,26 +27,63 @@ export async function criar({ idUsuario }, conexao = null) {
   return resultado.insertId;
 }
 
+/** Preferência booleana: `null` quer dizer "não informada", não "desligada". */
+function bit(valor) {
+  if (valor === null || valor === undefined) return null;
+  return valor ? 1 : 0;
+}
+
 /**
  * Atualiza só o que foi enviado. Faixa etária, avatar e objetivo chegam como
  * slug e são resolvidos aqui pelo próprio SQL — o service não precisa saber os
- * ids das tabelas de domínio, e o banco recusa slug que não existe.
+ * ids das tabelas de domínio.
+ *
+ * Quem garante que o slug existe é o service, contra o catálogo lido de
+ * `listarAvatares` e `listarObjetivosIniciais` (DT-27). Aqui o `CASE` só
+ * distingue "campo não informado" de "campo informado": até a T-04.3 esta
+ * resolução usava `COALESCE`, que confundia as duas coisas — slug inexistente
+ * caía no valor anterior e a gravação passava por bem-sucedida. Numa conta nova
+ * não havia valor anterior, então o onboarding terminava "com sucesso" e o
+ * perfil ficava sem avatar e sem objetivo. O comentário antigo ainda afirmava
+ * que o banco recusava slug inválido; ele nunca recusou, apenas ignorava.
  */
 export async function atualizar(
   id,
-  { faixaEtaria = null, avatar = null, objetivoInicial = null, fuso = null, minutosPorSessao = null },
+  {
+    faixaEtaria = null,
+    avatar = null,
+    objetivoInicial = null,
+    fuso = null,
+    minutosPorSessao = null,
+    somAtivo = null,
+    animacaoReduzida = null,
+  },
   conexao = null,
 ) {
   const resultado = await consultarEm(
     conexao,
     `UPDATE profiles
-        SET age_band_id     = COALESCE((SELECT id FROM age_bands     WHERE code = ?), age_band_id),
-            avatar_id       = COALESCE((SELECT id FROM avatars       WHERE slug = ?), avatar_id),
-            initial_goal_id = COALESCE((SELECT id FROM initial_goals WHERE slug = ?), initial_goal_id),
-            timezone        = COALESCE(?, timezone),
-            session_minutes = COALESCE(?, session_minutes)
+        SET age_band_id        = CASE WHEN ? IS NULL THEN age_band_id     ELSE (SELECT id FROM age_bands     WHERE code = ?) END,
+            avatar_id          = CASE WHEN ? IS NULL THEN avatar_id       ELSE (SELECT id FROM avatars       WHERE slug = ?) END,
+            initial_goal_id    = CASE WHEN ? IS NULL THEN initial_goal_id ELSE (SELECT id FROM initial_goals WHERE slug = ?) END,
+            timezone           = COALESCE(?, timezone),
+            session_minutes    = COALESCE(?, session_minutes),
+            is_sound_enabled   = COALESCE(?, is_sound_enabled),
+            has_reduced_motion = COALESCE(?, has_reduced_motion)
       WHERE id = ?`,
-    [faixaEtaria, avatar, objetivoInicial, fuso, minutosPorSessao, id],
+    [
+      faixaEtaria,
+      faixaEtaria,
+      avatar,
+      avatar,
+      objetivoInicial,
+      objetivoInicial,
+      fuso,
+      minutosPorSessao,
+      bit(somAtivo),
+      bit(animacaoReduzida),
+      id,
+    ],
   );
   return resultado.affectedRows;
 }
@@ -99,4 +136,21 @@ export async function listarFaixasEtarias() {
   return consultar(
     'SELECT id, code, name, min_age, max_age, is_economy_enabled, is_upkeep_enabled FROM age_bands ORDER BY min_age',
   );
+}
+
+/**
+ * Avatares oferecidos no onboarding (RF-ONB-06).
+ *
+ * A lista sai daqui para dois destinos que antes discordavam: o wizard, que
+ * trazia os slugs escritos no próprio JavaScript, e a validação, que não
+ * conferia coisa alguma. Com uma fonte só, acrescentar um mascote é seed —
+ * não é mexer no front.
+ */
+export async function listarAvatares() {
+  return consultar('SELECT slug, name, image_path FROM avatars ORDER BY id');
+}
+
+/** Objetivos iniciais oferecidos no onboarding (RF-ONB-05, RN-011). */
+export async function listarObjetivosIniciais() {
+  return consultar('SELECT slug, label FROM initial_goals ORDER BY id');
 }

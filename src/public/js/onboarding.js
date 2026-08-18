@@ -1,18 +1,18 @@
 // Wizard de onboarding (RF-ONB-01). Interatividade em JS puro na página, como o
 // resto dos jogos — sem framework, sem bundler.
 //
-// Três coisas mudaram na T-04.2. A primeira: cada passo respondido vai para o
-// servidor na hora, então fechar a aba no meio não custa o começo de novo, e
-// quem começa no computador da escola termina em casa — o estado não mora mais
-// na memória desta aba. A segunda: a tela é montada com a API do DOM, e não com
-// `innerHTML`, então o apelido digitado é texto e nunca marcação; até aqui,
-// digitar aspas no apelido e voltar um passo quebrava o atributo. A terceira: a
-// barra de progresso passou a usar as classes `.barra-N` e a anunciar o
-// progresso a quem usa leitor de tela.
+// Cada passo respondido vai para o servidor na hora (T-04.2), então fechar a aba
+// no meio não custa o começo de novo, e quem começa no computador da escola
+// termina em casa. A tela é montada com a API do DOM, e não com `innerHTML`,
+// então o apelido digitado é texto e nunca marcação.
 //
-// As opções não são inventadas aqui: `objetivo`, `avatar` e `nivel` viajam como
-// slug e o servidor os resolve contra `initial_goals`, `avatars` e a curva de
-// `levels`.
+// Na T-04.3 as opções deixaram de ser escritas aqui: avatar, objetivo, tempo por
+// sessão e preferências chegam no rascunho, vindas do catálogo do banco. Eram
+// duas listas para manter em sincronia — a daqui e a do servidor —, e nenhuma
+// delas era conferida na hora de gravar. Acrescentar um mascote agora é seed.
+//
+// Ficam fixos aqui só os dois passos que não têm catálogo: os dias da semana,
+// que são 0 a 6 por definição, e o nível inicial, que é a curva de XP.
 //
 // A ordem dos passos é a da RN-011, com as duas ressalvas registradas no laudo
 // da T-04.1: a faixa etária não é passo (vem da data de nascimento) e o nível
@@ -42,27 +42,31 @@ const etapas = [
     ],
   },
   {
+    id: 'tempo',
+    pergunta: 'Quanto tempo você quer jogar por vez?',
+    subtitulo: 'Dá para mudar depois, no perfil.',
+    tipo: 'radio',
+  },
+  {
     id: 'objetivo',
     pergunta: 'O que você quer conseguir?',
     subtitulo: 'Isso ajuda a escolher suas primeiras metas.',
     tipo: 'select',
-    opcoes: [
-      { valor: 'comprar-algo', rotulo: 'Quero comprar algo' },
-      { valor: 'aprender-a-guardar', rotulo: 'Quero aprender a guardar' },
-      { valor: 'entender-juros', rotulo: 'Quero entender juros' },
-    ],
   },
   {
     id: 'avatar',
     pergunta: 'Escolha sua abelha',
     subtitulo: 'Dá para trocar depois, no perfil.',
     tipo: 'radio',
-    opcoes: [
-      { valor: 'beenie-classico', rotulo: 'Beenie clássico' },
-      { valor: 'beenie-explorador', rotulo: 'Beenie explorador' },
-      { valor: 'beenie-dourado', rotulo: 'Beenie dourado' },
-      { valor: 'babybee', rotulo: 'Abelhinha' },
-    ],
+  },
+  {
+    id: 'preferencias',
+    pergunta: 'Como você prefere jogar?',
+    subtitulo: 'Marque o que quiser. Pode deixar tudo desmarcado.',
+    tipo: 'multipla',
+    // Nada marcado é resposta válida aqui: quer dizer sem som e com a animação
+    // normal. Por isso este é o único passo que avança sem preencher nada.
+    permiteVazio: true,
   },
   {
     id: 'nivel',
@@ -95,8 +99,8 @@ const textoProgresso = document.getElementById('progress-text');
 const erroEl = document.getElementById('erro-onboarding');
 
 // O rascunho vem do servidor no `dataset` do body: o que já foi respondido em
-// outra sessão, e em que passo o jogador parou. Se vier vazio ou ilegível, o
-// wizard começa do zero em vez de morrer na primeira linha.
+// outra sessão, em que passo o jogador parou e quais opções existem. Se vier
+// vazio ou ilegível, o wizard começa do zero em vez de morrer na primeira linha.
 function lerRascunho() {
   try {
     return JSON.parse(corpo.dataset.onboarding || '{}');
@@ -106,8 +110,14 @@ function lerRascunho() {
 }
 
 const rascunho = lerRascunho();
+const catalogo = rascunho.catalogo ?? {};
 const respostas = { ...(rascunho.respostas ?? {}) };
 let etapaAtual = Math.min(Math.max(Number(rascunho.passoAtual) || 0, 0), etapas.length - 1);
+
+/** As opções do passo: as fixas quando existem, senão as do catálogo do servidor. */
+function opcoesDaEtapa(etapa) {
+  return etapa.opcoes ?? catalogo[etapa.id] ?? [];
+}
 
 function elemento(tag, classe, texto) {
   const el = document.createElement(tag);
@@ -130,7 +140,19 @@ function opcaoMarcavel(tipo, opcao, marcada) {
   campo.checked = marcada;
   campo.className = 'h-4 w-4';
 
-  rotulo.append(campo, elemento('span', 'font-medium', opcao.rotulo));
+  rotulo.append(campo);
+
+  // O avatar é a única opção com imagem: o caminho vem do catálogo, junto do
+  // slug, para que a tela não precise adivinhar o nome do arquivo.
+  if (opcao.imagem) {
+    const figura = document.createElement('img');
+    figura.src = opcao.imagem;
+    figura.alt = '';
+    figura.className = 'h-10 w-10 object-contain';
+    rotulo.append(figura);
+  }
+
+  rotulo.append(elemento('span', 'font-medium', opcao.rotulo));
   return rotulo;
 }
 
@@ -147,6 +169,8 @@ function montarCampo(etapa, valorAtual) {
     return campo;
   }
 
+  const opcoes = opcoesDaEtapa(etapa);
+
   if (etapa.tipo === 'select') {
     const campo = document.createElement('select');
     campo.id = 'campo-etapa';
@@ -159,7 +183,7 @@ function montarCampo(etapa, valorAtual) {
     vazia.selected = !valorAtual;
     campo.append(vazia);
 
-    for (const opcao of etapa.opcoes) {
+    for (const opcao of opcoes) {
       const item = elemento('option', null, opcao.rotulo);
       item.value = opcao.valor;
       item.selected = valorAtual === opcao.valor;
@@ -172,7 +196,7 @@ function montarCampo(etapa, valorAtual) {
   const marcados = multipla ? [].concat(valorAtual ?? []).map(String) : [];
   const caixa = elemento('div', multipla ? 'grid gap-3 sm:grid-cols-2' : 'grid gap-3');
 
-  for (const opcao of etapa.opcoes) {
+  for (const opcao of opcoes) {
     const marcada = multipla ? marcados.includes(opcao.valor) : valorAtual === opcao.valor;
     caixa.append(opcaoMarcavel(multipla ? 'checkbox' : 'radio', opcao, marcada));
   }
@@ -256,8 +280,9 @@ async function enviar(caminho, dados) {
 
 /**
  * O último passo não tem gravação própria: ele é a conclusão. O servidor fecha
- * apelido, avatar, objetivo, ponto de partida do XP e agenda numa transação só
- * e é aí que a conta passa a valer como configurada.
+ * apelido, avatar, objetivo, tempo por sessão, preferências, ponto de partida
+ * do XP e agenda numa transação só, e é aí que a conta passa a valer como
+ * configurada.
  */
 async function finalizar() {
   await enviar(`/perfil/${perfilId}/onboarding`, respostas);
@@ -272,9 +297,10 @@ formulario.addEventListener('submit', async (evento) => {
   const etapa = etapas[etapaAtual];
   const valor = lerValorEtapa();
   // Lista vazia também conta como "não respondeu": os dias da semana chegam
-  // como array, e `Boolean([])` é `true`.
+  // como array, e `Boolean([])` é `true`. O passo de preferências é a exceção,
+  // porque lá desmarcar tudo é uma escolha.
   const respondeu = Array.isArray(valor) ? valor.length > 0 : Boolean(valor);
-  if (!respondeu) {
+  if (!respondeu && !etapa.permiteVazio) {
     mostrarErro('Responda para continuar.');
     return;
   }

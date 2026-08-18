@@ -96,7 +96,9 @@ A faixa é definida no onboarding e altera: quantidade de texto, dificuldade das
 
 ### 3.2 Onboarding e metas
 
-- **RN-011** O onboarding coleta, nesta ordem: apelido → faixa de idade → **dias da semana disponíveis** → tempo por sessão (5/10/20 min) → objetivo inicial ("quero comprar algo", "quero aprender a guardar", "quero entender juros") → escolha do mascote/cor.
+- **RN-011** O onboarding coleta, nesta ordem: apelido → faixa de idade → **dias da semana disponíveis** → tempo por sessão (5/10/20/30/45 min) → objetivo inicial ("quero comprar algo", "quero aprender a guardar", "quero entender juros") → escolha do mascote/cor.
+  - *Alterações registradas na T-04.3:* as durações de sessão eram 5, 10 e 20 minutos; 30 e 45 entraram por decisão de produto, para o jogador mais velho que quer uma sessão de estudo inteira em vez de duas visitas ao app. A migration `012_session_minutes_opcoes.sql` abriu o CHECK do banco.
+  - *Ressalva de implementação, decidida no laudo da T-04.1:* a **faixa de idade não é passo do wizard** — ela é derivada da data de nascimento no cadastro, porque decide regra econômica (RN-038) e segmentação de conteúdo (RN-029) e não pode ser autodeclarada. O **nível inicial** é passo, embora esta regra não o preveja, porque define o ponto de partida do XP.
 - **RN-012** O onboarding é obrigatório e bloqueante: usuário sem onboarding completo é redirecionado para ele em qualquer rota autenticada.
 - **RN-013** A disponibilidade é editável depois no perfil. Ao editar, as metas ativas são **recalculadas sem perder progresso já feito**.
 - **RN-014** Geração de metas conforme dias marcados (`GoalPlannerService`):

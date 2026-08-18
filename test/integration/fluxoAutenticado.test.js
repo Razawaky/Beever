@@ -226,24 +226,43 @@ describe('fluxo autenticado', opcoes, () => {
   });
 
   /**
-   * RN-011 conhece três durações de sessão, e o banco repete a lista num CHECK.
-   * O validador aceitava de 5 a 60, então 30 passava pela rota e só morria no
-   * MySQL — erro de formulário chegando ao jogador como falha do servidor.
+   * RN-011 conhece cinco durações de sessão, e o banco repete a lista num CHECK.
+   * O validador aceitava de 5 a 60, então um valor fora da lista passava pela
+   * rota e só morria no MySQL — erro de formulário chegando ao jogador como
+   * falha do servidor. Eram três durações até a T-04.3, quando 30 e 45 minutos
+   * entraram por decisão de produto; 7 continua não sendo uma delas.
    */
-  it('o perfil recusa tempo de sessão fora de 5, 10 ou 20 minutos', async () => {
+  it('o perfil recusa tempo de sessão fora de 5, 10, 20, 30 ou 45 minutos', async () => {
     csrf = await lerToken('/painel');
 
     await agente
       .put(`/perfil/${perfilId}`)
       .set('Accept', 'application/json')
-      .send({ minutos_por_sessao: 30, _csrf: csrf })
+      .send({ minutos_por_sessao: 7, _csrf: csrf })
       .expect(422);
 
     await agente
       .put(`/perfil/${perfilId}`)
       .set('Accept', 'application/json')
-      .send({ minutos_por_sessao: 20, _csrf: csrf })
+      .send({ minutos_por_sessao: 45, _csrf: csrf })
       .expect(200);
+  });
+
+  /**
+   * RN-050: som e animação são do perfil, e até a T-04.3 nenhuma tela os
+   * escrevia — as colunas existiam e ficavam no padrão para sempre (DT-20).
+   */
+  it('o perfil grava as preferências de som e de animação', async () => {
+    csrf = await lerToken('/painel');
+
+    const resposta = await agente
+      .put(`/perfil/${perfilId}`)
+      .set('Accept', 'application/json')
+      .send({ som_ativo: false, animacao_reduzida: true, _csrf: csrf })
+      .expect(200);
+
+    assert.equal(Number(resposta.body.is_sound_enabled), 0);
+    assert.equal(Number(resposta.body.has_reduced_motion), 1);
   });
 
   it('o painel e a loja renderizam com os dados da sessão', async () => {

@@ -80,7 +80,7 @@ erDiagram
         bigint user_id FK "UNIQUE — 1:1"
         bigint age_band_id FK
         varchar timezone
-        tinyint session_minutes "5, 10 ou 20"
+        tinyint session_minutes "5, 10, 20, 30 ou 45"
     }
     admins {
         bigint id PK
@@ -518,7 +518,7 @@ próprio banco, não pela aplicação.
 | Estrelas fora de 0–3 | `ck_cell_progress_stars` | RN-030 |
 | Duas células na mesma posição do favo | `uq_cells_hive_order` | RN-026 |
 | Lançamento para usuário inexistente | foreign key | integridade |
-| Sessão de estudo de 45 minutos | `ck_profiles_session_minutes` | RN-011 |
+| Sessão de 7 minutos, fora da lista da RN-011 | `ck_profiles_session_minutes` | RN-011 |
 
 ---
 
