@@ -65,6 +65,46 @@ describe('aplicação', () => {
     await request(app).get('/img/beever-icon.png').expect(200);
   });
 
+  describe('layout base', () => {
+    /**
+     * O esqueleto agora existe num lugar só. Estes testes cobrem o que a
+     * duplicação escondia: bastava uma página esquecer o `<head>` para ela
+     * chegar sem estilo e sem título, e ninguém notava até abrir aquela tela.
+     */
+    for (const [caminho, titulo] of [
+      ['/', 'Beever'],
+      ['/login', 'Entrar'],
+      ['/cadastro', 'Criar conta'],
+      ['/manutencao', 'Em manutenção'],
+    ]) {
+      it(`monta ${caminho} dentro do layout`, async () => {
+        const resposta = await request(app).get(caminho).set('Accept', 'text/html').expect(200);
+
+        assert.match(resposta.text, /^<!doctype html>/i);
+        assert.match(resposta.text, /<html lang="pt-BR">/);
+        assert.match(resposta.text, /<link rel="stylesheet" href="\/css\/app\.css" \/>/);
+        assert.ok(resposta.text.includes(titulo), `a página deveria se intitular "${titulo}"`);
+        assert.match(resposta.text, /<\/body>\s*<\/html>/);
+      });
+    }
+
+    it('a landing traz cabeçalho e rodapé; a tela de entrar, não', async () => {
+      const home = await request(app).get('/').set('Accept', 'text/html').expect(200);
+      assert.match(home.text, /projeto de conclusão de curso/);
+
+      const login = await request(app).get('/login').set('Accept', 'text/html').expect(200);
+      assert.ok(!login.text.includes('projeto de conclusão de curso'), 'tela de entrada é limpa, sem rodapé');
+    });
+
+    it('carrega o script só na página que precisa dele', async () => {
+      const cadastro = await request(app).get('/cadastro').set('Accept', 'text/html').expect(200);
+      assert.match(cadastro.text, /<script src="\/js\/cadastro\.js" defer><\/script>/);
+
+      const login = await request(app).get('/login').set('Accept', 'text/html').expect(200);
+      assert.ok(!login.text.includes('<script'), 'página sem interatividade não carrega script nenhum');
+    });
+  });
+
   describe('identificação da requisição', () => {
     it('devolve um id em toda resposta', async () => {
       const resposta = await request(app).get('/').expect(200);

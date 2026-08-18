@@ -1,0 +1,29 @@
+<%#
+  Layout base de todas as páginas.
+
+  Até aqui cada uma das nove páginas repetia o próprio `<!doctype>`, `<head>` e
+  `<body>` — nove cópias do mesmo esqueleto, das quais só duas lembravam de
+  incluir o cabeçalho e o rodapé (era a dívida DT-11). Trocar a tag de idioma ou
+  acrescentar uma meta significava abrir nove arquivos e esquecer um.
+
+  O EJS não tem motor de layout, e em vez de trazer uma dependência para isso, o
+  próprio `include` resolve: o layout recebe o caminho da página e a monta
+  dentro do esqueleto. Quem renderiza usa o helper `renderizarPagina`, que
+  preenche os padrões — nenhum controller monta este objeto à mão.
+-%>
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <%- include('partials/head') %>
+  </head>
+  <body class="<%= classeBody %>"<% Object.entries(dadosBody).forEach(([chave, valor]) => { %> data-<%= chave %>="<%= valor %>"<% }) %>>
+    <% if (comCabecalho) { %><%- include('partials/header') %><% } %>
+
+    <%- include(pagina) %>
+
+    <% if (comRodape) { %><%- include('partials/footer') %><% } %>
+    <% scripts.forEach((arquivo) => { %>
+    <script src="<%= arquivo %>" defer></script>
+    <% }) %>
+  </body>
+</html>

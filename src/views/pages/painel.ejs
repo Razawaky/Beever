@@ -1,99 +1,91 @@
-<!doctype html>
-<html lang="pt-BR">
-  <head>
-    <%- include('../partials/head') %>
-  </head>
-  <body class="min-h-screen bg-cera py-10 text-tinta antialiased">
-    <div class="mx-auto max-w-5xl overflow-hidden rounded-favo bg-white shadow-xl">
-      <div class="flex flex-col gap-6 bg-mel px-8 py-8 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-center gap-4">
-          <div class="flex h-16 w-16 items-center justify-center rounded-pilula bg-white/40 text-2xl font-bold">
-            <%= perfil.apelido.charAt(0).toUpperCase() %>
-          </div>
-          <div>
-            <h1 class="text-2xl font-bold text-tinta sm:text-3xl"><%= perfil.apelido %></h1>
-            <p class="text-sm text-tinta-suave">Nível <%= perfil.nivel?.nivel ?? 1 %></p>
-          </div>
+  <div class="mx-auto max-w-5xl overflow-hidden rounded-favo bg-white shadow-xl">
+    <div class="flex flex-col gap-6 bg-mel px-8 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-4">
+        <div class="flex h-16 w-16 items-center justify-center rounded-pilula bg-white/40 text-2xl font-bold">
+          <%= perfil.apelido.charAt(0).toUpperCase() %>
         </div>
-
-        <div class="text-left sm:text-right">
-          <p class="text-lg font-semibold">🍯 <%= perfil.mel %> de mel</p>
-          <p class="text-sm text-tinta-suave">🌼 <%= perfil.polen %> de pólen</p>
-          <%# O progresso dentro do nível vem calculado do service: a curva mora
-              em `levels` e a conta não se repete na view. %>
-          <div class="mt-2 h-3 w-56 overflow-hidden rounded-pilula bg-white/40">
-            <div
-              class="h-full rounded-pilula bg-breu"
-              style="width: <%= perfil.nivel?.progressoPercentual ?? 0 %>%"
-            ></div>
-          </div>
-          <p class="mt-1 text-xs text-tinta-suave">
-            <% if (perfil.nivel?.noTopo) { %>
-              Nível máximo alcançado
-            <% } else { %>
-              faltam <%= perfil.nivel?.xpParaSubir ?? 0 %> XP para o nível <%= (perfil.nivel?.nivel ?? 1) + 1 %>
-            <% } %>
-          </p>
+        <div>
+          <h1 class="text-2xl font-bold text-tinta sm:text-3xl"><%= perfil.apelido %></h1>
+          <p class="text-sm text-tinta-suave">Nível <%= perfil.nivel?.nivel ?? 1 %></p>
         </div>
       </div>
 
-      <div class="grid gap-8 p-8 sm:grid-cols-2">
-        <section class="rounded-favo bg-cera p-6">
-          <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-semibold">Inventário</h2>
-            <a href="/loja" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ir para a loja &rarr;</a>
-          </div>
-          <% if (inventario.length === 0) { %>
-            <div class="flex h-48 items-center justify-center rounded-lg bg-white text-sm text-tinta-suave">
-              Você ainda não comprou nenhum item.
-            </div>
+      <div class="text-left sm:text-right">
+        <p class="text-lg font-semibold">🍯 <%= perfil.mel %> de mel</p>
+        <p class="text-sm text-tinta-suave">🌼 <%= perfil.polen %> de pólen</p>
+        <%# O progresso dentro do nível vem calculado do service: a curva mora
+            em `levels` e a conta não se repete na view. %>
+        <div class="mt-2 h-3 w-56 overflow-hidden rounded-pilula bg-white/40">
+          <div
+            class="h-full rounded-pilula bg-breu"
+            style="width: <%= perfil.nivel?.progressoPercentual ?? 0 %>%"
+          ></div>
+        </div>
+        <p class="mt-1 text-xs text-tinta-suave">
+          <% if (perfil.nivel?.noTopo) { %>
+            Nível máximo alcançado
           <% } else { %>
-            <ul class="grid max-h-48 gap-2 overflow-y-auto">
-              <% inventario.forEach((item) => { %>
-                <li class="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm">
-                  <span class="font-medium"><%= item.nome %></span>
-                  <span class="text-tinta-suave">x<%= item.quantidade %></span>
-                </li>
-              <% }) %>
-            </ul>
+            faltam <%= perfil.nivel?.xpParaSubir ?? 0 %> XP para o nível <%= (perfil.nivel?.nivel ?? 1) + 1 %>
           <% } %>
-        </section>
-
-        <section class="rounded-favo bg-cera p-6">
-          <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-semibold">Sua meta</h2>
-            <a href="/metas" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver todas &rarr;</a>
-          </div>
-          <% if (!metaPrincipal) { %>
-            <div class="flex h-48 items-center justify-center rounded-lg bg-white text-sm text-tinta-suave">
-              Você ainda não criou nenhuma meta.
-            </div>
-          <% } else { %>
-            <%# Progresso é contagem até o alvo, não percentual guardado: a meta
-                sabe onde está (`current_value`) e aonde quer chegar (`target_value`). %>
-            <% const atual = Number(metaPrincipal.current_value); %>
-            <% const alvo = Number(metaPrincipal.target_value); %>
-            <% const percentual = alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)); %>
-            <div class="rounded-lg bg-white p-4">
-              <p class="font-semibold"><%= metaPrincipal.title %></p>
-              <p class="mt-1 text-sm text-tinta-suave"><%= atual %> de <%= alvo %></p>
-              <div class="mt-4 h-3 w-full overflow-hidden rounded-pilula bg-linha">
-                <div class="h-3 rounded-pilula bg-mel" style="width: <%= percentual %>%"></div>
-              </div>
-              <p class="mt-1 text-sm text-tinta-suave"><%= percentual %>% concluído</p>
-            </div>
-          <% } %>
-        </section>
-      </div>
-
-      <div class="border-t border-linha px-8 py-6">
-        <form method="POST" action="/sessao/logout">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-          <button type="submit" class="text-sm font-medium text-tinta-suave hover:text-tinta">
-            Sair da conta
-          </button>
-        </form>
+        </p>
       </div>
     </div>
-  </body>
-</html>
+
+    <div class="grid gap-8 p-8 sm:grid-cols-2">
+      <section class="rounded-favo bg-cera p-6">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Inventário</h2>
+          <a href="/loja" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ir para a loja &rarr;</a>
+        </div>
+        <% if (inventario.length === 0) { %>
+          <div class="flex h-48 items-center justify-center rounded-lg bg-white text-sm text-tinta-suave">
+            Você ainda não comprou nenhum item.
+          </div>
+        <% } else { %>
+          <ul class="grid max-h-48 gap-2 overflow-y-auto">
+            <% inventario.forEach((item) => { %>
+              <li class="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm">
+                <span class="font-medium"><%= item.nome %></span>
+                <span class="text-tinta-suave">x<%= item.quantidade %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </section>
+
+      <section class="rounded-favo bg-cera p-6">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Sua meta</h2>
+          <a href="/metas" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver todas &rarr;</a>
+        </div>
+        <% if (!metaPrincipal) { %>
+          <div class="flex h-48 items-center justify-center rounded-lg bg-white text-sm text-tinta-suave">
+            Você ainda não criou nenhuma meta.
+          </div>
+        <% } else { %>
+          <%# Progresso é contagem até o alvo, não percentual guardado: a meta
+              sabe onde está (`current_value`) e aonde quer chegar (`target_value`). %>
+          <% const atual = Number(metaPrincipal.current_value); %>
+          <% const alvo = Number(metaPrincipal.target_value); %>
+          <% const percentual = alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)); %>
+          <div class="rounded-lg bg-white p-4">
+            <p class="font-semibold"><%= metaPrincipal.title %></p>
+            <p class="mt-1 text-sm text-tinta-suave"><%= atual %> de <%= alvo %></p>
+            <div class="mt-4 h-3 w-full overflow-hidden rounded-pilula bg-linha">
+              <div class="h-3 rounded-pilula bg-mel" style="width: <%= percentual %>%"></div>
+            </div>
+            <p class="mt-1 text-sm text-tinta-suave"><%= percentual %>% concluído</p>
+          </div>
+        <% } %>
+      </section>
+    </div>
+
+    <div class="border-t border-linha px-8 py-6">
+      <form method="POST" action="/sessao/logout">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <button type="submit" class="text-sm font-medium text-tinta-suave hover:text-tinta">
+          Sair da conta
+        </button>
+      </form>
+    </div>
+  </div>

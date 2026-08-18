@@ -1,188 +1,180 @@
-<!doctype html>
-<html lang="pt-BR">
-  <head>
-    <%- include('../partials/head') %>
-  </head>
-  <body class="min-h-screen bg-cera text-tinta antialiased">
-    <header class="bg-mel px-6 py-6">
-      <div class="mx-auto flex max-w-3xl items-center justify-between">
-        <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
-        <h1 class="text-2xl font-bold">Metas e tarefas</h1>
-        <span></span>
-      </div>
-    </header>
+  <header class="bg-mel px-6 py-6">
+    <div class="mx-auto flex max-w-3xl items-center justify-between">
+      <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+      <h1 class="text-2xl font-bold">Metas e tarefas</h1>
+      <span></span>
+    </div>
+  </header>
 
-    <main class="mx-auto max-w-3xl px-6 py-10">
-      <%#
-        Metas e tarefas viraram duas listas irmãs, e não mais uma dentro da
-        outra: no banco a tarefa pertence ao jogador, não à meta. Meta é onde se
-        quer chegar; tarefa é o que a colmeia pede hoje.
-      %>
-      <section class="mb-10 rounded-favo bg-white p-6 shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">Nova meta</h2>
-        <form method="POST" action="/metas" class="grid gap-3 sm:grid-cols-2">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <main class="mx-auto max-w-3xl px-6 py-10">
+    <%#
+      Metas e tarefas viraram duas listas irmãs, e não mais uma dentro da
+      outra: no banco a tarefa pertence ao jogador, não à meta. Meta é onde se
+      quer chegar; tarefa é o que a colmeia pede hoje.
+    %>
+    <section class="mb-10 rounded-favo bg-white p-6 shadow-md">
+      <h2 class="mb-4 text-lg font-semibold">Nova meta</h2>
+      <form method="POST" action="/metas" class="grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input
+          type="text"
+          name="titulo"
+          required
+          maxlength="160"
+          placeholder="O que você quer conquistar"
+          class="rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta sm:col-span-2"
+        />
+        <div>
+          <label class="mb-1 block text-xs text-tinta-suave">Quanto de mel quer juntar</label>
           <input
-            type="text"
-            name="titulo"
+            type="number"
+            name="alvo"
             required
-            maxlength="160"
-            placeholder="O que você quer conquistar"
-            class="rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta sm:col-span-2"
+            min="1"
+            placeholder="Ex: 200"
+            class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
           />
-          <div>
-            <label class="mb-1 block text-xs text-tinta-suave">Quanto de mel quer juntar</label>
-            <input
-              type="number"
-              name="alvo"
-              required
-              min="1"
-              placeholder="Ex: 200"
-              class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
-            />
-          </div>
-          <div>
-            <label class="mb-1 block text-xs text-tinta-suave">Prazo final</label>
-            <input
-              type="date"
-              name="data_final"
-              required
-              class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
-            />
-          </div>
-          <button
-            type="submit"
-            class="self-end rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta sm:col-span-2"
-          >
-            Criar meta
-          </button>
-        </form>
-      </section>
-
-      <h2 class="mb-4 text-lg font-semibold">Minhas metas</h2>
-
-      <% if (metas.length === 0) { %>
-        <p class="mb-10 text-tinta-suave">Nenhuma meta ainda. Crie a primeira acima.</p>
-      <% } %>
-
-      <div class="mb-12 space-y-6">
-        <% metas.forEach((meta) => { %>
-          <% const atual = Number(meta.current_value); %>
-          <% const alvo = Number(meta.target_value); %>
-          <% const percentual = alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)); %>
-          <% const concluida = meta.status === 'concluida'; %>
-          <section class="rounded-favo bg-white p-6 shadow-md">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <h3 class="text-lg font-bold <%= concluida ? 'line-through text-tinta-suave' : '' %>">
-                  <%= meta.title %>
-                </h3>
-                <p class="mt-1 text-sm text-tinta-suave"><%= atual %> de <%= alvo %></p>
-                <p class="mt-1 text-xs text-tinta-suave">
-                  Prazo: <%= new Date(meta.due_at).toLocaleDateString('pt-BR') %> ·
-                  <%= meta.status %> · dificuldade <%= meta.difficulty %>
-                </p>
-              </div>
-              <div class="w-24 text-right">
-                <span class="text-sm font-semibold"><%= percentual %>%</span>
-                <div class="mt-1 h-2 overflow-hidden rounded-pilula bg-linha">
-                  <div class="h-full bg-mel" style="width: <%= percentual %>%"></div>
-                </div>
-              </div>
-            </div>
-
-            <% if (!concluida) { %>
-              <form method="POST" action="/metas/<%= meta.id %>/concluir" class="mt-4">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-                <button
-                  type="submit"
-                  class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-                >
-                  Marcar como concluída
-                </button>
-              </form>
-            <% } else { %>
-              <p class="mt-4 text-xs font-semibold text-acerto-texto">
-                Concluída ✓ · rendeu <%= meta.reward_coins %> de mel e <%= meta.reward_points %> de pólen
-              </p>
-            <% } %>
-          </section>
-        <% }) %>
-      </div>
-
-      <section class="mb-10 rounded-favo bg-white p-6 shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">Nova tarefa</h2>
-        <%#
-          O texto da tarefa não é digitado: ele vem do catálogo `task_types`,
-          que já traz o alvo e a recompensa. Assim a colmeia paga o que
-          prometeu, sem ninguém inventar quanto vale.
-        %>
-        <form method="POST" action="/tarefas" class="grid gap-3 sm:grid-cols-2">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-          <select
-            name="tipo"
+        </div>
+        <div>
+          <label class="mb-1 block text-xs text-tinta-suave">Prazo final</label>
+          <input
+            type="date"
+            name="data_final"
             required
-            class="rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta sm:col-span-2"
-          >
-            <% tiposDeTarefa.forEach((tipo) => { %>
-              <option value="<%= tipo.slug %>">
-                <%= tipo.name %> (<%= tipo.scope %>) · <%= tipo.reward_points %> de pólen, <%= tipo.reward_coins %> de mel
-              </option>
-            <% }) %>
-          </select>
-          <div>
-            <label class="mb-1 block text-xs text-tinta-suave">Prazo</label>
-            <input
-              type="date"
-              name="data_prazo"
-              required
-              class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
-            />
-          </div>
-          <button
-            type="submit"
-            class="self-end rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-          >
-            Adicionar tarefa
-          </button>
-        </form>
-      </section>
+            class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+        <button
+          type="submit"
+          class="self-end rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta sm:col-span-2"
+        >
+          Criar meta
+        </button>
+      </form>
+    </section>
 
-      <h2 class="mb-4 text-lg font-semibold">Minhas tarefas</h2>
+    <h2 class="mb-4 text-lg font-semibold">Minhas metas</h2>
 
-      <% if (tarefas.length === 0) { %>
-        <p class="text-tinta-suave">Nenhuma tarefa por enquanto.</p>
-      <% } %>
+    <% if (metas.length === 0) { %>
+      <p class="mb-10 text-tinta-suave">Nenhuma meta ainda. Crie a primeira acima.</p>
+    <% } %>
 
-      <ul class="space-y-2">
-        <% tarefas.forEach((tarefa) => { %>
-          <% const concluida = tarefa.status === 'concluida'; %>
-          <li class="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm shadow-sm">
+    <div class="mb-12 space-y-6">
+      <% metas.forEach((meta) => { %>
+        <% const atual = Number(meta.current_value); %>
+        <% const alvo = Number(meta.target_value); %>
+        <% const percentual = alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)); %>
+        <% const concluida = meta.status === 'concluida'; %>
+        <section class="rounded-favo bg-white p-6 shadow-md">
+          <div class="flex items-start justify-between gap-4">
             <div>
-              <span class="<%= concluida ? 'line-through text-tinta-suave' : '' %> font-medium">
-                <%= tarefa.title %>
-              </span>
-              <span class="ml-2 text-xs text-tinta-suave">
-                <%= tarefa.current_value %>/<%= tarefa.target_value %> ·
-                <%= tarefa.scope %> · prazo <%= new Date(tarefa.due_at).toLocaleDateString('pt-BR') %>
-              </span>
+              <h3 class="text-lg font-bold <%= concluida ? 'line-through text-tinta-suave' : '' %>">
+                <%= meta.title %>
+              </h3>
+              <p class="mt-1 text-sm text-tinta-suave"><%= atual %> de <%= alvo %></p>
+              <p class="mt-1 text-xs text-tinta-suave">
+                Prazo: <%= new Date(meta.due_at).toLocaleDateString('pt-BR') %> ·
+                <%= meta.status %> · dificuldade <%= meta.difficulty %>
+              </p>
             </div>
-            <% if (concluida) { %>
-              <span class="text-xs font-semibold text-acerto-texto">Concluída ✓</span>
-            <% } else { %>
-              <form method="POST" action="/tarefas/<%= tarefa.id %>/concluir">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-                <button
-                  type="submit"
-                  class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-                >
-                  Concluir
-                </button>
-              </form>
-            <% } %>
-          </li>
-        <% }) %>
-      </ul>
-    </main>
-  </body>
-</html>
+            <div class="w-24 text-right">
+              <span class="text-sm font-semibold"><%= percentual %>%</span>
+              <div class="mt-1 h-2 overflow-hidden rounded-pilula bg-linha">
+                <div class="h-full bg-mel" style="width: <%= percentual %>%"></div>
+              </div>
+            </div>
+          </div>
+
+          <% if (!concluida) { %>
+            <form method="POST" action="/metas/<%= meta.id %>/concluir" class="mt-4">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button
+                type="submit"
+                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+              >
+                Marcar como concluída
+              </button>
+            </form>
+          <% } else { %>
+            <p class="mt-4 text-xs font-semibold text-acerto-texto">
+              Concluída ✓ · rendeu <%= meta.reward_coins %> de mel e <%= meta.reward_points %> de pólen
+            </p>
+          <% } %>
+        </section>
+      <% }) %>
+    </div>
+
+    <section class="mb-10 rounded-favo bg-white p-6 shadow-md">
+      <h2 class="mb-4 text-lg font-semibold">Nova tarefa</h2>
+      <%#
+        O texto da tarefa não é digitado: ele vem do catálogo `task_types`,
+        que já traz o alvo e a recompensa. Assim a colmeia paga o que
+        prometeu, sem ninguém inventar quanto vale.
+      %>
+      <form method="POST" action="/tarefas" class="grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <select
+          name="tipo"
+          required
+          class="rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta sm:col-span-2"
+        >
+          <% tiposDeTarefa.forEach((tipo) => { %>
+            <option value="<%= tipo.slug %>">
+              <%= tipo.name %> (<%= tipo.scope %>) · <%= tipo.reward_points %> de pólen, <%= tipo.reward_coins %> de mel
+            </option>
+          <% }) %>
+        </select>
+        <div>
+          <label class="mb-1 block text-xs text-tinta-suave">Prazo</label>
+          <input
+            type="date"
+            name="data_prazo"
+            required
+            class="w-full rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+        <button
+          type="submit"
+          class="self-end rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+        >
+          Adicionar tarefa
+        </button>
+      </form>
+    </section>
+
+    <h2 class="mb-4 text-lg font-semibold">Minhas tarefas</h2>
+
+    <% if (tarefas.length === 0) { %>
+      <p class="text-tinta-suave">Nenhuma tarefa por enquanto.</p>
+    <% } %>
+
+    <ul class="space-y-2">
+      <% tarefas.forEach((tarefa) => { %>
+        <% const concluida = tarefa.status === 'concluida'; %>
+        <li class="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm shadow-sm">
+          <div>
+            <span class="<%= concluida ? 'line-through text-tinta-suave' : '' %> font-medium">
+              <%= tarefa.title %>
+            </span>
+            <span class="ml-2 text-xs text-tinta-suave">
+              <%= tarefa.current_value %>/<%= tarefa.target_value %> ·
+              <%= tarefa.scope %> · prazo <%= new Date(tarefa.due_at).toLocaleDateString('pt-BR') %>
+            </span>
+          </div>
+          <% if (concluida) { %>
+            <span class="text-xs font-semibold text-acerto-texto">Concluída ✓</span>
+          <% } else { %>
+            <form method="POST" action="/tarefas/<%= tarefa.id %>/concluir">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button
+                type="submit"
+                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+              >
+                Concluir
+              </button>
+            </form>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+  </main>

@@ -1,6 +1,7 @@
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { ErroAplicacao } from '../utils/erros.js';
+import { renderizarPagina } from '../utils/pagina.js';
 
 /**
  * Handler global de erros do Express (assinatura de 4 argumentos).
@@ -40,8 +41,11 @@ export function errorHandler(erro, req, res, next) {
     });
   }
 
-  return res.status(status).render('pages/erro', {
+  res.status(status);
+  return renderizarPagina(res, 'erro', {
     titulo: `Erro ${status}`,
+    comCabecalho: true,
+    comRodape: true,
     status,
     mensagem,
     requestId: req.id,
