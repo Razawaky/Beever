@@ -162,6 +162,13 @@ export const trilha = assincrono(async (req, res) => {
   });
 });
 
+/**
+ * A tela de jogo é da E07. Até ela existir, a célula liberada mostra "em breve"
+ * em vez de um link para uma rota que responderia 404 — prometer o que não
+ * existe é pior do que avisar que ainda não dá.
+ */
+const JOGO_DISPONIVEL = false;
+
 /** As células de um favo (RF-CON-02). Favo travado nem lista: quem barra é o service. */
 export const favo = assincrono(async (req, res) => {
   const { favo, celulas } = await contentService.listarCelulasDoFavo(req.session.usuarioId, Number(req.params.id));
@@ -171,6 +178,7 @@ export const favo = assincrono(async (req, res) => {
     classeBody: FUNDO_CERA,
     favo,
     celulas,
+    jogoDisponivel: JOGO_DISPONIVEL,
   });
 });
 

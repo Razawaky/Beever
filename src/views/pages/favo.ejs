@@ -97,7 +97,7 @@
             <% } %>
           </div>
 
-          <% if (aberta && celula.temConteudo) { %>
+          <% if (aberta && celula.temConteudo && jogoDisponivel) { %>
             <a
               href="/trilha/<%= favo.id %>/celula/<%= celula.id %>"
               class="shrink-0 rounded-pilula bg-mel px-5 py-2.5 text-sm font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
@@ -105,7 +105,7 @@
               <%= celula.concluida ? 'Repetir' : 'Jogar' %>
             </a>
           <% } else if (aberta) { %>
-            <span class="shrink-0 text-xs text-tinta-suave">em breve</span>
+            <span class="shrink-0 rounded-pilula bg-linha px-4 py-2 text-xs font-medium text-tinta-suave">em breve</span>
           <% } %>
         </div>
       </li>

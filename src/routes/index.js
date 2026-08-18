@@ -1,10 +1,12 @@
 import { Router } from 'express';
+import { param } from 'express-validator';
 
 import * as healthController from '../controllers/healthController.js';
 import * as homeController from '../controllers/homeController.js';
 import * as paginaController from '../controllers/paginaController.js';
 import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { somentePagina } from '../middlewares/somentePagina.js';
+import { validate } from '../middlewares/validate.js';
 import lojaRouter from './loja.js';
 import metasRouter from './metas.js';
 import perfilRouter from './perfil.js';
@@ -40,7 +42,7 @@ router.get('/loja', somentePagina, requireOnboarding, paginaController.loja);
 router.get('/metas', somentePagina, requireOnboarding, paginaController.metas);
 router.get('/perfil', somentePagina, requireOnboarding, paginaController.perfil);
 router.get('/trilha', requireOnboarding, paginaController.trilha);
-router.get('/trilha/:id', requireOnboarding, paginaController.favo);
+router.get('/trilha/:id', requireOnboarding, param('id').isInt({ min: 1 }), validate, paginaController.favo);
 router.get('/manutencao', paginaController.manutencao);
 
 router.use('/users', usersRouter);

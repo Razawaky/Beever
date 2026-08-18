@@ -124,8 +124,17 @@ describe('telas da trilha', opcoes, () => {
     assert.match(pagina.text, /Meu primeiro orçamento/);
     assert.match(pagina.text, /Conclua a célula anterior/, 'as travadas dizem por quê');
 
-    const botoes = pagina.text.match(/>\s*(Jogar|Repetir)\s*</g) ?? [];
-    assert.equal(botoes.length, 1, 'a trilha abre uma célula de cada vez');
+    assert.match(pagina.text, /em breve/, 'a tela de jogo é da E07');
+    assert.doesNotMatch(
+      pagina.text,
+      /\/celula\//,
+      'nenhum link para rota que ainda não existe — botão que responde 404 é pior que aviso honesto',
+    );
+  });
+
+  it('id de favo inválido é recusado pela rota, não pelo controller', async () => {
+    await agente.get('/trilha/abc').set('Accept', 'application/json').expect(422);
+    await agente.get('/trilha/0').set('Accept', 'application/json').expect(422);
   });
 
   it('favo travado não serve a lista de células nem por URL', async () => {
@@ -138,9 +147,8 @@ describe('telas da trilha', opcoes, () => {
 
     const pagina = await agente.get(`/trilha/${primeiroFavo.id}`).set('Accept', 'text/html').expect(200);
 
-    assert.match(pagina.text, /Repetir/);
     assert.match(pagina.text, /3 de 3 estrelas/, 'a leitura de tela recebe as estrelas em texto');
-    assert.equal((pagina.text.match(/>\s*(Jogar|Repetir)\s*</g) ?? []).length, 2, 'a concluída e a seguinte');
+    assert.equal((pagina.text.match(/em breve/g) ?? []).length, 2, 'a concluída e a seguinte, as duas jogáveis');
 
     const trilha = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
     assert.match(trilha.text, /25%/);

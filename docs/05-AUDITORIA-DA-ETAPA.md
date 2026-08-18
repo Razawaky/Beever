@@ -79,6 +79,22 @@ baixo, para quando a trilha crescer.
 
 ---
 
+## 3.1 O que já foi corrigido
+
+Corrigido logo depois do laudo, no commit que o acompanha:
+
+- **L-1** — a célula liberada mostra "em breve" em vez de um link para rota
+  inexistente. A troca é uma constante no controller (`JOGO_DISPONIVEL`), que a
+  E07 vira para `true` quando a tela de jogo existir. Teste: a página não contém
+  `/celula/` em lugar nenhum.
+- **L-3** — `/trilha/:id` ganhou `param('id').isInt({ min: 1 })` e `validate`,
+  como todas as outras rotas com `:id`. Teste: `/trilha/abc` e `/trilha/0`
+  respondem 422.
+
+Seguem abertas L-2, L-4, L-5, L-6 e L-7, com o encaminhamento da seção 4.
+
+---
+
 ## 4. Veredito
 
 **Pode avançar para a E06. Zero bloqueantes técnicos.**
