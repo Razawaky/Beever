@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `2270762` (T-02.2 fechada)
+**Último commit:** `3680c31` (T-02.3 fechada — aplicação no ar de novo)
 
 ---
 
@@ -37,18 +37,15 @@ gatilho, seeds com usuário demo jogável, e o ciclo `docker compose up` →
 `db:migrate` → `db:seed` → `db:reconcile` funcionando do zero. O schema anterior
 está arquivado em `migrations/_legacy/`, nada apagado.
 
-**A aplicação está temporariamente fora do ar** — e isso era esperado. Os 13
-repositories já falam o schema novo desde a T-02.2, mas os 12 services ainda
-importam os nomes antigos, então o servidor **não sobe**:
-`ERR_MODULE_NOT_FOUND`. É o risco R-01, previsto desde a T-00.1 e aceito ao
-trocar o schema. O código das telas continua lá (cadastro, login, onboarding,
-painel, loja com compra transacional, inventário, metas e tarefas); o que falta
-é apontá-lo para os nomes novos, que é a T-02.3. O dump do banco anterior está
-guardado, caso precise do app de pé antes disso.
+**A aplicação voltou ao ar na T-02.3**, contra o schema novo, e o risco R-01
+está encerrado. O fluxo inteiro foi percorrido com o servidor rodando —
+cadastro, onboarding, painel, loja, tarefa, compra, meta, logout — e virou
+teste automatizado, em vez de ficar como print numa conversa.
 
 **O que está saudável:** arquitetura em camadas respeitada (nenhuma SQL fora de
-repository), 138 testes passando — dos quais 114 batem num banco real —, `npm
-audit` limpo, páginas que não consultam o banco respondendo em menos de 20 ms.
+repository), 171 testes passando — dos quais 124 batem num banco real, incluindo
+as rotas autenticadas —, `npm audit` limpo, `db:reconcile` fechando os quatro
+livros.
 
 **O que não existe** e o escopo exige: favos, células, trilha, jogos, pólen,
 patrimônio, cofre, ciclos econômicos, sequência (streak), conquistas, área
@@ -56,25 +53,21 @@ administrativa, CI. O código atual implementa um produto **menor e diferente**
 do que os documentos `docs/01`–`04` especificam — o mapa etapa a etapa está na
 seção 4.
 
-**O buraco mais sério:** o loop de recompensa está cortado. `creditarXp` não é
-chamada por ninguém e `moedasService` não tem `creditar`. Hoje **nenhum XP é
-creditado** e mel só sai da carteira, nunca entra. Fecha na E06.
+**O buraco mais sério, agora menor:** o loop de recompensa estava cortado dos
+dois lados. A T-02.3 religou um: `coinsService.creditar` passou a existir e
+concluir tarefa paga mel e pólen de verdade, com os valores vindos de
+`task_types`. O outro lado continua aberto — **nenhum XP é creditado em jogo**,
+porque nenhuma recompensa do MVP declara XP. Isso é o motor da E06.
 
-**O que vem agora:** **E02 em andamento.** A T-02.1 entregou a rede de teste com
-banco real e a **T-02.2 fechou o realinhamento dos 13 repositories**, cada um
-com teste de integração contra banco de verdade — 93 asserções novas. A próxima
-é a **T-02.3**, que realinha services e controllers e é o que **devolve a
-aplicação ao ar**. O modelo está documentado em
+**O que vem agora:** **E02 em andamento, 3 de 7 tarefas fechadas.** A T-02.1
+entregou a rede de teste com banco real, a T-02.2 realinhou os 13 repositories e
+a T-02.3 realinhou services, controllers e telas — que é o que devolveu a
+aplicação ao ar. A próxima é a **T-02.4**, `requireOnboarding` como middleware.
+
+O risco R-01 foi pago em duas parcelas e **está encerrado**: repositories na
+T-02.2, camada de cima na T-02.3. O modelo está documentado em
 [`MODELO-DE-DADOS.md`](MODELO-DE-DADOS.md) e o mapa de nomes em
 [`00-MAPA-DE-NOMES-LEGADO.md`](00-MAPA-DE-NOMES-LEGADO.md).
-
-O risco R-01 **materializou-se como previsto** e está sendo pago em duas
-parcelas: a camada de repository já fala o schema novo, a de service ainda não.
-Hoje a aplicação nem sobe — os 12 services importam `usuarioRepository`,
-`nivelRepository` e `auditoriaRepository`, arquivos que não existem mais, e o
-Node falha no carregamento com `ERR_MODULE_NOT_FOUND`. É uma janela vermelha
-maior que a prevista, decidida no checkpoint da T-02.2 para manter a tarefa
-pequena e testável, e ela fecha na T-02.3.
 
 **O que morde:** `npm run lint` falha, mas só por causa de scripts de plugin de
 IA — o código do projeto está limpo (DT-02). O servidor MCP do grafo voltou a
@@ -84,11 +77,11 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 2 de 7 tarefas fechadas |
-| Endpoints · services · repositories | 26 · 14 · 13 |
-| Testes | **138 passando, 3 falhando** (`app.test.js`, `nivelService.test.js`, `usuarioService.test.js`, todos por import de service — caem na T-02.3) · 7 services sem teste |
-| Dívida técnica catalogada | 15 itens abertos (DT-02 a DT-17, menos a DT-16 resolvida) |
-| Riscos abertos | 1 (R-01 schema, na última parcela) |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 3 de 7 tarefas fechadas |
+| Endpoints · services · repositories | 28 · 14 · 13 |
+| Testes | **171 passando, 0 falhando** — 124 contra banco real, incluindo o fluxo autenticado ponta a ponta |
+| Dívida técnica catalogada | 11 itens abertos — a T-02.3 fechou DT-04, DT-05, DT-07 e o resto da DT-16 |
+| Riscos abertos | nenhum |
 
 ---
 
@@ -120,7 +113,7 @@ npm run dev
 
 | Script | Resultado |
 |---|---|
-| `npm start` | **Não sobe desde a T-02.2**: os services importam repositories já renomeados e o Node falha com `ERR_MODULE_NOT_FOUND`. Volta na T-02.3 — ver R-01. Antes disso subia na porta 3000, com `/health` respondendo `{"status":"ok","banco":{"conectado":true,"migrationsAplicadas":7}}` |
+| `npm start` | Sobe na porta 3000. Fluxo completo percorrido em 2026-08-17 contra o schema novo: cadastro, onboarding, painel, loja, tarefa, compra, meta e logout, todos respondendo |
 | `npm run dev` | Mesmo `start` com `node --watch` (ver armadilha na seção 7) |
 | `npm run db:migrate` | "Nenhuma migration pendente"; segunda execução idêntica — **idempotente confirmado** |
 | `npm run db:seed` | Aplica os 6 arquivos de `scripts/seeds/`. Três execuções seguidas deixam as mesmas contagens — **idempotente confirmado**. Imprime o estado do banco e as contas de desenvolvimento |
@@ -129,7 +122,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (23,6 KB) em 136 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 138 passam, 3 falham — as 3 são de service e caem na T-02.3. Sem MySQL, os 114 testes de banco se pulam com aviso |
+| `npm test` | 171 passam, 0 falham. Sem MySQL, os 124 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -150,7 +143,8 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
-| Suíte de testes | `npm run test:db` → **138 passam, 3 falham**, com MySQL no ar. As 3 são de service e caem na T-02.3 |
+| Suíte de testes | `npm run test:db` → **171 passam, 0 falham**, com MySQL no ar |
+| **Fluxo autenticado ponta a ponta (T-02.3)** | `test/integration/fluxoAutenticado.test.js`: uma sessão só, do cadastro ao logout, contra banco real. Prova o onboarding gravando nível e agenda, a tarefa pagando mel e pólen uma vez só, a compra debitando o valor exato e congelando o preço, a compra sem saldo devolvendo 422 sem mexer no saldo, e os três livros fechando com o cache no fim |
 | **Os 13 repositories contra o schema novo (T-02.2)** | 93 testes de integração em `test/integration/repositories/`, um arquivo por repository, batendo em banco real criado do zero. Cobrem o caminho feliz e as recusas do banco: total de compra que não fecha a conta, estrelas acima de 3, dia da semana fora de 0–6, alvo de tarefa zero, valor de inventário negativo, XP negativo e token de partida repetido |
 | **Idempotência onde ela paga recompensa** | Concluir tarefa, concluir meta, fechar partida e vender item duas vezes: a segunda chamada devolve 0 linhas afetadas em todas. A checagem mora no `WHERE`, então não há janela entre ler e gravar |
 | **Livro × cache, no código e não só no script** | Crédito e débito de mel, pólen e XP testados dentro de transação: o saldo e o lançamento andam juntos, e um `throw` no meio desfaz os dois |
@@ -235,13 +229,13 @@ abertura da E02, está na tabela abaixo e também no próprio
 |---|---|
 | T-02.1 Arnês de teste com banco real + asserções de integridade | **feita** (commit `b9d9f84`) |
 | T-02.2 Realinhar os 13 repositories ao schema novo, com teste de integração para cada | **feita** (commits `c061fa7` e `2270762`) |
-| T-02.3 Realinhar services e controllers que dependem deles | **próxima** |
-| T-02.4 `requireOnboarding` como middleware (hoje é checagem espalhada em controllers) | pendente |
+| T-02.3 Realinhar services e controllers que dependem deles | **feita** (commit `3680c31`) |
+| T-02.4 `requireOnboarding` como middleware (hoje é checagem espalhada em controllers) | **próxima** — o `exigirLoginPagina` já saiu do arquivo de rotas na T-02.3 |
 | T-02.5 Request-id no logger | pendente |
 | T-02.6 `AuditService` com API única, gravando em `audit_logs` | pendente |
 | T-02.7 Layout EJS base, hoje só partials incluídos à mão | pendente |
 
-A T-02.3 é a que devolve a aplicação ao ar.
+A T-02.3 devolveu a aplicação ao ar.
 
 **O que a T-02.2 mudou de contrato**, e que a T-02.3 vai ter que absorver — não
 é rename, é semântica:
@@ -261,9 +255,9 @@ A T-02.3 é a que devolve a aplicação ao ar.
 | Etapa | Situação | O que falta |
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
-| E02 Núcleo | **em andamento, reordenada** | T-02.1 feita. Ver a tabela de tarefas logo acima — a etapa virou o realinhamento das camadas ao schema novo, mais o pouco que faltava do escopo original |
+| E02 Núcleo | **em andamento** | T-02.1, T-02.2 e T-02.3 feitas. Falta T-02.4 a T-02.7 — middleware de onboarding, request-id no logger, `AuditService` e layout EJS base |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
-| E04 Onboarding e metas | parcial | **`GoalPlannerService` não existe** — metas são criadas à mão, sem RN-014/015 |
+| E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
@@ -286,12 +280,12 @@ Identificadores rastreiam os documentos da E00.
 |---|---|---|---|
 | ~~DT-01~~ | ~~Fases 1–3 não commitadas~~ | R-03 | **Resolvido em 2026-08-17**: commits `c428ba3`, `a2e596b`, `a5f5e9b`, `4898fa3`. Working tree limpo |
 | DT-02 | `npm run lint` falha com 3242 erros, **todos** de `.claude/skills/**` e `.github/skills/**` | D-08 | Uma linha de `ignores` no `eslint.config.js`. Bloqueia usar lint como portão de CI |
-| DT-03 | Loop de recompensa cortado: `nivelService.creditarXp` sem chamador, `moedasService` sem `creditar` | M-02, D-03 | E06. Hoje **nenhum XP é creditado** e mel só sai, nunca entra |
-| DT-04 | **RN-006 ainda violada no código.** `reward_configs` existe e está semeada com 54 linhas, e `levels` tem a curva — mas `nivelService.js:9` segue com `XP_POR_NIVEL = 1000` e `pontosService.js:10` com `PONTOS_POR_TAREFA_CONCLUIDA = 10`. Criar a tabela não cumpre a regra; falta o service ler dela | C-03, auditoria da E01 (L-03) | **E06, com dono declarado.** Não pode chegar na entrega assim |
-| DT-05 | Negociação de conteúdo copiada 9 vezes em 6 controllers | P-01 | Helper único em `src/utils/`, na E02 |
+| DT-03 | Loop de recompensa pela metade: `coinsService.creditar` existe desde a T-02.3 e a tarefa concluída paga mel e pólen. Continua sem quem credite **XP em jogo** — nenhuma recompensa do MVP declara XP | M-02, D-03 | E06 |
+| ~~DT-04~~ | ~~`XP_POR_NIVEL = 1000` e `PONTOS_POR_TAREFA_CONCLUIDA = 10` em constante~~ | C-03, auditoria da E01 (L-03) | **Resolvido na T-02.3**: a curva de nível é lida de `levels` e a recompensa da tarefa vem de `task_types`. Nenhuma das duas constantes existe mais. Falta ainda o consumo de `reward_configs` pelo motor de recompensas (E06) |
+| ~~DT-05~~ | ~~Negociação de conteúdo copiada 9 vezes em 6 controllers~~ | P-01 | **Resolvido na T-02.3**: `querJson` em `src/utils/resposta.js` |
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
-| DT-07 | Dois guardas de autenticação com a mesma regra; um declarado dentro de `src/routes/index.js` | P-04, C-01 | Unificar e mover para `src/middlewares/`, na E02 |
-| DT-08 | Cobertura de testes rasa **na camada de service**: sem teste para `compraService`, `tarefaService`, `metaService`, `moedasService`, `pontosService`, `perfilService`, `authService`. A camada de repository deixou de ser rasa na T-02.2 (93 testes de integração) | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto da T-02.3 e de cada etapa |
+| ~~DT-07~~ | ~~Guarda de autenticação declarado dentro de `src/routes/index.js`~~ | P-04, C-01 | **Resolvido na T-02.3**: virou `src/middlewares/exigirLoginPagina.js`. Ele e o `requireAuth` continuam separados de propósito — página redireciona, API devolve 401 |
+| DT-08 | Cobertura de service ainda indireta: `purchasesService`, `tasksService`, `goalsService`, `coinsService`, `pointsService`, `profilesService` e `authService` são exercitados pelo teste de fluxo, mas não têm teste próprio de caso de borda | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
 | DT-11 | `header.ejs` e `footer.ejs` usados por 2 de 9 páginas; sem motor de layout | T-00.2 | E02/E11 |
@@ -299,18 +293,17 @@ Identificadores rastreiam os documentos da E00.
 | DT-13 | Sem workflow de CI (`.github/` só tem arquivos de plugin) | D-10 | E14 |
 | DT-14 | Sem catálogo administrável de itens (criar/editar); catálogo vem do seed | herdado | E12 |
 | DT-15 | `.env.example` não documenta `DB_ROOT_PASSWORD`, usada pelo `docker-compose.yml` | T-00.5 | Uma linha; formalizado na T-14.4 |
-| ~~DT-16~~ | ~~Nenhum teste automatizado cobre o banco~~ | auditoria da E01, L-01 | **Resolvido na T-02.1**: 21 testes de integração com banco real. Segue verdade que nenhum teste cobre rota autenticada — isso volta com os repositories |
+| ~~DT-16~~ | ~~Nenhum teste automatizado cobre o banco~~ | auditoria da E01, L-01 | **Resolvido por inteiro**: 21 testes de schema na T-02.1, 93 de repository na T-02.2 e o fluxo autenticado na T-02.3 |
 | DT-17 | Conteúdo semeado só na faixa A: B e C não têm favo próprio. Pela RN-029 eles veem o conteúdo das faixas anteriores, então não quebra — mas não dá para testar a segmentação por faixa | auditoria da E01, L-07 | E05 |
 
 ### Riscos abertos
 
-- **R-01 — ativo desde 2026-08-17, agora na segunda metade.** O banco de
-  desenvolvimento foi recriado com o schema novo e a aplicação não funciona
-  contra ele. Com a T-02.2 fechada, o sintoma **piorou antes de melhorar**: não
-  é mais 500 no login por tabela ausente, é o servidor **não subir**, com
-  `ERR_MODULE_NOT_FOUND` — os services importam os nomes de repository que
-  foram renomeados. Some na T-02.3, que é a última parcela deste risco. O
-  roteiro está em `00-MAPA-DE-NOMES-LEGADO.md`, seção 4.
+- ~~**R-01**~~ — **Encerrado em 2026-08-17.** A troca de schema derrubou a
+  aplicação por duas tarefas, exatamente como previsto na T-00.1, e ela voltou
+  na T-02.3 rodando contra o banco novo. O que fica de lição: o risco foi
+  previsto, aceito e pago em parcelas anunciadas, sem surpresa — e a segunda
+  parcela foi pior que a primeira (servidor sem subir, em vez de 500 numa
+  rota), porque renomear arquivo quebra o carregamento inteiro do módulo.
   **Para voltar ao app funcionando antes disso:** restaure o dump em
   `backups/beever-antes-da-E01-*.sql` (ver seção 7).
 - ~~**R-02**~~ — Encerrado em 2026-08-17: o servidor MCP `code-review-graph`
@@ -374,6 +367,15 @@ Não reabrir sem motivo novo.
   antes de qualquer módulo do projeto.** Ele aponta o pool para um banco de
   teste próprio do arquivo. Se os imports forem reordenados, o teste passa a
   escrever no banco de desenvolvimento.
+- **O token de CSRF morre junto com a sessão regenerada.** Cadastro e login
+  regeneram a sessão de propósito, então o token lido antes deles não vale
+  depois. No navegador isso é invisível (a página seguinte traz o token novo);
+  em script ou teste, é preciso reler de uma página após cada regeneração.
+  Sintoma: 403 `Token CSRF inválido ou ausente` logo depois do cadastro.
+- **Rota de página e rota JSON no mesmo caminho**: resolvido com
+  `src/middlewares/somentePagina.js`, que faz a página passar a vez quando o
+  cliente pede JSON. Ao criar uma página nova que também tem API no mesmo path,
+  use-o — sem ele, uma das duas some sem erro nenhum.
 - `git status` antes de assumir que algo está salvo.
 - **`audit_logs` não aceita `UPDATE` nem `DELETE`** — nem pelo root, sem
   desabilitar os gatilhos da migration `008` de propósito. É a RNF-17
@@ -399,4 +401,4 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** T-02.3 — realinhar services e controllers aos repositories novos. É ela que devolve a aplicação ao ar.
+**Próxima tarefa:** T-02.4 — `requireOnboarding` como middleware, hoje espalhado como checagem dentro dos controllers de página.
