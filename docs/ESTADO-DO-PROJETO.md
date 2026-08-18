@@ -4,7 +4,7 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-17 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `4e6020c` (T-02.4 fechada)
+**Último commit:** `8510dd3` (T-02.5 fechada)
 
 ---
 
@@ -59,11 +59,12 @@ concluir tarefa paga mel e pólen de verdade, com os valores vindos de
 `task_types`. O outro lado continua aberto — **nenhum XP é creditado em jogo**,
 porque nenhuma recompensa do MVP declara XP. Isso é o motor da E06.
 
-**O que vem agora:** **E02 em andamento, 4 de 7 tarefas fechadas.** A T-02.1
+**O que vem agora:** **E02 em andamento, 5 de 7 tarefas fechadas.** A T-02.1
 entregou a rede de teste com banco real, a T-02.2 realinhou os 13 repositories,
 a T-02.3 realinhou services, controllers e telas — devolvendo a aplicação ao ar
-— e a T-02.4 tirou a checagem de onboarding de dentro dos controllers. A
-próxima é a **T-02.5**, request-id no logger estruturado.
+—, a T-02.4 tirou a checagem de onboarding de dentro dos controllers e a T-02.5
+deu um identificador a cada requisição. A próxima é a **T-02.6**, o
+`AuditService` com API única.
 
 O risco R-01 foi pago em duas parcelas e **está encerrado**: repositories na
 T-02.2, camada de cima na T-02.3. O modelo está documentado em
@@ -78,9 +79,9 @@ impacto.
 
 | Em números | |
 |---|---|
-| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 4 de 7 tarefas fechadas |
+| Etapas do roadmap prontas | 2 de 16 (E00 e E01); E02 com 5 de 7 tarefas fechadas |
 | Endpoints · services · repositories | 28 · 14 · 13 |
-| Testes | **176 passando, 0 falhando** — 129 contra banco real, incluindo o fluxo autenticado ponta a ponta |
+| Testes | **187 passando, 0 falhando** — 129 contra banco real, incluindo o fluxo autenticado ponta a ponta |
 | Dívida técnica catalogada | 11 itens abertos — DT-04, DT-05 e o resto da DT-16 caíram na T-02.3; a DT-07 fechou por inteiro na T-02.4 |
 | Riscos abertos | nenhum |
 
@@ -144,6 +145,7 @@ Verificado nesta sessão, por execução, não por leitura de documento.
 
 | Item | Como foi verificado |
 |---|---|
+| **Rastro por requisição (T-02.5)** | Servidor no ar, um 404 provocado: o mesmo id apareceu no header `x-request-id`, no corpo JSON do erro e nas linhas de log da requisição. Com `x-request-id` vindo do cliente, o id do proxy foi preservado ponta a ponta |
 | Suíte de testes | `npm run test:db` → **171 passam, 0 falham**, com MySQL no ar |
 | **Fluxo autenticado ponta a ponta (T-02.3)** | `test/integration/fluxoAutenticado.test.js`: uma sessão só, do cadastro ao logout, contra banco real. Prova o onboarding gravando nível e agenda, a tarefa pagando mel e pólen uma vez só, a compra debitando o valor exato e congelando o preço, a compra sem saldo devolvendo 422 sem mexer no saldo, e os três livros fechando com o cache no fim |
 | **Os 13 repositories contra o schema novo (T-02.2)** | 93 testes de integração em `test/integration/repositories/`, um arquivo por repository, batendo em banco real criado do zero. Cobrem o caminho feliz e as recusas do banco: total de compra que não fecha a conta, estrelas acima de 3, dia da semana fora de 0–6, alvo de tarefa zero, valor de inventário negativo, XP negativo e token de partida repetido |
@@ -232,8 +234,8 @@ abertura da E02, está na tabela abaixo e também no próprio
 | T-02.2 Realinhar os 13 repositories ao schema novo, com teste de integração para cada | **feita** (commits `c061fa7` e `2270762`) |
 | T-02.3 Realinhar services e controllers que dependem deles | **feita** (commit `3680c31`) |
 | T-02.4 `requireOnboarding` como middleware | **feita** (commit `4e6020c`) |
-| T-02.5 Request-id no logger | **próxima** |
-| T-02.6 `AuditService` com API única, gravando em `audit_logs` | pendente |
+| T-02.5 Request-id no logger | **feita** (commit `8510dd3`) |
+| T-02.6 `AuditService` com API única, gravando em `audit_logs` | **próxima** |
 | T-02.7 Layout EJS base, hoje só partials incluídos à mão | pendente |
 
 A T-02.3 devolveu a aplicação ao ar.
@@ -256,7 +258,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | Etapa | Situação | O que falta |
 |---|---|---|
 | E01 Banco | **concluída e auditada** | T-01.1 a T-01.8 entregues, 12 de 12 no checklist de aceite, mais os 5 itens que a auditoria da etapa apontou: auditoria imutável, reconciliação completa, seed que não apaga trabalho de admin, `iniciar-proj.md` atualizado e script de backup (RNF-19). O que sobrou virou DT-16 (E02), DT-04 (E06) e DT-17 (E05), cada um com dono |
-| E02 Núcleo | **em andamento** | T-02.1 a T-02.4 feitas. Falta T-02.5 a T-02.7 — request-id no logger, `AuditService` e layout EJS base |
+| E02 Núcleo | **em andamento** | T-02.1 a T-02.5 feitas. Falta T-02.6 e T-02.7 — `AuditService` e layout EJS base |
 | E03 Autenticação | feito com lacunas | Consentimento do responsável; testes de brute force e sessão expirada |
 | E04 Onboarding e metas | parcial | O onboarding agora grava avatar, objetivo, nível inicial e agenda semanal. **`GoalPlannerService` continua não existindo** — tipo, dificuldade e prazo da meta ainda vêm do formulário, sem RN-014/015 |
 | E05 Conteúdo e trilha | do zero | Favo e célula não existem em lugar nenhum |
@@ -402,4 +404,4 @@ Não reabrir sem motivo novo.
 | `docs/01-AUDITORIA-DO-SCHEMA.md` | T-01.1 e T-01.2 — diferenças, riscos e conflitos do schema |
 | `docs/MODELO-DE-DADOS.md` | T-01.7 — o banco explicado, com diagramas ER e rastreabilidade regra → tabela |
 
-**Próxima tarefa:** T-02.5 — request-id no logger estruturado, para uma requisição poder ser seguida de ponta a ponta no log.
+**Próxima tarefa:** T-02.6 — `AuditService` com API única `record(actor, action, before, after)`, hoje com sete services chamando o repository de auditoria direto.
