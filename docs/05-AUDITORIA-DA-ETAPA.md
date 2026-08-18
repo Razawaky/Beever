@@ -171,7 +171,22 @@ um status que descreve entidade inválida em vez de endereço inexistente — 40
 seria a resposta honesta. É dívida que a própria correção criou, e vale registrar
 como tal.
 
-### 5.4 Veredito da segunda passagem
+### 5.4 Correções da segunda passagem
+
+Feitas no commit que acompanha este laudo:
+
+- **L-8 e L-4 juntas** — `cellsRepository.contarDoFavo`, que estava sem uso e sem
+  filtro de faixa, virou `contarPorFavos`: conta em lote, respeita a RN-029 e é
+  de onde a trilha tira o total. A tela passou de "0 de ? células" para "0 de 4
+  células" antes de o jogador tocar no favo, e o código morto sumiu no mesmo
+  movimento. Teste: a página **não contém** "de ? células".
+- **L-9** — as rotas de página ganharam `validateEnderecoDePagina`, que faz a
+  mesma checagem e responde 404 "Página não encontrada" em vez de 422 "Verifique
+  os campos preenchidos". Teste: `/trilha/abc` responde 404 e não fala de campos.
+
+Seguem abertas L-2, L-5, L-6 e L-7.
+
+### 5.5 Veredito da segunda passagem
 
 **Pode avançar para a E06. Zero bloqueantes.**
 

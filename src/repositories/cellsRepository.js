@@ -84,11 +84,25 @@ export async function buscarAnterior(celula) {
   return linhas[0] ?? null;
 }
 
-/** Quantas células ativas o favo tem. É o denominador do percentual da RN-027. */
-export async function contarDoFavo(idFavo) {
+/**
+ * Quantas células cada favo tem, para os favos pedidos — o denominador da
+ * RN-027, e o número que a trilha mostra antes de o jogador tocar no favo.
+ *
+ * Em lote e com filtro de faixa: a trilha precisa de todos os favos de uma vez,
+ * e contar sem o recorte da RN-029 daria um total que o jogador não enxerga.
+ */
+export async function contarPorFavos(idsDeFavo = [], codigosDeFaixa = []) {
+  if (idsDeFavo.length === 0 || codigosDeFaixa.length === 0) return new Map();
+
   const linhas = await consultar(
-    `SELECT COUNT(*) AS total FROM cells c WHERE c.hive_id = ? AND ${ATIVO}`,
-    [idFavo],
+    `SELECT c.hive_id, COUNT(*) AS total
+       FROM cells c
+       ${JOINS}
+      WHERE c.hive_id IN (${marcadores(idsDeFavo.length)})
+        AND ${ATIVO} AND ab.code IN (${marcadores(codigosDeFaixa.length)})
+      GROUP BY c.hive_id`,
+    [...idsDeFavo, ...codigosDeFaixa],
   );
-  return Number(linhas[0].total);
+
+  return new Map(linhas.map((linha) => [Number(linha.hive_id), Number(linha.total)]));
 }

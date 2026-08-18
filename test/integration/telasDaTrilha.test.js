@@ -98,6 +98,13 @@ describe('telas da trilha', opcoes, () => {
     assert.match(painel.text, /href="\/trilha"/);
   });
 
+  it('a trilha diz quantas células o favo tem antes de o jogador tocar nele', async () => {
+    const pagina = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
+
+    assert.match(pagina.text, /0 de 4 células/, 'o total vem do catálogo, não do cache de progresso');
+    assert.doesNotMatch(pagina.text, /de \? células/, 'a tela sabe o número: não pergunta');
+  });
+
   it('a trilha mostra os dois favos, um aberto e um travado com o motivo escrito', async () => {
     const pagina = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
 
@@ -132,9 +139,12 @@ describe('telas da trilha', opcoes, () => {
     );
   });
 
-  it('id de favo inválido é recusado pela rota, não pelo controller', async () => {
-    await agente.get('/trilha/abc').set('Accept', 'application/json').expect(422);
-    await agente.get('/trilha/0').set('Accept', 'application/json').expect(422);
+  it('endereço com id inválido é página que não existe, não formulário errado', async () => {
+    const resposta = await agente.get('/trilha/abc').set('Accept', 'text/html').expect(404);
+    assert.match(resposta.text, /Página não encontrada/);
+    assert.doesNotMatch(resposta.text, /campos preenchidos/, 'quem digitou uma URL não preencheu campo nenhum');
+
+    await agente.get('/trilha/0').set('Accept', 'application/json').expect(404);
   });
 
   it('favo travado não serve a lista de células nem por URL', async () => {

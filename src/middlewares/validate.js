@@ -1,6 +1,6 @@
 import { validationResult } from 'express-validator';
 
-import { erroValidacao } from '../utils/erros.js';
+import { erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 
 /**
  * Fecha uma cadeia de validações do express-validator.
@@ -22,4 +22,16 @@ export function validate(req, res, next) {
   }));
 
   next(erroValidacao('Verifique os campos preenchidos', detalhes));
+}
+
+/**
+ * Mesma checagem, outra resposta. Numa rota de página, id torto na URL é
+ * endereço que não existe — 404 —, e não formulário mal preenchido: quem digitou
+ * `/trilha/abc` não preencheu campo nenhum para ler "verifique os campos".
+ */
+export function validateEnderecoDePagina(req, res, next) {
+  const resultado = validationResult(req);
+  if (resultado.isEmpty()) return next();
+
+  next(erroNaoEncontrado('Página não encontrada'));
 }

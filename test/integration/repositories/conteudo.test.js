@@ -113,9 +113,19 @@ describe('repositories de conteúdo', opcoes, () => {
     );
   });
 
-  it('conta as células ativas do favo, que é o denominador da RN-027', async () => {
-    const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
-    assert.equal(await cellsRepository.contarDoFavo(favo.id), 4);
+  it('conta as células de vários favos de uma vez, respeitando a faixa', async () => {
+    const primeiro = await hivesRepository.buscarPorSlug('primeiros-passos');
+    const segundo = await hivesRepository.buscarPorSlug('guardar-e-gastar');
+    const deOutraFaixa = await hivesRepository.buscarPorSlug('o-tempo-e-o-juro');
+
+    const totais = await cellsRepository.contarPorFavos([primeiro.id, segundo.id, deOutraFaixa.id], ['A']);
+
+    assert.equal(totais.get(Number(primeiro.id)), 4, 'é o denominador da RN-027');
+    assert.equal(totais.get(Number(segundo.id)), 4);
+    assert.equal(totais.has(Number(deOutraFaixa.id)), false, 'favo de faixa acima não entra na conta');
+
+    assert.equal((await cellsRepository.contarPorFavos([], ['A'])).size, 0);
+    assert.equal((await cellsRepository.contarPorFavos([primeiro.id], [])).size, 0);
   });
 
   it('o banco recusa duas células na mesma posição do favo', async () => {

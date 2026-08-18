@@ -145,6 +145,13 @@ export async function listarTrilha(idUsuario) {
   const contexto = await contextoDoJogador(idUsuario);
   const favos = await hivesRepository.listarPorFaixas(contexto.codigosVisiveis);
 
+  // O total de células vem do catálogo, não do cache: `hive_progress` só ganha
+  // linha depois da primeira tentativa, e até lá a trilha mostrava "0 de ?".
+  const totais = await cellsRepository.contarPorFavos(
+    favos.map((favo) => favo.id),
+    contexto.codigosVisiveis,
+  );
+
   const trilha = [];
   let anteriorDaFaixa = null;
 
@@ -165,7 +172,7 @@ export async function listarTrilha(idUsuario) {
       ...favo,
       percentual: Number(progresso?.percent ?? 0),
       celulasConcluidas: Number(progresso?.completed_cells ?? 0),
-      celulasTotais: Number(progresso?.total_cells ?? 0),
+      celulasTotais: totais.get(Number(favo.id)) ?? Number(progresso?.total_cells ?? 0),
       concluido: Boolean(progresso?.completed_at),
       estado,
       motivo,

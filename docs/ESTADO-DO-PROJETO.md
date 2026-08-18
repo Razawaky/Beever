@@ -110,7 +110,7 @@ impacto.
 |---|---|
 | Etapas do roadmap prontas | **6 de 16** — E00, E01, E02, E03, E04 e E05, todas auditadas |
 | Endpoints · services · repositories | 34 · 19 · 17 |
-| Testes | **348 passando, 0 falhando** (266 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Testes | **349 passando, 0 falhando** (267 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 15 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33, a correção de escopo abriu DT-34 e a T-05.2 abriu DT-35 |
 | Riscos abertos | nenhum |
 
@@ -153,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (26,9 KB) em cerca de 150 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 348 passam, 0 falham. Sem MySQL, os 266 testes de banco se pulam com aviso |
+| `npm test` | 349 passam, 0 falham. Sem MySQL, os 267 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -815,10 +815,20 @@ jogador.
 que todo jogo use o mesmo contrato de recompensa.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
-avançar, zero bloqueantes. Das sete lacunas do laudo, duas foram corrigidas na
-mesma sessão — o botão "Jogar" que levava a 404 (L-1) e a rota `/trilha/:id` sem
-validação de parâmetro (L-3). Ficam abertas cinco, de risco médio para baixo, com
-encaminhamento escrito no laudo.
+avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
+segunda — que aplicou o checklist de banco esquecido na primeira e foi olhar o
+HTML renderizado — achou mais duas, ambas visíveis para o jogador. Das nove,
+**cinco foram corrigidas** nesta sessão: o botão "Jogar" que levava a 404 (L-1),
+a rota sem validação de parâmetro (L-3), o "0 de ? células" da primeira tela da
+trilha (L-8), o código morto que resolvia esse total (L-4) e o 422 "verifique os
+campos" para endereço torto (L-9). Ficam abertas quatro, de risco baixo.
+
+Duas lições registradas, porque valem para as etapas seguintes: **o roteiro de
+auditoria tem sete passos e pular um custa** — foi assim que o seed quase ficou
+sem conferência de idempotência (roda duas vezes e as contagens não mudam:
+6 favos, 24 células, 24 conteúdos). E **imprimir a página acha em minutos o que
+reler o service não acha** — as duas lacunas da segunda passagem saíram do HTML,
+não do código.
 
 **Uma suspeita que a auditoria mediu e descartou**, e que vale lembrar antes de
 otimizar qualquer coisa na E06: o caminho de `registrarTentativa` dispara mais de
