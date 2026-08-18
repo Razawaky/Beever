@@ -110,7 +110,7 @@ impacto.
 |---|---|
 | Etapas do roadmap prontas | **5 de 16** — E00, E01, E02, E03 e E04, todas auditadas |
 | Endpoints · services · repositories | 34 · 19 · 17 |
-| Testes | **341 passando, 0 falhando** (259 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
+| Testes | **347 passando, 0 falhando** (265 contra banco real) — fluxo autenticado ponta a ponta, onboarding completo e retomado em outro navegador, metas geradas pela RN-014, semana editada de 5 para 2 dias sem perder progresso, erro em produção, recusas de autenticação, força bruta e autorização por dono da conta |
 | Dívida técnica catalogada | 15 itens abertos — a T-04.4 abriu DT-31 e DT-32, a auditoria da E04 abriu DT-33, a correção de escopo abriu DT-34 e a T-05.2 abriu DT-35 |
 | Riscos abertos | nenhum |
 
@@ -153,7 +153,7 @@ npm run dev
 | `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
 | `npm run css:build` | Gera `src/public/css/app.css` (26,9 KB) em cerca de 150 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
-| `npm test` | 341 passam, 0 falham. Sem MySQL, os 259 testes de banco se pulam com aviso |
+| `npm test` | 347 passam, 0 falham. Sem MySQL, os 265 testes de banco se pulam com aviso |
 | `npm run test:db` | Mesma suíte exigindo banco no ar — falha em vez de pular. É o comando do CI |
 | `npm run lint` | **Falha** — 3242 erros, todos de `.claude/skills/**` e `.github/skills/**`; nenhum do código do projeto. Ver DT-02 |
 
@@ -265,7 +265,7 @@ argumento a favor da rede que a T-02.1 montou.
 | T-05.3 `ProgressService`: tentativa, erros, estrelas, percentual do favo | **feita** — RN-030 com dono único, tentativa e percentual na mesma transação, sem pagar nada |
 | T-05.4 Views da trilha e da lista de células | **feita** — `/trilha` e `/trilha/:id`, hexágonos serpenteantes, favo travado com o motivo escrito |
 | T-05.5 Filtro por faixa de idade | **feita** — faixas B e C semeadas, filtro também na célula, três jogadores testados |
-| T-05.6 Testes: célula travada não abre; 80% libera o favo seguinte; patrimônio respeitado | pendente |
+| T-05.6 Testes: célula travada não abre; 80% libera o favo seguinte; patrimônio respeitado | **feita** — os três critérios num percurso único, e o limite de 80% enfim exercido com dado real |
 
 **O que a T-05.1 entregou.** As seis tabelas de conteúdo existiam desde a
 migration `002` e nenhuma tinha repository — a trilha era schema sem código.
@@ -398,6 +398,15 @@ a lista, para a contagem e para o recálculo do cache, e o caso tem teste própr
 O conteúdo das faixas B e C é **de demonstração**, como o da faixa A: dá para
 navegar a trilha inteira, mas material pedagógico aprovado vem da área
 administrativa (E12).
+
+**O que a T-05.6 entregou.** Os três critérios de aceite num percurso único —
+cadastro, trilha, favo, células, desbloqueio — em vez de espalhados. E um buraco
+que só apareceu ao escrever este teste: **os 80% da RN-027 nunca tinham sido
+exercidos com dado real.** Os favos semeados têm quatro células, então o
+percentual pulava de 75% direto para 100%, e o limite exato só existia no teste
+unitário, com número montado à mão. O teste de aceite dá ao favo uma quinta
+célula: 3 de 5 são 60% e não abrem o seguinte; 4 de 5 são exatamente 80% e abrem
+— com o favo atual ainda por fechar, que é o ponto da regra.
 
 ---
 
@@ -605,7 +614,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E02 Núcleo | **concluída e auditada** | T-02.1 a T-02.7, mais os dois bloqueantes que a auditoria encontrou. As lacunas não bloqueantes viraram dívida com etapa marcada |
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
-| E05 Conteúdo e trilha | **em andamento** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas e o filtro da RN-029 valendo também para célula. Falta T-05.6 |
+| E05 Conteúdo e trilha | **tarefas concluídas, auditoria pendente** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. **Tarefas concluídas, auditoria pendente** |
 | E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
