@@ -120,6 +120,8 @@ describe('Quiz do Favo', opcoes, () => {
       .expect(200);
 
     assert.match(pagina.text, /js\/quiz\.js/, 'a tela é montada pelo JS da página');
+    assert.match(pagina.text, new RegExp(`data-celula-id="${celulas[0].id}"`), 'é assim que o dataset lê');
+    assert.match(pagina.text, /data-csrf-token="[^"]+"/, 'a partida é POST e a página não tem formulário');
     assert.doesNotMatch(pagina.text, /correta/, 'a resposta certa não pode viajar no HTML');
     assert.equal(await contarPartidas(), antes, 'GET não cria partida');
   });

@@ -22,9 +22,9 @@ import * as gameSessionService from '../../src/services/gameSessionService.js';
  * mesmo token não credita duas vezes (RN-009), e repetir a célula paga 25% de XP
  * e zero mel (RN-008).
  *
- * A primeira célula de "primeiros passos" é a única com quiz de verdade
- * semeado; as demais têm conteúdo de demonstração, e é por isso que a segunda
- * aparece aqui como célula não jogável.
+ * As duas primeiras células de "primeiros passos" têm jogo semeado — quiz e
+ * arrastar —, e a terceira é de um jogo que ainda não existe: é ela que aparece
+ * aqui como célula não jogável.
  */
 
 const pular = await motivoParaPular();
@@ -32,6 +32,7 @@ const opcoes = pular ? { skip: pular } : {};
 
 const RESPOSTAS_CERTAS = [0, 0];
 const RESPOSTAS_COM_UM_ERRO = [0, 2];
+const CAIXAS_CERTAS = ['entra', 'entra', 'sai', 'sai'];
 
 describe('sessão de jogo', opcoes, () => {
   let banco;
@@ -167,10 +168,16 @@ describe('sessão de jogo', opcoes, () => {
   });
 
   it('célula sem jogo implementado recusa abrir, em vez de pagar por conteúdo vazio', async () => {
+    // A segunda célula é a de arrastar, que a T-07.3 implementou: para chegar a
+    // uma célula sem validador é preciso concluí-la e liberar a terceira, cujo
+    // jogo ainda não existe.
+    const arraste = await gameSessionService.abrir(idUsuario, celulas[1].id);
+    await gameSessionService.fechar(idUsuario, arraste.token, { respostas: CAIXAS_CERTAS });
+
     await assert.rejects(
-      () => gameSessionService.abrir(idUsuario, celulas[1].id),
+      () => gameSessionService.abrir(idUsuario, celulas[2].id),
       (erro) => erro.codigo === 'VALIDACAO',
-      'a segunda célula está liberada agora, mas o jogo dela é da E07',
+      'a terceira célula está liberada agora, mas o jogo dela ainda não existe',
     );
   });
 

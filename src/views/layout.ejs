@@ -23,7 +23,8 @@
 
     <% if (comRodape) { %><%- include('partials/footer') %><% } %>
     <% scripts.forEach((arquivo) => { %>
-    <script src="<%= arquivo %>" defer></script>
+    <%# `type="module"` porque as telas de jogo importam a parte comum (`partida.js`). -%>
+    <script src="<%= arquivo %>" type="module"></script>
     <% }) %>
   </body>
 </html>

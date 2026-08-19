@@ -158,9 +158,11 @@ describe('telas da trilha', opcoes, () => {
 
     assert.match(pagina.text, /3 de 3 estrelas/, 'a leitura de tela recebe as estrelas em texto');
     assert.match(pagina.text, /Repetir/, 'célula concluída convida a repetir');
-    // A segunda célula abriu, mas o jogo dela (arraste e classifique) é da
-    // T-07.3: ela aparece como "em breve", e não como link.
-    assert.match(pagina.text, /em breve/);
+    // A segunda célula abriu, e o jogo dela — o Arraste e Classifique — existe
+    // desde a T-07.3: ela vira link, e não mais "em breve". As duas seguintes
+    // continuam travadas, então nenhuma "em breve" sobra nesta tela.
+    assert.match(pagina.text, new RegExp(`href="/trilha/${primeiroFavo.id}/celula/${celulas[1].id}"`));
+    assert.doesNotMatch(pagina.text, /em breve/);
 
     const trilha = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
     assert.match(trilha.text, /25%/);

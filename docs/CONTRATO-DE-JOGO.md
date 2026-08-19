@@ -20,10 +20,16 @@ O contrato é só esse. O que conta como erro é decisão de cada jogo: no quiz 
 
 O corpo do Quiz do Favo é `{ tipo, perguntas: [{ enunciado, alternativas, correta }] }`, com `correta` sendo o índice da alternativa certa dentro de `alternativas`. O `conferirForma` recusa conteúdo sem perguntas, pergunta com menos de duas alternativas e resposta certa fora da lista. O `paraJogar` devolve enunciado e alternativas, e deixa o `correta` para trás. O `validar` compara resposta a resposta, na ordem das perguntas.
 
+## O exemplo do Arraste e Classifique
+
+O corpo do segundo jogo é `{ tipo, enunciado, categorias: [{ id, nome }], cartas: [{ texto, categoria }] }`, em que `categoria` é o `id` da caixa certa daquela carta. O `conferirForma` exige pelo menos duas caixas com identificadores diferentes e recusa carta cuja caixa certa não está na lista. O `paraJogar` entrega as caixas inteiras — o jogador precisa vê-las — e das cartas devolve só o texto. As respostas chegam como lista de `id` de caixa, uma por carta, na ordem em que as cartas foram enviadas, e carta sem caixa nenhuma conta como erro.
+
+Vale notar que a resposta deste jogo não é número, e sim texto: o contrato nunca prometeu número, prometeu uma decisão por item na ordem em que o conteúdo foi enviado.
+
 ## Estado salvo, que ainda não existe
 
 A RF-JOG-07 prevê retomar uma partida interrompida, e é P1, planejada para a T-07.7. O lugar dela no contrato é uma quarta função opcional, `estadoParaSalvar(respostasParciais)`, e uma coluna de estado na partida. Nenhum jogo da E07 deve inventar seu próprio jeito de salvar antes disso: quem precisar guardar progresso parcial agora, guarda no navegador e assume que fechar a aba custa a partida.
 
 ## Como acrescentar um jogo
 
-Escreva o validador no mapa, com as três funções, e um teste unitário dele em `test/unit/validadoresDeJogo.test.js`, que roda sem banco. Semeie o conteúdo em `scripts/seeds/`, no formato que o `conferirForma` aceita. Monte a tela e o JavaScript da página, que manda as respostas no formato que o `validar` espera. Nada além disso precisa mudar: o motor de recompensas já sabe pagar qualquer jogo, desde a E06.
+Escreva o validador no mapa, com as três funções, e um teste unitário dele em `test/unit/validadoresDeJogo.test.js`, que roda sem banco. Semeie o conteúdo em `scripts/seeds/`, no formato que o `conferirForma` aceita. Monte a área da tela em `src/views/partials/jogos/` e o JavaScript dela em `src/public/js/`, que manda as respostas no formato que o `validar` espera; a casca em volta — cabeçalho, carregando, erro, barra e resultado — já existe em `pages/celula.ejs` e em `public/js/partida.js`, e o mapa de qual jogo usa qual das duas está no `paginaController`. Nada além disso precisa mudar: o motor de recompensas já sabe pagar qualquer jogo, desde a E06.

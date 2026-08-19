@@ -4,10 +4,9 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-07.2 — **o jogo existe**: a criança abre o quiz, responde e
-vê o que ganhou. Árvore limpa, 415 testes passando.
-**Próximo passo: T-07.3**, o Arraste e Classifique, com alternativa por clique e
-teclado (RNF-23)
+**Último commit:** T-07.3 — **o segundo jogo existe**, com arrastar de verdade e
+o mesmo caminho por clique e teclado. Árvore limpa, 429 testes passando.
+**Próximo passo: T-07.4**, o Monte o Orçamento
 
 ---
 
@@ -248,7 +247,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
-| A tela do quiz em navegador real | A T-07.2 entregou rota, tela e JavaScript, com oito testes pelo HTTP conferindo o HTML servido. O que **não** foi visto por olho humano é o jogo rodando: alternativa selecionada, barra andando, foco de teclado ao trocar de pergunta e o painel de resultado. É a DT-22 e a L-10 do laudo da E06 |
+| As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O que **ainda não** foi visto por olho humano é o gesto: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz e o foco de teclado trocando de pergunta. É a DT-22 e a L-10 do laudo da E06 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -267,7 +266,7 @@ teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
 |---|---|
 | T-07.1 Contrato único de jogo (`docs/CONTRATO-DE-JOGO.md`) | **feita** — as três funções de um validador viraram assinatura, e o quiz ganhou 12 testes unitários; paga as lacunas L-5 e L-8 do laudo da E06 |
 | T-07.2 Quiz do Favo | **feita** — rota, tela, `quiz.js` e 8 testes pelo HTTP; o botão "Jogar" passou a ser por célula |
-| T-07.3 Arraste e Classifique (com alternativa por clique e teclado) | pendente |
+| T-07.3 Arraste e Classifique (com alternativa por clique e teclado) | **feita** — validador, seed com três células, `arraste.js` com arrastar de verdade, e a casca da tela virou parte comum; 7 testes unitários e 7 pelo HTTP |
 | T-07.4 Monte o Orçamento | pendente |
 | T-07.5 Cofre do Tempo | pendente |
 | T-07.6 Tela de resultado unificada | pendente |
@@ -906,7 +905,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | **em andamento** | T-07.1 feita: contrato documentado e imposto pelo código. T-07.2 feita: o Quiz do Favo joga de verdade, com tela, rota e teste pelo HTTP. Faltam T-07.3 a T-07.5 (os outros três jogos), a tela de resultado (T-07.6) e os P1 da T-07.7 |
+| E07 Jogos | **em andamento** | T-07.1 feita: contrato documentado e imposto pelo código. T-07.2 e T-07.3 feitas: o Quiz do Favo e o Arraste e Classifique jogam de verdade, e a casca da tela de jogo virou parte comum. Faltam T-07.4 e T-07.5 (os outros dois jogos), a tela de resultado (T-07.6) e os P1 da T-07.7 |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -937,6 +936,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
 | DT-23 | A virada do dia usa o relógio do servidor: `tasksService.garantirTarefasDoDia` chama `new Date()` cru, enquanto a RN-024 manda usar o fuso do perfil (`profiles.timezone`, já gravado no onboarding). Quem estiver em fuso diferente recebe as tarefas do dia na hora errada — e a sequência vai herdar o mesmo defeito, porque a RN-021 depende da mesma virada | dúvida levantada na revisão da E02 | **E08**, junto da sequência: as duas dependem da mesma noção de "dia do jogador" e devem ser resolvidas de uma vez |
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
+| DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.claude/skills/impeccable/scripts/`, que é plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
 | DT-08 | Cobertura de service ainda indireta: `purchasesService`, `tasksService`, `goalsService`, `coinsService`, `pointsService`, `profilesService` e `authService` são exercitados pelo teste de fluxo, mas não têm teste próprio de caso de borda | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
@@ -1100,15 +1100,18 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-07.3 — **Arraste e Classifique**, e a diferença dele para
-o quiz é a RNF-23: jogo de arrastar precisa de alternativa por clique e teclado,
-não é enfeite de acessibilidade. O caminho está montado: basta um validador novo
-no mapa, conteúdo semeado no formato que ele aceita e a tela; o motor de
-recompensas e a partida já funcionam para qualquer jogo.
+**Próxima tarefa:** T-07.4 — **Monte o Orçamento**, o primeiro jogo cuja resposta
+não é uma escolha por item e sim uma distribuição: o jogador reparte uma quantia
+entre categorias, e o que o validador confere é se a divisão respeita a regra do
+conteúdo. O caminho está montado — validador no mapa, conteúdo semeado, parcial
+da tela em `partials/jogos/` e o JavaScript dela —, e a casca já é comum aos
+jogos desde a T-07.3.
 
-Vale reaproveitar o que a T-07.2 montou: a página de célula é genérica, e só o
-`quiz.js` é específico. Se o segundo jogo repetir a casca inteira, o terceiro vai
-repetir de novo — é o momento de olhar o que vira parte comum.
+O que a T-07.3 deixou pronto para os próximos: `public/js/partida.js` abre a
+partida, mostra erro, move a barra e monta o resultado; `pages/celula.ejs` é a
+casca; o mapa de qual jogo usa qual parcial e qual script está no
+`paginaController`. Um jogo novo é um validador, um conteúdo semeado, uma
+parcial e um arquivo de JavaScript — nada além.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
@@ -1460,3 +1463,57 @@ Para a T-07.3 saber:
    ela simplesmente não existe no CSS servido.
 3. **A barra de progresso usa `.barra-N` de cinco em cinco**, porque a CSP não
    permite largura em `style`.
+
+---
+
+### Sessão de 2026-08-19, T-07.3: o segundo jogo, e dois bugs que só o navegador acha
+
+Suíte em **429 testes, zero falhas** (415 antes).
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/validadoresDeJogo.js` | validador de `arraste-e-classifique`: caixas, cartas e gabarito por `id` |
+| `src/public/js/arraste.js` | o jogo: arrastar de verdade, e o mesmo caminho por clique e teclado |
+| `src/public/js/partida.js` | a parte igual em todo jogo: abrir partida, erro, barra e resultado |
+| `src/views/pages/celula.ejs` e `src/views/partials/jogos/` | a casca genérica e a área de cada jogo |
+| `scripts/seeds/05_demo_content.sql` | conteúdo real nas três células de arrastar |
+| `test/integration/arrasteEClassifique.test.js` | 7 testes pelo HTTP |
+
+**O jogo.** O corpo do conteúdo é
+`{ tipo, enunciado, categorias: [{ id, nome }], cartas: [{ texto, categoria }] }`,
+e a resposta é a lista de `id` de caixa, uma por carta, na ordem enviada. É o
+primeiro jogo cuja resposta é texto, e não número: o contrato nunca prometeu
+número, prometeu uma decisão por item na ordem em que o conteúdo foi enviado.
+Carta deixada fora de qualquer caixa conta erro, como a pergunta em branco do
+quiz.
+
+**A acessibilidade não é um segundo jogo.** Arrastar e clicar acabam na mesma
+função: quem arrasta dispara o mesmo `colocar` que o botão "Colocar aqui"
+dispara. Cada jogada é anunciada em região `aria-live`, e o foco volta para a
+carta depois de a tela ser redesenhada — sem isso, quem joga pelo teclado
+perderia o foco a cada jogada.
+
+**Os dois bugs que só apareceram com a aplicação de pé.** Vinham da T-07.2 e
+matavam o jogo em qualquer navegador, apesar de a suíte inteira passar:
+
+1. **A página não mandava o token de CSRF.** O `quiz.js` lia
+   `document.body.dataset.csrfToken`, que nunca existiu na tela de célula, então
+   todo `POST /partidas` responderia 403. Os testes não pegaram porque pegavam o
+   token de outra tela e mandavam no cabeçalho.
+2. **`data-celulaId` não vira `dataset.celulaId`.** Atributo de HTML não guarda
+   maiúscula: o navegador lê `data-celulaid` e o `dataset` só monta o nome em
+   camelo a partir de `data-celula-id`. O id chegava `NaN`.
+
+Os dois estão corrigidos, e o teste que os prova abre a partida usando **só** o
+token que veio da própria página.
+
+Para a T-07.4 saber:
+
+1. **Teste pelo HTTP não é teste de navegador.** A suíte passava com o jogo
+   quebrado. Vale sempre subir a aplicação e percorrer o caminho como o
+   navegador percorre — foi isso, e só isso, que achou os dois bugs acima.
+2. **A casca é comum de verdade agora.** Um jogo novo não escreve cabeçalho,
+   carregando, erro, barra nem resultado: importa o `partida.js` e escreve só a
+   área do meio.
+3. **O `<script>` do layout virou `type="module"`**, porque as telas de jogo
+   importam a parte comum. Módulo já é adiado, então o `defer` saiu.

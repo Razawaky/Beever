@@ -68,8 +68,72 @@ const quiz = {
   },
 };
 
+/**
+ * Arraste e Classifique (RF-JOG-02): cada carta vai para uma das caixas.
+ *
+ * Corpo esperado:
+ * `{ tipo, enunciado, categorias: [{ id, nome }], cartas: [{ texto, categoria }] }`,
+ * em que `categoria` é o `id` da caixa certa. As respostas chegam como lista de
+ * `id`, uma por carta, na mesma ordem em que as cartas foram enviadas à tela.
+ */
+const arraste = {
+  conferirForma(corpo) {
+    const categorias = corpo?.categorias;
+    const cartas = corpo?.cartas;
+
+    if (!Array.isArray(categorias) || categorias.length < 2) {
+      throw erroValidacao('Esta célula ainda não é jogável: precisa de pelo menos duas caixas');
+    }
+    if (!Array.isArray(cartas) || cartas.length === 0) {
+      throw erroValidacao('Esta célula ainda não é jogável: o conteúdo não tem cartas');
+    }
+
+    const idsDasCategorias = new Set();
+    for (const categoria of categorias) {
+      if (typeof categoria.id !== 'string' || categoria.id === '' || !categoria.nome) {
+        throw erroValidacao('Caixa sem identificador ou sem nome');
+      }
+      if (idsDasCategorias.has(categoria.id)) {
+        throw erroValidacao('Duas caixas com o mesmo identificador');
+      }
+      idsDasCategorias.add(categoria.id);
+    }
+
+    for (const carta of cartas) {
+      if (!carta.texto) throw erroValidacao('Carta sem texto');
+      if (!idsDasCategorias.has(carta.categoria)) {
+        throw erroValidacao('Carta com resposta certa fora das caixas');
+      }
+    }
+  },
+
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      enunciado: corpo.enunciado,
+      categorias: corpo.categorias.map((categoria) => ({ id: categoria.id, nome: categoria.nome })),
+      cartas: corpo.cartas.map((carta) => ({ texto: carta.texto })),
+    };
+  },
+
+  /** Carta deixada fora de qualquer caixa conta como erro, igual à pergunta em branco. */
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma por carta');
+    }
+
+    let erros = 0;
+    corpo.cartas.forEach((carta, indice) => {
+      if (respostas[indice] !== carta.categoria) erros += 1;
+    });
+
+    return { erros, total: corpo.cartas.length };
+  },
+};
+
 const VALIDADORES = {
   'quiz-do-favo': quiz,
+  'arraste-e-classifique': arraste,
 };
 
 function escolher(slugDoTipoDeJogo) {

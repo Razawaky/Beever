@@ -8,7 +8,7 @@ import * as itemsService from '../services/itemsService.js';
 import * as profilesService from '../services/profilesService.js';
 import * as schedulesService from '../services/schedulesService.js';
 import * as tasksService from '../services/tasksService.js';
-import { assincrono } from '../utils/erros.js';
+import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
 
 /**
@@ -179,8 +179,9 @@ export const favo = assincrono(async (req, res) => {
   const { favo, celulas } = await contentService.listarCelulasDoFavo(req.session.usuarioId, Number(req.params.id));
 
   // Quem diz se a célula tem jogo é o `contentService`, célula a célula: o quiz
-  // existe desde a T-07.2 e os outros cinco não. As demais seguem com "em
-  // breve", porque prometer o que não existe é pior do que avisar que não dá.
+  // e o Arraste e Classifique existem, os outros quatro não. As demais seguem
+  // com "em breve", porque prometer o que não existe é pior do que avisar que
+  // não dá.
   renderizarPagina(res, 'favo', {
     titulo: `${favo.title} — Beever`,
     classeBody: FUNDO_CERA,
@@ -190,11 +191,23 @@ export const favo = assincrono(async (req, res) => {
 });
 
 /**
- * A tela de jogo (RF-JOG-01).
+ * Qual recorte de tela e qual JavaScript cada jogo usa.
+ *
+ * A casca da página é a mesma para todos; o que muda é a área do meio. O mapa
+ * fica aqui, e não na view, para que o slug vindo do banco nunca vire caminho
+ * de arquivo.
+ */
+const TELAS_DE_JOGO = {
+  'quiz-do-favo': { areaDoJogo: 'quiz', script: '/js/quiz.js' },
+  'arraste-e-classifique': { areaDoJogo: 'arraste', script: '/js/arraste.js' },
+};
+
+/**
+ * A tela de jogo (RF-JOG-01 e RF-JOG-02).
  *
  * A página é uma casca: ela conhece o id da célula e nada mais. Quem abre a
- * partida e recebe as perguntas é o `quiz.js`, por `fetch` — assim `GET` não
- * cria partida, e atualizar a tela não deixa partida abandonada para trás.
+ * partida e recebe o conteúdo é o JavaScript do jogo, por `fetch` — assim `GET`
+ * não cria partida, e atualizar a tela não deixa partida abandonada para trás.
  *
  * A conferência de acesso acontece aqui também, e não só no `POST`: quem digita
  * a URL de uma célula travada precisa ver o erro na hora, não depois de a tela
@@ -202,14 +215,26 @@ export const favo = assincrono(async (req, res) => {
  */
 export const celula = assincrono(async (req, res) => {
   const { celula } = await contentService.abrirCelula(req.session.usuarioId, Number(req.params.idCelula));
+  const tela = TELAS_DE_JOGO[celula.game_type_slug];
+
+  if (!tela) throw erroNaoEncontrado('Este jogo ainda não está disponível');
 
   renderizarPagina(res, 'celula', {
     titulo: `${celula.title} — Beever`,
     classeBody: FUNDO_CERA,
     celula,
     idFavo: Number(req.params.idFavo),
-    scripts: ['/js/quiz.js'],
-    dadosBody: { celulaId: Number(celula.id), favoId: Number(req.params.idFavo) },
+    areaDoJogo: tela.areaDoJogo,
+    scripts: [tela.script],
+    // Os nomes vão em kebab-case porque o navegador lê `data-celula-id` como
+    // `dataset.celulaId`; escrito junto, `data-celulaId` vira `celulaid` e o
+    // JavaScript não acha nada. O token de CSRF viaja aqui pelo mesmo motivo
+    // que no onboarding: a partida é POST, e a página não tem formulário.
+    dadosBody: {
+      'celula-id': Number(celula.id),
+      'favo-id': Number(req.params.idFavo),
+      'csrf-token': res.locals.csrfToken,
+    },
   });
 });
 

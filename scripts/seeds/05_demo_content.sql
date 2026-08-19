@@ -87,6 +87,71 @@ SELECT celula.id, 1, JSON_OBJECT(
  WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 1
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
+-- Arraste e Classifique (RF-JOG-02): três células, uma por favo, cada uma com
+-- um par de caixas diferente. `categoria` guarda o `id` da caixa certa e nunca
+-- viaja para a tela.
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'arraste',
+    'enunciado', 'O dinheiro entrou ou saiu?',
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'entra', 'nome', 'Dinheiro que entra'),
+      JSON_OBJECT('id', 'sai',   'nome', 'Dinheiro que sai')
+    ),
+    'cartas', JSON_ARRAY(
+      JSON_OBJECT('texto', 'Mesada do mês',        'categoria', 'entra'),
+      JSON_OBJECT('texto', 'Presente da vovó',     'categoria', 'entra'),
+      JSON_OBJECT('texto', 'Comprar figurinhas',   'categoria', 'sai'),
+      JSON_OBJECT('texto', 'Pagar o lanche',       'categoria', 'sai')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 2
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'arraste',
+    'enunciado', 'Esse gasto é sempre igual ou muda de valor?',
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'fixo',     'nome', 'Gasto fixo'),
+      JSON_OBJECT('id', 'variavel', 'nome', 'Gasto variável')
+    ),
+    'cartas', JSON_ARRAY(
+      JSON_OBJECT('texto', 'Mensalidade da escola',     'categoria', 'fixo'),
+      JSON_OBJECT('texto', 'Aluguel da casa',           'categoria', 'fixo'),
+      JSON_OBJECT('texto', 'Sorvete no fim de semana',  'categoria', 'variavel'),
+      JSON_OBJECT('texto', 'Conta de luz',              'categoria', 'variavel')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'dinheiro-no-dia-a-dia' AND celula.order_index = 3
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'arraste',
+    'enunciado', 'Para onde vai esse dinheiro?',
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'gastar',  'nome', 'Gastar agora'),
+      JSON_OBJECT('id', 'guardar', 'nome', 'Guardar parado'),
+      JSON_OBJECT('id', 'render',  'nome', 'Fazer render')
+    ),
+    'cartas', JSON_ARRAY(
+      JSON_OBJECT('texto', 'Comprar um doce',            'categoria', 'gastar'),
+      JSON_OBJECT('texto', 'Ingresso do cinema',         'categoria', 'gastar'),
+      JSON_OBJECT('texto', 'Cofrinho embaixo da cama',   'categoria', 'guardar'),
+      JSON_OBJECT('texto', 'Poupança que rende juros',   'categoria', 'render'),
+      JSON_OBJECT('texto', 'Dinheiro investido no banco','categoria', 'render')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'construir-patrimonio' AND celula.order_index = 1
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
 INSERT INTO contents (cell_id, version, body)
 SELECT celula.id, 1, JSON_OBJECT('tipo', 'placeholder', 'texto', 'Conteúdo em produção.')
   FROM cells celula

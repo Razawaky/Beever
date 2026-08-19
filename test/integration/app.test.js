@@ -98,7 +98,9 @@ describe('aplicação', () => {
 
     it('carrega o script só na página que precisa dele', async () => {
       const cadastro = await request(app).get('/cadastro').set('Accept', 'text/html').expect(200);
-      assert.match(cadastro.text, /<script src="\/js\/cadastro\.js" defer><\/script>/);
+      // `type="module"` no lugar de `defer` desde a T-07.3: as telas de jogo
+      // importam a parte comum, e módulo já é adiado por natureza.
+      assert.match(cadastro.text, /<script src="\/js\/cadastro\.js" type="module"><\/script>/);
 
       const login = await request(app).get('/login').set('Accept', 'text/html').expect(200);
       assert.ok(!login.text.includes('<script'), 'página sem interatividade não carrega script nenhum');
