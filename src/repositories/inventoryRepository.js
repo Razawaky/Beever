@@ -10,9 +10,12 @@ import { consultar, consultarEm } from '../config/database.js';
  * com data e valor. Duas unidades do mesmo item podem estar em estados
  * diferentes, e uma coluna de contagem não conseguiria representar isso.
  *
- * O status vem de `inventory_statuses` (ativo, inadimplente, vendido) e é
- * resolvido por slug aqui dentro: quem chama fala a linguagem do domínio, não
- * a dos ids de tabela de apoio.
+ * O status vem de `inventory_statuses` (ativo, inadimplente, vendido,
+ * consumido) e é resolvido por slug aqui dentro: quem chama fala a linguagem do
+ * domínio, não a dos ids de tabela de apoio.
+ *
+ * "Em mãos" é o que não foi vendido nem consumido — é essa a conta que a tela
+ * de inventário e os requisitos da loja querem.
  */
 
 const CAMPOS = `inv.id, inv.item_id, inv.purchase_id, inv.current_value, inv.overdue_cycles,
@@ -30,7 +33,7 @@ export async function listarPorUsuario(idUsuario) {
     `SELECT ${CAMPOS}
        FROM inventory inv
        ${JOINS}
-      WHERE inv.user_id = ? AND s.slug <> 'vendido'
+      WHERE inv.user_id = ? AND s.slug NOT IN ('vendido', 'consumido')
       ORDER BY inv.acquired_at DESC, inv.id DESC`,
     [idUsuario],
   );
@@ -70,7 +73,7 @@ export async function contarDoItem(idUsuario, idItem) {
     `SELECT COUNT(*) AS total
        FROM inventory inv
        JOIN inventory_statuses s ON s.id = inv.status_id
-      WHERE inv.user_id = ? AND inv.item_id = ? AND s.slug <> 'vendido'`,
+      WHERE inv.user_id = ? AND inv.item_id = ? AND s.slug NOT IN ('vendido', 'consumido')`,
     [idUsuario, idItem],
   );
   return Number(linhas[0]?.total ?? 0);
@@ -91,7 +94,7 @@ export async function valorTotalEmPatrimonio(idUsuario) {
        FROM inventory inv
        JOIN items i ON i.id = inv.item_id
        JOIN inventory_statuses s ON s.id = inv.status_id
-      WHERE inv.user_id = ? AND s.slug <> 'vendido' AND i.counts_in_patrimony = 1`,
+      WHERE inv.user_id = ? AND s.slug NOT IN ('vendido', 'consumido') AND i.counts_in_patrimony = 1`,
     [idUsuario],
   );
   return Number(linhas[0]?.total ?? 0);
@@ -120,4 +123,57 @@ export async function marcarComoVendido(conexao, id, valorVenda) {
     [valorVenda, id],
   );
   return resultado.affectedRows;
+}
+
+/** Quantas unidades ativas do item o jogador tem — é a verdade sobre o escudo (RN-022). */
+export async function contarAtivosDoItem(idUsuario, idItem, conexao = null) {
+  const linhas = await consultarEm(
+    conexao,
+    `SELECT COUNT(*) AS total
+       FROM inventory inv
+       JOIN inventory_statuses s ON s.id = inv.status_id
+      WHERE inv.user_id = ? AND inv.item_id = ? AND s.slug = 'ativo'`,
+    [idUsuario, idItem],
+  );
+  return Number(linhas[0]?.total ?? 0);
+}
+
+/**
+ * A unidade ativa mais antiga do item, travada para uso.
+ *
+ * O `FOR UPDATE` existe porque quem chama vem consumir: duas avaliações ao
+ * mesmo tempo pegariam a mesma linha e gastariam um escudo só duas vezes.
+ */
+export async function bloquearUnidadeAtivaDoItem(conexao, idUsuario, idItem) {
+  const linhas = await consultarEm(
+    conexao,
+    `SELECT inv.id
+       FROM inventory inv
+       JOIN inventory_statuses s ON s.id = inv.status_id
+      WHERE inv.user_id = ? AND inv.item_id = ? AND s.slug = 'ativo'
+      ORDER BY inv.acquired_at, inv.id
+      LIMIT 1
+      FOR UPDATE`,
+    [idUsuario, idItem],
+  );
+  return linhas[0] ?? null;
+}
+
+/**
+ * Marca a unidade como consumida — item de uso único que acabou de ser gasto.
+ *
+ * A condição de status vai no `WHERE`, como na venda: consumir a mesma unidade
+ * duas vezes devolve 0 linhas afetadas em vez de gastar dois escudos.
+ */
+export async function marcarComoConsumido(conexao, id) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE inventory
+        SET status_id = (SELECT id FROM inventory_statuses WHERE slug = 'consumido'),
+            is_equipped = 0
+      WHERE id = ?
+        AND status_id = (SELECT id FROM inventory_statuses WHERE slug = 'ativo')`,
+    [id],
+  );
+  return (resultado.affectedRows ?? 0) === 1;
 }

@@ -220,10 +220,13 @@ AS novo
 ON DUPLICATE KEY UPDATE name = novo.name;
 
 -- RN-037: dois ciclos inadimplente e o item é vendido automaticamente.
+-- `consumido` é o fim de linha dos itens de uso único (RN-022): o escudo gasto
+-- sai das mãos do jogador sem virar venda, que renderia mel que ninguém pagou.
 INSERT INTO inventory_statuses (slug, name) VALUES
   ('ativo',        'Ativo'),
   ('inadimplente', 'Inadimplente'),
-  ('vendido',      'Vendido')
+  ('vendido',      'Vendido'),
+  ('consumido',    'Consumido')
 AS novo
 ON DUPLICATE KEY UPDATE name = novo.name;
 

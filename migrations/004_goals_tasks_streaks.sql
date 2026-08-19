@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS streaks (
   CONSTRAINT ck_streaks_shields CHECK (shields_available <= 2)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- cumprido · perdido · protegido_por_escudo · neutro. RN-020: dia não marcado
+-- cumprido · perdido · protegido · neutro. RN-020: dia não marcado
 -- não avança nem quebra a sequência, e precisa aparecer como "neutro" no
 -- calendário — por isso é evento registrado, não ausência de registro.
 CREATE TABLE IF NOT EXISTS streak_event_types (

@@ -6,6 +6,7 @@ import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as idempotencyService from './idempotencyService.js';
 import * as itemsService from './itemsService.js';
+import * as streakService from './streakService.js';
 
 /**
  * Comprar um item é uma coisa só: debitar o mel, lançar no livro, gravar a
@@ -19,7 +20,25 @@ import * as itemsService from './itemsService.js';
 /**
  * Grava a compra: debita, registra e dá entrada no inventário. Tudo ou nada.
  */
-async function registrarCompra(conexao, { idUsuario, idItem, preco }) {
+const ESCUDO = 'escudo-de-sequencia';
+const MAXIMO_DE_ESCUDOS = 2;
+
+/**
+ * O teto de dois escudos guardados é da RN-022, e é conferido antes do débito:
+ * recusar depois de tirar o mel devolveria a criança à loja sem o mel e sem o
+ * item.
+ */
+async function exigirVagaParaEscudo(idUsuario, item) {
+  if (item.slug !== ESCUDO) return;
+  if ((await streakService.escudosDisponiveis(idUsuario)) < MAXIMO_DE_ESCUDOS) return;
+
+  throw new ErroAplicacao('Você já tem dois Escudos de Sequência guardados', {
+    status: 422,
+    codigo: 'LIMITE_DE_ESCUDOS',
+  });
+}
+
+async function registrarCompra(conexao, { idUsuario, idItem, slug, preco }) {
   await coinsService.debitar(conexao, idUsuario, preco, {
     motivo: 'compra',
     referenciaTipo: 'item',
@@ -43,6 +62,10 @@ async function registrarCompra(conexao, { idUsuario, idItem, preco }) {
     valorInicial: preco,
   });
 
+  // O escudo tem espelho em `streaks.shields_available`, e ele é refeito na
+  // mesma transação da compra (RN-022).
+  if (slug === ESCUDO) await streakService.sincronizarEscudos(conexao, idUsuario);
+
   return compra;
 }
 
@@ -63,6 +86,8 @@ export async function comprar(idUsuario, idItem, { chaveDeIdempotencia = null } 
   // mínimo — E05 e E09) não bloqueia a compra: travar a loja por uma checagem
   // que ninguém sabe fazer deixaria itens do catálogo impossíveis de comprar.
   // Ele volta como aviso, para a tela poder mostrar.
+  await exigirVagaParaEscudo(idUsuario, item);
+
   const pendencias = await itemsService.requisitosNaoCumpridos(idItem, idUsuario);
   const bloqueios = pendencias.filter((pendencia) => !pendencia.naoVerificavelAinda);
 
@@ -79,7 +104,9 @@ export async function comprar(idUsuario, idItem, { chaveDeIdempotencia = null } 
   const saldoAntes = await auditService.retratoDoSaldo(idUsuario);
 
   if (!chaveDeIdempotencia) {
-    const idCompra = await emTransacao((conexao) => registrarCompra(conexao, { idUsuario, idItem, preco }));
+    const idCompra = await emTransacao((conexao) =>
+      registrarCompra(conexao, { idUsuario, idItem, slug: item.slug, preco }),
+    );
     return concluir(idUsuario, idItem, item, preco, idCompra, pendencias, saldoAntes);
   }
 
@@ -92,7 +119,7 @@ export async function comprar(idUsuario, idItem, { chaveDeIdempotencia = null } 
     },
     {
       executar: async (conexao) => ({
-        idCompra: await registrarCompra(conexao, { idUsuario, idItem, preco }),
+        idCompra: await registrarCompra(conexao, { idUsuario, idItem, slug: item.slug, preco }),
         repetida: false,
       }),
       // A tabela de chaves guarda hash, não resposta: quem repete recebe a

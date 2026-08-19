@@ -1,4 +1,7 @@
+import { emTransacao } from '../config/database.js';
 import * as gameSessionsRepository from '../repositories/gameSessionsRepository.js';
+import * as inventoryRepository from '../repositories/inventoryRepository.js';
+import * as itemsRepository from '../repositories/itemsRepository.js';
 import * as streaksRepository from '../repositories/streaksRepository.js';
 import { dataDoDia, diaDaSemana, diferencaEmDias, inicioDoDia, somarDias } from '../utils/diaDoJogador.js';
 import * as auditService from './auditService.js';
@@ -13,15 +16,20 @@ import * as schedulesService from './schedulesService.js';
  * são julgados — o de hoje ainda pode ser cumprido, e condenar o dia em
  * andamento seria quebrar a sequência de quem ainda vai jogar à noite.
  *
- * Três desfechos por dia: cumprido (concluiu célula em dia marcado), perdido
- * (dia marcado sem nenhuma célula) e neutro (dia que o jogador não marcou —
- * não avança nem quebra, RN-020). O quarto, protegido por escudo, é da T-08.3.
+ * Quatro desfechos por dia: cumprido (concluiu célula em dia marcado), perdido
+ * (dia marcado sem nenhuma célula), neutro (dia que o jogador não marcou — não
+ * avança nem quebra, RN-020) e protegido, quando um Escudo de Sequência é
+ * gasto para salvar um dia perdido (RN-022).
  *
  * O dia vem sempre do fuso do perfil, nunca do relógio do servidor.
  */
 
 /** Sumiço maior que isto zera a sequência sem varrer o histórico inteiro. */
 const MAXIMO_DE_DIAS_AVALIADOS = 60;
+
+/** O escudo é item de loja, e o teto de dois guardados é da RN-022. */
+const ESCUDO = 'escudo-de-sequencia';
+const MAXIMO_DE_ESCUDOS = 2;
 
 function paraMySQL(data) {
   return data.toISOString().slice(0, 19).replace('T', ' ');
@@ -32,11 +40,64 @@ function ehDiaMarcado(agenda, dataISO) {
   return agenda.length === 0 || agenda.includes(diaDaSemana(dataISO));
 }
 
-/** O desfecho de um dia fechado. O escudo da RN-022 entra aqui na T-08.3. */
+/** O desfecho de um dia fechado, antes de o escudo ter chance de salvá-lo. */
 function desfechoDoDia(agenda, dia, cumpriu) {
   if (!ehDiaMarcado(agenda, dia)) return 'neutro';
   if (cumpriu) return 'cumprido';
   return 'perdido';
+}
+
+async function idDoEscudo() {
+  const item = await itemsRepository.buscarPorSlug(ESCUDO);
+  return item ? Number(item.id) : null;
+}
+
+/** Quantos escudos o jogador tem em mãos. A verdade é o inventário. */
+export async function escudosDisponiveis(idUsuario) {
+  const idItem = await idDoEscudo();
+  if (!idItem) return 0;
+  return inventoryRepository.contarAtivosDoItem(idUsuario, idItem);
+}
+
+/**
+ * Copia para `streaks.shields_available` a contagem real do inventário.
+ *
+ * Chamada pela compra e por todo consumo: coluna que atualiza depois é cache
+ * que mente na tela seguinte, e aqui ela ainda por cima carrega o `CHECK` do
+ * teto da RN-022.
+ */
+export async function sincronizarEscudos(conexao, idUsuario) {
+  const idItem = await idDoEscudo();
+  if (!idItem) return 0;
+
+  const emMaos = await inventoryRepository.contarAtivosDoItem(idUsuario, idItem, conexao);
+  const guardados = Math.min(emMaos, MAXIMO_DE_ESCUDOS);
+
+  await streaksRepository.criarSeNaoExistir(idUsuario, conexao);
+  await streaksRepository.definirEscudos(conexao, idUsuario, guardados);
+  return guardados;
+}
+
+/**
+ * Gasta um escudo, se houver. Devolve `true` quando o dia foi salvo.
+ *
+ * Tudo numa transação porque são três escritas que só fazem sentido juntas:
+ * travar a unidade, marcá-la consumida e refazer o espelho da contagem.
+ */
+async function consumirEscudo(idUsuario) {
+  const idItem = await idDoEscudo();
+  if (!idItem) return false;
+
+  return emTransacao(async (conexao) => {
+    const unidade = await inventoryRepository.bloquearUnidadeAtivaDoItem(conexao, idUsuario, idItem);
+    if (!unidade) return false;
+
+    const consumiu = await inventoryRepository.marcarComoConsumido(conexao, unidade.id);
+    if (!consumiu) return false;
+
+    await sincronizarEscudos(conexao, idUsuario);
+    return true;
+  });
 }
 
 async function agendaDoJogador(idUsuario) {
@@ -98,6 +159,7 @@ export async function avaliar(idUsuario, agora = new Date()) {
   let melhorDias = Number(sequencia.best_days);
   let ultimoDiaContado = sequencia.last_counted_date;
   let quebrou = false;
+  const protegidos = [];
 
   if (dias.length > 0) {
     const [agenda, cumpridos, jaAvaliados] = await Promise.all([
@@ -111,7 +173,15 @@ export async function avaliar(idUsuario, agora = new Date()) {
     for (const dia of dias) {
       if (comDesfecho.has(dia)) continue;
 
-      const tipo = desfechoDoDia(agenda, dia, cumpridos.has(dia));
+      let tipo = desfechoDoDia(agenda, dia, cumpridos.has(dia));
+
+      // O escudo só é gasto quando há sequência para salvar: proteger um dia de
+      // quem já está zerado queimaria 400 de mel para não mudar nada.
+      if (tipo === 'perdido' && diasAtuais > 0 && (await consumirEscudo(idUsuario))) {
+        tipo = 'protegido';
+        protegidos.push(dia);
+      }
+
       await streaksRepository.registrarEvento({ idUsuario, data: dia, tipo });
 
       if (tipo === 'cumprido') {
@@ -143,7 +213,16 @@ export async function avaliar(idUsuario, agora = new Date()) {
     });
   }
 
-  return { diasAtuais, melhorDias, ultimoDiaContado, hoje, fuso };
+  for (const dia of protegidos) {
+    await auditService.registrar(auditService.sistema(), 'sequencia.escudo-consumido', {
+      entidade: 'streak',
+      id: Number(sequencia.id),
+      antes: { diaSalvo: dia, diasAtuais },
+      depois: { escudosGuardados: await escudosDisponiveis(idUsuario) },
+    });
+  }
+
+  return { diasAtuais, melhorDias, ultimoDiaContado, protegidos, hoje, fuso };
 }
 
 /**

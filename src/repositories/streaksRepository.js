@@ -66,3 +66,18 @@ export async function listarEventos(idUsuario, dataInicial, dataFinal, conexao =
     [idUsuario, dataInicial, dataFinal],
   );
 }
+
+/**
+ * Espelha quantos escudos o jogador tem guardados.
+ *
+ * A verdade é o inventário — uma linha por unidade, como todo item comprado. Esta
+ * coluna é cópia, e existe porque o `CHECK (shields_available <= 2)` do banco é a
+ * última trava do teto da RN-022.
+ */
+export async function definirEscudos(conexao, idUsuario, quantidade) {
+  const resultado = await consultarEm(conexao, 'UPDATE streaks SET shields_available = ? WHERE user_id = ?', [
+    quantidade,
+    idUsuario,
+  ]);
+  return resultado.affectedRows ?? 0;
+}

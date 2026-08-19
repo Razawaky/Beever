@@ -4,11 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-08.2 — o `StreakService` e o **dia do jogador**: a
-sequência é avaliada de forma preguiçosa na primeira página do dia, no fuso do
-perfil, e a virada do dia parou de usar o relógio do servidor (dívida DT-23
-paga). Árvore limpa, 512 testes passando.
-**Próximo passo: T-08.3**, o consumo automático do Escudo de Sequência
+**Último commit:** T-08.3 — o **Escudo de Sequência** é gasto sozinho para
+salvar um dia marcado perdido, um dia por unidade, com teto de dois guardados
+recusado na loja antes do débito. Árvore limpa, 518 testes passando.
+**Próximo passo: T-08.4**, os marcos de sequência com bônus
 
 ---
 
@@ -268,7 +267,7 @@ semanas de uso e a sequência bater com a regra em todos os cenários.
 |---|---|
 | T-08.1 `GoalService`: progresso por evento, conclusão única, expiração e renovação | **feita** — três das quatro metades já existiam desde a E06; esta tarefa entregou a renovação (RN-017, RF-MET-05, dívida DT-33) e fechou um vazamento: meta fora de `ativa` não paga mais |
 | T-08.2 `StreakService`: avaliação preguiçosa na primeira requisição do dia, com fuso e dias marcados | **feita** — três desfechos por dia (cumprido, perdido, neutro), avaliação idempotente por evento de dia, e a DT-23 paga junto: o dia do jogador sai de `profiles.timezone` |
-| T-08.3 Consumo automático do Escudo de Sequência | pendente — o gancho já está marcado em `desfechoDoDia`, antes de o dia virar `perdido` |
+| T-08.3 Consumo automático do Escudo de Sequência | **feita** — o dia perdido vira `protegido` quando há escudo, a unidade sai do inventário como `consumido` e o teto de dois da RN-022 é recusado antes de tirar mel |
 | T-08.4 Marcos de sequência com bônus | pendente |
 | T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | pendente |
 | T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | pendente |
@@ -926,7 +925,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
-| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. Faltam o escudo (T-08.3), os marcos (T-08.4), as tarefas (T-08.5), as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
+| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. Faltam os marcos (T-08.4), as tarefas (T-08.5), as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
@@ -956,6 +955,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
 | ~~DT-23~~ | ~~A virada do dia usa o relógio do servidor, enquanto a RN-024 manda usar o fuso do perfil~~ | dúvida levantada na revisão da E02 | **Resolvida na T-08.2**: `src/utils/diaDoJogador.js` resolve o dia a partir de `profiles.timezone`, e tanto a geração de tarefas quanto a sequência passaram a usá-lo. O horário de verão foi coberto: `inicioDoDia` confere o deslocamento duas vezes |
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
+| DT-40 | A contagem de escudos vive em dois lugares: as unidades ativas em `inventory` (a verdade) e o espelho `streaks.shields_available` (que carrega o `CHECK` do teto). Os dois são escritos na mesma transação, então divergir exige falha fora do banco — mas `scripts/reconcile.js` ainda não confere esse par, como já confere o `hive_progress` | T-08.3 | Acrescentar a conferência ao `reconcile.js` na E09, junto do resto da economia |
 | DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.github/skills/impeccable/scripts/` e `.claude/skills/impeccable/scripts/`, que são plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
 | DT-37 | `test/integration/seguranca.test.js` falhou uma vez em três execuções da suíte completa, no caso "o dono continua alterando a própria conta", e passa sempre quando o arquivo roda sozinho (três de três). Não reproduzi o erro, então não sei se é o limitador de tentativas de login, contenção de banco sob execução paralela ou tempo. Teste que falha de vez em quando é pior do que teste que falha sempre: ensina a ignorar vermelho | T-07.6 | Rodar a suíte com `--test-concurrency=1` para isolar, e só então corrigir a causa |
 | DT-38 | Partida aberta em uma célula nunca é fechada quando o jogador vai jogar outra: a retomada é por célula, então dá para acumular partidas penduradas. Não paga nada indevido, porque cada partida exige o próprio token | L-5 do laudo da E07 | E08, junto do índice da DT-39 |
@@ -1124,11 +1124,11 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa: T-08.3 — o consumo automático do Escudo de Sequência**
-(RN-022, RF-SEQ-03): antes de um dia marcado virar `perdido`, gastar um escudo
-do inventário, no máximo dois acumulados. O lugar exato já está marcado em
-`streakService.desfechoDoDia`, e a coluna `streaks.shields_available` existe com
-`CHECK` desde a E01.
+**Próxima tarefa: T-08.4 — os marcos de sequência com bônus** (RN-023,
+RF-SEQ-04): 7, 14, 30, 60 e 100 dias rendem mel bônus e conquista. A tabela
+`achievements` existe desde a migration `007`, que a nomeia como o par natural
+de `streaks`; o valor do bônus precisa sair de configuração em banco, nunca de
+número no código (RN-006).
 
 Duas dívidas da E07 continuam esperando a E08: o índice `(user_id, cell_id)` em
 `game_sessions` (DT-39) e as partidas abertas que ninguém fecha (DT-38).
@@ -1851,3 +1851,57 @@ Para a T-08.3 saber:
 3. **Quem for testar tempo usa `agora` injetado**, não relógio de sistema:
    `avaliar` e `registrarDiaCumprido` recebem a data como parâmetro, e é assim
    que os sete testes de integração viajam no tempo.
+
+---
+
+### Sessão de 2026-08-19, T-08.3: o escudo se gasta sozinho
+
+Suíte em **518 testes, zero falhas** (512 antes).
+
+O escudo já existia como item de loja desde a E01 — `escudo-de-sequencia`, 400
+de mel, `is_consumable = 1` — e o desfecho `protegido` já estava no seed. O que
+faltava era quem gastasse: nenhum consumível do catálogo tinha consumo até
+aqui, e `inventory_statuses` só conhecia ativo, inadimplente e vendido.
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/streakService.js` | `escudosDisponiveis`, `sincronizarEscudos` e `consumirEscudo` |
+| `src/repositories/inventoryRepository.js` | `contarAtivosDoItem`, `bloquearUnidadeAtivaDoItem`, `marcarComoConsumido` |
+| `src/repositories/streaksRepository.js` | `definirEscudos`, o espelho da contagem |
+| `src/services/purchasesService.js` | o teto de dois, recusado antes do débito |
+| `scripts/seeds/02_age_bands_domains.sql` | o estado `consumido` |
+| `test/integration/escudoDeSequencia.test.js` | 6 testes |
+
+**Consumir não é vender.** O estado novo `consumido` entrou porque marcar o
+escudo gasto como `vendido` inventaria uma venda e um valor de venda que
+ninguém pagou — e o relatório de patrimônio da E09 leria isso como dinheiro que
+voltou. O estado serve aos outros três consumíveis do catálogo, que ainda vão
+precisar dele: dica extra, passe de revisão e mel dobrado.
+
+**"Em mãos" mudou de sentido.** `listarPorUsuario`, `contarDoItem` e o cálculo
+de patrimônio filtravam só o vendido; agora excluem os dois estados finais. Sem
+isso, o escudo gasto continuaria na tela do inventário e ainda valeria como
+pré-requisito de item na loja.
+
+**O escudo não é queimado à toa.** Só é gasto quando há sequência para salvar
+(`diasAtuais > 0`), e o dia protegido não avança a sequência — ele apenas
+impede a quebra, e `last_counted_date` fica onde estava.
+
+**O consumo trava a unidade.** `bloquearUnidadeAtivaDoItem` usa `FOR UPDATE` e o
+`marcarComoConsumido` confere o status no próprio `WHERE`: duas avaliações
+simultâneas não gastam o mesmo escudo duas vezes.
+
+Uma divergência pequena corrigida no caminho: o comentário da migration `004`
+dizia que o desfecho protegido tinha slug `protegido_por_escudo`, mas o seed
+grava `protegido`. O seed é a verdade; o comentário foi corrigido.
+
+Para a T-08.4 saber:
+
+1. **`avaliar` devolve `protegidos`**, a lista de dias salvos por escudo, além
+   de `diasAtuais` e `melhorDias` — é por `diasAtuais` que o marco vai ser
+   reconhecido.
+2. **O bônus do marco precisa sair de banco** (RN-006). O padrão da casa é
+   `reward_configs` ou `reward_modifiers`, como o corte da repetição e o fator
+   da meta renovada.
+3. **A tabela `achievements` existe desde a migration `007`**, que já a descreve
+   como o par natural de `streaks`.
