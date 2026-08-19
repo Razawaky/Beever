@@ -131,9 +131,112 @@ const arraste = {
   },
 };
 
+/**
+ * Monte o Orçamento (RF-JOG-03): repartir uma quantia entre categorias.
+ *
+ * Corpo esperado:
+ * `{ tipo, enunciado, total, passo, categorias: [{ id, nome, minimo, maximo, dica }] }`.
+ * As respostas chegam como lista de números, um por categoria, na ordem enviada.
+ *
+ * Este é o único jogo sem gabarito escondido: a regra de cada categoria é o
+ * próprio enunciado, e o jogador precisa vê-la para decidir. O que o servidor
+ * guarda não é a resposta certa — é o critério.
+ */
+const orcamento = {
+  conferirForma(corpo) {
+    const categorias = corpo?.categorias;
+
+    if (!Number.isInteger(corpo?.total) || corpo.total <= 0) {
+      throw erroValidacao('Esta célula ainda não é jogável: o orçamento não tem total');
+    }
+    if (!Number.isInteger(corpo?.passo) || corpo.passo <= 0 || corpo.total % corpo.passo !== 0) {
+      throw erroValidacao('O passo precisa ser inteiro e caber no total um número exato de vezes');
+    }
+    if (!Array.isArray(categorias) || categorias.length < 2) {
+      throw erroValidacao('Esta célula ainda não é jogável: precisa de pelo menos duas categorias');
+    }
+
+    const idsDasCategorias = new Set();
+    let somaDosMinimos = 0;
+    let somaDosMaximos = 0;
+
+    for (const categoria of categorias) {
+      if (typeof categoria.id !== 'string' || categoria.id === '' || !categoria.nome) {
+        throw erroValidacao('Categoria sem identificador ou sem nome');
+      }
+      if (idsDasCategorias.has(categoria.id)) {
+        throw erroValidacao('Duas categorias com o mesmo identificador');
+      }
+      idsDasCategorias.add(categoria.id);
+
+      const faixaTorta =
+        !Number.isInteger(categoria.minimo) ||
+        !Number.isInteger(categoria.maximo) ||
+        categoria.minimo < 0 ||
+        categoria.maximo < categoria.minimo ||
+        categoria.maximo > corpo.total;
+      if (faixaTorta) throw erroValidacao(`A faixa da categoria "${categoria.nome}" não faz sentido`);
+
+      somaDosMinimos += categoria.minimo;
+      somaDosMaximos += categoria.maximo;
+    }
+
+    // Sem isto, existiria conteúdo em que nenhuma divisão zera os erros: os
+    // mínimos estourariam o total, ou os máximos não o alcançariam.
+    if (somaDosMinimos > corpo.total || somaDosMaximos < corpo.total) {
+      throw erroValidacao('As regras deste orçamento não fecham: nenhuma divisão as respeita');
+    }
+  },
+
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      enunciado: corpo.enunciado,
+      total: corpo.total,
+      passo: corpo.passo,
+      categorias: corpo.categorias.map((categoria) => ({
+        id: categoria.id,
+        nome: categoria.nome,
+        minimo: categoria.minimo,
+        maximo: categoria.maximo,
+        dica: categoria.dica ?? null,
+      })),
+    };
+  },
+
+  /**
+   * Uma decisão por categoria, mais uma pelo total: quem erra uma categoria
+   * ainda sai com três estrelas, e quem erra tudo sai com uma (RN-030).
+   */
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma por categoria');
+    }
+
+    let erros = 0;
+    let distribuido = 0;
+
+    corpo.categorias.forEach((categoria, indice) => {
+      const valor = Number(respostas[indice]);
+      if (!Number.isInteger(valor) || valor < categoria.minimo || valor > categoria.maximo) {
+        erros += 1;
+        // Valor sem sentido não entra na soma: só o que dá para gastar conta.
+        if (Number.isInteger(valor) && valor > 0) distribuido += valor;
+        return;
+      }
+      distribuido += valor;
+    });
+
+    if (distribuido !== corpo.total) erros += 1;
+
+    return { erros, total: corpo.categorias.length + 1 };
+  },
+};
+
 const VALIDADORES = {
   'quiz-do-favo': quiz,
   'arraste-e-classifique': arraste,
+  'monte-o-orcamento': orcamento,
 };
 
 function escolher(slugDoTipoDeJogo) {

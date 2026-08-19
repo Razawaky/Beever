@@ -26,6 +26,12 @@ O corpo do segundo jogo é `{ tipo, enunciado, categorias: [{ id, nome }], carta
 
 Vale notar que a resposta deste jogo não é número, e sim texto: o contrato nunca prometeu número, prometeu uma decisão por item na ordem em que o conteúdo foi enviado.
 
+## O exemplo do Monte o Orçamento
+
+O corpo do terceiro jogo é `{ tipo, enunciado, total, passo, categorias: [{ id, nome, minimo, maximo, dica }] }`, e a resposta é a lista de números, um por categoria, na ordem enviada. O `conferirForma` exige que o passo caiba no total um número exato de vezes e recusa orçamento cujas regras não fecham — soma dos mínimos acima do total, ou soma dos máximos abaixo dele —, porque nesse conteúdo nenhuma divisão zeraria os erros. O `validar` conta um erro por categoria fora da faixa e mais um quando a soma não bate com o total, então `total` é o número de categorias mais um.
+
+Este é o único jogo sem gabarito escondido, e o `paraJogar` devolve as regras inteiras: aqui a regra é o enunciado, não a resposta. Esconder o mínimo de cada categoria não tornaria o jogo mais honesto, tornaria-o impossível.
+
 ## Estado salvo, que ainda não existe
 
 A RF-JOG-07 prevê retomar uma partida interrompida, e é P1, planejada para a T-07.7. O lugar dela no contrato é uma quarta função opcional, `estadoParaSalvar(respostasParciais)`, e uma coluna de estado na partida. Nenhum jogo da E07 deve inventar seu próprio jeito de salvar antes disso: quem precisar guardar progresso parcial agora, guarda no navegador e assume que fechar a aba custa a partida.

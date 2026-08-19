@@ -200,6 +200,7 @@ export const favo = assincrono(async (req, res) => {
 const TELAS_DE_JOGO = {
   'quiz-do-favo': { areaDoJogo: 'quiz', script: '/js/quiz.js' },
   'arraste-e-classifique': { areaDoJogo: 'arraste', script: '/js/arraste.js' },
+  'monte-o-orcamento': { areaDoJogo: 'orcamento', script: '/js/orcamento.js' },
 };
 
 /**

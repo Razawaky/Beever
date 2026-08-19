@@ -4,9 +4,9 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-07.3 — **o segundo jogo existe**, com arrastar de verdade e
-o mesmo caminho por clique e teclado. Árvore limpa, 429 testes passando.
-**Próximo passo: T-07.4**, o Monte o Orçamento
+**Último commit:** T-07.4 — **o terceiro jogo existe**: repartir a mesada entre
+categorias, com a regra conferida no servidor. Árvore limpa, 442 testes passando.
+**Próximo passo: T-07.5**, o Cofre do Tempo
 
 ---
 
@@ -247,7 +247,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
-| As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O que **ainda não** foi visto por olho humano é o gesto: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz e o foco de teclado trocando de pergunta. É a DT-22 e a L-10 do laudo da E06 |
+| As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O mesmo caminho foi refeito na T-07.4, com a divisão do orçamento aceita e paga. O que **ainda não** foi visto por olho humano é o gesto e o desenho: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz, o foco de teclado trocando de pergunta e as três telas de jogo a 320 px, onde o orçamento é o mais apertado — cinco categorias, dois botões e um número por linha. É a DT-22 e a L-10 do laudo da E06 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -267,7 +267,7 @@ teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
 | T-07.1 Contrato único de jogo (`docs/CONTRATO-DE-JOGO.md`) | **feita** — as três funções de um validador viraram assinatura, e o quiz ganhou 12 testes unitários; paga as lacunas L-5 e L-8 do laudo da E06 |
 | T-07.2 Quiz do Favo | **feita** — rota, tela, `quiz.js` e 8 testes pelo HTTP; o botão "Jogar" passou a ser por célula |
 | T-07.3 Arraste e Classifique (com alternativa por clique e teclado) | **feita** — validador, seed com três células, `arraste.js` com arrastar de verdade, e a casca da tela virou parte comum; 7 testes unitários e 7 pelo HTTP |
-| T-07.4 Monte o Orçamento | pendente |
+| T-07.4 Monte o Orçamento | **feita** — validador com regra por categoria, cinco células nas três faixas, `orcamento.js` com botões − e +; 7 testes unitários e 6 pelo HTTP |
 | T-07.5 Cofre do Tempo | pendente |
 | T-07.6 Tela de resultado unificada | pendente |
 | T-07.7 (P1) Mercado Esperto, Ordene a Prioridade e retomada de sessão | pendente |
@@ -905,7 +905,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | **em andamento** | T-07.1 feita: contrato documentado e imposto pelo código. T-07.2 e T-07.3 feitas: o Quiz do Favo e o Arraste e Classifique jogam de verdade, e a casca da tela de jogo virou parte comum. Faltam T-07.4 e T-07.5 (os outros dois jogos), a tela de resultado (T-07.6) e os P1 da T-07.7 |
+| E07 Jogos | **em andamento** | T-07.1 feita: contrato documentado e imposto pelo código. T-07.2, T-07.3 e T-07.4 feitas: quiz, arrastar e orçamento jogam de verdade, sobre uma casca de tela comum. Faltam o Cofre do Tempo (T-07.5), a tela de resultado (T-07.6) e os P1 da T-07.7 |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -1100,18 +1100,17 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-07.4 — **Monte o Orçamento**, o primeiro jogo cuja resposta
-não é uma escolha por item e sim uma distribuição: o jogador reparte uma quantia
-entre categorias, e o que o validador confere é se a divisão respeita a regra do
-conteúdo. O caminho está montado — validador no mapa, conteúdo semeado, parcial
-da tela em `partials/jogos/` e o JavaScript dela —, e a casca já é comum aos
-jogos desde a T-07.3.
+**Próxima tarefa:** T-07.5 — **Cofre do Tempo**, juros compostos com gráfico
+simples. É o último jogo obrigatório da etapa, e o primeiro cuja tela precisa
+mostrar uma evolução, não só uma escolha: o jogador decide quanto guardar e vê o
+rendimento crescer por ciclo. O gráfico não pode custar dependência nova nem
+estilo inline, por causa da CSP.
 
-O que a T-07.3 deixou pronto para os próximos: `public/js/partida.js` abre a
-partida, mostra erro, move a barra e monta o resultado; `pages/celula.ejs` é a
-casca; o mapa de qual jogo usa qual parcial e qual script está no
-`paginaController`. Um jogo novo é um validador, um conteúdo semeado, uma
-parcial e um arquivo de JavaScript — nada além.
+O caminho é sempre o mesmo desde a T-07.3: `public/js/partida.js` abre a partida,
+mostra erro, move a barra e monta o resultado; `pages/celula.ejs` é a casca; o
+mapa de qual jogo usa qual parcial e qual script está no `paginaController`. Um
+jogo novo é um validador, um conteúdo semeado, uma parcial e um arquivo de
+JavaScript — nada além.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
@@ -1517,3 +1516,58 @@ Para a T-07.4 saber:
    área do meio.
 3. **O `<script>` do layout virou `type="module"`**, porque as telas de jogo
    importam a parte comum. Módulo já é adiado, então o `defer` saiu.
+
+---
+
+### Sessão de 2026-08-19, T-07.4: o terceiro jogo, e a trilha com buracos
+
+Suíte em **442 testes, zero falhas** (429 antes).
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/validadoresDeJogo.js` | validador de `monte-o-orcamento`: faixa por categoria e total exato |
+| `src/public/js/orcamento.js` | os botões − e +, o restante à vista e o envio da divisão |
+| `src/views/partials/jogos/orcamento.ejs` | a área do jogo dentro da casca comum |
+| `scripts/seeds/05_demo_content.sql` | cinco células de orçamento, uma por favo, das três faixas |
+| `test/integration/monteOOrcamento.test.js` | 6 testes pelo HTTP |
+
+**O jogo.** O corpo é
+`{ tipo, enunciado, total, passo, categorias: [{ id, nome, minimo, maximo, dica }] }`,
+e a resposta é a lista de números, um por categoria. Erro é categoria fora da
+faixa, mais um erro quando a soma não fecha com o total, então o `total` do
+contrato é o número de categorias mais um — errar uma categoria ainda vale três
+estrelas, e errar tudo vale uma (RN-030).
+
+**Duas decisões que valem lembrar.** A primeira: este é o único jogo **sem
+gabarito escondido**. A regra de cada categoria vai inteira para a tela, porque
+ela é o enunciado — esconder o mínimo não deixaria o jogo mais honesto, deixaria
+o jogo impossível. A segunda: o `conferirForma` recusa orçamento cujas regras não
+fecham, isto é, soma dos mínimos acima do total ou soma dos máximos abaixo dele.
+Sem isso existiria conteúdo em que nenhuma divisão zera os erros, e a criança
+perderia estrela por um defeito do conteúdo.
+
+**O botão + para no que sobra, e não no máximo da categoria.** Não dá para
+distribuir mel que não existe, mas dá para passar do máximo de uma categoria:
+esse é um erro que o jogador pode cometer de propósito, e travá-lo esconderia o
+jogo em vez de ensiná-lo.
+
+**A trilha tem buracos, e eles são da etapa.** Com três dos seis tipos de jogo
+implementados, várias células ficam inalcançáveis jogando: quem é da faixa B
+esbarra na segunda célula do primeiro favo, que é `mercado-esperto` (P1, T-07.7),
+e a faixa C esbarra no `cofre-do-tempo` da terceira célula. Não é defeito de
+regra — a RN-026 está fazendo o que deve —, é a etapa pela metade. Fecha com a
+T-07.5 e a T-07.7. Enquanto isso, o teste do orçamento libera as células
+anteriores pelo `progressService`, como o teste da trilha já fazia.
+
+Para a T-07.5 saber:
+
+1. **Rodar a aplicação virou parte da tarefa.** Depois dos dois bugs da T-07.3,
+   toda tarefa de jogo termina com o servidor de pé e a partida percorrida como
+   o navegador percorre — página, `dataset`, token, abertura, resultado.
+2. **A lista do orçamento é montada uma vez e só atualizada.** Redesenhar a cada
+   toque destruiria o botão recém-clicado e o teclado perderia o foco no meio da
+   conta. O Cofre do Tempo, que muda números o tempo todo, tem o mesmo problema.
+3. **Gráfico sem dependência e sem `style`.** A CSP não permite largura em
+   atributo, e é por isso que a barra de progresso usa `.barra-N`. O gráfico do
+   cofre precisa nascer com essa restrição em mente — SVG servido pela própria
+   página resolve.

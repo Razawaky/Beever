@@ -107,9 +107,9 @@ describe('Quiz do Favo', opcoes, () => {
     const pagina = await agente.get(`/trilha/${favo.id}`).set('Accept', 'text/html').expect(200);
 
     assert.match(pagina.text, new RegExp(`href="/trilha/${favo.id}/celula/${celulas[0].id}"`), 'o quiz é jogável');
-    // A segunda célula está travada pela RN-026; a quarta é de um jogo que a
-    // E07 ainda não escreveu. Nenhuma das duas pode oferecer link.
-    assert.doesNotMatch(pagina.text, new RegExp(`celula/${celulas[3].id}"`), 'jogo sem validador não vira link');
+    // Nenhuma outra célula do favo abriu ainda: a RN-026 trava tudo até a
+    // primeira ser concluída, e célula travada não oferece link.
+    assert.doesNotMatch(pagina.text, new RegExp(`celula/${celulas[3].id}"`), 'célula travada não vira link');
   });
 
   it('a página do jogo não entrega o gabarito nem cria partida', async () => {

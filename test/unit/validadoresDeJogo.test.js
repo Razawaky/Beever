@@ -38,6 +38,18 @@ const ARRASTE = {
   ],
 };
 
+const ORCAMENTO = {
+  tipo: 'orcamento',
+  enunciado: 'Divida 50 de mel.',
+  total: 50,
+  passo: 5,
+  categorias: [
+    { id: 'guardar', nome: 'Guardar', minimo: 20, maximo: 50 },
+    { id: 'lanche', nome: 'Lanche', minimo: 10, maximo: 20 },
+    { id: 'brinquedo', nome: 'Brinquedo', minimo: 0, maximo: 15 },
+  ],
+};
+
 describe('validadoresDeJogo', () => {
   describe('validarRespostas', () => {
     it('não acha erro quando tudo está certo', () => {
@@ -171,7 +183,54 @@ describe('validadoresDeJogo', () => {
     });
   });
 
+  describe('Monte o Orçamento', () => {
+    it('não acha erro quando cada categoria está na faixa e o total fecha', () => {
+      assert.deepEqual(validarRespostas('monte-o-orcamento', ORCAMENTO, [25, 15, 10]), { erros: 0, total: 4 });
+    });
+
+    it('conta um erro por categoria fora da faixa', () => {
+      // 55 passa do máximo de "guardar", -5 nem é valor, e a soma não fecha.
+      assert.equal(validarRespostas('monte-o-orcamento', ORCAMENTO, [55, 15, -5]).erros, 3, 'duas faixas e o total');
+      assert.equal(validarRespostas('monte-o-orcamento', ORCAMENTO, [40, 5, 5]).erros, 1, 'só o lanche está baixo');
+    });
+
+    it('sobrar ou faltar mel conta como o erro do total', () => {
+      assert.equal(validarRespostas('monte-o-orcamento', ORCAMENTO, [20, 10, 0]).erros, 1, 'sobraram 20');
+      assert.equal(validarRespostas('monte-o-orcamento', ORCAMENTO, [30, 20, 15]).erros, 1, 'passou do total');
+    });
+
+    it('categoria em branco conta erro de faixa e derruba o total', () => {
+      assert.equal(validarRespostas('monte-o-orcamento', ORCAMENTO, [25, 15]).erros, 2);
+    });
+
+    it('recusa orçamento cujas regras não fecham', () => {
+      const minimosAltos = {
+        ...ORCAMENTO,
+        categorias: ORCAMENTO.categorias.map((categoria) => ({ ...categoria, minimo: 30, maximo: 40 })),
+      };
+      const maximosBaixos = {
+        ...ORCAMENTO,
+        categorias: ORCAMENTO.categorias.map((categoria) => ({ ...categoria, minimo: 0, maximo: 5 })),
+      };
+
+      assert.throws(() => conferirForma('monte-o-orcamento', minimosAltos), { codigo: 'VALIDACAO' });
+      assert.throws(() => conferirForma('monte-o-orcamento', maximosBaixos), { codigo: 'VALIDACAO' });
+    });
+
+    it('recusa passo que não cabe no total um número exato de vezes', () => {
+      assert.throws(() => conferirForma('monte-o-orcamento', { ...ORCAMENTO, passo: 7 }), { codigo: 'VALIDACAO' });
+    });
+
+    it('entrega as regras para a tela, porque elas são o enunciado', () => {
+      const paraTela = conteudoParaJogar('monte-o-orcamento', ORCAMENTO);
+
+      assert.equal(paraTela.total, 50);
+      assert.equal(paraTela.categorias[0].minimo, 20);
+      assert.equal(paraTela.categorias[0].maximo, 50);
+    });
+  });
+
   it('diz quais tipos de jogo já são jogáveis', () => {
-    assert.deepEqual(tiposJogaveis(), ['quiz-do-favo', 'arraste-e-classifique']);
+    assert.deepEqual(tiposJogaveis(), ['quiz-do-favo', 'arraste-e-classifique', 'monte-o-orcamento']);
   });
 });

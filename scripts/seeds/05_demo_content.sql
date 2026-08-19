@@ -152,6 +152,99 @@ SELECT celula.id, 1, JSON_OBJECT(
  WHERE favo.slug = 'construir-patrimonio' AND celula.order_index = 1
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
+-- Monte o Orçamento (RF-JOG-03): cinco células, uma por favo, com o total e o
+-- passo crescendo junto da faixa etária. A soma dos mínimos nunca passa do
+-- total, e a dos máximos nunca fica abaixo dele — senão não existiria divisão
+-- sem erro.
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'orcamento',
+    'enunciado', 'Você tem 50 de mel para a semana. Divida sem quebrar nenhuma regra.',
+    'total', 50,
+    'passo', 5,
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'guardar',   'nome', 'Guardar',   'minimo', 20, 'maximo', 50, 'dica', 'Guarde pelo menos 20'),
+      JSON_OBJECT('id', 'lanche',    'nome', 'Lanche',    'minimo', 10, 'maximo', 20, 'dica', 'Entre 10 e 20'),
+      JSON_OBJECT('id', 'brinquedo', 'nome', 'Brinquedo', 'minimo',  0, 'maximo', 15, 'dica', 'No máximo 15')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 4
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'orcamento',
+    'enunciado', 'São 40 de mel para a semana inteira. Onde cada parte vai?',
+    'total', 40,
+    'passo', 5,
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'guardar',  'nome', 'Guardar',  'minimo', 15, 'maximo', 40, 'dica', 'Guarde pelo menos 15'),
+      JSON_OBJECT('id', 'passeio',  'nome', 'Passeio',  'minimo',  5, 'maximo', 15, 'dica', 'Entre 5 e 15'),
+      JSON_OBJECT('id', 'presente', 'nome', 'Presente', 'minimo',  0, 'maximo', 20, 'dica', 'No máximo 20')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'guardar-e-gastar' AND celula.order_index = 4
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'orcamento',
+    'enunciado', 'A casa recebeu 200 de mel no mês. Feche a conta sem furar nenhuma regra.',
+    'total', 200,
+    'passo', 10,
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'contas',  'nome', 'Contas da casa', 'minimo', 80, 'maximo', 120, 'dica', 'Entre 80 e 120'),
+      JSON_OBJECT('id', 'comida',  'nome', 'Comida',         'minimo', 40, 'maximo',  80, 'dica', 'Entre 40 e 80'),
+      JSON_OBJECT('id', 'lazer',   'nome', 'Lazer',          'minimo',  0, 'maximo',  40, 'dica', 'No máximo 40'),
+      JSON_OBJECT('id', 'guardar', 'nome', 'Guardar',        'minimo', 20, 'maximo', 100, 'dica', 'Guarde pelo menos 20')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'dinheiro-no-dia-a-dia' AND celula.order_index = 4
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'orcamento',
+    'enunciado', 'Entraram 150 de mel no mês. Quanto vai sobrar depende de você.',
+    'total', 150,
+    'passo', 10,
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'fixos',     'nome', 'Gastos fixos',    'minimo', 60, 'maximo', 90, 'dica', 'Entre 60 e 90'),
+      JSON_OBJECT('id', 'variaveis', 'nome', 'Gastos variáveis','minimo', 20, 'maximo', 50, 'dica', 'Entre 20 e 50'),
+      JSON_OBJECT('id', 'guardar',   'nome', 'Guardar',         'minimo', 30, 'maximo', 80, 'dica', 'Guarde pelo menos 30'),
+      JSON_OBJECT('id', 'imprevisto','nome', 'Imprevisto',      'minimo', 10, 'maximo', 30, 'dica', 'Entre 10 e 30')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'planejar-o-mes' AND celula.order_index = 1
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'orcamento',
+    'enunciado', 'São 500 de mel para o ano. Decida o que fica de pé no fim dele.',
+    'total', 500,
+    'passo', 10,
+    'categorias', JSON_ARRAY(
+      JSON_OBJECT('id', 'moradia',      'nome', 'Moradia',              'minimo', 150, 'maximo', 250, 'dica', 'Entre 150 e 250'),
+      JSON_OBJECT('id', 'estudo',       'nome', 'Estudo',               'minimo',  50, 'maximo', 150, 'dica', 'Entre 50 e 150'),
+      JSON_OBJECT('id', 'lazer',        'nome', 'Lazer',                'minimo',   0, 'maximo',  80, 'dica', 'No máximo 80'),
+      JSON_OBJECT('id', 'reserva',      'nome', 'Reserva de emergência','minimo', 100, 'maximo', 200, 'dica', 'Pelo menos 100'),
+      JSON_OBJECT('id', 'investimento', 'nome', 'Investimento',         'minimo',  50, 'maximo', 150, 'dica', 'Entre 50 e 150')
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'construir-patrimonio' AND celula.order_index = 4
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
 INSERT INTO contents (cell_id, version, body)
 SELECT celula.id, 1, JSON_OBJECT('tipo', 'placeholder', 'texto', 'Conteúdo em produção.')
   FROM cells celula
