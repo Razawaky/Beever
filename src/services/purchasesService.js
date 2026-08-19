@@ -4,6 +4,7 @@ import * as purchasesRepository from '../repositories/purchasesRepository.js';
 import { ErroAplicacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
+import * as idempotencyService from './idempotencyService.js';
 import * as itemsService from './itemsService.js';
 
 /**
@@ -15,7 +16,46 @@ import * as itemsService from './itemsService.js';
  * veio do formulário: o cliente pediu o **item**, não o preço dele.
  */
 
-export async function comprar(idUsuario, idItem) {
+/**
+ * Grava a compra: debita, registra e dá entrada no inventário. Tudo ou nada.
+ */
+async function registrarCompra(conexao, { idUsuario, idItem, preco }) {
+  await coinsService.debitar(conexao, idUsuario, preco, {
+    motivo: 'compra',
+    referenciaTipo: 'item',
+    referenciaId: idItem,
+  });
+
+  const compra = await purchasesRepository.criar(conexao, {
+    idUsuario,
+    idItem,
+    quantidade: 1,
+    precoUnitario: preco,
+    precoTotal: preco,
+  });
+
+  // Uma linha por unidade: no schema novo o inventário não tem quantidade,
+  // porque cada unidade valoriza, deprecia e é vendida por conta própria.
+  await inventoryRepository.adicionar(conexao, {
+    idUsuario,
+    idItem,
+    idCompra: compra,
+    valorInicial: preco,
+  });
+
+  return compra;
+}
+
+/**
+ * `chaveDeIdempotencia` vem do formulário, uma por renderização da loja. Dois
+ * cliques no mesmo botão mandam a mesma chave e compram uma vez só; abrir a
+ * loja de novo traz chave nova, então comprar o mesmo item de propósito
+ * continua possível (DT-18).
+ *
+ * Sem chave, a compra roda como antes — é o caminho de quem chama a API direto,
+ * e a proteção fica por conta de quem chama.
+ */
+export async function comprar(idUsuario, idItem, { chaveDeIdempotencia = null } = {}) {
   const item = await itemsService.obterAtivo(idItem);
   const preco = Number(item.price);
 
@@ -34,40 +74,54 @@ export async function comprar(idUsuario, idItem) {
     });
   }
 
-  const idCompra = await emTransacao(async (conexao) => {
-    await coinsService.debitar(conexao, idUsuario, preco, {
-      motivo: 'compra',
-      referenciaTipo: 'item',
-      referenciaId: idItem,
-    });
+  if (!chaveDeIdempotencia) {
+    const idCompra = await emTransacao((conexao) => registrarCompra(conexao, { idUsuario, idItem, preco }));
+    return concluir(idUsuario, idItem, item, preco, idCompra, pendencias);
+  }
 
-    const compra = await purchasesRepository.criar(conexao, {
+  const { idCompra, repetida } = await idempotencyService.executarUmaVezSo(
+    {
+      chave: chaveDeIdempotencia,
       idUsuario,
-      idItem,
-      quantidade: 1,
-      precoUnitario: preco,
-      precoTotal: preco,
-    });
+      operacao: 'compra',
+      pedido: { idItem },
+    },
+    {
+      executar: async (conexao) => ({
+        idCompra: await registrarCompra(conexao, { idUsuario, idItem, preco }),
+        repetida: false,
+      }),
+      // A tabela de chaves guarda hash, não resposta: quem repete recebe a
+      // compra que o primeiro envio gravou, que é a mais recente daquele item.
+      aoRepetir: async () => ({
+        idCompra: (await purchasesRepository.buscarUltimaDoItem(idUsuario, idItem))?.id ?? null,
+        repetida: true,
+      }),
+    },
+  );
 
-    // Uma linha por unidade: no schema novo o inventário não tem quantidade,
-    // porque cada unidade valoriza, deprecia e é vendida por conta própria.
-    await inventoryRepository.adicionar(conexao, {
-      idUsuario,
-      idItem,
-      idCompra: compra,
-      valorInicial: preco,
-    });
+  if (repetida) {
+    return { idCompra, item, precoPago: preco, repetida: true, avisos: [] };
+  }
 
-    return compra;
-  });
+  return concluir(idUsuario, idItem, item, preco, idCompra, pendencias);
+}
 
+/** Auditoria e resposta, comuns aos dois caminhos da compra. */
+async function concluir(idUsuario, idItem, item, preco, idCompra, pendencias) {
   await auditService.registrar(auditService.usuario(idUsuario), 'compra.realizada', {
     entidade: 'purchase',
     id: idCompra,
     depois: { idItem, item: item.name, precoTotal: preco },
   });
 
-  return { idCompra, item, precoPago: preco, avisos: pendencias.filter((p) => p.naoVerificavelAinda) };
+  return {
+    idCompra,
+    item,
+    precoPago: preco,
+    repetida: false,
+    avisos: pendencias.filter((pendencia) => pendencia.naoVerificavelAinda),
+  };
 }
 
 export async function listarDoUsuario(idUsuario) {

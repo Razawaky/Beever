@@ -53,6 +53,25 @@ export async function buscarPorId(id) {
 }
 
 /** Quanto o jogador já gastou na loja — entra no cálculo de patrimônio e nos relatórios. */
+/**
+ * A compra mais recente daquele item pelo jogador.
+ *
+ * Serve ao reenvio idempotente: `idempotency_keys` guarda hash e não resposta,
+ * então quem repete o pedido recebe a compra que o primeiro envio gravou — que
+ * é justamente a mais recente daquele item.
+ */
+export async function buscarUltimaDoItem(idUsuario, idItem) {
+  const linhas = await consultar(
+    `SELECT id, user_id, item_id, quantity, price_at_purchase, discount_applied, total_price, purchased_at
+       FROM purchases
+      WHERE user_id = ? AND item_id = ?
+      ORDER BY id DESC
+      LIMIT 1`,
+    [idUsuario, idItem],
+  );
+  return linhas[0] ?? null;
+}
+
 export async function totalGastoPorUsuario(idUsuario) {
   const linhas = await consultar(
     'SELECT COALESCE(SUM(total_price), 0) AS total FROM purchases WHERE user_id = ?',

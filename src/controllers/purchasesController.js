@@ -4,10 +4,18 @@ import { querJson } from '../utils/resposta.js';
 
 export const criar = assincrono(async (req, res) => {
   const idItem = Number(req.body.idItem);
-  const { item, precoPago } = await purchasesService.comprar(req.session.usuarioId, idItem);
+  const { item, precoPago, repetida } = await purchasesService.comprar(req.session.usuarioId, idItem, {
+    chaveDeIdempotencia: req.body.chaveDeIdempotencia ?? null,
+  });
 
   if (querJson(req)) {
-    return res.status(201).json({ mensagem: `${item.name} comprado com sucesso`, item, precoPago });
+    // Envio repetido responde 200, e não 201: nada foi criado desta vez.
+    return res.status(repetida ? 200 : 201).json({
+      mensagem: `${item.name} comprado com sucesso`,
+      item,
+      precoPago,
+      repetida,
+    });
   }
   res.redirect('/loja');
 });

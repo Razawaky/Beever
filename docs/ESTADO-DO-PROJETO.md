@@ -4,10 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-06.5 — a partida existe: abre com token, fecha conferindo as
-respostas no servidor e paga as três recompensas numa transação. Árvore limpa,
-380 testes passando.
-**Próximo passo: T-06.6**, a idempotência por `idempotency_keys`
+**Último commit:** T-06.6 — idempotência de verdade: a mesma chave roda uma vez
+só, e a compra parou de debitar duas vezes em dois cliques. Árvore limpa,
+384 testes passando.
+**Próximo passo: T-06.7**, a auditoria dos créditos
 
 ---
 
@@ -249,6 +249,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
 | A partida jogada em navegador | O `gameSessionService` fecha o ciclo inteiro com teste contra banco real, mas não há rota nem tela de jogo: isso é a E07. Nenhuma criança viu XP, pólen ou mel subir na tela |
+| O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Comportamento sob concorrência | O débito atômico foi testado sequencialmente. Nunca houve teste com duas requisições simultâneas de verdade |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -270,7 +271,7 @@ mesmo contrato de recompensa.
 | T-06.3 `PointsService`: calcula e credita pólen | **feita** — `calcularPolenDaCelula` e `creditarPorCelula`, no mesmo desenho do XP; repetir paga zero pólen |
 | T-06.4 `CoinService`: calcula e credita mel, valida saldo, nunca negativo | **feita** — `calcularMelDaCelula`, `creditarPorCelula` e `creditarBonusDeNivel`; repetir paga zero mel e o débito além do saldo é recusado sem rastro |
 | T-06.5 `GameSessionService`: abre e fecha sessão validando respostas no servidor, orquestra os três em uma transação | **feita** — `abrir`/`fechar`/`abandonar`, validador de quiz, trava `FOR UPDATE` no token e 8 testes; fecha a RF-CON-04 |
-| T-06.6 Idempotência: token de sessão consumido uma única vez | pendente |
+| T-06.6 Idempotência: token de sessão consumido uma única vez | **feita** — `idempotencyService.executarUmaVezSo`, usado pela partida e pela compra; **DT-18 paga** |
 | T-06.7 Auditoria em todos os créditos | pendente |
 | T-06.8 Testes: dupla submissão, repetição, cliente mentindo na pontuação | pendente |
 
@@ -395,6 +396,41 @@ Quatro decisões que valem lembrar:
 indexados pelo slug de `game_types` — mesmo padrão do `goalProgressSources`. A
 T-07.1 formaliza o contrato de jogo e as tarefas da E07 acrescentam os outros
 cinco no mesmo mapa.
+
+**O que a T-06.6 entregou.** Um mecanismo só de "isto roda uma vez só":
+`idempotencyService.executarUmaVezSo` reserva a chave **dentro** da transação da
+operação e chama `aoRepetir` quando a chave já existe. Usam-no a conclusão de
+partida e a compra.
+
+Quatro decisões que valem lembrar:
+
+1. **A reserva é `INSERT IGNORE`, não "consultar e depois gravar".** Entre a
+   consulta e a escrita cabe a segunda requisição, e aí as duas se achariam a
+   primeira.
+2. **A chave é gravada na transação da operação.** Rollback leva a chave junto:
+   chave registrada de operação que falhou impediria a retentativa legítima.
+3. **A tabela guarda hash, não resposta** (`response_hash`, 64 caracteres). Por
+   isso o reenvio é respondido pela tabela de domínio: a partida por
+   `game_sessions`, a compra pela última compra daquele item. Está documentado
+   nos dois lugares, porque é o tipo de coisa que confunde quem chega depois.
+4. **Chave repetida com pedido diferente é recusada** com `CHAVE_REUTILIZADA`
+   (409). Tratar como repetição engoliria em silêncio a compra que a pessoa de
+   fato pediu.
+
+**Na compra, a chave vem do formulário** — um UUID por renderização da loja, em
+campo escondido. Dois cliques no mesmo botão compram uma vez; recarregar a loja
+traz chave nova, então comprar o mesmo item de propósito continua possível. Envio
+repetido responde 200 em vez de 201, porque nada foi criado desta vez. **A DT-18
+está paga.**
+
+**Na partida, a chave é o próprio token** (`partida:<token>`), sem pedir nada ao
+cliente. O pedido fica fora do hash de propósito: quem reenvia com respostas
+diferentes recebe o resultado gravado, porque o crédito já aconteceu e trocar a
+resposta depois não o desfaz.
+
+**Uma correção de documento:** este arquivo dizia que `idempotency_keys` estava
+"semeada". Não estava — nenhum seed a tocava, e ela só passou a ter linhas agora,
+escritas pela aplicação.
 
 **Uma decisão de produto tomada aqui:** a RN-008 fala de XP e mel, e cala sobre
 pólen. O seed zera o pólen na repetição também — pólen repetido à vontade é o
@@ -763,7 +799,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
-| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. Faltam T-06.6 a T-06.8 — a idempotência por `idempotency_keys`, a auditoria e os testes de aceite. Ver também DT-18 |
+| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. Faltam T-06.7 e T-06.8 — a auditoria dos créditos e os testes de aceite. Ver também DT-18 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
@@ -789,7 +825,7 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-05~~ | ~~Negociação de conteúdo copiada 9 vezes em 6 controllers~~ | P-01 | **Resolvido na T-02.3**: `querJson` em `src/utils/resposta.js` |
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
 | ~~DT-07~~ | ~~Dois guardas de autenticação com a mesma regra, um deles dentro de `src/routes/index.js`~~ | P-04, C-01 | **Resolvido por inteiro na T-02.4**: o guarda saiu do arquivo de rotas na T-02.3 e foi absorvido por `requireOnboarding`/`requireOnboardingPendente`, que respondem conforme o cliente — redirecionamento para HTML, código de erro para JSON |
-| DT-18 | Compra não é idempotente: dois cliques rápidos criam duas compras e debitam duas vezes. `idempotency_keys` existe no schema, semeada, e não é usada por ninguém | auditoria da E02 | E06 — é onde o motor de recompensa e a economia ganham dono |
+| ~~DT-18~~ | ~~Compra não é idempotente: dois cliques rápidos criam duas compras e debitam duas vezes~~ | auditoria da E02 | **Resolvida na T-06.6**: `idempotencyService.executarUmaVezSo` com a chave vinda do formulário, uma por renderização da loja. A tabela `idempotency_keys` nunca esteve semeada, ao contrário do que este documento dizia; agora ela é escrita pela aplicação |
 | ~~DT-19~~ | ~~`reward_configs` (54 linhas semeadas) não é lida por nenhum service~~ | auditoria da E02 | **Resolvida na T-06.1**: `rewardConfigsRepository` lê a tabela por slug do jogo, código da faixa e estrelas, com os 54 combos conferidos em teste. Quem vai consumir são os services da T-06.2 a T-06.4 |
 | ~~DT-20~~ | ~~Onboarding não coleta tempo por sessão nem preferências de som e animação, que a RN-011 e a RN-050 pedem~~ | auditoria da E02 | **Resolvida na T-04.3**: os dois passos entraram no wizard e gravam em `session_minutes`, `is_sound_enabled` e `has_reduced_motion`. As durações passaram a ser cinco (5, 10, 20, 30 e 45) por decisão de produto tomada no checkpoint da tarefa, com migration `012` e reescrita da RN-011 |
 | DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
@@ -958,11 +994,12 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-06.6 — idempotência com `idempotency_keys`, a tabela
-semeada na E01 que ninguém usa (**DT-18**). A T-06.5 já protege a partida com a
-trava `FOR UPDATE` no token e com o `finalizar` que só fecha partida aberta; o
-que a T-06.6 acrescenta é o mecanismo geral, que a **compra** também precisa —
-hoje dois cliques rápidos criam duas compras e debitam duas vezes.
+**Próxima tarefa:** T-06.7 — auditoria em todos os créditos (RN-010, RNF-17). A
+decisão já foi tomada no checkpoint da T-06.3 e vale relembrar: a linha de
+auditoria é **uma por partida**, escrita no `gameSessionService`, com o antes e o
+depois da carteira e do nível. Três linhas soltas por partida, uma por crédito,
+descreveriam o detalhe e perderiam o fato. A compra já é auditada desde a E02, e
+`auditService` é a porta única.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -1165,3 +1202,29 @@ Para a T-06.6 e a T-06.8 saber:
    creditam uma vez" é a T-06.8; o que existe hoje é o reenvio sequencial.
 3. **A RF-CON-04 fechou.** `duration_seconds` é gravado pelo banco no
    `finalizar`, e a lacuna L-2 do laudo da E05 está paga.
+
+---
+
+### Sessão de 2026-08-19, continuação: T-06.6
+
+Suíte em **384 testes, zero falhas** (380 antes), reconciliação OK. **DT-18 paga.**
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/idempotencyService.js` | `executarUmaVezSo`, com a reserva da chave dentro da transação da operação |
+| `src/repositories/idempotencyKeysRepository.js` | `reservar` por `INSERT IGNORE` e `buscar` |
+| `src/repositories/purchasesRepository.js` | `buscarUltimaDoItem`, para o reenvio responder com a compra que existe |
+| `src/services/purchasesService.js` | `comprar` aceita `chaveDeIdempotencia`; o corpo da transação virou `registrarCompra` |
+| `src/services/gameSessionService.js` | `fechar` roda pelo mecanismo; o corpo virou `creditarPartida` |
+| `src/controllers/paginaController.js`, `src/views/pages/loja.ejs`, `src/routes/loja.js`, `src/controllers/purchasesController.js` | uma chave por renderização da loja, validada como UUID na rota |
+| `test/integration/idempotencia.test.js` | 4 testes da compra |
+
+Para a T-06.7 e a T-06.8 saber:
+
+1. **A partida tem duas defesas, não uma.** A trava `FOR UPDATE` serializa
+   conclusões simultâneas e a chave impede a segunda execução. O aceite da etapa
+   — cinco conclusões em paralelo creditando uma vez — é a T-06.8, e é ele que
+   vai provar as duas juntas sob concorrência de verdade.
+2. **A compra sem chave continua funcionando**, para quem chama a API direto. É
+   escolha consciente: a proteção fica com quem chama, e a tela sempre manda a
+   chave.

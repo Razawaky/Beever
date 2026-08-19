@@ -7,6 +7,7 @@ import * as gameSessionsRepository from '../repositories/gameSessionsRepository.
 import { erroAcessoNegado, erroNaoEncontrado } from '../utils/erros.js';
 import * as coinsService from './coinsService.js';
 import * as contentService from './contentService.js';
+import * as idempotencyService from './idempotencyService.js';
 import * as levelsService from './levelsService.js';
 import * as pointsService from './pointsService.js';
 import * as progressService from './progressService.js';
@@ -71,6 +72,68 @@ function resultadoGravado(partida) {
 }
 
 /**
+ * O que acontece dentro da transação da conclusão: grava a tentativa, paga as
+ * três recompensas e fecha a partida.
+ *
+ * Separado de `fechar` para a função não virar uma escada — aqui é a parte que
+ * escreve, lá é a que confere.
+ */
+async function creditarPartida(conexao, { idUsuario, token, partida, celula, erros, pontuacao }) {
+  // Trava a partida antes de qualquer escrita. Duas conclusões ao mesmo tempo
+  // viram uma: a segunda espera, encontra a partida já fechada e devolve o
+  // resultado dela em vez de creditar outra vez.
+  const aberta = await gameSessionsRepository.bloquearAbertaPorToken(conexao, token);
+  if (!aberta) return resultadoGravado(await gameSessionsRepository.buscarPorToken(token));
+
+  const tentativa = await progressService.registrarTentativa(
+    idUsuario,
+    partida.cell_id,
+    { erros, pontuacao, concluiu: true },
+    conexao,
+  );
+
+  const dadosDaRecompensa = {
+    celula,
+    estrelas: tentativa.estrelas,
+    ehRepeticao: tentativa.ehRepeticao,
+  };
+
+  const xp = await levelsService.creditarPorCelula(conexao, idUsuario, dadosDaRecompensa);
+  const polen = await pointsService.creditarPorCelula(conexao, idUsuario, dadosDaRecompensa);
+  const mel = await coinsService.creditarPorCelula(conexao, idUsuario, dadosDaRecompensa);
+
+  // O bônus do degrau só é conhecido depois do crédito de XP, então é o último a
+  // ser pago — e quem o paga é o service do mel.
+  const bonus = await coinsService.creditarBonusDeNivel(conexao, idUsuario, xp.bonusDeMelPorNivel ?? 0, {
+    nivel: xp.nivel,
+  });
+
+  await gameSessionsRepository.finalizar(conexao, {
+    token,
+    estrelas: tentativa.estrelas,
+    erros,
+    xp: xp.xpCreditado,
+    pontos: polen.polenCreditado,
+    moedas: mel.melCreditado + bonus.melCreditado,
+  });
+
+  return {
+    jaEstavaFechada: false,
+    estrelas: tentativa.estrelas,
+    erros,
+    ehRepeticao: tentativa.ehRepeticao,
+    xp: xp.xpCreditado,
+    polen: polen.polenCreditado,
+    mel: mel.melCreditado,
+    bonusDeMelPorNivel: bonus.melCreditado,
+    nivel: xp.nivel ?? null,
+    subiuDeNivel: Boolean(xp.subiuDeNivel),
+    favo: tentativa.favo,
+    favoConcluido: tentativa.favoConcluido,
+  };
+}
+
+/**
  * Fecha a partida: confere as respostas, grava a tentativa e paga.
  *
  * Reenviar o mesmo token devolve o resultado já gravado, sem creditar de novo
@@ -92,60 +155,17 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
   const { erros, total } = validadoresDeJogo.validarRespostas(celula.game_type_slug, conteudo.body, respostas);
   const pontuacao = total === 0 ? 0 : Math.round(((total - erros) / total) * 100);
 
-  return emTransacao(async (conexao) => {
-    // Trava a partida antes de qualquer escrita. Duas conclusões ao mesmo tempo
-    // viram uma: a segunda espera, encontra a partida já fechada e devolve o
-    // resultado dela em vez de creditar outra vez.
-    const aberta = await gameSessionsRepository.bloquearAbertaPorToken(conexao, token);
-    if (!aberta) return resultadoGravado(await gameSessionsRepository.buscarPorToken(token));
-
-    const tentativa = await progressService.registrarTentativa(
-      idUsuario,
-      partida.cell_id,
-      { erros, pontuacao, concluiu: true },
-      conexao,
-    );
-
-    const dadosDaRecompensa = {
-      celula,
-      estrelas: tentativa.estrelas,
-      ehRepeticao: tentativa.ehRepeticao,
-    };
-
-    const xp = await levelsService.creditarPorCelula(conexao, idUsuario, dadosDaRecompensa);
-    const polen = await pointsService.creditarPorCelula(conexao, idUsuario, dadosDaRecompensa);
-    const mel = await coinsService.creditarPorCelula(conexao, idUsuario, dadosDaRecompensa);
-
-    // O bônus do degrau só é conhecido depois do crédito de XP, então é o
-    // último a ser pago — e quem o paga é o service do mel.
-    const bonus = await coinsService.creditarBonusDeNivel(conexao, idUsuario, xp.bonusDeMelPorNivel ?? 0, {
-      nivel: xp.nivel,
-    });
-
-    await gameSessionsRepository.finalizar(conexao, {
-      token,
-      estrelas: tentativa.estrelas,
-      erros,
-      xp: xp.xpCreditado,
-      pontos: polen.polenCreditado,
-      moedas: mel.melCreditado + bonus.melCreditado,
-    });
-
-    return {
-      jaEstavaFechada: false,
-      estrelas: tentativa.estrelas,
-      erros,
-      ehRepeticao: tentativa.ehRepeticao,
-      xp: xp.xpCreditado,
-      polen: polen.polenCreditado,
-      mel: mel.melCreditado,
-      bonusDeMelPorNivel: bonus.melCreditado,
-      nivel: xp.nivel ?? null,
-      subiuDeNivel: Boolean(xp.subiuDeNivel),
-      favo: tentativa.favo,
-      favoConcluido: tentativa.favoConcluido,
-    };
-  });
+  // A chave é o próprio token: ele já é único por partida, e assim o cliente não
+  // precisa inventar nada. O pedido fica fora do hash de propósito — quem reenvia
+  // com respostas diferentes recebe o resultado gravado, porque o crédito já
+  // aconteceu e resposta trocada depois não o desfaz.
+  return idempotencyService.executarUmaVezSo(
+    { chave: `partida:${token}`, idUsuario, operacao: 'partida.fechar' },
+    {
+      executar: (conexao) => creditarPartida(conexao, { idUsuario, token, partida, celula, erros, pontuacao }),
+      aoRepetir: async () => resultadoGravado(await gameSessionsRepository.buscarPorToken(token)),
+    },
+  );
 }
 
 /** Desiste da partida sem creditar nada — o jogador saiu no meio. */

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import * as contentService from '../services/contentService.js';
 import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
@@ -96,7 +98,17 @@ export const loja = assincrono(async (req, res) => {
     inventoryService.idsPossuidos(req.session.usuarioId),
   ]);
 
-  renderizarPagina(res, 'loja', { titulo: 'Loja — Beever', classeBody: FUNDO_CERA, perfil, itens, possuidos });
+  // Uma chave de idempotência por renderização: dois cliques no mesmo botão
+  // mandam a mesma chave e compram uma vez só, e recarregar a loja traz chave
+  // nova, então comprar o mesmo item de propósito continua possível.
+  renderizarPagina(res, 'loja', {
+    titulo: 'Loja — Beever',
+    classeBody: FUNDO_CERA,
+    perfil,
+    itens,
+    possuidos,
+    chaveDeCompra: randomUUID(),
+  });
 });
 
 export const metas = assincrono(async (req, res) => {

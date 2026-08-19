@@ -24,6 +24,7 @@ router.post(
   '/compras',
   limiteCompra,
   body('idItem').isInt({ min: 1 }).withMessage('Item inválido'),
+  body('chaveDeIdempotencia').optional({ values: 'falsy' }).isUUID().withMessage('Chave de compra inválida'),
   validate,
   purchasesController.criar,
 );
