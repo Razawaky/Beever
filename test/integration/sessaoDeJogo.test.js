@@ -167,17 +167,25 @@ describe('sessão de jogo', opcoes, () => {
     assert.equal(depois.mel, antes.mel + resultado.bonusDeMelPorNivel, 'só o bônus de nível pode ter entrado');
   });
 
-  it('célula sem jogo implementado recusa abrir, em vez de pagar por conteúdo vazio', async () => {
-    // A segunda célula é a de arrastar, que a T-07.3 implementou: para chegar a
-    // uma célula sem validador é preciso concluí-la e liberar a terceira, cujo
-    // jogo ainda não existe.
+  /**
+   * Desde a T-07.7 todos os seis tipos de jogo têm validador, então não existe
+   * mais célula recusada por falta de jogo. O que continua podendo acontecer é
+   * conteúdo que não dá para jogar — e é ele que precisa parar a partida antes
+   * de o motor de recompensas ser acionado.
+   */
+  it('célula com conteúdo que não dá para jogar recusa abrir, em vez de pagar por nada', async () => {
     const arraste = await gameSessionService.abrir(idUsuario, celulas[1].id);
     await gameSessionService.fechar(idUsuario, arraste.token, { respostas: CAIXAS_CERTAS });
+
+    await conexao.query(
+      "UPDATE contents SET body = JSON_OBJECT('tipo', 'placeholder', 'texto', 'Em produção.') WHERE cell_id = ?",
+      [celulas[2].id],
+    );
 
     await assert.rejects(
       () => gameSessionService.abrir(idUsuario, celulas[2].id),
       (erro) => erro.codigo === 'VALIDACAO',
-      'a terceira célula está liberada agora, mas o jogo dela ainda não existe',
+      'a terceira célula está liberada, mas o conteúdo dela não é jogável',
     );
   });
 

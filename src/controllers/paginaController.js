@@ -203,6 +203,7 @@ const TELAS_DE_JOGO = {
   'monte-o-orcamento': { areaDoJogo: 'orcamento', script: '/js/orcamento.js' },
   'cofre-do-tempo': { areaDoJogo: 'cofre', script: '/js/cofre.js' },
   'mercado-esperto': { areaDoJogo: 'mercado', script: '/js/mercado.js' },
+  'ordene-a-prioridade': { areaDoJogo: 'ordene', script: '/js/ordene.js' },
 };
 
 /**

@@ -1,0 +1,26 @@
+<%#
+  Área do Ordene a Prioridade (RF-JOG-06): a lista, e dois botões por item para
+  subir e descer. Quem preenche é o `ordene.js`; a casca em volta é a
+  `pages/celula.ejs`.
+
+  Subir e descer por botão serve ao mouse, ao dedo e ao teclado do mesmo jeito —
+  é a mesma escolha da RNF-23 que o Arraste e Classifique faz.
+-%>
+<h2 id="ordene-enunciado" tabindex="-1" class="mt-6 font-display text-xl text-tinta" aria-live="polite"></h2>
+
+<p class="mt-2 text-sm text-tinta-suave">
+  O primeiro da lista é o mais importante. Use as setas para mudar a ordem.
+</p>
+
+<%# Cada troca é anunciada, porque quem usa leitor de tela não vê a lista mexer. -%>
+<p id="ordene-aviso" class="sr-only" role="status" aria-live="polite"></p>
+
+<ol id="ordene-itens" class="mt-5 space-y-3"></ol>
+
+<button
+  id="ordene-confirmar"
+  type="button"
+  class="mt-6 w-full rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+>
+  Confirmar ordem
+</button>

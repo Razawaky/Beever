@@ -408,6 +408,56 @@ SELECT celula.id, 1, JSON_OBJECT(
  WHERE favo.slug = 'o-tempo-e-o-juro' AND celula.order_index = 3
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
+-- Ordene a Prioridade (RF-JOG-06): três células. A `ordem` vai de 1 até a
+-- quantidade de itens, sem repetir, e o validador confere isso antes de deixar
+-- jogar. A tela recebe os itens embaralhados.
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'ordene',
+    'enunciado', 'O dinheiro está curto. O que você resolve primeiro?',
+    'itens', JSON_ARRAY(
+      JSON_OBJECT('id', 'comida',    'texto', 'Comida em casa',        'ordem', 1),
+      JSON_OBJECT('id', 'escola',    'texto', 'Material da escola',    'ordem', 2),
+      JSON_OBJECT('id', 'brinquedo', 'texto', 'Brinquedo novo',        'ordem', 3)
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 3
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'ordene',
+    'enunciado', 'Chegou o dinheiro do mês. Em que ordem você resolve cada coisa?',
+    'itens', JSON_ARRAY(
+      JSON_OBJECT('id', 'luz',     'texto', 'Conta de luz, que vence amanhã', 'ordem', 1),
+      JSON_OBJECT('id', 'mercado', 'texto', 'Compra do mês',                  'ordem', 2),
+      JSON_OBJECT('id', 'guardar', 'texto', 'Guardar um pouco',               'ordem', 3),
+      JSON_OBJECT('id', 'cinema',  'texto', 'Cinema no fim de semana',        'ordem', 4)
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'planejar-o-mes' AND celula.order_index = 2
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'ordene',
+    'enunciado', 'Sobrou dinheiro. O que rende mais no fim das contas?',
+    'itens', JSON_ARRAY(
+      JSON_OBJECT('id', 'divida',      'texto', 'Pagar a dívida que cobra juro',       'ordem', 1),
+      JSON_OBJECT('id', 'reserva',     'texto', 'Montar a reserva de emergência',      'ordem', 2),
+      JSON_OBJECT('id', 'investir',    'texto', 'Investir o que sobrar',               'ordem', 3),
+      JSON_OBJECT('id', 'celular',     'texto', 'Trocar o celular que ainda funciona', 'ordem', 4)
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'o-tempo-e-o-juro' AND celula.order_index = 4
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
 INSERT INTO contents (cell_id, version, body)
 SELECT celula.id, 1, JSON_OBJECT('tipo', 'placeholder', 'texto', 'Conteúdo em produção.')
   FROM cells celula

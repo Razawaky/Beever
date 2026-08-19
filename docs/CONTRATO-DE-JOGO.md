@@ -44,6 +44,12 @@ O corpo do quinto jogo é `{ tipo, rodadas: [{ enunciado, unidade, opcoes: [{ te
 
 O `paraJogar` entrega preço e quantidade inteiros, porque fazer essa conta é o jogo; o que a tela nunca mostra é o preço por unidade já calculado.
 
+## O exemplo do Ordene a Prioridade
+
+O corpo do sexto jogo é `{ tipo, enunciado, itens: [{ id, texto, ordem }] }`, com `ordem` indo de 1 até a quantidade de itens, sem repetir, e a resposta é a lista de `id` na ordem escolhida pelo jogador. O `paraJogar` devolve os itens **embaralhados** e sem `ordem` — mandá-los na ordem em que estão no conteúdo entregaria a resposta.
+
+O erro é contado **por par invertido**, e não por posição fora do lugar: com quatro itens são seis pares, trocar dois vizinhos custa um erro e inverter a lista inteira custa seis. Contar por posição faria mover um item empurrar todos os outros, e uma bobagem viraria nota zero — o oposto da RN-030. Item que o jogador não ordenou fica depois de todos, então perde os pares dele.
+
 ## Estado salvo, que ainda não existe
 
 A RF-JOG-07 prevê retomar uma partida interrompida, e é P1, planejada para a T-07.7. O lugar dela no contrato é uma quarta função opcional, `estadoParaSalvar(respostasParciais)`, e uma coluna de estado na partida. Nenhum jogo da E07 deve inventar seu próprio jeito de salvar antes disso: quem precisar guardar progresso parcial agora, guarda no navegador e assume que fechar a aba custa a partida.

@@ -12,13 +12,15 @@ import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
+import * as progressService from '../../src/services/progressService.js';
 
 /**
- * A tela de resultado, igual para os quatro jogos (RF-CON-05).
+ * A tela de resultado, igual para todos os jogos (RF-CON-05).
  *
  * O que estes testes protegem: a mesma marcação serve a todos os jogos, o fim
  * de uma partida aponta para a próxima célula quando ela existe e está aberta,
- * e nunca aponta para um beco — célula travada ou de jogo que ainda não existe.
+ * e nunca aponta para um beco — célula travada, sem conteúdo jogável ou o fim
+ * do favo.
  */
 
 const pular = await motivoParaPular();
@@ -26,6 +28,7 @@ const opcoes = pular ? { skip: pular } : {};
 
 const RESPOSTAS_DO_QUIZ = [0, 0];
 const CAIXAS_CERTAS = ['entra', 'entra', 'sai', 'sai'];
+const DIVISAO_DO_ORCAMENTO = [25, 15, 10];
 
 describe('tela de resultado', opcoes, () => {
   let banco;
@@ -34,6 +37,7 @@ describe('tela de resultado', opcoes, () => {
   let csrf;
   let favo;
   let celulas;
+  let idUsuario;
 
   async function lerToken(caminho) {
     const resposta = await agente.get(caminho).set('Accept', 'text/html');
@@ -98,8 +102,9 @@ describe('tela de resultado', opcoes, () => {
     const [[perfil]] = await banco.conexao.query('SELECT user_id FROM profiles WHERE id = ?', [
       cadastro.body.idPerfil,
     ]);
+    idUsuario = Number(perfil.user_id);
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
-    celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, Number(perfil.user_id), ['A']);
+    celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
     csrf = await lerToken('/painel');
   });
 
@@ -157,11 +162,17 @@ describe('tela de resultado', opcoes, () => {
     assert.equal(Number(resultado.proximaCelula.id), Number(celulas[1].id));
   });
 
-  it('não aponta para célula de jogo que ainda não existe', async () => {
-    // A terceira célula abriu com a conclusão da segunda, mas o jogo dela é um
-    // dos P1 da T-07.7: mandar a criança para lá seria mandá-la a um beco.
-    const { resultado } = await jogar(celulas[1].id, CAIXAS_CERTAS);
+  /**
+   * Desde a T-07.7 todo tipo de jogo tem validador, então o beco que sobra é o
+   * fim do favo: a última célula não tem para onde apontar.
+   */
+  it('a última célula do favo não aponta para lugar nenhum', async () => {
+    for (const celula of celulas.slice(1, 3)) {
+      await progressService.registrarTentativa(idUsuario, celula.id, { erros: 0, pontuacao: 100, concluiu: true });
+    }
 
-    assert.equal(resultado.proximaCelula, null);
+    const { resultado } = await jogar(celulas[3].id, DIVISAO_DO_ORCAMENTO);
+
+    assert.equal(resultado.proximaCelula, null, 'depois da quarta célula acaba o favo');
   });
 });

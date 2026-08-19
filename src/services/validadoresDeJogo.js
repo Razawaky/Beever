@@ -429,12 +429,87 @@ const mercado = {
   },
 };
 
+/**
+ * Ordene a Prioridade (RF-JOG-06): o que vem primeiro.
+ *
+ * Corpo esperado: `{ tipo, enunciado, itens: [{ id, texto, ordem }] }`, com
+ * `ordem` indo de 1 até a quantidade de itens, sem repetir. A resposta é a lista
+ * de `id` na ordem escolhida pelo jogador.
+ *
+ * O erro é contado por par invertido, e não por posição fora do lugar: trocar
+ * dois vizinhos custa um erro só, enquanto mover um item para o topo bagunçaria
+ * todas as posições seguintes e viraria nota zero por uma bobagem. Errar pouco
+ * tem que doer pouco (RN-030).
+ */
+const ordene = {
+  conferirForma(corpo) {
+    const itens = corpo?.itens;
+    if (!Array.isArray(itens) || itens.length < 3) {
+      throw erroValidacao('Esta célula ainda não é jogável: ordenar pede pelo menos três itens');
+    }
+
+    const ids = new Set();
+    const ordens = new Set();
+
+    for (const item of itens) {
+      if (typeof item.id !== 'string' || item.id === '' || !item.texto) {
+        throw erroValidacao('Item sem identificador ou sem texto');
+      }
+      if (ids.has(item.id)) throw erroValidacao('Dois itens com o mesmo identificador');
+      if (!Number.isInteger(item.ordem) || item.ordem < 1 || item.ordem > itens.length) {
+        throw erroValidacao(`A ordem do item "${item.texto}" está fora da lista`);
+      }
+      if (ordens.has(item.ordem)) throw erroValidacao('Dois itens disputando a mesma posição');
+      ids.add(item.id);
+      ordens.add(item.ordem);
+    }
+  },
+
+  /** Embaralhado, senão a tela entregaria a resposta na ordem em que a recebeu. */
+  paraJogar(corpo) {
+    const itens = corpo.itens.map((item) => ({ id: item.id, texto: item.texto }));
+
+    for (let posicao = itens.length - 1; posicao > 0; posicao -= 1) {
+      const sorteada = Math.floor(Math.random() * (posicao + 1));
+      [itens[posicao], itens[sorteada]] = [itens[sorteada], itens[posicao]];
+    }
+
+    return { tipo: corpo.tipo, enunciado: corpo.enunciado, itens };
+  },
+
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma posição por item');
+    }
+
+    // Item que o jogador não colocou fica depois de todos: quem não ordena
+    // erra todos os pares daquele item, e não fica de fora da conta.
+    const posicaoEscolhida = new Map(respostas.map((id, posicao) => [id, posicao]));
+    const naOrdemCerta = [...corpo.itens].sort((um, outro) => um.ordem - outro.ordem);
+
+    let erros = 0;
+    let pares = 0;
+
+    for (let primeiro = 0; primeiro < naOrdemCerta.length; primeiro += 1) {
+      for (let segundo = primeiro + 1; segundo < naOrdemCerta.length; segundo += 1) {
+        pares += 1;
+        const posicaoDoPrimeiro = posicaoEscolhida.get(naOrdemCerta[primeiro].id) ?? Infinity;
+        const posicaoDoSegundo = posicaoEscolhida.get(naOrdemCerta[segundo].id) ?? Infinity;
+        if (posicaoDoPrimeiro >= posicaoDoSegundo) erros += 1;
+      }
+    }
+
+    return { erros, total: pares };
+  },
+};
+
 const VALIDADORES = {
   'quiz-do-favo': quiz,
   'arraste-e-classifique': arraste,
   'monte-o-orcamento': orcamento,
   'cofre-do-tempo': cofre,
   'mercado-esperto': mercado,
+  'ordene-a-prioridade': ordene,
 };
 
 function escolher(slugDoTipoDeJogo) {

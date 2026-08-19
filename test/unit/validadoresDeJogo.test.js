@@ -83,6 +83,17 @@ const MERCADO = {
   ],
 };
 
+const ORDENE = {
+  tipo: 'ordene',
+  enunciado: 'Em que ordem você resolve cada coisa?',
+  itens: [
+    { id: 'luz', texto: 'Conta de luz', ordem: 1 },
+    { id: 'mercado', texto: 'Compra do mês', ordem: 2 },
+    { id: 'guardar', texto: 'Guardar um pouco', ordem: 3 },
+    { id: 'cinema', texto: 'Cinema', ordem: 4 },
+  ],
+};
+
 describe('validadoresDeJogo', () => {
   describe('validarRespostas', () => {
     it('não acha erro quando tudo está certo', () => {
@@ -132,8 +143,9 @@ describe('validadoresDeJogo', () => {
     });
 
     it('recusa tipo de jogo sem validador, dizendo qual é', () => {
-      // O último jogo sem validador é o Ordene a Prioridade, ainda nesta tarefa.
-      assert.throws(() => conferirForma('ordene-a-prioridade', QUIZ), /ordene-a-prioridade/);
+      // Os seis jogos do escopo têm validador; o slug abaixo não existe, e é
+      // esse o caso que a mensagem de erro precisa nomear.
+      assert.throws(() => conferirForma('jogo-que-nao-existe', QUIZ), /jogo-que-nao-existe/);
     });
   });
 
@@ -384,6 +396,78 @@ describe('validadoresDeJogo', () => {
     });
   });
 
+  describe('Ordene a Prioridade', () => {
+    it('a ordem certa não tem par invertido', () => {
+      assert.deepEqual(validarRespostas('ordene-a-prioridade', ORDENE, ['luz', 'mercado', 'guardar', 'cinema']), {
+        erros: 0,
+        total: 6,
+      });
+    });
+
+    it('trocar dois vizinhos custa um erro, e não a lista inteira', () => {
+      assert.equal(
+        validarRespostas('ordene-a-prioridade', ORDENE, ['mercado', 'luz', 'guardar', 'cinema']).erros,
+        1,
+        'só o par luz/mercado saiu trocado',
+      );
+    });
+
+    it('a ordem invertida erra todos os pares', () => {
+      assert.equal(
+        validarRespostas('ordene-a-prioridade', ORDENE, ['cinema', 'guardar', 'mercado', 'luz']).erros,
+        6,
+      );
+    });
+
+    it('item deixado de fora fica depois de todos e erra os pares dele', () => {
+      assert.equal(
+        validarRespostas('ordene-a-prioridade', ORDENE, ['luz', 'mercado', 'guardar']).erros,
+        0,
+        'o cinema era o último mesmo, então nenhum par se inverteu',
+      );
+      assert.equal(
+        validarRespostas('ordene-a-prioridade', ORDENE, ['mercado', 'guardar', 'cinema']).erros,
+        3,
+        'a luz ficou de fora e perdeu os três pares dela',
+      );
+    });
+
+    it('recusa lista curta, ordem repetida e ordem fora da lista', () => {
+      const curta = { tipo: 'ordene', itens: ORDENE.itens.slice(0, 2) };
+      const repetida = {
+        tipo: 'ordene',
+        itens: [
+          { id: 'a', texto: 'A', ordem: 1 },
+          { id: 'b', texto: 'B', ordem: 1 },
+          { id: 'c', texto: 'C', ordem: 3 },
+        ],
+      };
+      const foraDaLista = {
+        tipo: 'ordene',
+        itens: [
+          { id: 'a', texto: 'A', ordem: 1 },
+          { id: 'b', texto: 'B', ordem: 2 },
+          { id: 'c', texto: 'C', ordem: 9 },
+        ],
+      };
+
+      assert.throws(() => conferirForma('ordene-a-prioridade', curta), { codigo: 'VALIDACAO' });
+      assert.throws(() => conferirForma('ordene-a-prioridade', repetida), { codigo: 'VALIDACAO' });
+      assert.throws(() => conferirForma('ordene-a-prioridade', foraDaLista), { codigo: 'VALIDACAO' });
+    });
+
+    it('entrega os itens embaralhados e sem a ordem certa', () => {
+      const paraTela = conteudoParaJogar('ordene-a-prioridade', ORDENE);
+
+      assert.equal(paraTela.itens.length, 4);
+      for (const item of paraTela.itens) {
+        assert.equal(item.ordem, undefined, 'a ordem certa não pode viajar para a tela');
+        assert.ok(item.id && item.texto);
+      }
+      assert.equal(ORDENE.itens[0].ordem, 1, 'o gabarito precisa continuar no lugar');
+    });
+  });
+
   it('diz quais tipos de jogo já são jogáveis', () => {
     assert.deepEqual(tiposJogaveis(), [
       'quiz-do-favo',
@@ -391,6 +475,7 @@ describe('validadoresDeJogo', () => {
       'monte-o-orcamento',
       'cofre-do-tempo',
       'mercado-esperto',
+      'ordene-a-prioridade',
     ]);
   });
 });
