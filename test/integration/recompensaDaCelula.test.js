@@ -14,19 +14,23 @@ import * as userLevelsRepository from '../../src/repositories/userLevelsReposito
 import * as usersRepository from '../../src/repositories/usersRepository.js';
 import * as walletsRepository from '../../src/repositories/walletsRepository.js';
 import * as levelsService from '../../src/services/levelsService.js';
+import * as pointsService from '../../src/services/pointsService.js';
 
 /**
- * XP de célula concluída, contra banco real.
+ * O que uma célula concluída paga, contra banco real.
+ *
+ * Um arquivo para as três recompensas porque a partida é uma só: montar
+ * usuário, carteira, nível e célula três vezes seria o mesmo cenário copiado.
  *
  * O que estes testes protegem: o valor pago sai de `reward_configs` e não do
- * código (RN-006), repetir paga 25% (RN-008), e o livro de XP continua
- * explicando o `xp_total` do cache — que é o que o `db:reconcile` confere.
+ * código (RN-006), repetir corta a recompensa (RN-008), e os livros continuam
+ * explicando os saldos em cache — que é o que o `db:reconcile` confere.
  */
 
 const pular = await motivoParaPular();
 const opcoes = pular ? { skip: pular } : {};
 
-describe('XP de célula concluída', opcoes, () => {
+describe('recompensa de célula concluída', opcoes, () => {
   let banco;
   let conexao;
   let idUsuario;
@@ -59,13 +63,28 @@ describe('XP de célula concluída', opcoes, () => {
     if (banco) await banco.encerrar();
   });
 
-  async function xpDaTabela(estrelas) {
-    const configuracao = await rewardConfigsRepository.buscarConfiguracao({
+  async function configuracaoDaTabela(estrelas) {
+    return rewardConfigsRepository.buscarConfiguracao({
       slugDoTipoDeJogo: celula.game_type_slug,
       codigoDaFaixa: celula.age_band_code,
       estrelas,
     });
-    return Number(configuracao.xp_amount);
+  }
+
+  async function xpDaTabela(estrelas) {
+    return Number((await configuracaoDaTabela(estrelas)).xp_amount);
+  }
+
+  async function polenDaTabela(estrelas) {
+    return Number((await configuracaoDaTabela(estrelas)).points_amount);
+  }
+
+  async function polenNoLivro() {
+    const [linhas] = await conexao.query(
+      'SELECT COALESCE(SUM(amount), 0) AS total FROM point_ledger WHERE user_id = ?',
+      [idUsuario],
+    );
+    return Number(linhas[0].total);
   }
 
   async function xpNoLivro() {
@@ -115,6 +134,35 @@ describe('XP de célula concluída', opcoes, () => {
     const [linhas] = await conexao.query('SELECT level, xp_total FROM user_levels WHERE user_id = ?', [idUsuario]);
 
     assert.equal(Number(linhas[0].xp_total), await xpNoLivro());
+  });
+
+  it('a estreia paga o pólen que a tabela manda', async () => {
+    const esperado = await polenDaTabela(3);
+    const antes = await polenNoLivro();
+
+    const resultado = await emTransacao((conn) =>
+      pointsService.creditarPorCelula(conn, idUsuario, { celula, estrelas: 3, ehRepeticao: false }),
+    );
+
+    assert.equal(resultado.polenCreditado, esperado);
+    assert.equal(await polenNoLivro(), antes + esperado, 'o livro precisa explicar o saldo');
+  });
+
+  it('repetir não paga pólen nenhum, e não lança linha no livro', async () => {
+    const antes = await polenNoLivro();
+
+    const resultado = await emTransacao((conn) =>
+      pointsService.creditarPorCelula(conn, idUsuario, { celula, estrelas: 3, ehRepeticao: true }),
+    );
+
+    assert.equal(resultado.polenCreditado, 0, 'o fator de pólen da repetição é zero');
+    assert.equal(await polenNoLivro(), antes);
+  });
+
+  it('o cache de wallets.points_total continua batendo com o livro de pólen', async () => {
+    const [linhas] = await conexao.query('SELECT points_total FROM wallets WHERE user_id = ?', [idUsuario]);
+
+    assert.equal(Number(linhas[0].points_total), await polenNoLivro());
   });
 
   it('subir de nível devolve o bônus de mel da curva, sem creditar mel aqui', async () => {
