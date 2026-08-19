@@ -4,7 +4,7 @@
 // e o próximo ciclo começa. O saldo mostrado aqui é projeção para o jogador ver
 // a curva na hora; quem confere a meta e conta os erros é o servidor, que
 // recalcula tudo do zero a partir dos depósitos (RN-007).
-import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso } from './partida.js';
+import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
 
 const enunciado = document.getElementById('cofre-enunciado');
 const grafico = document.getElementById('cofre-barras');
@@ -126,14 +126,20 @@ botaoColocar.addEventListener('click', () => {
   atualizarControles();
 });
 
-botaoConfirmar.addEventListener('click', () => {
-  depositos.push(depositoAtual);
-  saldo = renderUmCiclo(saldo, depositoAtual);
+/** Um ciclo fechado: rende, desenha a barra e entra no histórico. */
+function guardarNoCiclo(deposito) {
+  depositos.push(deposito);
+  saldo = renderUmCiclo(saldo, deposito);
   desenharBarra(cicloAtual, saldo);
-  registrarNoHistorico(cicloAtual, depositoAtual);
+  registrarNoHistorico(cicloAtual, deposito);
   atualizarLegenda();
-
   cicloAtual += 1;
+}
+
+botaoConfirmar.addEventListener('click', () => {
+  guardarNoCiclo(depositoAtual);
+  salvarProgresso(depositos);
+
   if (cicloAtual < conteudo.ciclos) {
     mostrarCiclo();
     return;
@@ -165,6 +171,17 @@ async function comecar() {
     linhaDaMeta.setAttribute('y1', String(BASE_DO_GRAFICO - alturaDaBarra(conteudo.meta)));
     linhaDaMeta.setAttribute('y2', String(BASE_DO_GRAFICO - alturaDaBarra(conteudo.meta)));
     atualizarLegenda();
+
+    // Quem voltou vê de novo os ciclos que já fechou, com gráfico e histórico
+    // refeitos a partir dos depósitos salvos (RF-JOG-07).
+    for (const deposito of partida.estado?.respostas ?? []) {
+      if (cicloAtual < conteudo.ciclos) guardarNoCiclo(deposito);
+    }
+
+    if (cicloAtual >= conteudo.ciclos) {
+      terminar();
+      return;
+    }
     mostrarCiclo();
     enunciado.focus?.();
   } catch (erro) {

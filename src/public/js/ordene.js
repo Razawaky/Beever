@@ -3,7 +3,7 @@
 // A lista chega embaralhada do servidor e o jogador a arruma com as setas de
 // subir e descer. Quem confere é o servidor, que conta os pares fora de ordem
 // (RN-007) — daqui sai só a lista de ids na ordem escolhida.
-import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso } from './partida.js';
+import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
 
 const enunciado = document.getElementById('ordene-enunciado');
 const lista = document.getElementById('ordene-itens');
@@ -25,6 +25,7 @@ function mover(posicao, destino) {
 
   [itens[posicao], itens[destino]] = [itens[destino], itens[posicao]];
   desenhar();
+  salvarProgresso(itens.map((item) => item.id));
   anunciar(`${itens[destino].texto} agora está na posição ${destino + 1} de ${itens.length}.`);
 
   // Desenhar troca os botões por outros novos; o foco volta para a seta que o
@@ -86,6 +87,13 @@ async function comecar() {
 
     token = partida.token;
     itens = partida.conteudo.itens;
+    // Quem voltou encontra a lista na ordem em que a deixou (RF-JOG-07). O
+    // servidor reembaralha a cada abertura, então a ordem salva manda.
+    const ordemSalva = partida.estado?.respostas;
+    if (Array.isArray(ordemSalva) && ordemSalva.length === itens.length) {
+      itens = ordemSalva.map((id) => itens.find((item) => item.id === id)).filter(Boolean);
+      if (itens.length !== ordemSalva.length) itens = partida.conteudo.itens;
+    }
     enunciado.textContent = partida.conteudo.enunciado;
 
     desenhar();

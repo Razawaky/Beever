@@ -4,11 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-07.6 — **a tela de resultado é uma só** para os quatro
-jogos, com estrelas, as três recompensas, o mascote e o botão que leva à próxima
-célula. Árvore limpa, 462 testes passando.
-**Próximo passo: T-07.7**, os dois jogos P1 e a retomada de sessão — o que
-resta da E07
+**Último commit:** T-07.7 — **a E07 está inteira**: os seis jogos existem, a
+retomada de sessão funciona e nenhuma célula semeada ficou sem jogo. Árvore
+limpa, 491 testes passando.
+**Próximo passo: a auditoria da E07**, antes de abrir a E08
 
 ---
 
@@ -272,7 +271,7 @@ teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
 | T-07.4 Monte o Orçamento | **feita** — validador com regra por categoria, cinco células nas três faixas, `orcamento.js` com botões − e +; 7 testes unitários e 6 pelo HTTP |
 | T-07.5 Cofre do Tempo | **feita** — validador com juro composto, quatro células, gráfico em SVG sem dependência; 8 testes unitários e 6 pelo HTTP. Achou e corrigiu o botão "Jogar" que prometia célula com conteúdo de demonstração |
 | T-07.6 Tela de resultado unificada | **feita** — parcial própria, `resultado.js`, estrelas animadas em CSS e "Continuar" para a próxima célula; 4 testes pelo HTTP |
-| T-07.7 (P1) Mercado Esperto, Ordene a Prioridade e retomada de sessão | pendente |
+| T-07.7 (P1) Mercado Esperto, Ordene a Prioridade e retomada de sessão | **feita**, em três commits — o Mercado Esperto com gabarito calculado, o Ordene a Prioridade contando par invertido, e a retomada com a migration 015 e a quarta função do contrato |
 
 **O que a T-07.1 entregou.** O contrato existe em dois lugares que se sustentam:
 o documento explica o ciclo da partida e o formato, e o código o impõe. Todo
@@ -907,7 +906,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | **em andamento** | **Tudo o que é obrigatório está pronto** (T-07.1 a T-07.6): os quatro jogos, a casca comum e a tela de resultado. Resta só a T-07.7, que é P1 — Mercado Esperto, Ordene a Prioridade e retomada de sessão |
+| E07 Jogos | **concluída, à espera de auditoria** | As sete tarefas foram entregues: o contrato, os seis jogos, a casca comum, a tela de resultado e a retomada de sessão. Nenhuma célula semeada ficou sem jogo |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -1103,15 +1102,15 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-07.7 — os dois jogos **P1** (Mercado Esperto e Ordene a
-Prioridade) e a **retomada de sessão** (RF-JOG-07). É o que resta da E07, e é
-tudo P1: se o prazo apertar, a etapa pode ser auditada sem ela, porque todo
-requisito obrigatório da E07 já está entregue.
+**Próxima tarefa: auditar a E07** (`/auditar-etapa`), antes de abrir a E08. O
+critério de aceite da etapa é curto e conferível: cada jogo roda em até um
+segundo, funciona no celular e a nota vem do servidor. Os dois primeiros nunca
+foram medidos — é a DT-22, e a auditoria é a hora de encará-la.
 
-A retomada é a única que mexe no contrato: o `docs/CONTRATO-DE-JOGO.md` reserva
-o lugar dela numa quarta função opcional, `estadoParaSalvar(respostasParciais)`,
-mais uma coluna de estado na partida. Nenhum dos quatro jogos inventou o seu
-próprio jeito de guardar progresso, então esse lugar continua livre.
+Três pontas que a auditoria deve olhar primeiro, porque foram achadas por
+verificação e não por teste: o botão "Jogar" que prometia célula com conteúdo de
+demonstração (corrigido na T-07.5), a regra da próxima célula que ignorava
+célula concluída (corrigida na T-07.6) e o teste intermitente da DT-37.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
@@ -1677,3 +1676,54 @@ Para a T-07.7 saber:
    jogos ocupou esse lugar por conta própria.
 3. **`proximaCelulaJogavel` já sabe recusar beco**, e serve a qualquer tela que
    precise perguntar "e agora, para onde?".
+
+---
+
+### Sessão de 2026-08-19, T-07.7: a E07 fecha
+
+Suíte em **491 testes, zero falhas** (462 antes). Três commits, na ordem em que
+foram feitos: Mercado Esperto, Ordene a Prioridade e retomada de sessão.
+
+| Arquivo | O que é |
+|---|---|
+| `src/public/js/mercado.js` e `partials/jogos/mercado.ejs` | o quinto jogo |
+| `src/public/js/ordene.js` e `partials/jogos/ordene.ejs` | o sexto jogo |
+| `migrations/015_estado_de_partida.sql` | a coluna `saved_state` em `game_sessions` |
+| `src/services/validadoresDeJogo.js` | dois validadores e a quarta função do contrato |
+| `test/integration/{mercadoEsperto,ordeneAPrioridade,retomadaDePartida}.test.js` | 16 testes pelo HTTP |
+
+**O Mercado Esperto não guarda gabarito.** A melhor compra é a de menor preço
+por unidade, calculada a partir dos dois números — conteúdo nenhum consegue
+declarar uma "melhor compra" que a conta desmente. Em troca, o `conferirForma`
+recusa empate no primeiro lugar, que daria duas respostas certas.
+
+**O Ordene a Prioridade conta par invertido, e não posição.** Com quatro itens
+são seis pares: trocar dois vizinhos custa um erro, inverter tudo custa seis.
+Contar por posição faria mover um item empurrar todos os outros, e uma bobagem
+viraria nota zero — o oposto da RN-030.
+
+**A retomada ocupou o lugar que o contrato reservava desde a T-07.1.** Quem abre
+uma célula que já tem partida aberta recebe **aquela** partida, com o estado, em
+vez de uma nova: fechar a aba deixou de custar o progresso, e voltar à célula
+parou de encher a tabela de partidas órfãs. O estado é rascunho e nunca nota —
+há teste que salva duas respostas certas, manda duas erradas no fim e confere
+que valeram as do fim.
+
+**O estado mora no servidor, e não no navegador.** É a mesma razão do rascunho
+do onboarding: o Beever é web multiplataforma, e quem começa no computador da
+escola precisa continuar no celular de casa.
+
+**Dois testes foram reescritos, e a razão é boa:** eles afirmavam existir "célula
+de jogo que ainda não existe", e não existe mais. Passaram a cobrir o que restou
+— conteúdo que não dá para jogar, e o fim do favo.
+
+Para a auditoria saber:
+
+1. **Nenhuma célula semeada ficou sem jogo.** Os seis tipos de `game_types` têm
+   validador. O que ainda aparece como "em breve" é célula cujo **conteúdo** é de
+   demonstração — cinco células de quiz —, e isso é conteúdo a escrever, não
+   código a fazer.
+2. **O aceite da etapa tem duas metades não medidas**: "roda em até 1 s" e
+   "funciona no celular". A DT-22 cobre as duas.
+3. **A DT-37 continua aberta** e é o risco mais chato de todos: teste que falha
+   de vez em quando ensina a ignorar vermelho.

@@ -21,7 +21,7 @@ import { limiteSeguro } from '../utils/limite.js';
 
 const CAMPOS = `gs.id, gs.user_id, gs.cell_id, gs.token, gs.started_at, gs.finished_at,
                 gs.duration_seconds, gs.errors, gs.stars, gs.xp_awarded, gs.points_awarded,
-                gs.coins_awarded, gs.is_replay, st.slug AS status`;
+                gs.coins_awarded, gs.is_replay, gs.saved_state, st.slug AS status`;
 
 const JOINS = 'JOIN game_session_statuses st ON st.id = gs.status_id';
 
@@ -126,6 +126,36 @@ export async function abandonar(conexao, token) {
             duration_seconds = TIMESTAMPDIFF(SECOND, started_at, NOW())
       WHERE token = ? AND finished_at IS NULL`,
     [token],
+  );
+  return resultado.affectedRows;
+}
+
+/**
+ * A partida ainda aberta desta célula, se houver (RF-JOG-07).
+ *
+ * É o que permite retomar em vez de recomeçar: quem volta à célula encontra a
+ * partida que deixou pela metade, com o token e o progresso dela.
+ */
+export async function buscarAbertaDaCelula(idUsuario, idCelula) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS}
+       FROM game_sessions gs
+       ${JOINS}
+      WHERE gs.user_id = ? AND gs.cell_id = ? AND gs.finished_at IS NULL
+      ORDER BY gs.started_at DESC, gs.id DESC
+      LIMIT 1`,
+    [idUsuario, idCelula],
+  );
+  return linhas[0] ?? null;
+}
+
+/** Grava o progresso parcial da partida. Partida fechada não aceita mais escrita. */
+export async function salvarEstado(token, estado) {
+  const resultado = await consultar(
+    `UPDATE game_sessions
+        SET saved_state = CAST(? AS JSON)
+      WHERE token = ? AND finished_at IS NULL`,
+    [JSON.stringify(estado), token],
   );
   return resultado.affectedRows;
 }

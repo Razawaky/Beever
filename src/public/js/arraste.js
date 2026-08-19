@@ -8,7 +8,7 @@
 //
 // Como sempre, quem corrige é o servidor (RN-007): daqui sai só a caixa
 // escolhida para cada carta.
-import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso } from './partida.js';
+import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
 
 const enunciado = document.getElementById('arraste-enunciado');
 const monte = document.getElementById('arraste-monte');
@@ -69,6 +69,7 @@ function colocar(indiceDaCarta, idDaCaixa) {
   anunciar(`Carta "${cartas[indiceDaCarta].texto}" foi para a caixa ${nomeDaCaixa(idDaCaixa)}.`);
   desenhar();
   atualizarProgresso();
+  salvarProgresso(caixaDaCarta);
 
   // Depois de colocar, o teclado precisa de um lugar para cair: a próxima carta
   // do monte, ou o botão de terminar quando o monte acabou.
@@ -172,7 +173,8 @@ async function comecar() {
     token = partida.token;
     cartas = partida.conteudo.cartas;
     categorias = partida.conteudo.categorias;
-    caixaDaCarta = cartas.map(() => null);
+    // Quem voltou encontra as cartas nas caixas em que as deixou (RF-JOG-07).
+    caixaDaCarta = partida.estado?.respostas ?? cartas.map(() => null);
     enunciado.textContent = partida.conteudo.enunciado;
 
     desenhar();

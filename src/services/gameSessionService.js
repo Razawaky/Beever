@@ -35,6 +35,11 @@ import * as validadoresDeJogo from './validadoresDeJogo.js';
  *
  * A célula é conferida pelo `contentService`: quem não pode abri-la também não
  * pode jogá-la, mesmo mandando o pedido direto.
+ *
+ * Se o jogador já tem uma partida aberta nesta célula, ela é devolvida em vez de
+ * uma nova (RF-JOG-07): é assim que fechar a aba no meio do jogo deixa de custar
+ * o progresso. Abrir sempre uma partida nova encheria a tabela de partidas
+ * órfãs e faria a criança recomeçar do zero.
  */
 export async function abrir(idUsuario, idCelula) {
   const { celula, conteudo } = await contentService.abrirCelula(idUsuario, idCelula);
@@ -42,6 +47,18 @@ export async function abrir(idUsuario, idCelula) {
   // Falha antes de gravar partida: conteúdo sem gabarito não é jogável, e uma
   // partida aberta que ninguém consegue fechar só sujaria a tabela.
   const paraJogar = validadoresDeJogo.conteudoParaJogar(celula.game_type_slug, conteudo.body);
+
+  const emAndamento = await gameSessionsRepository.buscarAbertaDaCelula(idUsuario, idCelula);
+  if (emAndamento) {
+    return {
+      token: emAndamento.token,
+      celula,
+      conteudo: paraJogar,
+      ehRepeticao: Boolean(emAndamento.is_replay),
+      estado: emAndamento.saved_state ?? null,
+      retomada: true,
+    };
+  }
 
   const jaConcluiu = await gameSessionsRepository.contarConcluidasNaCelula(idUsuario, idCelula);
   const token = randomUUID();
@@ -55,7 +72,28 @@ export async function abrir(idUsuario, idCelula) {
     }),
   );
 
-  return { token, celula, conteudo: paraJogar, ehRepeticao: jaConcluiu > 0 };
+  return { token, celula, conteudo: paraJogar, ehRepeticao: jaConcluiu > 0, estado: null, retomada: false };
+}
+
+/**
+ * Guarda o progresso parcial da partida (RF-JOG-07).
+ *
+ * Rascunho, não nota: o que é salvo aqui não entra em conta nenhuma, e o
+ * resultado continua saindo do gabarito do banco quando a partida fecha
+ * (RN-007). Por isso o estado é aceito como veio, com um limite de tamanho — o
+ * que ele significa é assunto de cada jogo.
+ */
+export async function salvarEstado(idUsuario, token, respostasParciais) {
+  const partida = await gameSessionsRepository.buscarPorToken(token);
+  if (!partida) throw erroNaoEncontrado('Partida não encontrada');
+  if (Number(partida.user_id) !== Number(idUsuario)) throw erroAcessoNegado('Esta partida é de outro jogador');
+  if (partida.finished_at) throw erroValidacao('Esta partida já foi encerrada e não guarda mais progresso');
+
+  const celula = await cellsRepository.buscarPorId(partida.cell_id);
+  const estado = validadoresDeJogo.estadoParaSalvar(celula.game_type_slug, respostasParciais);
+
+  await gameSessionsRepository.salvarEstado(token, estado);
+  return { salvo: true };
 }
 
 /** O que a partida já fechada rendeu. Reenvio recebe isto, e não um erro. */

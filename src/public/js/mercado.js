@@ -4,7 +4,7 @@
 // jogador escolhe a que vale mais a pena. O preço por unidade não aparece na
 // tela de propósito — fazer essa conta é o jogo. Quem confere é o servidor,
 // que recalcula a melhor compra a partir do preço e da quantidade (RN-007).
-import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso } from './partida.js';
+import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
 
 const enunciado = document.getElementById('mercado-enunciado');
 const listaDeOpcoes = document.getElementById('mercado-opcoes');
@@ -83,6 +83,7 @@ botaoConfirmar.addEventListener('click', () => {
 
   respostas[indiceAtual] = escolhaAtual;
   indiceAtual += 1;
+  salvarProgresso(respostas);
 
   if (indiceAtual < rodadas.length) {
     mostrarRodada();
@@ -97,7 +98,9 @@ async function comecar() {
 
     token = partida.token;
     rodadas = partida.conteudo.rodadas;
-    respostas = [];
+    // Quem voltou continua da rodada em que parou (RF-JOG-07).
+    respostas = partida.estado?.respostas ?? [];
+    indiceAtual = Math.min(respostas.length, rodadas.length - 1);
     mostrarRodada();
   } catch (erro) {
     mostrarErro(erro.message);

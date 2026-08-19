@@ -520,6 +520,29 @@ function escolher(slugDoTipoDeJogo) {
   return validador;
 }
 
+/**
+ * O que pode ser guardado como progresso parcial da partida (RF-JOG-07).
+ *
+ * É a quarta função do contrato, e a única opcional: o padrão serve a todos os
+ * jogos de hoje, porque em todos eles o progresso é a lista do que já foi
+ * decidido, na ordem. Um jogo que precise guardar outra coisa declara o próprio
+ * `estadoParaSalvar` no validador dele.
+ *
+ * O limite de itens não é capricho: é o que impede alguém de usar a coluna de
+ * rascunho como depósito de dados, mandando uma lista sem fim.
+ */
+const LIMITE_DE_RESPOSTAS_PARCIAIS = 100;
+
+export function estadoParaSalvar(slugDoTipoDeJogo, respostasParciais) {
+  const validador = escolher(slugDoTipoDeJogo);
+  if (validador.estadoParaSalvar) return validador.estadoParaSalvar(respostasParciais);
+
+  if (!Array.isArray(respostasParciais)) {
+    throw erroValidacao('O progresso precisa vir em lista, na ordem em que foi decidido');
+  }
+  return { respostas: respostasParciais.slice(0, LIMITE_DE_RESPOSTAS_PARCIAIS) };
+}
+
 /** Quais tipos de jogo já têm validador. A trilha usa para não abrir célula sem jogo. */
 export function tiposJogaveis() {
   return Object.keys(VALIDADORES);

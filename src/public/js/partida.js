@@ -20,9 +20,9 @@ const barraCaixa = document.getElementById('jogo-barra-caixa');
 const csrfToken = document.body.dataset.csrfToken;
 const idCelula = Number(document.body.dataset.celulaId);
 
-async function pedir(caminho, corpo) {
+async function pedir(caminho, corpo, metodo = 'POST') {
   const resposta = await fetch(caminho, {
-    method: 'POST',
+    method: metodo,
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'x-csrf-token': csrfToken },
     credentials: 'include',
     body: JSON.stringify(corpo),
@@ -51,14 +51,29 @@ export function mostrarProgresso(texto, feitas, total) {
   barraCaixa.setAttribute('aria-valuenow', String(porcento));
 }
 
+// Guardado aqui para o jogo não precisar repassar o token a cada salvamento.
+let tokenDaPartida = null;
+
 /** Abre a partida, troca o "carregando" pela área do jogo e devolve o conteúdo. */
 export async function abrirPartida() {
   const partida = await pedir('/partidas', { idCelula });
 
+  tokenDaPartida = partida.token;
   if (partida.ehRepeticao) avisoDeRepeticao.classList.remove('hidden');
   carregando.classList.add('hidden');
   area.classList.remove('hidden');
   return partida;
+}
+
+/**
+ * Guarda no servidor o que já foi decidido, para a partida poder ser retomada
+ * (RF-JOG-07).
+ *
+ * É rascunho, e não nota: o `.catch` existe porque perder um salvamento não
+ * pode parar o jogo. A conta continua saindo do gabarito no fim (RN-007).
+ */
+export function salvarProgresso(respostasParciais) {
+  return pedir(`/partidas/${tokenDaPartida}/estado`, { respostas: respostasParciais }, 'PUT').catch(() => false);
 }
 
 /** Manda as respostas e entrega o resultado para a tela que o mostra. */

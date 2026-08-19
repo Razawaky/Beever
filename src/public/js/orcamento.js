@@ -7,7 +7,7 @@
 // A lista é montada uma vez e depois só atualizada. Redesenhar a cada toque
 // destruiria o botão que acabou de ser clicado, e o teclado perderia o foco no
 // meio da conta.
-import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso } from './partida.js';
+import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
 
 const enunciado = document.getElementById('orcamento-enunciado');
 const painelDoRestante = document.getElementById('orcamento-restante');
@@ -41,6 +41,7 @@ function mudar(indice, quanto) {
 
   valores[indice] = novoValor;
   atualizar();
+  salvarProgresso(valores);
 }
 
 function criarBotaoDePasso(indice, quanto, rotulo) {
@@ -116,7 +117,8 @@ async function comecar() {
 
     token = partida.token;
     conteudo = partida.conteudo;
-    valores = conteudo.categorias.map(() => 0);
+    // Quem voltou encontra a divisão como deixou (RF-JOG-07).
+    valores = partida.estado?.respostas ?? conteudo.categorias.map(() => 0);
     linhas = [];
     enunciado.textContent = conteudo.enunciado;
 

@@ -34,6 +34,14 @@ router.post(
   gameSessionsController.fechar,
 );
 
+router.put(
+  '/:token/estado',
+  param('token').isUUID().withMessage('Partida inválida'),
+  body('respostas').isArray({ max: 100 }).withMessage('O progresso precisa vir em lista'),
+  validate,
+  gameSessionsController.salvarEstado,
+);
+
 router.post(
   '/:token/abandono',
   param('token').isUUID().withMessage('Partida inválida'),

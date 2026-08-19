@@ -50,9 +50,15 @@ O corpo do sexto jogo é `{ tipo, enunciado, itens: [{ id, texto, ordem }] }`, c
 
 O erro é contado **por par invertido**, e não por posição fora do lugar: com quatro itens são seis pares, trocar dois vizinhos custa um erro e inverter a lista inteira custa seis. Contar por posição faria mover um item empurrar todos os outros, e uma bobagem viraria nota zero — o oposto da RN-030. Item que o jogador não ordenou fica depois de todos, então perde os pares dele.
 
-## Estado salvo, que ainda não existe
+## Estado salvo, que agora existe
 
-A RF-JOG-07 prevê retomar uma partida interrompida, e é P1, planejada para a T-07.7. O lugar dela no contrato é uma quarta função opcional, `estadoParaSalvar(respostasParciais)`, e uma coluna de estado na partida. Nenhum jogo da E07 deve inventar seu próprio jeito de salvar antes disso: quem precisar guardar progresso parcial agora, guarda no navegador e assume que fechar a aba custa a partida.
+A RF-JOG-07 foi entregue na T-07.7, no lugar que o contrato já reservava: a quarta função, `estadoParaSalvar(respostasParciais)`, e a coluna `saved_state` em `game_sessions` (migration 015).
+
+A quarta função é a única **opcional**. O padrão guarda `{ respostas }` — a lista do que já foi decidido, na ordem, cortada em cem itens para a coluna de rascunho não virar depósito de dados — e serve a todos os jogos de hoje, porque em todos eles o progresso é exatamente isso: alternativas escolhidas, cartas colocadas, valores repartidos, depósitos feitos, itens ordenados. Um jogo que precise guardar outra coisa declara o próprio `estadoParaSalvar` no validador.
+
+O progresso é gravado por `PUT /partidas/:token/estado` a cada decisão, e quem abre uma célula que já tem partida aberta recebe **aquela partida**, com o estado, em vez de uma nova. Duas consequências que valem lembrar: fechar a aba deixou de custar o progresso, e voltar à célula não enche mais a tabela de partidas órfãs.
+
+O estado é **rascunho, nunca nota**. Nada do que foi salvo entra na conta: a recompensa continua saindo do gabarito do banco no `POST /:token/resultado`, e existe teste que salva duas respostas certas, manda duas erradas no fim e confere que valeram as do fim (RN-007). Partida encerrada recusa novo salvamento, e partida de outro jogador responde 403.
 
 ## Como acrescentar um jogo
 

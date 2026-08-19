@@ -6,7 +6,7 @@
 //
 // Abrir a partida, mostrar erro, a barra e o resultado moram no `partida.js`,
 // que é a parte igual em todo jogo.
-import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso } from './partida.js';
+import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
 
 const enunciado = document.getElementById('quiz-enunciado');
 const listaDeAlternativas = document.getElementById('quiz-alternativas');
@@ -78,6 +78,7 @@ botaoConfirmar.addEventListener('click', () => {
 
   respostas[indiceAtual] = escolhaAtual;
   indiceAtual += 1;
+  salvarProgresso(respostas);
 
   if (indiceAtual < perguntas.length) {
     mostrarPergunta();
@@ -92,7 +93,10 @@ async function comecar() {
 
     token = partida.token;
     perguntas = partida.conteudo.perguntas;
-    respostas = [];
+    // Quem voltou continua de onde parou: as perguntas já respondidas ficam
+    // para trás (RF-JOG-07).
+    respostas = partida.estado?.respostas ?? [];
+    indiceAtual = Math.min(respostas.length, perguntas.length - 1);
     mostrarPergunta();
   } catch (erro) {
     mostrarErro(erro.message);
