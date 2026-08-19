@@ -146,8 +146,12 @@ describe('aceite da trilha (E05)', opcoes, () => {
       'mandar um resultado sem ter jogado',
     );
 
-    const semLink = await agente.get(`/trilha/${primeiroFavo.id}`).set('Accept', 'text/html').expect(200);
-    assert.doesNotMatch(semLink.text, /\/celula\//, 'e a tela não oferece caminho para célula nenhuma ainda');
+    const pagina = await agente.get(`/trilha/${primeiroFavo.id}`).set('Accept', 'text/html').expect(200);
+    assert.doesNotMatch(
+      pagina.text,
+      new RegExp(`/celula/${terceira.id}`),
+      'e a tela não oferece caminho para a célula travada',
+    );
   });
 
   /** Critério 1, a outra metade: o favo travado não se abre pelo endereço. */

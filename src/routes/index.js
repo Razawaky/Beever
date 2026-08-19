@@ -9,6 +9,7 @@ import { somentePagina } from '../middlewares/somentePagina.js';
 import { validateEnderecoDePagina } from '../middlewares/validate.js';
 import lojaRouter from './loja.js';
 import metasRouter from './metas.js';
+import partidasRouter from './partidas.js';
 import perfilRouter from './perfil.js';
 import sessaoRouter from './sessao.js';
 import tarefasRouter from './tarefas.js';
@@ -49,6 +50,14 @@ router.get(
   validateEnderecoDePagina,
   paginaController.favo,
 );
+router.get(
+  '/trilha/:idFavo/celula/:idCelula',
+  requireOnboarding,
+  param('idFavo').isInt({ min: 1 }),
+  param('idCelula').isInt({ min: 1 }),
+  validateEnderecoDePagina,
+  paginaController.celula,
+);
 router.get('/manutencao', paginaController.manutencao);
 
 router.use('/users', usersRouter);
@@ -56,6 +65,7 @@ router.use('/perfil', perfilRouter);
 router.use('/sessao', sessaoRouter);
 router.use('/loja', lojaRouter);
 router.use('/metas', metasRouter);
+router.use('/partidas', partidasRouter);
 router.use('/tarefas', tarefasRouter);
 
 export default router;

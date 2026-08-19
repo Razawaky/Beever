@@ -4,9 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-07.1 — o contrato de jogo virou documento e assinatura, com
-o validador do quiz enfim testado sozinho. Árvore limpa, 407 testes passando.
-**Próximo passo: T-07.2**, o Quiz do Favo — o primeiro jogo completo, com tela
+**Último commit:** T-07.2 — **o jogo existe**: a criança abre o quiz, responde e
+vê o que ganhou. Árvore limpa, 415 testes passando.
+**Próximo passo: T-07.3**, o Arraste e Classifique, com alternativa por clique e
+teclado (RNF-23)
 
 ---
 
@@ -247,7 +248,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
-| A partida jogada em navegador | O `gameSessionService` fecha o ciclo inteiro com teste contra banco real, mas não há rota nem tela de jogo: isso é a E07. Nenhuma criança viu XP, pólen ou mel subir na tela |
+| A tela do quiz em navegador real | A T-07.2 entregou rota, tela e JavaScript, com oito testes pelo HTTP conferindo o HTML servido. O que **não** foi visto por olho humano é o jogo rodando: alternativa selecionada, barra andando, foco de teclado ao trocar de pergunta e o painel de resultado. É a DT-22 e a L-10 do laudo da E06 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -265,7 +266,7 @@ teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
 | Tarefa | Situação |
 |---|---|
 | T-07.1 Contrato único de jogo (`docs/CONTRATO-DE-JOGO.md`) | **feita** — as três funções de um validador viraram assinatura, e o quiz ganhou 12 testes unitários; paga as lacunas L-5 e L-8 do laudo da E06 |
-| T-07.2 Quiz do Favo | pendente |
+| T-07.2 Quiz do Favo | **feita** — rota, tela, `quiz.js` e 8 testes pelo HTTP; o botão "Jogar" passou a ser por célula |
 | T-07.3 Arraste e Classifique (com alternativa por clique e teclado) | pendente |
 | T-07.4 Monte o Orçamento | pendente |
 | T-07.5 Cofre do Tempo | pendente |
@@ -289,6 +290,32 @@ Três coisas que valem lembrar:
    destaque: resposta a mais é ignorada em vez de virar acerto, e
    `conteudoParaJogar` não altera o conteúdo original — entregar o gabarito por
    referência seria a falha mais silenciosa possível.
+
+**O que a T-07.2 entregou.** A primeira tela de jogo do projeto. A página
+`/trilha/:idFavo/celula/:idCelula` é uma casca: o `quiz.js` abre a partida por
+`POST /partidas`, recebe token e perguntas juntos, mostra uma pergunta por vez e
+manda as respostas em `POST /partidas/:token/resultado`.
+
+Quatro decisões que valem lembrar:
+
+1. **`GET` não cria partida.** A tela pede a partida por `fetch`, então atualizar
+   a página não deixa partida aberta para trás — que era o preço da alternativa
+   de renderizar token e perguntas no HTML.
+2. **O botão "Jogar" é por célula.** O `contentService` devolve `temJogo`
+   perguntando ao `tiposJogaveis()`, e a constante `JOGO_DISPONIVEL` saiu do
+   `paginaController`. Ligar um interruptor geral ofereceria jogo em 18 células
+   que o servidor recusaria.
+3. **O resultado é provisório e mora na própria página.** Mostra estrelas, XP,
+   pólen, mel e a subida de nível, tudo vindo pronto do servidor. A T-07.6 troca
+   a apresentação, não a origem do dado.
+4. **O JavaScript é externo e o CSRF vai no cabeçalho.** A CSP é
+   `script-src 'self'`, então não existe script inline nem JSON embutido; o
+   `x-csrf-token` já era aceito pelo middleware desde a E02.
+
+**Três testes da E05 foram reescritos, e não é regressão.** Eles afirmavam "a
+tela de jogo é da E07" e "nenhum link para `/celula/`" — exatamente o que esta
+tarefa entregou. As asserções passaram a checar o contrato novo: só a célula de
+quiz oferece link, e a travada continua sem nenhum.
 
 O estado salvo da RF-JOG-07 ficou **descrito e não implementado**: o contrato
 reserva o lugar dele, para que os quatro jogos da E07 não inventem cada um o seu
@@ -879,7 +906,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | **em andamento** | T-07.1 feita: contrato de jogo documentado e imposto pelo código, com o validador do quiz testado sozinho. Faltam os jogos em si (T-07.2 a T-07.5), a tela de resultado (T-07.6) e os P1 da T-07.7 |
+| E07 Jogos | **em andamento** | T-07.1 feita: contrato documentado e imposto pelo código. T-07.2 feita: o Quiz do Favo joga de verdade, com tela, rota e teste pelo HTTP. Faltam T-07.3 a T-07.5 (os outros três jogos), a tela de resultado (T-07.6) e os P1 da T-07.7 |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -1073,17 +1100,15 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-07.2 — o **Quiz do Favo**, primeiro jogo completo: rota,
-tela, JavaScript na página e teste. O caminho está aberto dos dois lados, e é
-raro isso acontecer: o validador já existe e é testado, e o motor de recompensas
-paga sozinho desde a E06. O que falta é exatamente o que nunca foi feito nesta
-parte do projeto, que é a **tela**.
+**Próxima tarefa:** T-07.3 — **Arraste e Classifique**, e a diferença dele para
+o quiz é a RNF-23: jogo de arrastar precisa de alternativa por clique e teclado,
+não é enfeite de acessibilidade. O caminho está montado: basta um validador novo
+no mapa, conteúdo semeado no formato que ele aceita e a tela; o motor de
+recompensas e a partida já funcionam para qualquer jogo.
 
-Duas coisas para decidir na abertura dela: a rota
-`/trilha/:idFavo/celula/:idCelula` é a que a E05 já aponta no botão "Jogar" (com
-a constante `JOGO_DISPONIVEL` esperando virar `true` em `paginaController`), e a
-tela de resultado é a T-07.6, então o quiz precisa de um destino provisório ao
-terminar.
+Vale reaproveitar o que a T-07.2 montou: a página de célula é genérica, e só o
+`quiz.js` é específico. Se o segundo jogo repetir a casca inteira, o terceiro vai
+repetir de novo — é o momento de olhar o que vira parte comum.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
@@ -1411,3 +1436,27 @@ Para a T-07.2 saber:
    "Jogar", hoje desligado pela constante `JOGO_DISPONIVEL` em `paginaController`.
 3. **A tela de resultado é a T-07.6**, então o quiz precisa de um destino
    provisório ao terminar, e vale decidir isso no checkpoint em vez de improvisar.
+
+---
+
+### Sessão de 2026-08-19, T-07.2: a primeira tela de jogo
+
+Suíte em **415 testes, zero falhas** (407 antes).
+
+| Arquivo | O que é |
+|---|---|
+| `src/views/pages/celula.ejs` | a casca da tela: carregando, jogo, erro e resultado provisório |
+| `src/public/js/quiz.js` | abre a partida, mostra uma pergunta por vez, manda as respostas |
+| `src/controllers/gameSessionsController.js` e `src/routes/partidas.js` | `POST /partidas`, `/:token/resultado` e `/:token/abandono`, só JSON |
+| `src/services/contentService.js` | `temJogo` por célula, no lugar da constante geral |
+| `test/integration/quizDoFavo.test.js` | 8 testes pelo HTTP |
+
+Para a T-07.3 saber:
+
+1. **A casca é quase genérica.** `celula.ejs` só tem de específico os ids do quiz
+   e o `scripts: ['/js/quiz.js']`. Antes de escrever o segundo jogo, vale decidir
+   o que vira parte comum — no terceiro já será tarde.
+2. **O Tailwind é compilado.** Classe nova em view exige `npm run css:build`, ou
+   ela simplesmente não existe no CSS servido.
+3. **A barra de progresso usa `.barra-N` de cinco em cinco**, porque a CSP não
+   permite largura em `style`.

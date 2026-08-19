@@ -1,0 +1,84 @@
+<%#
+  Tela de jogo (RF-JOG-01).
+
+  A página é uma casca de propósito: o `quiz.js` abre a partida por `fetch` e
+  monta as perguntas. Assim `GET` não cria partida, e atualizar a tela não deixa
+  partida aberta para trás.
+
+  O id da célula e o do favo viajam em `data-` no `<body>`, porque a CSP é
+  `script-src 'self'` e não existe script inline neste projeto.
+-%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto max-w-2xl">
+    <a
+      href="/trilha/<%= idFavo %>"
+      class="text-sm font-semibold text-tinta underline decoration-tinta/30 decoration-2 underline-offset-4 hover:decoration-tinta focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+      >&larr; Voltar ao favo</a
+    >
+    <h1 class="mt-2 font-display text-2xl text-tinta sm:text-3xl"><%= celula.title %></h1>
+    <p class="mt-1 text-sm text-tinta-suave"><%= celula.game_type_name %></p>
+  </div>
+</header>
+
+<main class="mx-auto max-w-2xl px-6 py-8">
+  <p id="quiz-carregando" class="rounded-favo bg-cera p-6 text-center text-tinta-suave">Preparando a atividade…</p>
+
+  <p
+    id="quiz-erro"
+    class="hidden rounded-favo border-2 border-erro bg-white p-6 text-center font-medium text-erro-texto"
+    role="alert"
+  ></p>
+
+  <section id="quiz-jogo" class="hidden">
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-sm font-semibold text-tinta-suave">
+        Pergunta <span id="quiz-numero">1</span> de <span id="quiz-total">1</span>
+      </p>
+      <p id="quiz-repeticao" class="hidden text-xs font-medium text-tinta-suave">
+        Você já concluiu esta célula: repetir rende menos.
+      </p>
+    </div>
+
+    <div
+      class="mt-3 h-3 overflow-hidden rounded-pilula bg-cera"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+      aria-label="Progresso da atividade"
+      id="quiz-barra-caixa"
+    >
+      <div id="quiz-barra" class="h-full rounded-pilula bg-mel barra-0"></div>
+    </div>
+
+    <h2 id="quiz-enunciado" tabindex="-1" class="mt-6 font-display text-xl text-tinta" aria-live="polite"></h2>
+
+    <ul id="quiz-alternativas" class="mt-5 space-y-3"></ul>
+
+    <button
+      id="quiz-confirmar"
+      type="button"
+      disabled
+      class="mt-6 w-full rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      Confirmar
+    </button>
+  </section>
+
+  <%#
+    Resultado provisório: a tela unificada é a T-07.6. Os números já vêm prontos
+    do servidor, então o que muda lá é a apresentação, não a origem do dado.
+  -%>
+  <section id="quiz-resultado" class="hidden rounded-favo bg-cera p-6 text-center" aria-live="polite">
+    <h2 class="font-display text-2xl text-tinta">Atividade concluída!</h2>
+    <p id="quiz-estrelas" class="mt-3 text-lg font-semibold text-tinta"></p>
+    <p id="quiz-ganhos" class="mt-2 text-tinta-suave"></p>
+    <p id="quiz-nivel" class="mt-2 hidden font-semibold text-acerto-texto"></p>
+
+    <a
+      href="/trilha/<%= idFavo %>"
+      class="mt-6 inline-block rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+      >Voltar ao favo</a
+    >
+  </section>
+</main>

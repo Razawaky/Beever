@@ -131,12 +131,11 @@ describe('telas da trilha', opcoes, () => {
     assert.match(pagina.text, /Meu primeiro orçamento/);
     assert.match(pagina.text, /Conclua a célula anterior/, 'as travadas dizem por quê');
 
-    assert.match(pagina.text, /em breve/, 'a tela de jogo é da E07');
-    assert.doesNotMatch(
-      pagina.text,
-      /\/celula\//,
-      'nenhum link para rota que ainda não existe — botão que responde 404 é pior que aviso honesto',
-    );
+    // Desde a T-07.2 o quiz é jogável, e só ele: as outras três células deste
+    // favo são de jogos que a E07 ainda não escreveu.
+    const links = pagina.text.match(/\/celula\/\d+/g) ?? [];
+    assert.equal(links.length, 1, 'só a célula de quiz oferece caminho');
+    assert.match(pagina.text, new RegExp(`/trilha/${primeiroFavo.id}/celula/${celulas[0].id}`));
   });
 
   it('endereço com id inválido é página que não existe, não formulário errado', async () => {
@@ -158,7 +157,10 @@ describe('telas da trilha', opcoes, () => {
     const pagina = await agente.get(`/trilha/${primeiroFavo.id}`).set('Accept', 'text/html').expect(200);
 
     assert.match(pagina.text, /3 de 3 estrelas/, 'a leitura de tela recebe as estrelas em texto');
-    assert.equal((pagina.text.match(/em breve/g) ?? []).length, 2, 'a concluída e a seguinte, as duas jogáveis');
+    assert.match(pagina.text, /Repetir/, 'célula concluída convida a repetir');
+    // A segunda célula abriu, mas o jogo dela (arraste e classifique) é da
+    // T-07.3: ela aparece como "em breve", e não como link.
+    assert.match(pagina.text, /em breve/);
 
     const trilha = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
     assert.match(trilha.text, /25%/);

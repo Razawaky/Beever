@@ -5,6 +5,7 @@ import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as progressRepository from '../repositories/progressRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado } from '../utils/erros.js';
 import * as inventoryService from './inventoryService.js';
+import * as validadoresDeJogo from './validadoresDeJogo.js';
 
 /**
  * `ContentService` — o que o jogador pode abrir na trilha, e por que não pode o
@@ -204,12 +205,17 @@ export async function listarCelulasDoFavo(idUsuario, idFavo) {
   const codigosDeFaixa = await faixasDoJogador(idUsuario);
   const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, codigosDeFaixa);
   const comConteudo = new Set(await contentsRepository.listarCelulasComConteudo(celulas.map((c) => c.id)));
+  const jogaveis = validadoresDeJogo.tiposJogaveis();
 
   return {
     favo,
+    // `temJogo` é por célula, e não uma chave geral de "a E07 chegou": o quiz já
+    // existe e os outros cinco jogos não, então só as células de quiz podem
+    // oferecer o botão de jogar.
     celulas: estadosDasCelulas(celulas).map((celula) => ({
       ...celula,
       temConteudo: comConteudo.has(Number(celula.id)),
+      temJogo: jogaveis.includes(celula.game_type_slug),
     })),
   };
 }

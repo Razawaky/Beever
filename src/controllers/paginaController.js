@@ -174,23 +174,42 @@ export const trilha = assincrono(async (req, res) => {
   });
 });
 
-/**
- * A tela de jogo é da E07. Até ela existir, a célula liberada mostra "em breve"
- * em vez de um link para uma rota que responderia 404 — prometer o que não
- * existe é pior do que avisar que ainda não dá.
- */
-const JOGO_DISPONIVEL = false;
-
 /** As células de um favo (RF-CON-02). Favo travado nem lista: quem barra é o service. */
 export const favo = assincrono(async (req, res) => {
   const { favo, celulas } = await contentService.listarCelulasDoFavo(req.session.usuarioId, Number(req.params.id));
 
+  // Quem diz se a célula tem jogo é o `contentService`, célula a célula: o quiz
+  // existe desde a T-07.2 e os outros cinco não. As demais seguem com "em
+  // breve", porque prometer o que não existe é pior do que avisar que não dá.
   renderizarPagina(res, 'favo', {
     titulo: `${favo.title} — Beever`,
     classeBody: FUNDO_CERA,
     favo,
     celulas,
-    jogoDisponivel: JOGO_DISPONIVEL,
+  });
+});
+
+/**
+ * A tela de jogo (RF-JOG-01).
+ *
+ * A página é uma casca: ela conhece o id da célula e nada mais. Quem abre a
+ * partida e recebe as perguntas é o `quiz.js`, por `fetch` — assim `GET` não
+ * cria partida, e atualizar a tela não deixa partida abandonada para trás.
+ *
+ * A conferência de acesso acontece aqui também, e não só no `POST`: quem digita
+ * a URL de uma célula travada precisa ver o erro na hora, não depois de a tela
+ * carregar.
+ */
+export const celula = assincrono(async (req, res) => {
+  const { celula } = await contentService.abrirCelula(req.session.usuarioId, Number(req.params.idCelula));
+
+  renderizarPagina(res, 'celula', {
+    titulo: `${celula.title} — Beever`,
+    classeBody: FUNDO_CERA,
+    celula,
+    idFavo: Number(req.params.idFavo),
+    scripts: ['/js/quiz.js'],
+    dadosBody: { celulaId: Number(celula.id), favoId: Number(req.params.idFavo) },
   });
 });
 
