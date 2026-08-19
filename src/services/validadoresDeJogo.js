@@ -7,9 +7,12 @@ import { erroValidacao } from '../utils/erros.js';
  * nunca quanto acertou. O gabarito mora em `contents.body`, e é daqui que a
  * contagem de erros sai.
  *
- * Um validador por slug de `game_types`. Hoje só o quiz tem conteúdo de verdade
- * semeado; a T-07.1 formaliza o contrato de jogo e as tarefas da E07
- * acrescentam os outros cinco neste mesmo mapa.
+ * Um validador por slug de `game_types`, com três funções cada — o contrato
+ * está em `docs/CONTRATO-DE-JOGO.md`:
+ *
+ *   conferirForma(corpo)          o conteúdo é jogável? erro de validação se não
+ *   paraJogar(corpo)              o que vai para a tela, sem o gabarito
+ *   validar(corpo, respostas)     devolve { erros, total }
  *
  * Este módulo mora separado do `gameSessionService` pelo mesmo motivo que
  * `goalProgressSources`: a lista vai crescer, e o service não deve engordar
@@ -17,42 +20,56 @@ import { erroValidacao } from '../utils/erros.js';
  */
 
 /**
- * Confere um quiz de múltipla escolha.
+ * Quiz do Favo (RF-JOG-01): múltipla escolha, uma resposta certa por pergunta.
  *
- * `respostas` é a lista de índices escolhidos, na ordem das perguntas. Pergunta
- * sem resposta conta como erro — deixar em branco não pode valer estrela.
+ * Corpo esperado: `{ tipo, perguntas: [{ enunciado, alternativas, correta }] }`,
+ * em que `correta` é o índice da alternativa certa.
  */
-function validarQuiz(corpo, respostas) {
-  const perguntas = corpo?.perguntas;
-  if (!Array.isArray(perguntas) || perguntas.length === 0) {
-    throw erroValidacao('Esta célula ainda não é jogável: o conteúdo não tem gabarito');
-  }
+const quiz = {
+  conferirForma(corpo) {
+    const perguntas = corpo?.perguntas;
+    if (!Array.isArray(perguntas) || perguntas.length === 0) {
+      throw erroValidacao('Esta célula ainda não é jogável: o conteúdo não tem gabarito');
+    }
 
-  if (!Array.isArray(respostas)) {
-    throw erroValidacao('As respostas precisam vir em lista, uma por pergunta');
-  }
+    for (const pergunta of perguntas) {
+      if (!Array.isArray(pergunta.alternativas) || pergunta.alternativas.length < 2) {
+        throw erroValidacao('Pergunta sem alternativas suficientes: o conteúdo está incompleto');
+      }
+      const foraDaLista = pergunta.correta < 0 || pergunta.correta >= pergunta.alternativas.length;
+      if (!Number.isInteger(pergunta.correta) || foraDaLista) {
+        throw erroValidacao('Pergunta com resposta certa fora das alternativas');
+      }
+    }
+  },
 
-  let erros = 0;
-  perguntas.forEach((pergunta, indice) => {
-    if (Number(respostas[indice]) !== Number(pergunta.correta)) erros += 1;
-  });
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      perguntas: corpo.perguntas.map((pergunta) => ({
+        enunciado: pergunta.enunciado,
+        alternativas: pergunta.alternativas,
+      })),
+    };
+  },
 
-  return { erros, total: perguntas.length };
-}
+  /** Pergunta sem resposta conta como erro: deixar em branco não pode valer estrela. */
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma por pergunta');
+    }
 
-/** Prepara o conteúdo do quiz para ir à tela: as perguntas sem o gabarito. */
-function quizParaJogar(corpo) {
-  return {
-    tipo: corpo.tipo,
-    perguntas: corpo.perguntas.map((pergunta) => ({
-      enunciado: pergunta.enunciado,
-      alternativas: pergunta.alternativas,
-    })),
-  };
-}
+    let erros = 0;
+    corpo.perguntas.forEach((pergunta, indice) => {
+      if (Number(respostas[indice]) !== Number(pergunta.correta)) erros += 1;
+    });
+
+    return { erros, total: corpo.perguntas.length };
+  },
+};
 
 const VALIDADORES = {
-  'quiz-do-favo': { validar: validarQuiz, paraJogar: quizParaJogar },
+  'quiz-do-favo': quiz,
 };
 
 function escolher(slugDoTipoDeJogo) {
@@ -63,19 +80,31 @@ function escolher(slugDoTipoDeJogo) {
   return validador;
 }
 
+/** Quais tipos de jogo já têm validador. A trilha usa para não abrir célula sem jogo. */
+export function tiposJogaveis() {
+  return Object.keys(VALIDADORES);
+}
+
+/** Recusa conteúdo que não dá para jogar, antes de a partida ser aberta. */
+export function conferirForma(slugDoTipoDeJogo, corpo) {
+  escolher(slugDoTipoDeJogo).conferirForma(corpo);
+}
+
 /** Erros e total de perguntas, a partir do gabarito guardado no conteúdo. */
 export function validarRespostas(slugDoTipoDeJogo, corpo, respostas) {
-  return escolher(slugDoTipoDeJogo).validar(corpo, respostas);
+  const validador = escolher(slugDoTipoDeJogo);
+  validador.conferirForma(corpo);
+  return validador.validar(corpo, respostas);
 }
 
 /**
- * O conteúdo como o jogador pode vê-lo — sem as respostas certas.
+ * O conteúdo como o jogador pode vê-lo, sem as respostas certas.
  *
  * Mandar o gabarito para a tela tornaria a validação no servidor teatro: quem
  * abre o inspetor do navegador leria a resposta antes de responder.
  */
 export function conteudoParaJogar(slugDoTipoDeJogo, corpo) {
   const validador = escolher(slugDoTipoDeJogo);
-  validador.validar(corpo, []);
+  validador.conferirForma(corpo);
   return validador.paraJogar(corpo);
 }

@@ -4,10 +4,9 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** correções L-1, L-2 e L-3 do laudo da E06. **A E06 está
-entregue e auditada**, com as três lacunas de risco médio fechadas. Árvore
-limpa, 395 testes passando.
-**Próximo passo: E07 — jogos interativos**, começando pela T-07.1 (contrato de jogo)
+**Último commit:** T-07.1 — o contrato de jogo virou documento e assinatura, com
+o validador do quiz enfim testado sozinho. Árvore limpa, 407 testes passando.
+**Próximo passo: T-07.2**, o Quiz do Favo — o primeiro jogo completo, com tela
 
 ---
 
@@ -259,8 +258,50 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E06 — motor de recompensas. As oito tarefas estão entregues; falta a
-auditoria da etapa.** A E05 está fechada e auditada em duas passagens. O roadmap
+**E07 — jogos interativos.** A regra da etapa é uma tarefa por jogo, e cada jogo
+só está pronto quando tem tela, JavaScript na página, validação no servidor e
+teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
+
+| Tarefa | Situação |
+|---|---|
+| T-07.1 Contrato único de jogo (`docs/CONTRATO-DE-JOGO.md`) | **feita** — as três funções de um validador viraram assinatura, e o quiz ganhou 12 testes unitários; paga as lacunas L-5 e L-8 do laudo da E06 |
+| T-07.2 Quiz do Favo | pendente |
+| T-07.3 Arraste e Classifique (com alternativa por clique e teclado) | pendente |
+| T-07.4 Monte o Orçamento | pendente |
+| T-07.5 Cofre do Tempo | pendente |
+| T-07.6 Tela de resultado unificada | pendente |
+| T-07.7 (P1) Mercado Esperto, Ordene a Prioridade e retomada de sessão | pendente |
+
+**O que a T-07.1 entregou.** O contrato existe em dois lugares que se sustentam:
+o documento explica o ciclo da partida e o formato, e o código o impõe. Todo
+validador é um objeto com `conferirForma`, `paraJogar` e `validar`, indexado pelo
+slug de `game_types`.
+
+Três coisas que valem lembrar:
+
+1. **`conteudoParaJogar` deixou de usar o validador de respostas para conferir
+   forma.** Era a L-8: chamar `validar(corpo, [])` só para provocar o erro
+   funcionava por acidente, e quebraria no primeiro jogo com validação cara.
+2. **`conferirForma` do quiz ficou rigoroso**: recusa pergunta com menos de duas
+   alternativas e resposta certa fora da lista. É o tipo de conteúdo torto que a
+   área administrativa da E12 vai poder cadastrar.
+3. **O validador enfim tem teste próprio**, sem banco (L-5). Dois casos merecem
+   destaque: resposta a mais é ignorada em vez de virar acerto, e
+   `conteudoParaJogar` não altera o conteúdo original — entregar o gabarito por
+   referência seria a falha mais silenciosa possível.
+
+O estado salvo da RF-JOG-07 ficou **descrito e não implementado**: o contrato
+reserva o lugar dele, para que os quatro jogos da E07 não inventem cada um o seu
+jeito de guardar progresso parcial antes da T-07.7.
+
+---
+
+**E06 — motor de recompensas** (concluída e auditada, guardada aqui como
+histórico).
+
+**As oito tarefas foram entregues; a auditoria está em
+`docs/06-AUDITORIA-DA-ETAPA.md` e o resumo da etapa em
+`docs/06-RESUMO-DA-ETAPA.md`.** A E05 está fechada e auditada em duas passagens. O roadmap
 manda fazer esta etapa **antes** dos jogos, para que todo jogo use o mesmo
 contrato de recompensa.
 
@@ -838,7 +879,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
+| E07 Jogos | **em andamento** | T-07.1 feita: contrato de jogo documentado e imposto pelo código, com o validador do quiz testado sozinho. Faltam os jogos em si (T-07.2 a T-07.5), a tela de resultado (T-07.6) e os P1 da T-07.7 |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -1032,13 +1073,20 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-07.1 — o contrato único de jogo, em
-`docs/CONTRATO-DE-JOGO.md`: como o front manda respostas e como o servidor
-valida. O mapa `VALIDADORES` de `src/services/validadoresDeJogo.js` já é o lugar
-onde os cinco jogos que faltam entram, e o quiz serve de exemplo pronto.
+**Próxima tarefa:** T-07.2 — o **Quiz do Favo**, primeiro jogo completo: rota,
+tela, JavaScript na página e teste. O caminho está aberto dos dois lados, e é
+raro isso acontecer: o validador já existe e é testado, e o motor de recompensas
+paga sozinho desde a E06. O que falta é exatamente o que nunca foi feito nesta
+parte do projeto, que é a **tela**.
+
+Duas coisas para decidir na abertura dela: a rota
+`/trilha/:idFavo/celula/:idCelula` é a que a E05 já aponta no botão "Jogar" (com
+a constante `JOGO_DISPONIVEL` esperando virar `true` em `paginaController`), e a
+tela de resultado é a T-07.6, então o quiz precisa de um destino provisório ao
+terminar.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
-(L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas abaixo.
+(L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -1341,3 +1389,25 @@ aluguel muito depois de escrito.
 
 Ficam abertas sete lacunas de risco baixo, cada uma com etapa marcada na seção 3
 do laudo.
+
+---
+
+### Sessão de 2026-08-19, abertura da E07: T-07.1
+
+Suíte em **407 testes, zero falhas** (395 antes).
+
+| Arquivo | O que é |
+|---|---|
+| `docs/CONTRATO-DE-JOGO.md` | o ciclo da partida, as três funções de um validador, o quiz como exemplo e o passo a passo para acrescentar um jogo |
+| `src/services/validadoresDeJogo.js` | cada validador virou objeto com `conferirForma`, `paraJogar` e `validar`; `tiposJogaveis()` diz quais existem |
+| `test/unit/validadoresDeJogo.test.js` | 12 testes sem banco |
+
+Para a T-07.2 saber:
+
+1. **O servidor já está pronto.** `gameSessionService.abrir` devolve token e
+   conteúdo sem gabarito; `fechar` recebe `{ respostas }` e paga tudo. A tela não
+   precisa saber nada sobre recompensa.
+2. **A rota é `/trilha/:idFavo/celula/:idCelula`**, que a E05 já aponta no botão
+   "Jogar", hoje desligado pela constante `JOGO_DISPONIVEL` em `paginaController`.
+3. **A tela de resultado é a T-07.6**, então o quiz precisa de um destino
+   provisório ao terminar, e vale decidir isso no checkpoint em vez de improvisar.
