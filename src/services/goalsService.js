@@ -110,6 +110,9 @@ export async function concluir(idMeta, idUsuario) {
     );
   }
 
+  // Retrato antes do crédito, para a linha de auditoria (RN-010).
+  const saldoAntes = await auditService.retratoDoSaldo(idUsuario);
+
   const recompensa = await emTransacao(async (conexao) => {
     const afetadas = await goalsRepository.concluir(conexao, idMeta);
     if (afetadas === 0) throw erroValidacao('Esta meta já foi concluída');
@@ -135,11 +138,12 @@ export async function concluir(idMeta, idUsuario) {
     return { mel, polen };
   });
 
-  await auditService.registrar(auditService.usuario(idUsuario), 'meta.concluida', {
+  await auditService.registrarRecompensa(auditService.usuario(idUsuario), 'meta.concluida', {
     entidade: 'goal',
     id: idMeta,
-    antes: { status: meta.status, progresso: Number(meta.current_value) },
-    depois: { status: 'concluida', melGanho: recompensa.mel, polenGanho: recompensa.polen },
+    antes: { ...saldoAntes, status: meta.status, progresso: Number(meta.current_value) },
+    depois: await auditService.retratoDoSaldo(idUsuario),
+    detalhes: { status: 'concluida', melGanho: recompensa.mel, polenGanho: recompensa.polen },
   });
 
   // RN-016: meta concluída dá lugar a outra, e a RN-018 exige que sempre exista

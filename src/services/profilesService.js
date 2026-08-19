@@ -337,6 +337,10 @@ export async function salvarOnboarding(
 
   await exigirPosse(idPerfil, idUsuario);
 
+  // O ponto de partida lança XP no livro, e crédito de XP precisa de rastro
+  // (RN-010). O retrato do antes é lido aqui, antes de qualquer escrita.
+  const saldoAntes = await auditService.retratoDoSaldo(idUsuario);
+
   const resultado = await emTransacao(async (conexao) => {
     if (apelido) await usersRepository.atualizar(idUsuario, { apelido }, conexao);
     await profilesRepository.atualizar(
@@ -371,6 +375,14 @@ export async function salvarOnboarding(
       nivelInicial: resultado.nivelInicial.nivel,
       diasDisponiveis: resultado.diasMarcados,
     },
+  });
+
+  await auditService.registrarRecompensa(auditService.usuario(idUsuario), 'xp.ponto-de-partida', {
+    entidade: 'user_level',
+    id: idUsuario,
+    antes: saldoAntes,
+    depois: await auditService.retratoDoSaldo(idUsuario),
+    detalhes: { nivelEscolhido: nivel, nivelInicial: resultado.nivelInicial.nivel },
   });
 
   // RF-ONB-07: as primeiras metas nascem aqui, conforme a RN-014.

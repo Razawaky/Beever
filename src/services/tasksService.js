@@ -200,6 +200,9 @@ export async function concluir(idTarefa, idUsuario) {
     );
   }
 
+  // Retrato antes do crédito, para a linha de auditoria (RN-010).
+  const saldoAntes = await auditService.retratoDoSaldo(idUsuario);
+
   const recompensa = await emTransacao(async (conexao) => {
     const afetadas = await tasksRepository.concluir(conexao, idTarefa);
     // Zero linhas aqui, depois da checagem acima, significa corrida: outra
@@ -227,11 +230,12 @@ export async function concluir(idTarefa, idUsuario) {
     return { polen, mel };
   });
 
-  await auditService.registrar(auditService.usuario(idUsuario), 'tarefa.concluida', {
+  await auditService.registrarRecompensa(auditService.usuario(idUsuario), 'tarefa.concluida', {
     entidade: 'task',
     id: idTarefa,
-    antes: { status: tarefa.status, progresso: Number(tarefa.current_value) },
-    depois: { status: 'concluida', polenGanho: recompensa.polen, melGanho: recompensa.mel },
+    antes: { ...saldoAntes, status: tarefa.status, progresso: Number(tarefa.current_value) },
+    depois: await auditService.retratoDoSaldo(idUsuario),
+    detalhes: { status: 'concluida', polenGanho: recompensa.polen, melGanho: recompensa.mel },
   });
 
   return recompensa;

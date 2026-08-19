@@ -1,6 +1,8 @@
 import { hashDoIpDaRequisicao, idDaRequisicao } from '../config/contextoRequisicao.js';
 import { logger } from '../config/logger.js';
 import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
+import * as userLevelsRepository from '../repositories/userLevelsRepository.js';
+import * as walletsRepository from '../repositories/walletsRepository.js';
 
 /**
  * Porta única da trilha de auditoria (RN-010, RNF-17).
@@ -75,4 +77,40 @@ export async function registrar(ator, acao, alvo) {
       'Falha ao registrar auditoria — a operação seguiu, mas o rastro se perdeu',
     );
   }
+}
+
+/**
+ * Retrato do que o jogador tem agora: mel, pólen, XP e nível.
+ *
+ * É o "antes" e o "depois" que a RN-010 pede para crédito de recompensa. Lido do
+ * banco nos dois momentos, e não calculado a partir do valor creditado: conta
+ * feita de cabeça vira mentira no primeiro crédito concorrente.
+ */
+export async function retratoDoSaldo(idUsuario) {
+  const [carteira, nivel] = await Promise.all([
+    walletsRepository.buscarPorUsuario(idUsuario),
+    userLevelsRepository.buscarPorUsuario(idUsuario),
+  ]);
+
+  return {
+    mel: Number(carteira?.coins ?? 0),
+    polen: Number(carteira?.points_total ?? 0),
+    xp: Number(nivel?.xp_total ?? 0),
+    nivel: Number(nivel?.level ?? 0),
+  };
+}
+
+/**
+ * Registra um crédito de recompensa com os dois retratos de saldo.
+ *
+ * `detalhes` é o que a operação rendeu (estrelas, item, meta), e vai junto do
+ * retrato do depois — a linha conta o que mudou e por causa de quê.
+ */
+export async function registrarRecompensa(ator, acao, { entidade, id = null, antes, depois, detalhes = null }) {
+  await registrar(ator, acao, {
+    entidade,
+    id,
+    antes,
+    depois: detalhes ? { ...depois, ...detalhes } : depois,
+  });
 }

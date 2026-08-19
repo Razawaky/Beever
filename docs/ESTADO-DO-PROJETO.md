@@ -4,10 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-06.6 — idempotência de verdade: a mesma chave roda uma vez
-só, e a compra parou de debitar duas vezes em dois cliques. Árvore limpa,
-384 testes passando.
-**Próximo passo: T-06.7**, a auditoria dos créditos
+**Último commit:** T-06.7 — todo crédito deixa rastro com saldo antes e depois, e
+a partida, que não gerava nenhum, agora gera. Árvore limpa, 388 testes passando.
+**Próximo passo: T-06.8**, o aceite da etapa — cinco conclusões em paralelo
+creditando uma vez
 
 ---
 
@@ -272,7 +272,7 @@ mesmo contrato de recompensa.
 | T-06.4 `CoinService`: calcula e credita mel, valida saldo, nunca negativo | **feita** — `calcularMelDaCelula`, `creditarPorCelula` e `creditarBonusDeNivel`; repetir paga zero mel e o débito além do saldo é recusado sem rastro |
 | T-06.5 `GameSessionService`: abre e fecha sessão validando respostas no servidor, orquestra os três em uma transação | **feita** — `abrir`/`fechar`/`abandonar`, validador de quiz, trava `FOR UPDATE` no token e 8 testes; fecha a RF-CON-04 |
 | T-06.6 Idempotência: token de sessão consumido uma única vez | **feita** — `idempotencyService.executarUmaVezSo`, usado pela partida e pela compra; **DT-18 paga** |
-| T-06.7 Auditoria em todos os créditos | pendente |
+| T-06.7 Auditoria em todos os créditos | **feita** — `retratoDoSaldo` e `registrarRecompensa`; a partida e o XP do onboarding ganharam linha, tarefa e meta ganharam o saldo |
 | T-06.8 Testes: dupla submissão, repetição, cliente mentindo na pontuação | pendente |
 
 **O que a T-06.1 entregou.** A metade "em banco" da tarefa já existia — a tabela
@@ -431,6 +431,28 @@ resposta depois não o desfaz.
 **Uma correção de documento:** este arquivo dizia que `idempotency_keys` estava
 "semeada". Não estava — nenhum seed a tocava, e ela só passou a ter linhas agora,
 escritas pela aplicação.
+
+**O que a T-06.7 entregou.** Crédito sem rastro é crédito que ninguém consegue
+explicar depois, e havia dois: **a partida não gerava linha nenhuma** e o **XP
+inicial do onboarding** tampouco. Agora `auditService.retratoDoSaldo` lê mel,
+pólen, XP e nível, e `registrarRecompensa` grava o antes, o depois e o que a
+operação rendeu.
+
+Quatro decisões que valem lembrar:
+
+1. **Uma linha por partida**, ação `partida.concluida`, entidade `game_session`.
+   Três linhas — uma por recompensa — descreveriam o detalhe e perderiam o fato.
+2. **O retrato é lido do banco nos dois momentos**, e não calculado como
+   "depois menos o que foi pago": conta feita de cabeça vira mentira no primeiro
+   crédito concorrente.
+3. **A linha é escrita depois do commit**, como a compra já fazia. O
+   `auditService` engole a própria falha de propósito: rastro perdido vira
+   alarme no log, e não recompensa desfeita na cara da criança.
+4. **Reenvio idempotente não gera linha**, porque nada mudou.
+
+Tarefa e meta já registravam o antes/depois **da entidade**; agora carregam
+também o saldo, que é o que a RN-010 pede de um crédito. Nenhum campo antigo
+saiu — o que existia continua, ao lado do retrato.
 
 **Uma decisão de produto tomada aqui:** a RN-008 fala de XP e mel, e cala sobre
 pólen. O seed zera o pólen na repetição também — pólen repetido à vontade é o
@@ -799,7 +821,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
-| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. Faltam T-06.7 e T-06.8 — a auditoria dos créditos e os testes de aceite. Ver também DT-18 |
+| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. Falta a T-06.8 — os testes de aceite da etapa. Ver também DT-18 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
@@ -994,12 +1016,13 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-06.7 — auditoria em todos os créditos (RN-010, RNF-17). A
-decisão já foi tomada no checkpoint da T-06.3 e vale relembrar: a linha de
-auditoria é **uma por partida**, escrita no `gameSessionService`, com o antes e o
-depois da carteira e do nível. Três linhas soltas por partida, uma por crédito,
-descreveriam o detalhe e perderiam o fato. A compra já é auditada desde a E02, e
-`auditService` é a porta única.
+**Próxima tarefa:** T-06.8 — os testes que fecham a etapa: dupla submissão
+credita uma vez, repetição dá 25% de XP e zero mel, e cliente mentindo na
+pontuação é ignorado. Os três já têm cobertura em teste sequencial; o que a
+T-06.8 acrescenta é o **aceite de verdade**, que o roadmap escreve assim: "um
+teste que envia a mesma conclusão 5 vezes **em paralelo** credita exatamente uma
+vez". É a primeira vez que o projeto vai exercer concorrência real — hoje o
+"comportamento sob concorrência" está na seção 3 como não verificado.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -1228,3 +1251,27 @@ Para a T-06.7 e a T-06.8 saber:
 2. **A compra sem chave continua funcionando**, para quem chama a API direto. É
    escolha consciente: a proteção fica com quem chama, e a tela sempre manda a
    chave.
+
+---
+
+### Sessão de 2026-08-19, continuação: T-06.7
+
+Suíte em **388 testes, zero falhas** (384 antes), reconciliação OK.
+
+| Arquivo | O que mudou |
+|---|---|
+| `src/services/auditService.js` | `retratoDoSaldo` (mel, pólen, XP e nível) e `registrarRecompensa` |
+| `src/services/gameSessionService.js` | linha `partida.concluida`, uma por partida, sem linha no reenvio |
+| `src/services/profilesService.js` | linha `xp.ponto-de-partida` — o XP inicial creditava sem rastro |
+| `src/services/tasksService.js`, `src/services/goalsService.js` | o antes/depois passou a carregar o saldo, além da entidade |
+| `test/integration/auditoriaDeCreditos.test.js` | 4 testes, incluindo a imutabilidade da trilha |
+
+Para a T-06.8 saber:
+
+1. **O aceite é concorrência de verdade.** "Cinco conclusões em paralelo
+   creditam uma vez" nunca foi exercido: o que existe é reenvio sequencial. As
+   duas defesas a provar juntas são a chave de idempotência e a trava
+   `FOR UPDATE` no token.
+2. **A auditoria serve de prova.** Uma partida creditada uma vez tem exatamente
+   uma linha `partida.concluida`; contá-las é um jeito direto de o teste
+   verificar que não houve crédito duplo.

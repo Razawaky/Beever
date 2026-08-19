@@ -5,6 +5,7 @@ import * as cellsRepository from '../repositories/cellsRepository.js';
 import * as contentsRepository from '../repositories/contentsRepository.js';
 import * as gameSessionsRepository from '../repositories/gameSessionsRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado } from '../utils/erros.js';
+import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as contentService from './contentService.js';
 import * as idempotencyService from './idempotencyService.js';
@@ -155,17 +156,43 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
   const { erros, total } = validadoresDeJogo.validarRespostas(celula.game_type_slug, conteudo.body, respostas);
   const pontuacao = total === 0 ? 0 : Math.round(((total - erros) / total) * 100);
 
+  // Retrato antes da partida, para a linha de auditoria (RN-010). Lido aqui, e
+  // não dentro da transação, porque é o estado que a partida encontrou.
+  const antes = await auditService.retratoDoSaldo(idUsuario);
+
   // A chave é o próprio token: ele já é único por partida, e assim o cliente não
   // precisa inventar nada. O pedido fica fora do hash de propósito — quem reenvia
   // com respostas diferentes recebe o resultado gravado, porque o crédito já
   // aconteceu e resposta trocada depois não o desfaz.
-  return idempotencyService.executarUmaVezSo(
+  const resultado = await idempotencyService.executarUmaVezSo(
     { chave: `partida:${token}`, idUsuario, operacao: 'partida.fechar' },
     {
       executar: (conexao) => creditarPartida(conexao, { idUsuario, token, partida, celula, erros, pontuacao }),
       aoRepetir: async () => resultadoGravado(await gameSessionsRepository.buscarPorToken(token)),
     },
   );
+
+  // Uma linha por partida, e não uma por crédito: três linhas descreveriam o
+  // detalhe e perderiam o fato. Reenvio não gera linha, porque nada mudou.
+  if (!resultado.jaEstavaFechada) {
+    await auditService.registrarRecompensa(auditService.usuario(idUsuario), 'partida.concluida', {
+      entidade: 'game_session',
+      id: Number(partida.id),
+      antes,
+      depois: await auditService.retratoDoSaldo(idUsuario),
+      detalhes: {
+        celula: Number(partida.cell_id),
+        estrelas: resultado.estrelas,
+        erros: resultado.erros,
+        ehRepeticao: resultado.ehRepeticao,
+        xpGanho: resultado.xp,
+        polenGanho: resultado.polen,
+        melGanho: resultado.mel + resultado.bonusDeMelPorNivel,
+      },
+    });
+  }
+
+  return resultado;
 }
 
 /** Desiste da partida sem creditar nada — o jogador saiu no meio. */
