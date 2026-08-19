@@ -1,3 +1,5 @@
+import { logger } from '../config/logger.js';
+import * as rewardConfigsRepository from '../repositories/rewardConfigsRepository.js';
 import * as userLevelsRepository from '../repositories/userLevelsRepository.js';
 import { erroValidacao } from '../utils/erros.js';
 
@@ -143,16 +145,22 @@ export async function definirPontoDePartida(conexao, idUsuario, nivelEscolhido) 
  * concluída, de uma partida fechada ou de uma meta batida, e todos esses
  * gravam mais de uma linha.
  *
- * Ainda **sem chamador** no MVP: quem credita XP é o motor de recompensas da
- * E06. O que mudou aqui é que agora, quando ele chamar, a conta sai da curva do
- * banco e não de uma constante inventada (DT-03 continua aberta, DT-04 não).
+ * Quem chama pela célula concluída é `creditarPorCelula`, logo abaixo. O
+ * retorno traz o bônus de mel dos níveis cruzados, que este service calcula e
+ * não paga — mel é do `coinsService`.
  */
 export async function creditarXp(conexao, idUsuario, quantidade, { motivo, referenciaTipo = null, referenciaId = null }) {
   if (!Number.isInteger(quantidade) || quantidade <= 0) {
     throw erroValidacao('XP creditado precisa ser um inteiro positivo');
   }
 
-  const [linha, curva] = await Promise.all([userLevelsRepository.buscarPorUsuario(idUsuario), obterCurva()]);
+  // A leitura vai pela conexão da transação: sem isso, dois créditos ao mesmo
+  // tempo leem o mesmo `xp_total` e o cache perde um deles. O livro continuaria
+  // certo, mas o `db:reconcile` acusaria a diferença longe da causa.
+  const [linha, curva] = await Promise.all([
+    userLevelsRepository.buscarPorUsuario(idUsuario, conexao),
+    obterCurva(),
+  ]);
   if (!linha) throw erroValidacao('Este jogador não tem linha de nível — a conta foi criada pela metade?');
 
   const nivelAnterior = Number(linha.level);
@@ -170,5 +178,102 @@ export async function creditarXp(conexao, idUsuario, quantidade, { motivo, refer
   });
   await userLevelsRepository.atualizar(conexao, idUsuario, { nivel, xpTotal, xpProximoNivel });
 
-  return { nivel, xpTotal, xpProximoNivel, subiuDeNivel: nivel > nivelAnterior };
+  return {
+    nivel,
+    xpTotal,
+    xpProximoNivel,
+    subiuDeNivel: nivel > nivelAnterior,
+    bonusDeMelPorNivel: bonusDeMelEntreNiveis(curva, nivelAnterior, nivel),
+  };
+}
+
+/**
+ * Mel que os níveis cruzados prometem (`levels.reward_coins`).
+ *
+ * Este service **não credita mel** — devolve o valor e a T-06.5 chama o
+ * `coinsService` dentro da mesma transação. Quem paga mel é um service só.
+ * Subir dois níveis de uma vez soma os dois bônus.
+ */
+export function bonusDeMelEntreNiveis(curva, nivelAnterior, nivelNovo) {
+  return curva
+    .filter((degrau) => Number(degrau.level) > nivelAnterior && Number(degrau.level) <= nivelNovo)
+    .reduce((total, degrau) => total + Number(degrau.reward_coins ?? 0), 0);
+}
+
+/**
+ * Quanto XP uma célula concluída vale. Conta, sem crédito.
+ *
+ * O valor cheio vem de `reward_configs` (RN-006). Repetir multiplica pelo fator
+ * de `reward_modifiers` (RN-008), e o resultado é arredondado — recompensa
+ * pequena repetida pode dar zero, que é o efeito anti-farming pretendido.
+ *
+ * A faixa é a **da célula**, não a do jogador: quem define o esforço é o
+ * conteúdo. Pela faixa do jogador, um adolescente refazendo conteúdo infantil
+ * ganharia 1,5× por material fácil.
+ *
+ * Configuração faltando paga zero e vira alarme no log, em vez de estourar: o
+ * buraco é de administração, e derrubar a partida da criança não o conserta.
+ */
+export async function calcularXpDaCelula(
+  { slugDoTipoDeJogo, codigoDaFaixa, estrelas, ehRepeticao = false },
+  conexao = null,
+) {
+  if (!Number.isInteger(estrelas) || estrelas < 1) return 0;
+
+  const configuracao = await rewardConfigsRepository.buscarConfiguracao(
+    { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
+    conexao,
+  );
+
+  if (!configuracao) {
+    logger.error({ slugDoTipoDeJogo, codigoDaFaixa, estrelas }, 'Sem configuração de recompensa: creditando zero de XP');
+    return 0;
+  }
+
+  const xpCheio = Number(configuracao.xp_amount);
+  if (!ehRepeticao) return xpCheio;
+
+  const modificador = await rewardConfigsRepository.buscarModificador(
+    rewardConfigsRepository.REPETICAO_DE_CELULA,
+    conexao,
+  );
+  if (!modificador) {
+    logger.error('Modificador de repetição ausente: rode `npm run db:seed`. Repetição não pagou XP');
+    return 0;
+  }
+
+  return Math.round(xpCheio * modificador.xp_factor);
+}
+
+/**
+ * Calcula e credita o XP de uma célula concluída.
+ *
+ * Recebe a célula já buscada (`cellsRepository.buscarPorId`), que traz o slug do
+ * tipo de jogo e o código da faixa. Zero XP não vira lançamento: livro com linha
+ * de valor zero suja o extrato e a reconciliação.
+ */
+export async function creditarPorCelula(conexao, idUsuario, { celula, estrelas, ehRepeticao = false }) {
+  const quantidade = await calcularXpDaCelula(
+    {
+      slugDoTipoDeJogo: celula.game_type_slug,
+      codigoDaFaixa: celula.age_band_code,
+      estrelas,
+      ehRepeticao,
+    },
+    conexao,
+  );
+
+  // Nada a lançar: nem livro, nem leitura extra do nível. Quem quiser o estado
+  // atual chama `obterDoUsuario`.
+  if (quantidade === 0) {
+    return { xpCreditado: 0, subiuDeNivel: false, bonusDeMelPorNivel: 0 };
+  }
+
+  const resultado = await creditarXp(conexao, idUsuario, quantidade, {
+    motivo: 'conclusao-celula',
+    referenciaTipo: 'cell',
+    referenciaId: celula.id,
+  });
+
+  return { xpCreditado: quantidade, ...resultado };
 }

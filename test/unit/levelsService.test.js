@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { nivelParaXp, xpDoNivel, xpDoProximoNivel } from '../../src/services/levelsService.js';
+import {
+  bonusDeMelEntreNiveis,
+  nivelParaXp,
+  xpDoNivel,
+  xpDoProximoNivel,
+} from '../../src/services/levelsService.js';
 
 /**
  * A parte de nível que dá para testar sem banco: dada uma curva, qual nível o
@@ -14,10 +19,10 @@ import { nivelParaXp, xpDoNivel, xpDoProximoNivel } from '../../src/services/lev
  */
 
 const CURVA = [
-  { level: 1, required_xp: 0 },
-  { level: 2, required_xp: 280 },
-  { level: 3, required_xp: 520 },
-  { level: 4, required_xp: 800 },
+  { level: 1, required_xp: 0, reward_coins: 0 },
+  { level: 2, required_xp: 280, reward_coins: 50 },
+  { level: 3, required_xp: 520, reward_coins: 75 },
+  { level: 4, required_xp: 800, reward_coins: 100 },
 ];
 
 describe('levelsService', () => {
@@ -48,6 +53,20 @@ describe('levelsService', () => {
 
     it('devolve null no topo, porque não existe próximo', () => {
       assert.equal(xpDoProximoNivel(CURVA, 4), null);
+    });
+  });
+
+  describe('bonusDeMelEntreNiveis', () => {
+    it('não paga nada quando o nível não mudou', () => {
+      assert.equal(bonusDeMelEntreNiveis(CURVA, 2, 2), 0);
+    });
+
+    it('paga o bônus do degrau alcançado', () => {
+      assert.equal(bonusDeMelEntreNiveis(CURVA, 1, 2), 50);
+    });
+
+    it('soma os degraus quando o ganho pula mais de um nível', () => {
+      assert.equal(bonusDeMelEntreNiveis(CURVA, 1, 3), 125);
     });
   });
 

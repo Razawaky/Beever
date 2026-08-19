@@ -4,9 +4,9 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-06.1 — `reward_configs` ganhou repository e os fatores da
-RN-008 viraram dado. Árvore limpa, 356 testes passando.
-**Próximo passo: T-06.2**, o `XpService`
+**Último commit:** T-06.2 — o XP de célula passou a ser calculado a partir da
+tabela, com o corte da repetição aplicado. Árvore limpa, 364 testes passando.
+**Próximo passo: T-06.3**, o `PointsService`
 
 ---
 
@@ -247,6 +247,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
+| XP creditado com o jogador jogando | `creditarPorCelula` tem teste contra banco real, mas ninguém o chama ainda: o chamador é o `GameSessionService` da T-06.5. Nenhuma criança viu XP subir na tela |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Comportamento sob concorrência | O débito atômico foi testado sequencialmente. Nunca houve teste com duas requisições simultâneas de verdade |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -264,7 +265,7 @@ mesmo contrato de recompensa.
 | Tarefa | Situação |
 |---|---|
 | T-06.1 `reward_configs` em banco e repository | **feita** — `rewardConfigsRepository`, mais a tabela `reward_modifiers` para os fatores da RN-008, com 7 testes contra banco real |
-| T-06.2 `XpService`: calcula e credita XP, resolve subida de nível | pendente |
+| T-06.2 `XpService`: calcula e credita XP, resolve subida de nível | **feita** — o dono do XP é o `levelsService`, que ganhou o cálculo pela tabela, o corte da repetição e o bônus de mel do degrau; 8 testes novos |
 | T-06.3 `PointsService`: calcula e credita pólen | pendente |
 | T-06.4 `CoinService`: calcula e credita mel, valida saldo, nunca negativo | pendente |
 | T-06.5 `GameSessionService`: abre e fecha sessão validando respostas no servidor, orquestra os três em uma transação | pendente |
@@ -291,6 +292,37 @@ Três decisões que valem lembrar:
    valor de recompensa no código. `reward_configs` não servia: ela é indexada por
    tipo de jogo, faixa e estrelas, e o corte não varia por nenhum dos três. Sem
    a tabela, o número apareceria escrito à mão em três services.
+
+**O que a T-06.2 entregou.** Metade da tarefa já existia: `levelsService`
+creditava XP e resolvia o nível pela curva do banco desde a T-02.3. O que
+faltava era o "calcula" — ninguém ligava `reward_configs` ao crédito. Agora
+`calcularXpDaCelula` lê a tabela e aplica o corte da repetição, e
+`creditarPorCelula` credita com motivo `conclusao-celula`.
+
+**O `XpService` do roadmap é o `levelsService` do código.** Criar um arquivo
+novo com o nome do roadmap deixaria duas portas para a mesma recompensa. O
+roadmap nomeia responsabilidade, não arquivo.
+
+Três decisões que valem lembrar:
+
+1. **A faixa que define o valor é a da célula, não a do jogador.** O seed dizia
+   "quem está na faixa mais avançada", que é ambíguo. Pela faixa do jogador, um
+   adolescente refazendo conteúdo infantil ganharia 1,5× por material fácil;
+   pela faixa da célula, quem paga mais é o conteúdo mais difícil.
+2. **Este service não paga mel.** `levels.reward_coins` estava semeado desde a
+   E01 e ninguém o lia; agora `creditarXp` devolve `bonusDeMelPorNivel`, e quem
+   credita é o `coinsService`, chamado pela T-06.5 na mesma transação. Mel entra
+   por uma porta só.
+3. **Configuração faltando paga zero e vira alarme no log**, em vez de estourar
+   — o mesmo princípio já escrito no `auditService`: buraco de administração não
+   derruba a partida da criança. Crédito zero também não vira linha no livro.
+
+**Um defeito corrigido no caminho, e que vale como regra geral:** `creditarXp`
+lia `user_levels` pelo pool enquanto escrevia pela transação. Inofensivo
+enquanto ninguém creditava XP; agora que a célula credita, dois créditos
+simultâneos leriam o mesmo `xp_total` e o cache perderia um — livro certo, cache
+torto, e o `db:reconcile` acusando longe da causa. Quem escreve em transação lê
+pela mesma conexão, de novo.
 
 **Uma decisão de produto tomada aqui:** a RN-008 fala de XP e mel, e cala sobre
 pólen. O seed zera o pólen na repetição também — pólen repetido à vontade é o
@@ -659,7 +691,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
-| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. Faltam T-06.2 a T-06.8 — os três services de crédito, a sessão de jogo, a idempotência e a auditoria. Ver também DT-03 e DT-18 |
+| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. Faltam T-06.3 a T-06.8 — pólen, mel, a sessão de jogo, a idempotência e a auditoria. Ver também DT-18 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
@@ -680,7 +712,7 @@ Identificadores rastreiam os documentos da E00.
 |---|---|---|---|
 | ~~DT-01~~ | ~~Fases 1–3 não commitadas~~ | R-03 | **Resolvido em 2026-08-17**: commits `c428ba3`, `a2e596b`, `a5f5e9b`, `4898fa3`. Working tree limpo |
 | DT-02 | `npm run lint` falha com 3242 erros, **todos** de `.claude/skills/**` e `.github/skills/**` | D-08 | Uma linha de `ignores` no `eslint.config.js`. Bloqueia usar lint como portão de CI |
-| DT-03 | Loop de recompensa pela metade: `coinsService.creditar` existe desde a T-02.3 e a tarefa concluída paga mel e pólen. Continua sem quem credite **XP em jogo** — nenhuma recompensa do MVP declara XP | M-02, D-03 | E06 |
+| ~~DT-03~~ | ~~Loop de recompensa pela metade: ninguém creditava **XP em jogo**~~ | M-02, D-03 | **Resolvida na T-06.2**: `levelsService.creditarPorCelula` calcula o XP pela tabela e credita. Falta o chamador, que é a T-06.5 |
 | ~~DT-04~~ | ~~`XP_POR_NIVEL = 1000` e `PONTOS_POR_TAREFA_CONCLUIDA = 10` em constante~~ | C-03, auditoria da E01 (L-03) | **Resolvido na T-02.3**: a curva de nível é lida de `levels` e a recompensa da tarefa vem de `task_types`. Nenhuma das duas constantes existe mais. Falta ainda o consumo de `reward_configs` pelo motor de recompensas (E06) |
 | ~~DT-05~~ | ~~Negociação de conteúdo copiada 9 vezes em 6 controllers~~ | P-01 | **Resolvido na T-02.3**: `querJson` em `src/utils/resposta.js` |
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
@@ -708,7 +740,7 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-29~~ | ~~A barra de progresso do onboarding é a única fora do padrão `.barra-N`, e sem `role="progressbar"`~~ | auditoria do onboarding (T-04.1) | **Resolvida na T-04.2**: a barra usa as classes `.barra-N` e anuncia `role="progressbar"`, `aria-valuenow`, `aria-valuemin` e `aria-valuemax`. Sobra a regra de arredondamento repetida no cliente, porque o navegador não importa `src/utils/barraDeProgresso.js` sem bundler — ver DT-30 |
 | DT-30 | A regra de arredondamento da barra de progresso existe duas vezes: em `src/utils/barraDeProgresso.js`, para as páginas renderizadas no servidor, e em `src/public/js/onboarding.js`, para o wizard. São cinco caracteres de conta, mas duas cópias mesmo assim — o navegador não consegue importar de `src/utils` enquanto não houver bundler ou um módulo servido em `src/public` | T-04.2 | E11, junto do trabalho de front: ou um módulo compartilhado servido como estático, ou a barra do wizard passa a ser montada pelo servidor |
 | DT-31 | A calibragem dos alvos das metas é um chute educado, não medição: `goal_target_rules` diz que uma sessão de 10 minutos vale 25 de mel, e as tarefas de hoje pagam mais ou menos isso — mas quem vai pagar de verdade são as células e os jogos, que ainda não existem. Uma meta escalada (a segunda ou a terceira do mesmo tipo no plano) pode estar acima do que a economia atual permite ganhar no prazo | T-04.4 | E07, quando os jogos pagarem; é editar seed e rodar, sem tocar em código |
-| DT-32 | A meta de "atingir nível" é mensurável mas ainda inalcançável: nenhuma recompensa do MVP credita XP, então o nível não sobe e a meta fica parada. Ela não é meta impossível por desenho — é impossível por falta do motor de XP, que é o buraco conhecido da E06 | T-04.4 | E06, junto do motor de recompensa. Se atrasar, a saída é uma linha a menos em `goal_target_rules` |
+| DT-32 | **Meio caminho andado na T-06.2**: o XP de célula já é calculado e creditado, então o nível sobe assim que a T-06.5 fechar a sessão de jogo. A meta de "atingir nível" é mensurável mas ainda parada até lá. Ela não é meta impossível por desenho — é impossível por falta do motor de XP, que é o buraco conhecido da E06 | T-04.4 | E06, junto do motor de recompensa. Se atrasar, a saída é uma linha a menos em `goal_target_rules` |
 | DT-33 | A RN-017 tem duas metades e só uma existe: a meta vencida entra em `expirada` sem punição, mas **a oferta de renovação — prazo estendido e recompensa reduzida em 50% — não foi construída**. Hoje a meta vencida simplesmente some das ativas e o planejador põe outra no lugar, então o jogador perde o trabalho já feito naquela meta específica sem a chance de retomá-la. É também a RF-MET-05 | auditoria da E04, L-2 | E06, junto do motor de recompensa, que é quem sabe calcular recompensa pela metade |
 | DT-34 | O administrador não tem como calibrar o ritmo do jogo: `goal_plan_rules` e `goal_target_rules` só mudam rodando `db:seed`, que é deploy. É o poder que faz sentido dar ao admin sobre metas — **não** criar meta para um jogador específico, o que reabriria o furo da RN-014 pelo painel administrativo. Requisito ainda não escrito em `01-REQUISITOS-E-REGRAS.md` | correção de escopo da E04, 2026-08-18 | E12, junto do resto da área administrativa |
 | DT-35 | O patrimônio que destrava favo (RN-028) conta só o inventário. A RN-045 diz que ele "na prática exige uso do cofre", e o cofre não existe: quando existir, `contentService` precisa somar as duas fontes, e um favo calibrado hoje ficará fácil demais | T-05.2 | E09, junto do cofre. A soma tem um lugar só — `contextoDoJogador` — então é mudança de uma linha |
@@ -854,10 +886,10 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-06.2 — `XpService`, que calcula e credita XP e resolve a
-subida de nível. A T-06.1 abriu a E06 e deixou pronto de onde os valores saem:
-`rewardConfigsRepository.buscarConfiguracao` para a recompensa cheia e
-`buscarModificador('repeticao-de-celula')` para o corte da RN-008.
+**Próxima tarefa:** T-06.3 — `PointsService`, o pólen. O caminho está aberto
+pela T-06.2: `pointsService.creditar` já existe, e o que falta é o mesmo "calcula"
+que o XP ganhou — ler `points_amount` de `reward_configs` e aplicar o fator de
+repetição, que para o pólen é zero por decisão da T-06.1.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -968,3 +1000,26 @@ Duas coisas para a T-06.2 saber:
 `npm run lint` continua acusando 3242 erros, **todos** de `.claude/skills/**` e
 `.github/skills/**` — é a DT-02, não código do projeto. Os arquivos desta tarefa
 passam limpos.
+
+---
+
+### Sessão de 2026-08-19, continuação: T-06.2
+
+Suíte em **364 testes, zero falhas** (356 antes), reconciliação OK.
+
+| Arquivo | O que mudou |
+|---|---|
+| `src/services/levelsService.js` | `calcularXpDaCelula`, `creditarPorCelula` e `bonusDeMelEntreNiveis`; `creditarXp` devolve o bônus do degrau e lê o nível pela conexão da transação |
+| `src/repositories/userLevelsRepository.js` | `buscarPorUsuario` aceita conexão, como as demais |
+| `test/integration/xpDeCelula.test.js` | 5 testes: estreia, repetição a 25%, zero sem estrela, cache batendo com o livro, bônus de nível sem tocar na carteira |
+| `test/unit/levelsService.test.js` | 3 testes do bônus por degrau, com curva sintética |
+
+Para a T-06.3 e a T-06.4 saber:
+
+1. **O molde já está pronto.** Pólen e mel repetem o desenho do XP: ler
+   `points_amount` / `coins_amount` da mesma configuração, aplicar o fator de
+   `reward_modifiers` e creditar pelo service que já existe. Os dois fatores da
+   repetição são zero, então a repetição não paga nem pólen nem mel.
+2. **O bônus de mel do nível espera a T-06.5.** `creditarXp` devolve
+   `bonusDeMelPorNivel` e não credita; quem paga é o `coinsService`, com o motivo
+   `subida-de-nivel` já semeado em `reward_reasons`.

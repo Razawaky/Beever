@@ -18,8 +18,9 @@ export async function criar(idUsuario, conexao = null) {
   return resultado.insertId;
 }
 
-export async function buscarPorUsuario(idUsuario) {
-  const linhas = await consultar(
+export async function buscarPorUsuario(idUsuario, conexao = null) {
+  const linhas = await consultarEm(
+    conexao,
     'SELECT id, user_id, level, xp_total, xp_next_level FROM user_levels WHERE user_id = ?',
     [idUsuario],
   );
