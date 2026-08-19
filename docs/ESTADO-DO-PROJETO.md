@@ -3,10 +3,10 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-18 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** `264b656` — E05 concluída e auditada em duas passagens, com
-cinco das nove lacunas corrigidas. Árvore limpa, 349 testes passando.
-**Próximo passo: T-06.1**, que abre o motor de recompensas
+**Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** T-06.1 — `reward_configs` ganhou repository e os fatores da
+RN-008 viraram dado. Árvore limpa, 356 testes passando.
+**Próximo passo: T-06.2**, o `XpService`
 
 ---
 
@@ -247,6 +247,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
+| Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Comportamento sob concorrência | O débito atômico foi testado sequencialmente. Nunca houve teste com duas requisições simultâneas de verdade |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
 
@@ -256,7 +257,50 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E05 — conteúdo e trilha.** A E04 está fechada e auditada em duas passagens.
+**E06 — motor de recompensas.** A E05 está fechada e auditada em duas passagens.
+O roadmap manda fazer esta etapa **antes** dos jogos, para que todo jogo use o
+mesmo contrato de recompensa.
+
+| Tarefa | Situação |
+|---|---|
+| T-06.1 `reward_configs` em banco e repository | **feita** — `rewardConfigsRepository`, mais a tabela `reward_modifiers` para os fatores da RN-008, com 7 testes contra banco real |
+| T-06.2 `XpService`: calcula e credita XP, resolve subida de nível | pendente |
+| T-06.3 `PointsService`: calcula e credita pólen | pendente |
+| T-06.4 `CoinService`: calcula e credita mel, valida saldo, nunca negativo | pendente |
+| T-06.5 `GameSessionService`: abre e fecha sessão validando respostas no servidor, orquestra os três em uma transação | pendente |
+| T-06.6 Idempotência: token de sessão consumido uma única vez | pendente |
+| T-06.7 Auditoria em todos os créditos | pendente |
+| T-06.8 Testes: dupla submissão, repetição, cliente mentindo na pontuação | pendente |
+
+**O que a T-06.1 entregou.** A metade "em banco" da tarefa já existia — a tabela
+`reward_configs` vem da migration `003` e as 54 linhas do seed `04`. O que
+faltava era leitor: nenhum service lia a tabela, que é a **DT-19, agora paga**.
+`rewardConfigsRepository.buscarConfiguracao` responde quanto vale uma célula por
+tipo de jogo, faixa e estrelas.
+
+Três decisões que valem lembrar:
+
+1. **A busca é por slug e código, não por id.** É o vocabulário que os services
+   já falam — o `contentService` trabalha com códigos de faixa. Pedir id obrigaria
+   a uma consulta antes da consulta.
+2. **Combinação sem linha devolve `null`.** O que fazer com configuração faltando
+   é decisão do service: recusar o crédito ou pagar zero e registrar. Repository
+   não faz política.
+3. **O corte da repetição virou dado, na tabela `reward_modifiers`** (migration
+   `014`). Os 25% de XP da RN-008 são valor de recompensa, e a RN-006 proíbe
+   valor de recompensa no código. `reward_configs` não servia: ela é indexada por
+   tipo de jogo, faixa e estrelas, e o corte não varia por nenhum dos três. Sem
+   a tabela, o número apareceria escrito à mão em três services.
+
+**Uma decisão de produto tomada aqui:** a RN-008 fala de XP e mel, e cala sobre
+pólen. O seed zera o pólen na repetição também — pólen repetido à vontade é o
+mesmo farming que a regra quer impedir. Se o produto discordar, é um `UPDATE`
+numa linha do seed, sem deploy.
+
+---
+
+**E05 — conteúdo e trilha** (concluída e auditada em duas passagens, guardada
+aqui como histórico).
 
 | Tarefa | Situação |
 |---|---|
@@ -615,7 +659,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
-| E06 Motor de recompensas | do zero na prática | Ver seção 5, dívida DT-03 |
+| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. Faltam T-06.2 a T-06.8 — os três services de crédito, a sessão de jogo, a idempotência e a auditoria. Ver também DT-03 e DT-18 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
@@ -642,7 +686,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-06 | Três padrões diferentes de contrato entre rotas equivalentes | C-03 | Padronizar na E02 |
 | ~~DT-07~~ | ~~Dois guardas de autenticação com a mesma regra, um deles dentro de `src/routes/index.js`~~ | P-04, C-01 | **Resolvido por inteiro na T-02.4**: o guarda saiu do arquivo de rotas na T-02.3 e foi absorvido por `requireOnboarding`/`requireOnboardingPendente`, que respondem conforme o cliente — redirecionamento para HTML, código de erro para JSON |
 | DT-18 | Compra não é idempotente: dois cliques rápidos criam duas compras e debitam duas vezes. `idempotency_keys` existe no schema, semeada, e não é usada por ninguém | auditoria da E02 | E06 — é onde o motor de recompensa e a economia ganham dono |
-| DT-19 | `reward_configs` (54 linhas semeadas) não é lida por nenhum service. Ela é indexada por tipo de jogo, faixa e estrelas, então só ganha uso quando a célula existir | auditoria da E02 | E06/E07 |
+| ~~DT-19~~ | ~~`reward_configs` (54 linhas semeadas) não é lida por nenhum service~~ | auditoria da E02 | **Resolvida na T-06.1**: `rewardConfigsRepository` lê a tabela por slug do jogo, código da faixa e estrelas, com os 54 combos conferidos em teste. Quem vai consumir são os services da T-06.2 a T-06.4 |
 | ~~DT-20~~ | ~~Onboarding não coleta tempo por sessão nem preferências de som e animação, que a RN-011 e a RN-050 pedem~~ | auditoria da E02 | **Resolvida na T-04.3**: os dois passos entraram no wizard e gravam em `session_minutes`, `is_sound_enabled` e `has_reduced_motion`. As durações passaram a ser cinco (5, 10, 20, 30 e 45) por decisão de produto tomada no checkpoint da tarefa, com migration `012` e reescrita da RN-011 |
 | DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
 | DT-23 | A virada do dia usa o relógio do servidor: `tasksService.garantirTarefasDoDia` chama `new Date()` cru, enquanto a RN-024 manda usar o fuso do perfil (`profiles.timezone`, já gravado no onboarding). Quem estiver em fuso diferente recebe as tarefas do dia na hora errada — e a sequência vai herdar o mesmo defeito, porque a RN-021 depende da mesma virada | dúvida levantada na revisão da E02 | **E08**, junto da sequência: as duas dependem da mesma noção de "dia do jogador" e devem ser resolvidas de uma vez |
@@ -810,9 +854,10 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-06.1 — `reward_configs` em banco e repository, abrindo a
-**E06 (motor de recompensas)**. O roadmap manda fazê-la **antes** dos jogos, para
-que todo jogo use o mesmo contrato de recompensa.
+**Próxima tarefa:** T-06.2 — `XpService`, que calcula e credita XP e resolve a
+subida de nível. A T-06.1 abriu a E06 e deixou pronto de onde os valores saem:
+`rewardConfigsRepository.buscarConfiguracao` para a recompensa cheia e
+`buscarModificador('repeticao-de-celula')` para o corte da RN-008.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -897,3 +942,29 @@ reescrita na T-06.5.
 visual nunca foi conferido em navegador de verdade. Nenhuma das telas novas foi
 aberta em um — 320 px sem rolagem horizontal e contraste medido pedem isso, e é
 o tipo de coisa que só aparece na apresentação.
+
+---
+
+### Sessão de 2026-08-19
+
+Entregue a **T-06.1**, primeira tarefa da E06. Suíte em **356 testes, zero
+falhas** (349 antes), reconciliação dos livros OK.
+
+| Arquivo | O que é |
+|---|---|
+| `migrations/014_reward_modifiers.sql` | tabela dos fatores que reduzem recompensa (RN-006 e RN-008) |
+| `scripts/seeds/07_reward_modifiers.sql` | a linha `repeticao-de-celula`: XP ×0,250, mel ×0, pólen ×0 |
+| `src/repositories/rewardConfigsRepository.js` | leitor de `reward_configs` e `reward_modifiers` |
+| `test/integration/repositories/rewardConfigs.test.js` | 7 testes contra banco real |
+
+Duas coisas para a T-06.2 saber:
+
+1. **Os fatores voltam como número**, e não como o texto que o driver devolve
+   para `DECIMAL` — eles existem para multiplicar. Os valores em mel continuam
+   inteiros, e quem arredonda é o service.
+2. **As duas funções aceitam conexão de fora**, para a T-06.5 lê-las de dentro
+   da transação que credita.
+
+`npm run lint` continua acusando 3242 erros, **todos** de `.claude/skills/**` e
+`.github/skills/**` — é a DT-02, não código do projeto. Os arquivos desta tarefa
+passam limpos.

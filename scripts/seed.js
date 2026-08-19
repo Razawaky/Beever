@@ -40,6 +40,7 @@ const CONTAGENS = [
   ['age_bands', 'faixas de idade'],
   ['game_types', 'tipos de jogo'],
   ['reward_configs', 'configurações de recompensa'],
+  ['reward_modifiers', 'fatores de recompensa'],
   ['items', 'itens do catálogo'],
   ['item_requirements', 'requisitos de compra'],
   ['hives', 'favos'],
