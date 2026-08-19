@@ -20,7 +20,7 @@ describe('runner de seeds', () => {
     assert.deepEqual(await listarSeeds(diretorio), ['01_primeiro.sql', '02_segundo.sql']);
   });
 
-  it('enxerga os sete seeds reais do projeto, na ordem de dependência', async () => {
+  it('enxerga os oito seeds reais do projeto, na ordem de dependência', async () => {
     assert.deepEqual(await listarSeeds(), [
       '01_levels.sql',
       '02_age_bands_domains.sql',
@@ -29,6 +29,7 @@ describe('runner de seeds', () => {
       '05_demo_content.sql',
       '06_admin_dev.sql',
       '07_reward_modifiers.sql',
+      '08_achievements.sql',
     ]);
   });
 });

@@ -4,6 +4,7 @@ import * as inventoryRepository from '../repositories/inventoryRepository.js';
 import * as itemsRepository from '../repositories/itemsRepository.js';
 import * as streaksRepository from '../repositories/streaksRepository.js';
 import { dataDoDia, diaDaSemana, diferencaEmDias, inicioDoDia, somarDias } from '../utils/diaDoJogador.js';
+import * as achievementsService from './achievementsService.js';
 import * as auditService from './auditService.js';
 import * as profilesService from './profilesService.js';
 import * as schedulesService from './schedulesService.js';
@@ -30,6 +31,9 @@ const MAXIMO_DE_DIAS_AVALIADOS = 60;
 /** O escudo é item de loja, e o teto de dois guardados é da RN-022. */
 const ESCUDO = 'escudo-de-sequencia';
 const MAXIMO_DE_ESCUDOS = 2;
+
+/** Marcos que rendem mel e conquista (RN-023). O valor de cada um vem do banco. */
+const MARCOS = [7, 14, 30, 60, 100];
 
 function paraMySQL(data) {
   return data.toISOString().slice(0, 19).replace('T', ' ');
@@ -142,6 +146,17 @@ async function diasComCelulaConcluida(idUsuario, primeiroDia, hoje, fuso) {
 }
 
 /**
+ * Paga o marco quando a sequência bate o número exato. A conquista é única por
+ * jogador, então chegar de novo aos 7 dias não paga segunda vez.
+ */
+async function conferirMarco(idUsuario, diasAtuais) {
+  if (!MARCOS.includes(diasAtuais)) return null;
+
+  const { desbloqueou, melCreditado } = await achievementsService.desbloquear(idUsuario, `sequencia-${diasAtuais}`);
+  return desbloqueou ? { dias: diasAtuais, melCreditado } : null;
+}
+
+/**
  * Avalia os dias fechados desde a última visita e devolve a sequência de hoje.
  *
  * Chamar duas vezes no mesmo dia não muda nada: cada dia já avaliado tem evento
@@ -160,6 +175,7 @@ export async function avaliar(idUsuario, agora = new Date()) {
   let ultimoDiaContado = sequencia.last_counted_date;
   let quebrou = false;
   const protegidos = [];
+  const marcos = [];
 
   if (dias.length > 0) {
     const [agenda, cumpridos, jaAvaliados] = await Promise.all([
@@ -188,6 +204,9 @@ export async function avaliar(idUsuario, agora = new Date()) {
         diasAtuais += 1;
         ultimoDiaContado = dia;
         melhorDias = Math.max(melhorDias, diasAtuais);
+
+        const marco = await conferirMarco(idUsuario, diasAtuais);
+        if (marco) marcos.push(marco);
       }
 
       if (tipo === 'perdido' && diasAtuais > 0) {
@@ -222,7 +241,7 @@ export async function avaliar(idUsuario, agora = new Date()) {
     });
   }
 
-  return { diasAtuais, melhorDias, ultimoDiaContado, protegidos, hoje, fuso };
+  return { diasAtuais, melhorDias, ultimoDiaContado, protegidos, marcos, hoje, fuso };
 }
 
 /**
@@ -259,5 +278,8 @@ export async function registrarDiaCumprido(idUsuario, agora = new Date()) {
     avaliadoEm: paraMySQL(agora),
   });
 
-  return { ...resumo, diasAtuais, melhorDias, ultimoDiaContado: resumo.hoje };
+  const marco = await conferirMarco(idUsuario, diasAtuais);
+  const marcos = marco ? [...resumo.marcos, marco] : resumo.marcos;
+
+  return { ...resumo, diasAtuais, melhorDias, ultimoDiaContado: resumo.hoje, marcos };
 }

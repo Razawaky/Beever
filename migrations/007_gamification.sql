@@ -1,8 +1,8 @@
 -- 007 — Conquistas e liga.
 --
--- Escopo P1 (RF-GAM): não é MVP e é cortável se o prazo apertar. Fica em
--- arquivo separado justamente por isso — dá para não aplicar este e ter um
--- banco íntegro mesmo assim, porque nada em 001 a 006 depende daqui.
+-- A liga é escopo P1 (RF-GAM) e é cortável. As conquistas deixaram de ser:
+-- a RF-SEQ-04 é obrigatória e paga o marco de sequência daqui, então
+-- `achievements` e `user_achievements` entram no MVP (T-08.4).
 --
 -- RN-023: os marcos de sequência (7, 14, 30, 60, 100 dias) rendem mel bônus
 -- **e** conquista, então `achievements` é o par natural de `streaks`.
