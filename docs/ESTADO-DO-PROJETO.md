@@ -4,10 +4,11 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-07.5 — **os quatro jogos obrigatórios existem**. O Cofre do
-Tempo fecha a lista, com gráfico em SVG e juros compostos conferidos no servidor.
-Árvore limpa, 458 testes passando.
-**Próximo passo: T-07.6**, a tela de resultado unificada
+**Último commit:** T-07.6 — **a tela de resultado é uma só** para os quatro
+jogos, com estrelas, as três recompensas, o mascote e o botão que leva à próxima
+célula. Árvore limpa, 462 testes passando.
+**Próximo passo: T-07.7**, os dois jogos P1 e a retomada de sessão — o que
+resta da E07
 
 ---
 
@@ -248,7 +249,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
-| As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O mesmo caminho foi refeito na T-07.4, com a divisão do orçamento aceita e paga. O que **ainda não** foi visto por olho humano é o gesto e o desenho: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz, o foco de teclado trocando de pergunta e as três telas de jogo a 320 px, onde o orçamento é o mais apertado — cinco categorias, dois botões e um número por linha. É a DT-22 e a L-10 do laudo da E06 |
+| As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O mesmo caminho foi refeito na T-07.4, com a divisão do orçamento aceita e paga. O caminho foi refeito de novo na T-07.5 e na T-07.6, sempre com o servidor de pé — e foi ele que achou o botão "Jogar" mentindo e a regra errada da próxima célula. O que **ainda não** foi visto por olho humano é o gesto e o desenho: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz, o foco de teclado trocando de pergunta, **o gráfico do cofre** com suas barras e a linha da meta, **as estrelas do resultado aparecendo uma a uma** — e as quatro telas de jogo a 320 px, onde o orçamento de faixa C é o mais apertado, com cinco categorias, dois botões e um número por linha. É a DT-22 e a L-10 do laudo da E06 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -270,7 +271,7 @@ teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
 | T-07.3 Arraste e Classifique (com alternativa por clique e teclado) | **feita** — validador, seed com três células, `arraste.js` com arrastar de verdade, e a casca da tela virou parte comum; 7 testes unitários e 7 pelo HTTP |
 | T-07.4 Monte o Orçamento | **feita** — validador com regra por categoria, cinco células nas três faixas, `orcamento.js` com botões − e +; 7 testes unitários e 6 pelo HTTP |
 | T-07.5 Cofre do Tempo | **feita** — validador com juro composto, quatro células, gráfico em SVG sem dependência; 8 testes unitários e 6 pelo HTTP. Achou e corrigiu o botão "Jogar" que prometia célula com conteúdo de demonstração |
-| T-07.6 Tela de resultado unificada | pendente |
+| T-07.6 Tela de resultado unificada | **feita** — parcial própria, `resultado.js`, estrelas animadas em CSS e "Continuar" para a próxima célula; 4 testes pelo HTTP |
 | T-07.7 (P1) Mercado Esperto, Ordene a Prioridade e retomada de sessão | pendente |
 
 **O que a T-07.1 entregou.** O contrato existe em dois lugares que se sustentam:
@@ -906,7 +907,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | **em andamento** | **Os quatro jogos obrigatórios estão prontos** (T-07.1 a T-07.5): quiz, arrastar, orçamento e cofre, sobre uma casca de tela comum. Faltam a tela de resultado unificada (T-07.6) e os P1 da T-07.7 |
+| E07 Jogos | **em andamento** | **Tudo o que é obrigatório está pronto** (T-07.1 a T-07.6): os quatro jogos, a casca comum e a tela de resultado. Resta só a T-07.7, que é P1 — Mercado Esperto, Ordene a Prioridade e retomada de sessão |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -938,6 +939,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-23 | A virada do dia usa o relógio do servidor: `tasksService.garantirTarefasDoDia` chama `new Date()` cru, enquanto a RN-024 manda usar o fuso do perfil (`profiles.timezone`, já gravado no onboarding). Quem estiver em fuso diferente recebe as tarefas do dia na hora errada — e a sequência vai herdar o mesmo defeito, porque a RN-021 depende da mesma virada | dúvida levantada na revisão da E02 | **E08**, junto da sequência: as duas dependem da mesma noção de "dia do jogador" e devem ser resolvidas de uma vez |
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
 | DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.claude/skills/impeccable/scripts/`, que é plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
+| DT-37 | `test/integration/seguranca.test.js` falhou uma vez em três execuções da suíte completa, no caso "o dono continua alterando a própria conta", e passa sempre quando o arquivo roda sozinho (três de três). Não reproduzi o erro, então não sei se é o limitador de tentativas de login, contenção de banco sob execução paralela ou tempo. Teste que falha de vez em quando é pior do que teste que falha sempre: ensina a ignorar vermelho | T-07.6 | Rodar a suíte com `--test-concurrency=1` para isolar, e só então corrigir a causa |
 | DT-08 | Cobertura de service ainda indireta: `purchasesService`, `tasksService`, `goalsService`, `coinsService`, `pointsService`, `profilesService` e `authService` são exercitados pelo teste de fluxo, mas não têm teste próprio de caso de borda | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
@@ -1101,14 +1103,15 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-07.6 — **a tela de resultado unificada**, com estrelas, XP,
-mel, pólen e o mascote (RF-CON-05). Hoje os quatro jogos terminam no painel
-provisório que a T-07.2 montou dentro do `partida.js`: os números já vêm prontos
-do servidor, então o que muda é a apresentação, não a origem do dado.
+**Próxima tarefa:** T-07.7 — os dois jogos **P1** (Mercado Esperto e Ordene a
+Prioridade) e a **retomada de sessão** (RF-JOG-07). É o que resta da E07, e é
+tudo P1: se o prazo apertar, a etapa pode ser auditada sem ela, porque todo
+requisito obrigatório da E07 já está entregue.
 
-O caminho é sempre o mesmo desde a T-07.3: `public/js/partida.js` abre a partida,
-mostra erro, move a barra e monta o resultado; `pages/celula.ejs` é a casca; o
-mapa de qual jogo usa qual parcial e qual script está no `paginaController`.
+A retomada é a única que mexe no contrato: o `docs/CONTRATO-DE-JOGO.md` reserva
+o lugar dela numa quarta função opcional, `estadoParaSalvar(respostasParciais)`,
+mais uma coluna de estado na partida. Nenhum dos quatro jogos inventou o seu
+próprio jeito de guardar progresso, então esse lugar continua livre.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
@@ -1623,3 +1626,54 @@ Para a T-07.6 saber:
 3. **A trilha tem menos buracos.** Faltam validadores só para `mercado-esperto` e
    `ordene-a-prioridade`, os dois P1 da T-07.7. As células de quiz que ainda têm
    conteúdo de demonstração agora aparecem honestamente como "em breve".
+
+---
+
+### Sessão de 2026-08-19, T-07.6: um fim de partida só
+
+Suíte em **462 testes, zero falhas** (458 antes). Com esta tarefa, **tudo o que
+é obrigatório na E07 está entregue**.
+
+| Arquivo | O que é |
+|---|---|
+| `src/views/partials/jogo-resultado.ejs` | a tela de resultado, servida em qualquer jogo |
+| `src/public/js/resultado.js` | preenche a tela, e é o único lugar que escolhe o mascote |
+| `src/services/contentService.js` | `proximaCelulaJogavel`, para o botão saber para onde ir |
+| `src/styles/tema.css` | as estrelas aparecendo uma a uma, desligadas por `prefers-reduced-motion` |
+| `test/integration/telaDeResultado.test.js` | 4 testes pelo HTTP |
+
+**O fim empurra para o próximo jogo.** O resultado passou a devolver
+`proximaCelula`, e o botão principal leva a ela quando existe e está aberta. Se
+a próxima estiver travada, sem conteúdo ou for de um jogo que ainda não existe,
+o botão volta a ser "Voltar ao favo" — nunca um beco. A pergunta é feita depois
+do crédito, porque é a conclusão desta célula que abre a seguinte.
+
+A primeira versão dessa regra estava errada, e quem achou foi a aplicação de pé:
+célula já concluída tem estado `concluido`, não `disponivel`, então exigir
+`disponivel` fazia o "Continuar" sumir para quem repetia uma célula. O certo é
+recusar só a travada — concluída não é beco. Tem teste com esse nome.
+
+**A arte do mascote tem um ponto de troca só.** O mapa `MASCOTES` no
+`resultado.js` guarda imagem, texto alternativo e título de cada desfecho. A
+arte de hoje é provisória e será substituída por desenho próprio; quando isso
+acontecer, muda-se ali e em nenhum outro arquivo. A animação está presa à classe
+do tema, não à imagem, então um desenho novo entra sem reescrever a tela.
+
+**A animação obedece à RNF-26.** As três estrelas aparecem com atraso escalonado
+por classe — a CSP não permite `style`, o mesmo motivo das `.barra-N` —, e o
+bloco de `prefers-reduced-motion` acende a estrela ganha sem animar nada.
+
+**Um teste falhou uma vez e não repetiu** (DT-37). Foi em
+`test/integration/seguranca.test.js`, fora do escopo desta tarefa, na execução
+completa da suíte; sozinho, o arquivo passa três de três. Não consertei sem
+saber a causa: está registrado como dívida, com o próximo passo escrito.
+
+Para a T-07.7 saber:
+
+1. **O painel de resultado não existe mais dentro do `partida.js`.** Quem
+   apresenta é o `resultado.js`; o `partida.js` só manda as respostas e entrega
+   os dados. Jogo novo não precisa saber que a tela existe.
+2. **A retomada de sessão tem lugar reservado no contrato**, e nenhum dos quatro
+   jogos ocupou esse lugar por conta própria.
+3. **`proximaCelulaJogavel` já sabe recusar beco**, e serve a qualquer tela que
+   precise perguntar "e agora, para onde?".

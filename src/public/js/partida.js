@@ -5,7 +5,10 @@
 // do meio, e é ela que mora no arquivo de cada jogo.
 //
 // Quem conta acerto e calcula recompensa é o servidor (RN-007): daqui só saem
-// as respostas escolhidas.
+// as respostas escolhidas. A tela de resultado é do `resultado.js`, para o
+// arquivo comum a todos os jogos não virar uma tela.
+import { mostrarResultado } from './resultado.js';
+
 const carregando = document.getElementById('jogo-carregando');
 const aviso = document.getElementById('jogo-erro');
 const area = document.getElementById('jogo-area');
@@ -13,7 +16,6 @@ const avisoDeRepeticao = document.getElementById('jogo-repeticao');
 const painelDePasso = document.getElementById('jogo-passo');
 const barra = document.getElementById('jogo-barra');
 const barraCaixa = document.getElementById('jogo-barra-caixa');
-const resultado = document.getElementById('jogo-resultado');
 
 const csrfToken = document.body.dataset.csrfToken;
 const idCelula = Number(document.body.dataset.celulaId);
@@ -59,26 +61,10 @@ export async function abrirPartida() {
   return partida;
 }
 
-/**
- * Manda as respostas e mostra o resultado.
- *
- * Os números já vêm prontos do servidor; a T-07.6 troca a apresentação, não a
- * origem do dado.
- */
+/** Manda as respostas e entrega o resultado para a tela que o mostra. */
 export async function concluirPartida(token, respostas) {
   const dados = await pedir(`/partidas/${token}/resultado`, { respostas });
 
   area.classList.add('hidden');
-  resultado.classList.remove('hidden');
-
-  document.getElementById('jogo-estrelas').textContent =
-    `${'★'.repeat(dados.estrelas)}${'☆'.repeat(3 - dados.estrelas)} — ${dados.estrelas} de 3 estrelas`;
-  document.getElementById('jogo-ganhos').textContent =
-    `Você ganhou ${dados.xp} de XP, ${dados.polen} de pólen e ${dados.mel} de mel.`;
-
-  if (dados.subiuDeNivel) {
-    const nivel = document.getElementById('jogo-nivel');
-    nivel.textContent = `Você chegou ao nível ${dados.nivel}! Bônus de ${dados.bonusDeMelPorNivel} de mel.`;
-    nivel.classList.remove('hidden');
-  }
+  mostrarResultado(dados);
 }

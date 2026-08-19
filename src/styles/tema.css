@@ -157,3 +157,45 @@
 .barra-90 { width: 90%; }
 .barra-95 { width: 95%; }
 .barra-100 { width: 100%; }
+
+/* Estrelas da tela de resultado (RF-CON-05).
+
+   A estrela ganha aparece com um pulinho, uma depois da outra. O atraso vai em
+   classe, e não em `style`, porque a CSP não permite estilo inline — mesmo
+   motivo das `.barra-N`. */
+.estrela {
+  display: inline-block;
+  opacity: 0.25;
+}
+
+.estrela-ganha {
+  opacity: 0;
+  animation: estrela-surge 0.4s ease-out forwards;
+}
+
+.estrela-ganha.estrela-2 {
+  animation-delay: 0.2s;
+}
+
+.estrela-ganha.estrela-3 {
+  animation-delay: 0.4s;
+}
+
+@keyframes estrela-surge {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Sem animação, a estrela ganha ainda precisa estar acesa (RNF-26). */
+@media (prefers-reduced-motion: reduce) {
+  .estrela-ganha {
+    opacity: 1;
+    animation: none;
+  }
+}

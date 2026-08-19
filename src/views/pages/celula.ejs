@@ -56,20 +56,5 @@
     <%- include(`../partials/jogos/${areaDoJogo}`) %>
   </section>
 
-  <%#
-    Resultado provisório: a tela unificada é a T-07.6. Os números já vêm prontos
-    do servidor, então o que muda lá é a apresentação, não a origem do dado.
-  -%>
-  <section id="jogo-resultado" class="hidden rounded-favo bg-cera p-6 text-center" aria-live="polite">
-    <h2 class="font-display text-2xl text-tinta">Atividade concluída!</h2>
-    <p id="jogo-estrelas" class="mt-3 text-lg font-semibold text-tinta"></p>
-    <p id="jogo-ganhos" class="mt-2 text-tinta-suave"></p>
-    <p id="jogo-nivel" class="mt-2 hidden font-semibold text-acerto-texto"></p>
-
-    <a
-      href="/trilha/<%= idFavo %>"
-      class="mt-6 inline-block rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
-      >Voltar ao favo</a
-    >
-  </section>
+  <%- include('../partials/jogo-resultado') %>
 </main>

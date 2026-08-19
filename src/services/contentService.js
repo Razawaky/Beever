@@ -237,6 +237,28 @@ export async function listarCelulasDoFavo(idUsuario, idFavo) {
 }
 
 /**
+ * A próxima célula jogável do mesmo favo, ou `null` quando não há.
+ *
+ * A tela de resultado usa para empurrar a criança ao próximo jogo em vez de
+ * devolvê-la a uma lista. Célula travada, sem conteúdo ou de jogo que ainda não
+ * existe não conta como próxima: o botão levaria a um beco.
+ *
+ * Célula já concluída conta, sim: quem repete uma célula continua tendo para
+ * onde ir depois dela.
+ */
+export async function proximaCelulaJogavel(idUsuario, idCelula) {
+  const celula = await cellsRepository.buscarPorId(idCelula);
+  if (!celula) return null;
+
+  const { celulas } = await listarCelulasDoFavo(idUsuario, celula.hive_id);
+  const posicao = celulas.findIndex((linha) => Number(linha.id) === Number(idCelula));
+  const proxima = celulas[posicao + 1];
+
+  if (!proxima || !proxima.temJogo || proxima.estado === ESTADOS.travadoPorCelulaAnterior) return null;
+  return { id: Number(proxima.id), titulo: proxima.title, idFavo: Number(celula.hive_id) };
+}
+
+/**
  * Abre a célula e devolve o conteúdo (RF-CON-03).
  *
  * É aqui que o pré-requisito é conferido de novo, e não só na tela: a lista pode

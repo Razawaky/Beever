@@ -152,7 +152,7 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
   if (partida.finished_at && partida.status !== 'concluida') {
     throw erroValidacao(`Esta partida foi ${partida.status} e não pode ser concluída`);
   }
-  if (partida.finished_at) return resultadoGravado(partida);
+  if (partida.finished_at) return comProximaCelula(idUsuario, partida.cell_id, resultadoGravado(partida));
 
   const celula = await cellsRepository.buscarPorId(partida.cell_id);
   if (!celula) throw erroNaoEncontrado('Célula não encontrada');
@@ -199,7 +199,17 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
     });
   }
 
-  return resultado;
+  return comProximaCelula(idUsuario, partida.cell_id, resultado);
+}
+
+/**
+ * Junta ao resultado para onde a tela de resultado leva (RF-CON-05).
+ *
+ * Vai no fim de propósito: a próxima célula só abre depois de esta ser
+ * concluída, então perguntar antes do crédito traria sempre `null`.
+ */
+async function comProximaCelula(idUsuario, idCelula, resultado) {
+  return { ...resultado, proximaCelula: await contentService.proximaCelulaJogavel(idUsuario, idCelula) };
 }
 
 /** Desiste da partida sem creditar nada — o jogador saiu no meio. */
