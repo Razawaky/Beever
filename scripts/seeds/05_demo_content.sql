@@ -245,6 +245,74 @@ SELECT celula.id, 1, JSON_OBJECT(
  WHERE favo.slug = 'construir-patrimonio' AND celula.order_index = 4
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
+-- Cofre do Tempo (RF-JOG-04): quatro células. A taxa é do conteúdo, não do
+-- código: a faixa A precisa de juro alto para ver a curva em quatro ciclos, e a
+-- faixa C fecha com os 2% do cofre de verdade (RN-042). A meta fica sempre
+-- acima do que guardar o mínimo alcança e dentro do que guardar tudo alcança.
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'cofre',
+    'enunciado', 'Entram 20 de mel por semana. Guarde o que puder: o que fica no cofre rende 10% toda semana.',
+    'nomeDoCiclo', 'semana',
+    'entradaPorCiclo', 20,
+    'minimoPorCiclo', 5,
+    'taxaPorCiclo', 10,
+    'ciclos', 4,
+    'meta', 60
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'guardar-e-gastar' AND celula.order_index = 2
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'cofre',
+    'enunciado', 'Entram 50 de mel por mês, e o cofre rende 5% ao mês. Chegue a 180 em cinco meses.',
+    'nomeDoCiclo', 'mês',
+    'entradaPorCiclo', 50,
+    'minimoPorCiclo', 10,
+    'taxaPorCiclo', 5,
+    'ciclos', 5,
+    'meta', 180
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'planejar-o-mes' AND celula.order_index = 4
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'cofre',
+    'enunciado', 'Entram 100 de mel por mês, e o cofre rende 4% ao mês. Guardar cedo rende mais do que guardar tarde.',
+    'nomeDoCiclo', 'mês',
+    'entradaPorCiclo', 100,
+    'minimoPorCiclo', 20,
+    'taxaPorCiclo', 4,
+    'ciclos', 6,
+    'meta', 480
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'o-tempo-e-o-juro' AND celula.order_index = 1
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'cofre',
+    'enunciado', 'Entram 80 de mel por semana e o cofre rende 2% por semana, como o cofre de verdade. Monte a reserva.',
+    'nomeDoCiclo', 'semana',
+    'entradaPorCiclo', 80,
+    'minimoPorCiclo', 20,
+    'taxaPorCiclo', 2,
+    'ciclos', 6,
+    'meta', 400
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'construir-patrimonio' AND celula.order_index = 3
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
 INSERT INTO contents (cell_id, version, body)
 SELECT celula.id, 1, JSON_OBJECT('tipo', 'placeholder', 'texto', 'Conteúdo em produção.')
   FROM cells celula

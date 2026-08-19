@@ -4,9 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-07.4 — **o terceiro jogo existe**: repartir a mesada entre
-categorias, com a regra conferida no servidor. Árvore limpa, 442 testes passando.
-**Próximo passo: T-07.5**, o Cofre do Tempo
+**Último commit:** T-07.5 — **os quatro jogos obrigatórios existem**. O Cofre do
+Tempo fecha a lista, com gráfico em SVG e juros compostos conferidos no servidor.
+Árvore limpa, 458 testes passando.
+**Próximo passo: T-07.6**, a tela de resultado unificada
 
 ---
 
@@ -268,7 +269,7 @@ teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
 | T-07.2 Quiz do Favo | **feita** — rota, tela, `quiz.js` e 8 testes pelo HTTP; o botão "Jogar" passou a ser por célula |
 | T-07.3 Arraste e Classifique (com alternativa por clique e teclado) | **feita** — validador, seed com três células, `arraste.js` com arrastar de verdade, e a casca da tela virou parte comum; 7 testes unitários e 7 pelo HTTP |
 | T-07.4 Monte o Orçamento | **feita** — validador com regra por categoria, cinco células nas três faixas, `orcamento.js` com botões − e +; 7 testes unitários e 6 pelo HTTP |
-| T-07.5 Cofre do Tempo | pendente |
+| T-07.5 Cofre do Tempo | **feita** — validador com juro composto, quatro células, gráfico em SVG sem dependência; 8 testes unitários e 6 pelo HTTP. Achou e corrigiu o botão "Jogar" que prometia célula com conteúdo de demonstração |
 | T-07.6 Tela de resultado unificada | pendente |
 | T-07.7 (P1) Mercado Esperto, Ordene a Prioridade e retomada de sessão | pendente |
 
@@ -905,7 +906,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | **em andamento** | T-07.1 feita: contrato documentado e imposto pelo código. T-07.2, T-07.3 e T-07.4 feitas: quiz, arrastar e orçamento jogam de verdade, sobre uma casca de tela comum. Faltam o Cofre do Tempo (T-07.5), a tela de resultado (T-07.6) e os P1 da T-07.7 |
+| E07 Jogos | **em andamento** | **Os quatro jogos obrigatórios estão prontos** (T-07.1 a T-07.5): quiz, arrastar, orçamento e cofre, sobre uma casca de tela comum. Faltam a tela de resultado unificada (T-07.6) e os P1 da T-07.7 |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -1100,17 +1101,14 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-07.5 — **Cofre do Tempo**, juros compostos com gráfico
-simples. É o último jogo obrigatório da etapa, e o primeiro cuja tela precisa
-mostrar uma evolução, não só uma escolha: o jogador decide quanto guardar e vê o
-rendimento crescer por ciclo. O gráfico não pode custar dependência nova nem
-estilo inline, por causa da CSP.
+**Próxima tarefa:** T-07.6 — **a tela de resultado unificada**, com estrelas, XP,
+mel, pólen e o mascote (RF-CON-05). Hoje os quatro jogos terminam no painel
+provisório que a T-07.2 montou dentro do `partida.js`: os números já vêm prontos
+do servidor, então o que muda é a apresentação, não a origem do dado.
 
 O caminho é sempre o mesmo desde a T-07.3: `public/js/partida.js` abre a partida,
 mostra erro, move a barra e monta o resultado; `pages/celula.ejs` é a casca; o
-mapa de qual jogo usa qual parcial e qual script está no `paginaController`. Um
-jogo novo é um validador, um conteúdo semeado, uma parcial e um arquivo de
-JavaScript — nada além.
+mapa de qual jogo usa qual parcial e qual script está no `paginaController`.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
@@ -1571,3 +1569,57 @@ Para a T-07.5 saber:
    atributo, e é por isso que a barra de progresso usa `.barra-N`. O gráfico do
    cofre precisa nascer com essa restrição em mente — SVG servido pela própria
    página resolve.
+
+---
+
+### Sessão de 2026-08-19, T-07.5: o cofre, e o botão que prometia demais
+
+Suíte em **458 testes, zero falhas** (442 antes). Com esta tarefa, **os quatro
+jogos obrigatórios da E07 existem**.
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/validadoresDeJogo.js` | validador de `cofre-do-tempo` e a função `saldoDoCofre` |
+| `src/public/js/cofre.js` | um ciclo por vez, gráfico em SVG e histórico em tabela |
+| `src/views/partials/jogos/cofre.ejs` | a área do jogo dentro da casca comum |
+| `scripts/seeds/05_demo_content.sql` | quatro células de cofre, das três faixas |
+| `test/integration/cofreDoTempo.test.js` | 6 testes pelo HTTP |
+
+**O jogo.** O depósito entra no começo do ciclo e o rendimento cai no fim, com
+arredondamento para baixo a cada ciclo. É essa ordem que faz guardar cedo render
+mais do que guardar tarde, e existe teste com esse nome: os mesmos 50 de mel
+batem a meta quando guardados nos dois primeiros ciclos e não batem quando
+guardados nos dois últimos. Erro é ciclo fora da regra, mais um se a meta não
+vier. Ciclo inválido perde o depósito, mas o tempo passa — o que já estava
+guardado rende assim mesmo.
+
+**A taxa é do conteúdo, não do código.** A célula de faixa A rende 10% por
+semana, para a curva ser visível em quatro ciclos; a de faixa C rende os 2% da
+RN-042, com o vocabulário do cofre de verdade. Este jogo é simulação e **não
+encosta na tabela `vaults`**: o Cofre real é da etapa da economia.
+
+**O gráfico não custou dependência.** É um `<svg>` montado na página, com barras
+posicionadas por atributo de geometria e cor por `currentColor` — a CSP não
+permite `style` inline, e biblioteca de gráfico para quatro barras seria peso
+sem motivo. Abaixo dele, a mesma informação aparece em tabela, que é o que o
+leitor de tela lê (RNF-25).
+
+**O bug que a verificação achou, e que não era desta tarefa.** Com a aplicação de
+pé, o botão "Jogar" aparecia em célula cujo conteúdo ainda é de demonstração, e o
+clique morria em `422 Esta célula ainda não é jogável`. Vinha da T-07.2:
+`temJogo` só perguntava se o **tipo de jogo** tinha validador, nunca se **aquele
+conteúdo** era jogável. Agora a trilha carrega o corpo de cada célula e pergunta
+ao `conferirForma`; célula com conteúdo de demonstração volta a dizer "em breve".
+É o mesmo defeito da L-1 da auditoria da E05, em outra roupa, e agora tem teste
+que troca o conteúdo por um placeholder e confere que o botão some.
+
+Para a T-07.6 saber:
+
+1. **O resultado já está pronto no servidor.** Estrelas, XP, pólen, mel, subida
+   de nível e bônus chegam do `POST /partidas/:token/resultado`. A tela nova
+   troca a apresentação; nenhum número precisa ser recalculado.
+2. **O painel provisório mora no `partida.js`**, e é ele que os quatro jogos
+   chamam em `concluirPartida`. Mudar lá muda nos quatro de uma vez.
+3. **A trilha tem menos buracos.** Faltam validadores só para `mercado-esperto` e
+   `ordene-a-prioridade`, os dois P1 da T-07.7. As células de quiz que ainda têm
+   conteúdo de demonstração agora aparecem honestamente como "em breve".

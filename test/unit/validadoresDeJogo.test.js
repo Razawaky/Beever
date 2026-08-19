@@ -50,6 +50,17 @@ const ORCAMENTO = {
   ],
 };
 
+const COFRE = {
+  tipo: 'cofre',
+  enunciado: 'Entram 20 de mel por semana.',
+  nomeDoCiclo: 'semana',
+  entradaPorCiclo: 20,
+  minimoPorCiclo: 5,
+  taxaPorCiclo: 10,
+  ciclos: 4,
+  meta: 60,
+};
+
 describe('validadoresDeJogo', () => {
   describe('validarRespostas', () => {
     it('não acha erro quando tudo está certo', () => {
@@ -99,7 +110,8 @@ describe('validadoresDeJogo', () => {
     });
 
     it('recusa tipo de jogo sem validador, dizendo qual é', () => {
-      assert.throws(() => conferirForma('cofre-do-tempo', QUIZ), /cofre-do-tempo/);
+      // Os quatro jogos obrigatórios já têm validador; os P1 da T-07.7, não.
+      assert.throws(() => conferirForma('mercado-esperto', QUIZ), /mercado-esperto/);
     });
   });
 
@@ -230,7 +242,78 @@ describe('validadoresDeJogo', () => {
     });
   });
 
+  describe('Cofre do Tempo', () => {
+    /**
+     * A conta à mão, com o depósito entrando no começo do ciclo e o rendimento
+     * caindo no fim, arredondando para baixo a cada ciclo:
+     *
+     *   guardando 20: 22, 46, 72, 101   guardando 5: 5, 11, 17, 24
+     *
+     * A meta é 60, então guardar tudo bate e guardar o mínimo não bate.
+     */
+    it('guardar tudo bate a meta e não acha erro nenhum', () => {
+      assert.deepEqual(validarRespostas('cofre-do-tempo', COFRE, [20, 20, 20, 20]), { erros: 0, total: 5 });
+    });
+
+    it('guardar o mínimo respeita a regra de todo ciclo e ainda assim perde a meta', () => {
+      assert.deepEqual(validarRespostas('cofre-do-tempo', COFRE, [5, 5, 5, 5]), { erros: 1, total: 5 });
+    });
+
+    it('guardar cedo rende mais do que guardar tarde', () => {
+      const cedo = validarRespostas('cofre-do-tempo', COFRE, [20, 20, 5, 5]);
+      const tarde = validarRespostas('cofre-do-tempo', COFRE, [5, 5, 20, 20]);
+
+      assert.equal(cedo.erros, 0, 'guardando cedo a meta vem');
+      assert.equal(tarde.erros, 1, 'os mesmos 50 de mel, guardados tarde, não chegam à meta');
+    });
+
+    it('depósito fora da regra é erro, e aquele ciclo não guarda nada', () => {
+      // O ciclo inválido rende sobre o que já havia, mas o depósito é perdido.
+      assert.equal(validarRespostas('cofre-do-tempo', COFRE, [50, 20, 20, 20]).erros, 1, 'acima da entrada');
+      assert.equal(validarRespostas('cofre-do-tempo', COFRE, [0, 20, 20, 20]).erros, 1, 'abaixo do mínimo');
+    });
+
+    it('ciclo deixado em branco conta como erro', () => {
+      assert.equal(validarRespostas('cofre-do-tempo', COFRE, [20, 20, 20]).erros, 1, 'faltou o quarto ciclo');
+    });
+
+    /**
+     * Um ciclo perdido custa a meta só quando os outros também vão mal — é a
+     * RN-030 na prática: a criança não é bloqueada por um erro.
+     */
+    it('um ciclo perdido não derruba a meta se os outros forem bem', () => {
+      assert.equal(validarRespostas('cofre-do-tempo', COFRE, [50, 20, 20, 20]).erros, 1, 'a meta veio assim mesmo');
+      assert.equal(validarRespostas('cofre-do-tempo', COFRE, [50, 5, 5, 5]).erros, 2, 'aí sim, o ciclo e a meta');
+    });
+
+    it('recusa meta inalcançável e meta que o mínimo já alcança', () => {
+      assert.throws(() => conferirForma('cofre-do-tempo', { ...COFRE, meta: 500 }), { codigo: 'VALIDACAO' });
+      assert.throws(() => conferirForma('cofre-do-tempo', { ...COFRE, meta: 10 }), { codigo: 'VALIDACAO' });
+    });
+
+    it('recusa taxa, ciclos ou mínimo tortos', () => {
+      assert.throws(() => conferirForma('cofre-do-tempo', { ...COFRE, taxaPorCiclo: 0 }), { codigo: 'VALIDACAO' });
+      assert.throws(() => conferirForma('cofre-do-tempo', { ...COFRE, ciclos: 9 }), { codigo: 'VALIDACAO' });
+      assert.throws(() => conferirForma('cofre-do-tempo', { ...COFRE, minimoPorCiclo: 30 }), {
+        codigo: 'VALIDACAO',
+      });
+    });
+
+    it('entrega as regras para a tela, porque elas são o enunciado', () => {
+      const paraTela = conteudoParaJogar('cofre-do-tempo', COFRE);
+
+      assert.equal(paraTela.meta, 60);
+      assert.equal(paraTela.taxaPorCiclo, 10);
+      assert.equal(paraTela.ciclos, 4);
+    });
+  });
+
   it('diz quais tipos de jogo já são jogáveis', () => {
-    assert.deepEqual(tiposJogaveis(), ['quiz-do-favo', 'arraste-e-classifique', 'monte-o-orcamento']);
+    assert.deepEqual(tiposJogaveis(), [
+      'quiz-do-favo',
+      'arraste-e-classifique',
+      'monte-o-orcamento',
+      'cofre-do-tempo',
+    ]);
   });
 });

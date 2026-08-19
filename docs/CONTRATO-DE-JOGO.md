@@ -32,6 +32,12 @@ O corpo do terceiro jogo é `{ tipo, enunciado, total, passo, categorias: [{ id,
 
 Este é o único jogo sem gabarito escondido, e o `paraJogar` devolve as regras inteiras: aqui a regra é o enunciado, não a resposta. Esconder o mínimo de cada categoria não tornaria o jogo mais honesto, tornaria-o impossível.
 
+## O exemplo do Cofre do Tempo
+
+O corpo do quarto jogo é `{ tipo, enunciado, nomeDoCiclo, entradaPorCiclo, minimoPorCiclo, taxaPorCiclo, ciclos, meta }`, e a resposta é a lista de depósitos, um por ciclo. O saldo é calculado com o depósito entrando no começo do ciclo e o rendimento caindo no fim, arredondado para baixo a cada ciclo — é isso que faz guardar cedo render mais do que guardar tarde, que é a lição do jogo. O `validar` conta um erro por ciclo cujo depósito fura a regra e mais um se a meta não vier, então `total` é o número de ciclos mais um. Ciclo inválido perde o depósito daquele ciclo, mas o tempo passa: o que já estava guardado rende assim mesmo.
+
+Como no orçamento, o `conferirForma` recusa conteúdo sem decisão possível: meta que nem guardando tudo se alcança, e meta que guardar o mínimo já alcança. A mesma conta do saldo existe no `public/js/cofre.js`, porque a tela projeta a curva enquanto o jogador decide; se uma das duas mudar, a outra muda junto.
+
 ## Estado salvo, que ainda não existe
 
 A RF-JOG-07 prevê retomar uma partida interrompida, e é P1, planejada para a T-07.7. O lugar dela no contrato é uma quarta função opcional, `estadoParaSalvar(respostasParciais)`, e uma coluna de estado na partida. Nenhum jogo da E07 deve inventar seu próprio jeito de salvar antes disso: quem precisar guardar progresso parcial agora, guarda no navegador e assume que fechar a aba custa a partida.

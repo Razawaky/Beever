@@ -233,10 +233,118 @@ const orcamento = {
   },
 };
 
+/**
+ * O saldo do cofre depois de todos os ciclos.
+ *
+ * O depósito entra no começo do ciclo e o rendimento cai no fim, que é o que
+ * faz guardar cedo valer mais do que guardar tarde — a lição do jogo. O saldo é
+ * arredondado para baixo a cada ciclo, para que o servidor e a tela cheguem ao
+ * mesmo número sem depender de casa decimal.
+ *
+ * O mesmo cálculo roda no `cofre.js`. Se um dos dois mudar, o outro muda junto.
+ */
+function saldoDoCofre(corpo, depositos) {
+  let saldo = 0;
+
+  for (let ciclo = 0; ciclo < corpo.ciclos; ciclo += 1) {
+    saldo = Math.floor(((saldo + depositos[ciclo]) * (100 + corpo.taxaPorCiclo)) / 100);
+  }
+  return saldo;
+}
+
+/**
+ * Cofre do Tempo (RF-JOG-04): quanto guardar em cada ciclo, para chegar à meta.
+ *
+ * Corpo esperado: `{ tipo, enunciado, nomeDoCiclo, entradaPorCiclo, minimoPorCiclo,
+ * taxaPorCiclo, ciclos, meta }`. As respostas chegam como lista de depósitos, um
+ * por ciclo, na ordem.
+ *
+ * Este jogo é simulação e não encosta na tabela `vaults`: o Cofre de verdade,
+ * com a taxa da RN-042, é da etapa da economia.
+ */
+const cofre = {
+  conferirForma(corpo) {
+    const inteiroPositivo = (valor) => Number.isInteger(valor) && valor > 0;
+
+    if (!inteiroPositivo(corpo?.entradaPorCiclo) || !inteiroPositivo(corpo?.meta)) {
+      throw erroValidacao('Esta célula ainda não é jogável: falta a entrada por ciclo ou a meta');
+    }
+    if (!Number.isInteger(corpo.taxaPorCiclo) || corpo.taxaPorCiclo <= 0 || corpo.taxaPorCiclo > 100) {
+      throw erroValidacao('A taxa por ciclo precisa ser um percentual inteiro entre 1 e 100');
+    }
+    // Seis ciclos é o que cabe no gráfico a 320 px sem virar risco no meio da tela.
+    if (!Number.isInteger(corpo.ciclos) || corpo.ciclos < 2 || corpo.ciclos > 6) {
+      throw erroValidacao('O cofre precisa ter de dois a seis ciclos');
+    }
+    if (
+      !Number.isInteger(corpo.minimoPorCiclo) ||
+      corpo.minimoPorCiclo < 0 ||
+      corpo.minimoPorCiclo > corpo.entradaPorCiclo
+    ) {
+      throw erroValidacao('O mínimo por ciclo precisa caber na entrada do ciclo');
+    }
+
+    const ciclos = Array.from({ length: corpo.ciclos });
+    const saldoGuardandoTudo = saldoDoCofre(corpo, ciclos.map(() => corpo.entradaPorCiclo));
+    const saldoGuardandoOMinimo = saldoDoCofre(corpo, ciclos.map(() => corpo.minimoPorCiclo));
+
+    // Meta inalcançável faria a criança perder estrela por defeito do conteúdo;
+    // meta que o mínimo já alcança faria o jogo não pedir decisão nenhuma.
+    if (corpo.meta > saldoGuardandoTudo) {
+      throw erroValidacao('A meta deste cofre é inalcançável: nem guardando tudo o saldo chega lá');
+    }
+    if (corpo.meta <= saldoGuardandoOMinimo) {
+      throw erroValidacao('A meta deste cofre já é alcançada guardando o mínimo: não há decisão a tomar');
+    }
+  },
+
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      enunciado: corpo.enunciado,
+      nomeDoCiclo: corpo.nomeDoCiclo ?? 'ciclo',
+      entradaPorCiclo: corpo.entradaPorCiclo,
+      minimoPorCiclo: corpo.minimoPorCiclo,
+      taxaPorCiclo: corpo.taxaPorCiclo,
+      ciclos: corpo.ciclos,
+      meta: corpo.meta,
+    };
+  },
+
+  /**
+   * Um erro por ciclo com depósito fora da regra, mais um se a meta não vier.
+   *
+   * O tempo passa mesmo quando o depósito é inválido: o ciclo rende sobre o que
+   * já estava guardado, e só o depósito daquele ciclo é perdido.
+   */
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma por ciclo');
+    }
+
+    let erros = 0;
+    const depositos = [];
+
+    for (let ciclo = 0; ciclo < corpo.ciclos; ciclo += 1) {
+      const deposito = Number(respostas[ciclo]);
+      const foraDaRegra =
+        !Number.isInteger(deposito) || deposito < corpo.minimoPorCiclo || deposito > corpo.entradaPorCiclo;
+
+      if (foraDaRegra) erros += 1;
+      depositos.push(foraDaRegra ? 0 : deposito);
+    }
+
+    if (saldoDoCofre(corpo, depositos) < corpo.meta) erros += 1;
+
+    return { erros, total: corpo.ciclos + 1 };
+  },
+};
+
 const VALIDADORES = {
   'quiz-do-favo': quiz,
   'arraste-e-classifique': arraste,
   'monte-o-orcamento': orcamento,
+  'cofre-do-tempo': cofre,
 };
 
 function escolher(slugDoTipoDeJogo) {
