@@ -58,6 +58,27 @@ export async function buscarPorId(id) {
 }
 
 /**
+ * A partida aberta daquele token, travada para atualização.
+ *
+ * O `FOR UPDATE` é o que faz duas conclusões simultâneas virarem uma: a segunda
+ * espera a primeira terminar e, quando chega a vez dela, a partida já está
+ * fechada e a linha não volta mais. Sem a trava, as duas leriam "aberta" ao
+ * mesmo tempo e as duas creditariam.
+ */
+export async function bloquearAbertaPorToken(conexao, token) {
+  const linhas = await consultarEm(
+    conexao,
+    `SELECT ${CAMPOS}
+       FROM game_sessions gs
+       ${JOINS}
+      WHERE gs.token = ? AND gs.finished_at IS NULL
+      FOR UPDATE`,
+    [token],
+  );
+  return linhas[0] ?? null;
+}
+
+/**
  * Fecha a partida e registra o que ela rendeu.
  *
  * A duração é calculada pelo banco a partir do `started_at` gravado na

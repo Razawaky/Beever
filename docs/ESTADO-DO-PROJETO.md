@@ -4,10 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-06.4 — o mel da célula sai da tabela e o bônus de subida de
-nível enfim é pago. Árvore limpa, 372 testes passando.
-**Próximo passo: T-06.5**, o `GameSessionService`, que junta as três recompensas
-numa transação só
+**Último commit:** T-06.5 — a partida existe: abre com token, fecha conferindo as
+respostas no servidor e paga as três recompensas numa transação. Árvore limpa,
+380 testes passando.
+**Próximo passo: T-06.6**, a idempotência por `idempotency_keys`
 
 ---
 
@@ -248,7 +248,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
-| As três recompensas creditadas com o jogador jogando | `creditarPorCelula` dos três services tem teste contra banco real, mas ninguém os chama ainda: o chamador é o `GameSessionService` da T-06.5. Nenhuma criança viu XP, pólen ou mel subir na tela |
+| A partida jogada em navegador | O `gameSessionService` fecha o ciclo inteiro com teste contra banco real, mas não há rota nem tela de jogo: isso é a E07. Nenhuma criança viu XP, pólen ou mel subir na tela |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Comportamento sob concorrência | O débito atômico foi testado sequencialmente. Nunca houve teste com duas requisições simultâneas de verdade |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -269,7 +269,7 @@ mesmo contrato de recompensa.
 | T-06.2 `XpService`: calcula e credita XP, resolve subida de nível | **feita** — o dono do XP é o `levelsService`, que ganhou o cálculo pela tabela, o corte da repetição e o bônus de mel do degrau; 8 testes novos |
 | T-06.3 `PointsService`: calcula e credita pólen | **feita** — `calcularPolenDaCelula` e `creditarPorCelula`, no mesmo desenho do XP; repetir paga zero pólen |
 | T-06.4 `CoinService`: calcula e credita mel, valida saldo, nunca negativo | **feita** — `calcularMelDaCelula`, `creditarPorCelula` e `creditarBonusDeNivel`; repetir paga zero mel e o débito além do saldo é recusado sem rastro |
-| T-06.5 `GameSessionService`: abre e fecha sessão validando respostas no servidor, orquestra os três em uma transação | pendente |
+| T-06.5 `GameSessionService`: abre e fecha sessão validando respostas no servidor, orquestra os três em uma transação | **feita** — `abrir`/`fechar`/`abandonar`, validador de quiz, trava `FOR UPDATE` no token e 8 testes; fecha a RF-CON-04 |
 | T-06.6 Idempotência: token de sessão consumido uma única vez | pendente |
 | T-06.7 Auditoria em todos os créditos | pendente |
 | T-06.8 Testes: dupla submissão, repetição, cliente mentindo na pontuação | pendente |
@@ -366,6 +366,35 @@ continua sem quem o leia, porque as três faixas têm a economia ligada e guarda
 que nunca reprova esconde a intenção (a RN-038 é E09); e a **DT-18** continua
 aberta, para a T-06.6 resolvê-la com o mecanismo de `idempotency_keys` em vez de
 uma solução paralela.
+
+**O que a T-06.5 entregou.** A partida virou fato registrado. `abrir` confere a
+célula pelo `contentService`, gera o token (UUID do servidor) e devolve o
+conteúdo **sem o gabarito**; `fechar` conta os erros contra o gabarito do banco,
+grava a tentativa e paga XP, pólen e mel na mesma transação, com o bônus do
+degrau por último. A duração vem do banco (`TIMESTAMPDIFF`), nunca do cronômetro
+do navegador — é o que fecha a **RF-CON-04**, que estava aberta desde a E05.
+
+Quatro decisões que valem lembrar:
+
+1. **A trava é `SELECT ... FOR UPDATE` no token.** Duas conclusões simultâneas
+   viram uma: a segunda espera, encontra a partida fechada e devolve o resultado
+   dela. Sem a trava, as duas leriam "aberta" e as duas creditariam — que é
+   exatamente o critério de aceite da etapa.
+2. **Reenvio recebe o resultado, não um erro.** Navegador que reenvia por
+   conexão ruim merece a tela de resultado. É o comportamento que a T-06.6 vai
+   formalizar com `idempotency_keys`.
+3. **O gabarito não vai para a tela.** `conteudoParaJogar` devolve as perguntas
+   sem o campo `correta`: mandar a resposta certa ao navegador tornaria a
+   validação no servidor teatro.
+4. **Conteúdo sem gabarito recusa abrir**, em vez de pagar por conteúdo vazio.
+   Das 24 células semeadas, só a primeira de "primeiros passos" tem quiz de
+   verdade; as outras são de demonstração e ganham jogo na E07. Recusar cedo
+   evita partida aberta que ninguém consegue fechar.
+
+**Os validadores moram em módulo próprio**, `src/services/validadoresDeJogo.js`,
+indexados pelo slug de `game_types` — mesmo padrão do `goalProgressSources`. A
+T-07.1 formaliza o contrato de jogo e as tarefas da E07 acrescentam os outros
+cinco no mesmo mapa.
 
 **Uma decisão de produto tomada aqui:** a RN-008 fala de XP e mel, e cala sobre
 pólen. O seed zera o pólen na repetição também — pólen repetido à vontade é o
@@ -734,7 +763,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
-| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. Faltam T-06.5 a T-06.8 — a sessão de jogo, a idempotência, a auditoria e os testes de aceite. Ver também DT-18 |
+| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. Faltam T-06.6 a T-06.8 — a idempotência por `idempotency_keys`, a auditoria e os testes de aceite. Ver também DT-18 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
@@ -929,13 +958,11 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-06.5 — `GameSessionService`, o miolo da etapa: abre a
-sessão com token, fecha validando as respostas **no servidor** (RN-007, o cliente
-manda respostas e nunca pontuação) e orquestra as três recompensas numa
-transação só. As peças estão prontas e não devem ser reescritas:
-`progressService.registrarTentativa` dá estrelas e `ehRepeticao` (RN-030), e os
-três `creditarPorCelula` aceitam conexão de fora. A tabela `game_sessions` já tem
-token, `is_replay` e `duration_seconds` desde a migration `003`.
+**Próxima tarefa:** T-06.6 — idempotência com `idempotency_keys`, a tabela
+semeada na E01 que ninguém usa (**DT-18**). A T-06.5 já protege a partida com a
+trava `FOR UPDATE` no token e com o `finalizar` que só fecha partida aberta; o
+que a T-06.6 acrescenta é o mecanismo geral, que a **compra** também precisa —
+hoje dois cliques rápidos criam duas compras e debitam duas vezes.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -1113,3 +1140,28 @@ Para a T-06.5 saber:
    XP, então ele é o último a ser pago, pelo `coinsService`.
 3. **O tempo de partida ainda não tem quem o grave.** `duration_seconds` existe
    em `game_sessions` desde a migration `003` e é a T-06.5 que fecha a RF-CON-04.
+
+---
+
+### Sessão de 2026-08-19, continuação: T-06.5
+
+Suíte em **380 testes, zero falhas** (372 antes), reconciliação OK. O ciclo do
+jogo existe do começo ao fim, menos a tela.
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/gameSessionService.js` | `abrir`, `fechar` e `abandonar` — o único orquestrador das três recompensas |
+| `src/services/validadoresDeJogo.js` | validação por slug de `game_types`; hoje só `quiz-do-favo`, e o conteúdo vai à tela sem o gabarito |
+| `src/repositories/gameSessionsRepository.js` | `bloquearAbertaPorToken`, com `FOR UPDATE` |
+| `test/integration/sessaoDeJogo.test.js` | 8 testes: célula travada, token e conteúdo sem gabarito, pagamento das três recompensas, reenvio, cliente mentindo, repetição, jogo sem validador, partida de outro jogador |
+
+Para a T-06.6 e a T-06.8 saber:
+
+1. **A defesa de hoje é a trava mais o `finalizar`.** `bloquearAbertaPorToken`
+   serializa conclusões simultâneas e `finalizar` só fecha partida aberta. A
+   T-06.6 acrescenta o mecanismo geral de `idempotency_keys`, que a **compra**
+   também precisa (DT-18).
+2. **O aceite da etapa ainda não foi exercido.** "Cinco conclusões em paralelo
+   creditam uma vez" é a T-06.8; o que existe hoje é o reenvio sequencial.
+3. **A RF-CON-04 fechou.** `duration_seconds` é gravado pelo banco no
+   `finalizar`, e a lacuna L-2 do laudo da E05 está paga.
