@@ -16,6 +16,9 @@ import { consultarEm } from '../config/database.js';
 /** Slug do modificador da RN-008. Semeado em `07_reward_modifiers.sql`. */
 export const REPETICAO_DE_CELULA = 'repeticao-de-celula';
 
+/** Slug do modificador da RN-017: meta renovada rende metade. Mesmo arquivo de seed. */
+export const META_RENOVADA = 'meta-renovada';
+
 export async function buscarConfiguracao(
   { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
   conexao = null,

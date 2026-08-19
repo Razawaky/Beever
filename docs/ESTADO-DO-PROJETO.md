@@ -4,10 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** auditoria da E07, com as duas lacunas de risco médio
-corrigidas — as estrelas do resultado viraram desenho (RNF-21) e a rota de
-partida ganhou limitador. Árvore limpa, 492 testes passando.
-**Próximo passo: abrir a E08** — metas e sequência
+**Último commit:** T-08.1 — a meta vencida pode ser **retomada** (RN-017), com o
+progresso guardado e metade da recompensa; e a meta fora do prazo parou de
+pagar, que era um vazamento aberto. Árvore limpa, 498 testes passando.
+**Próximo passo: T-08.2**, o `StreakService`
 
 ---
 
@@ -259,9 +259,27 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E07 — jogos interativos.** A regra da etapa é uma tarefa por jogo, e cada jogo
-só está pronto quando tem tela, JavaScript na página, validação no servidor e
-teste. O motor de recompensas já sabe pagar qualquer um deles desde a E06.
+**E08 — metas e sequência.** A etapa junta três assuntos que dependem da mesma
+noção de "dia do jogador": meta, sequência e tarefa. O aceite é simular três
+semanas de uso e a sequência bater com a regra em todos os cenários.
+
+| Tarefa | Situação |
+|---|---|
+| T-08.1 `GoalService`: progresso por evento, conclusão única, expiração e renovação | **feita** — três das quatro metades já existiam desde a E06; esta tarefa entregou a renovação (RN-017, RF-MET-05, dívida DT-33) e fechou um vazamento: meta fora de `ativa` não paga mais |
+| T-08.2 `StreakService`: avaliação preguiçosa na primeira requisição do dia, com fuso e dias marcados | pendente — depende da DT-23, a virada do dia que ainda usa o relógio do servidor |
+| T-08.3 Consumo automático do Escudo de Sequência | pendente |
+| T-08.4 Marcos de sequência com bônus | pendente |
+| T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | pendente |
+| T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | pendente |
+| T-08.7 Testes com tempo simulado: dia neutro, dia marcado perdido, escudo e virada de fuso | pendente |
+
+---
+
+**E07 — jogos interativos** (concluída e auditada, guardada aqui como histórico).
+
+A regra da etapa era uma tarefa por jogo, e cada jogo só ficava pronto com tela,
+JavaScript na página, validação no servidor e teste. O laudo está em
+`docs/07-AUDITORIA-DA-ETAPA.md`.
 
 | Tarefa | Situação |
 |---|---|
@@ -907,7 +925,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
-| E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
+| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. Faltam a sequência (T-08.2 a T-08.4), as tarefas (T-08.5), as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
@@ -960,7 +978,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-30 | A regra de arredondamento da barra de progresso existe duas vezes: em `src/utils/barraDeProgresso.js`, para as páginas renderizadas no servidor, e em `src/public/js/onboarding.js`, para o wizard. São cinco caracteres de conta, mas duas cópias mesmo assim — o navegador não consegue importar de `src/utils` enquanto não houver bundler ou um módulo servido em `src/public` | T-04.2 | E11, junto do trabalho de front: ou um módulo compartilhado servido como estático, ou a barra do wizard passa a ser montada pelo servidor |
 | DT-31 | A calibragem dos alvos das metas é um chute educado, não medição: `goal_target_rules` diz que uma sessão de 10 minutos vale 25 de mel, e as tarefas de hoje pagam mais ou menos isso — mas quem vai pagar de verdade são as células e os jogos, que ainda não existem. Uma meta escalada (a segunda ou a terceira do mesmo tipo no plano) pode estar acima do que a economia atual permite ganhar no prazo | T-04.4 | E07, quando os jogos pagarem; é editar seed e rodar, sem tocar em código |
 | DT-32 | **Meio caminho andado na T-06.2**: o XP de célula já é calculado e creditado, então o nível sobe assim que a T-06.5 fechar a sessão de jogo. A meta de "atingir nível" é mensurável mas ainda parada até lá. Ela não é meta impossível por desenho — é impossível por falta do motor de XP, que é o buraco conhecido da E06 | T-04.4 | E06, junto do motor de recompensa. Se atrasar, a saída é uma linha a menos em `goal_target_rules` |
-| DT-33 | A RN-017 tem duas metades e só uma existe: a meta vencida entra em `expirada` sem punição, mas **a oferta de renovação — prazo estendido e recompensa reduzida em 50% — não foi construída**. Hoje a meta vencida simplesmente some das ativas e o planejador põe outra no lugar, então o jogador perde o trabalho já feito naquela meta específica sem a chance de retomá-la. É também a RF-MET-05 | auditoria da E04, L-2 | E06, junto do motor de recompensa, que é quem sabe calcular recompensa pela metade |
+| ~~DT-33~~ | ~~A RN-017 tem duas metades e só uma existe: a meta vencida entra em `expirada` sem punição, mas a oferta de renovação não foi construída~~ | auditoria da E04, L-2 | **Resolvida na T-08.1**: a meta vencida mostra "Retomar esta meta", e retomar preserva o progresso, dá prazo novo pelo plano de hoje e paga metade — o fator 0,5 é linha em `reward_modifiers`, não número no código |
 | DT-34 | O administrador não tem como calibrar o ritmo do jogo: `goal_plan_rules` e `goal_target_rules` só mudam rodando `db:seed`, que é deploy. É o poder que faz sentido dar ao admin sobre metas — **não** criar meta para um jogador específico, o que reabriria o furo da RN-014 pelo painel administrativo. Requisito ainda não escrito em `01-REQUISITOS-E-REGRAS.md` | correção de escopo da E04, 2026-08-18 | E12, junto do resto da área administrativa |
 | DT-35 | O patrimônio que destrava favo (RN-028) conta só o inventário. A RN-045 diz que ele "na prática exige uso do cofre", e o cofre não existe: quando existir, `contentService` precisa somar as duas fontes, e um favo calibrado hoje ficará fácil demais | T-05.2 | E09, junto do cofre. A soma tem um lugar só — `contextoDoJogador` — então é mudança de uma linha |
 | ~~DT-17~~ | ~~Conteúdo semeado só na faixa A~~ — **paga na T-05.5**: as faixas B e C ganharam dois favos de quatro células cada, e a segmentação passou a ter teste com três jogadores reais | auditoria da E01, L-07 | fechada |
@@ -1105,14 +1123,14 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa: abrir a E08 — metas e sequência.** A E07 está auditada e
-aprovada (`docs/07-AUDITORIA-DA-ETAPA.md`): pode avançar, zero bloqueantes. O
-aceite da etapa foi medido no que era mensurável — o jogo mais lento fecha a
-partida em 110 ms, contra o teto de um segundo.
+**Próxima tarefa: T-08.2 — `StreakService`**, a avaliação preguiçosa da
+sequência na primeira requisição do dia, respeitando o fuso do perfil e os dias
+marcados (RN-019 a RN-021, RN-024). É a tarefa que a DT-23 espera desde a E02: a
+virada do dia usa hoje o relógio do servidor, e a sequência inteira depende de
+acertar isso.
 
-Duas dívidas da E07 caem dentro da E08 e vale resolvê-las lá: o índice
-`(user_id, cell_id)` em `game_sessions` (L-6) e a limpeza das partidas abertas
-que ninguém fecha (L-5). O resto das lacunas é visual e vai com a DT-22, na E11.
+Duas dívidas da E07 continuam esperando a E08: o índice `(user_id, cell_id)` em
+`game_sessions` (DT-39) e as partidas abertas que ninguém fecha (DT-38).
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.
@@ -1729,3 +1747,57 @@ Para a auditoria saber:
    "funciona no celular". A DT-22 cobre as duas.
 3. **A DT-37 continua aberta** e é o risco mais chato de todos: teste que falha
    de vez em quando ensina a ignorar vermelho.
+
+---
+
+### Sessão de 2026-08-19, T-08.1: a meta vencida deixou de ser um beco
+
+Suíte em **498 testes, zero falhas** (492 antes).
+
+A tarefa era menor do que o nome sugeria. Três das quatro metades da T-08.1 já
+existiam desde a E06: progresso automático, conclusão única e expiração. O que
+faltava era a **renovação** — a DT-33, aberta desde a auditoria da E04, que é
+metade da RN-017 e toda a RF-MET-05.
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/goalsService.js` | `renovar` e `listarRenovaveis` |
+| `src/services/goalPlannerService.js` | `planoAtual`, para a renovada ganhar o prazo de hoje |
+| `src/repositories/goalsRepository.js` | `listarExpiradasRenovaveis` e `marcarRenovada` |
+| `src/views/pages/metas.ejs` | três desfechos, três ações |
+| `test/integration/renovacaoDeMeta.test.js` | 6 testes pelo HTTP |
+
+**A renovação não custou banco.** A coluna `renewed_from_goal_id` e o status
+`renovada` já existiam desde a E01, e o fator de 50% é linha em
+`reward_modifiers` — o mesmo lugar do corte da repetição de célula. Zero
+migration.
+
+**O progresso sobrevive.** A meta retomada herda tipo, título, alvo **e o
+quanto já foi feito**; ganha prazo novo pelo plano de hoje e paga metade.
+Recomeçar do zero tiraria justamente o trabalho que a renovação existe para
+salvar, e "meta vencida não é punida" ficaria sem sentido.
+
+**Um vazamento de recompensa fechado no caminho.** O `concluir` nunca conferiu o
+status: meta **vencida** com o alvo batido ainda podia ser cobrada. Com a
+renovação isso viraria pagamento dobrado — a renovada herda o progresso, então a
+mesma meta pagaria duas vezes. Agora só meta `ativa` paga, no service e no
+`WHERE` do `UPDATE`.
+
+**Uma decisão do checkpoint foi cumprida pela metade, e é deliberado.** A ideia
+era a renovação ocupar a vaga de uma meta gerada pelo planejador, para respeitar
+o teto da RN-014. Implementar isso exigia apagar uma linha de meta ou inventar um
+status para "meta que ninguém quis" — os dois piores do que o problema. A
+renovação passou a poder deixar o jogador com uma meta a mais do que o teto, e
+isso se corrige sozinho: o planejador não cria enquanto estiver acima da conta. O
+teto da RN-014 é o alvo do planejador, não uma trava sobre o que o jogador pode
+carregar.
+
+Para a T-08.2 saber:
+
+1. **A expiração é preguiçosa** e roda quando o jogador abre a tela, sem rotina
+   diária. A sequência vai precisar do mesmo padrão, e da DT-23 resolvida: a
+   virada do dia ainda usa o relógio do servidor, não o fuso do perfil.
+2. **`planoAtual` já existe** e devolve dias, metas ativas, prazo e dificuldade
+   do plano de hoje — serve a qualquer regra que precise do plano.
+3. **O `ck_goals_dates` do banco recusa `due_at <= starts_at`.** Quem for
+   fabricar meta vencida em teste precisa mover as duas datas, não só o prazo.

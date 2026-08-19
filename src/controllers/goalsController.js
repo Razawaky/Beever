@@ -8,6 +8,14 @@ export const listar = assincrono(async (req, res) => {
   res.json(await goalsService.listarDoUsuario(req.session.usuarioId));
 });
 
+/** Retoma uma meta vencida (RN-017): prazo novo, progresso mantido, metade da recompensa. */
+export const renovar = assincrono(async (req, res) => {
+  const meta = await goalsService.renovar(Number(req.params.id), req.session.usuarioId);
+
+  if (querJson(req)) return res.status(201).json(meta);
+  res.redirect('/metas');
+});
+
 export const concluir = assincrono(async (req, res) => {
   const recompensa = await goalsService.concluir(Number(req.params.id), req.session.usuarioId);
 

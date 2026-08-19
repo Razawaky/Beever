@@ -25,4 +25,8 @@ router.get('/', goalsController.listar);
 
 router.post('/:id/concluir', limiteRecompensa, param('id').isInt({ min: 1 }), validate, goalsController.concluir);
 
+// Renovar não paga nada na hora, mas cria meta que vai pagar: entra no mesmo
+// limitador das rotas de recompensa.
+router.post('/:id/renovar', limiteRecompensa, param('id').isInt({ min: 1 }), validate, goalsController.renovar);
+
 export default router;

@@ -14,7 +14,8 @@ import { consultar, consultarEm } from '../config/database.js';
  * service que sabe consultar a fonte. Aqui só se grava o resultado.
  */
 
-const CAMPOS = `g.id, g.user_id, g.title, g.target_value, g.current_value,
+const CAMPOS = `g.id, g.user_id, g.goal_type_id, g.difficulty_id,
+                g.title, g.target_value, g.current_value,
                 g.reward_coins, g.reward_points, g.starts_at, g.due_at, g.completed_at,
                 g.renewed_from_goal_id, g.created_at,
                 gt.slug AS type_slug, gt.progress_source,
@@ -116,7 +117,8 @@ export async function concluir(conexao, id) {
             status_id = (SELECT id FROM goal_statuses WHERE slug = 'concluida')
       WHERE id = ?
         AND completed_at IS NULL
-        AND current_value >= target_value`,
+        AND current_value >= target_value
+        AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
     [id],
   );
   return resultado.affectedRows;
@@ -156,6 +158,37 @@ export async function expirarVencidasDoUsuario(conexao, idUsuario) {
         AND due_at < NOW()
         AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
     [idUsuario],
+  );
+  return resultado.affectedRows;
+}
+
+/**
+ * As metas vencidas que ainda podem ser renovadas (RN-017).
+ *
+ * Meta já renovada sai da lista sozinha: renovar troca o status dela para
+ * `renovada`, então a oferta não aparece duas vezes para a mesma meta.
+ */
+export async function listarExpiradasRenovaveis(idUsuario) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM goals g
+       ${JOINS}
+      WHERE g.user_id = ? AND st.slug = 'expirada' AND g.completed_at IS NULL
+      ORDER BY g.due_at DESC`,
+    [idUsuario],
+  );
+}
+
+/** Marca a meta vencida como renovada. Só a expirada muda, e só uma vez. */
+export async function marcarRenovada(conexao, id) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE goals
+        SET status_id = (SELECT id FROM goal_statuses WHERE slug = 'renovada')
+      WHERE id = ?
+        AND completed_at IS NULL
+        AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'expirada')`,
+    [id],
   );
   return resultado.affectedRows;
 }

@@ -146,6 +146,30 @@ function sortear(lista) {
 }
 
 /**
+ * O plano de metas que vale hoje para este jogador (RN-014).
+ *
+ * Exportado porque a renovação da meta vencida precisa do prazo do plano atual:
+ * a meta renovada ganha prazo novo pela disponibilidade de agora, e não pela
+ * que valia quando ela nasceu.
+ */
+export async function planoAtual(idUsuario) {
+  const [dias, regras] = await Promise.all([
+    schedulesService.diasDisponiveis(idUsuario),
+    goalsRepository.listarRegrasDePlano(),
+  ]);
+
+  const plano = escolherPlano(regras, dias.length);
+  if (!plano) return null;
+
+  return {
+    dias: dias.length,
+    metasAtivas: Number(plano.active_goals),
+    diasDePrazo: Number(plano.default_days),
+    idDificuldade: plano.difficulty_id,
+  };
+}
+
+/**
  * Completa o plano até a quantidade da RN-014 e devolve o que criou. Nunca mexe
  * em meta existente: quem reduziu os dias fica com o excesso até vencer
  * (RN-013).

@@ -1,5 +1,6 @@
 import { emTransacao } from '../config/database.js';
 import * as goalsRepository from '../repositories/goalsRepository.js';
+import * as rewardConfigsRepository from '../repositories/rewardConfigsRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
@@ -37,7 +38,8 @@ export async function exigirPosse(idMeta, idUsuario) {
  * abre a tela, porque não há rotina diária neste MVP.
  *
  * Vencer não é punição — nada é removido, a meta só deixa de valer recompensa.
- * A oferta de renovação da RN-017 é da E06 (DT-33).
+ * A outra metade da RN-017, a oferta de renovação, está logo abaixo em
+ * `renovar`: a meta vencida fica disponível para ser retomada.
  */
 export async function expirarVencidas(idUsuario) {
   const vencidas = await goalsRepository.listarVencidasPorUsuario(idUsuario);
@@ -84,6 +86,82 @@ export async function sincronizarProgresso(idUsuario) {
   return { sincronizadas };
 }
 
+/** As metas vencidas que o jogador ainda pode retomar (RN-017, RF-MET-05). */
+export async function listarRenovaveis(idUsuario) {
+  await expirarVencidas(idUsuario);
+  return goalsRepository.listarExpiradasRenovaveis(idUsuario);
+}
+
+/**
+ * Renova uma meta vencida (RN-017, RF-MET-05).
+ *
+ * A meta vencida não é punida: quem perdeu o prazo retoma a mesma meta, **com o
+ * progresso que já tinha**, ganha prazo novo pelo plano de hoje e aceita
+ * receber metade da recompensa. Recomeçar do zero tiraria justamente o trabalho
+ * que a renovação existe para salvar.
+ *
+ * A vencida vira `renovada` na mesma transação, e é isso que impede renovar
+ * duas vezes a mesma meta.
+ */
+export async function renovar(idMeta, idUsuario) {
+  const meta = await exigirPosse(idMeta, idUsuario);
+  if (meta.status !== 'expirada') {
+    throw erroValidacao('Só meta vencida pode ser renovada');
+  }
+
+  const plano = await goalPlannerService.planoAtual(idUsuario);
+  if (!plano) throw erroValidacao('Sem dias marcados na semana não há prazo para a meta renovada');
+
+  const desconto = await rewardConfigsRepository.buscarModificador(rewardConfigsRepository.META_RENOVADA);
+  if (!desconto) throw erroValidacao('Falta a configuração de recompensa da meta renovada');
+
+  const prazo = new Date(Date.now() + plano.diasDePrazo * 24 * 60 * 60 * 1000);
+  const recompensaMoedas = Math.round(Number(meta.reward_coins) * desconto.coins_factor);
+  const recompensaPontos = Math.round(Number(meta.reward_points) * desconto.points_factor);
+
+  const idNovaMeta = await emTransacao(async (conexao) => {
+    const afetadas = await goalsRepository.marcarRenovada(conexao, idMeta);
+    if (afetadas === 0) throw erroValidacao('Esta meta já foi renovada');
+
+    const id = await goalsRepository.criar(conexao, {
+      idUsuario,
+      idTipo: meta.goal_type_id,
+      idDificuldade: meta.difficulty_id,
+      titulo: meta.title,
+      alvo: Number(meta.target_value),
+      recompensaMoedas,
+      recompensaPontos,
+      prazo,
+      renovadaDe: idMeta,
+    });
+
+    // O progresso é copiado depois de criar, e não no INSERT, porque quem sabe
+    // limitar o valor ao alvo é o `atualizarProgresso`.
+    await goalsRepository.atualizarProgresso(conexao, id, Number(meta.current_value));
+    return id;
+  });
+
+  await auditService.registrar(auditService.usuario(idUsuario), 'meta.renovada', {
+    entidade: 'goal',
+    id: idMeta,
+    antes: {
+      status: 'expirada',
+      progresso: Number(meta.current_value),
+      recompensaMoedas: Number(meta.reward_coins),
+      recompensaPontos: Number(meta.reward_points),
+    },
+    depois: {
+      status: 'renovada',
+      novaMeta: idNovaMeta,
+      prazo,
+      recompensaMoedas,
+      recompensaPontos,
+    },
+  });
+
+  return goalsRepository.buscarPorId(idNovaMeta);
+}
+
 /** Progresso informado de fora, para as fontes que ainda não têm consulta própria. */
 export async function atualizarProgresso(idMeta, idUsuario, valorAtual) {
   await exigirPosse(idMeta, idUsuario);
@@ -103,6 +181,13 @@ export async function concluir(idMeta, idUsuario) {
   // agora mesmo, numa compra ou numa tarefa da mesma sessão.
   await sincronizarProgresso(idUsuario);
   const meta = await exigirPosse(idMeta, idUsuario);
+
+  // Só meta ativa paga. Sem esta linha, a vencida com alvo batido ainda podia
+  // ser cobrada — e, depois da renovação, a mesma meta pagaria duas vezes: uma
+  // pela vencida e outra pela renovada, que herda o progresso.
+  if (meta.status !== 'ativa') {
+    throw erroValidacao(`Esta meta está ${meta.status} e não paga mais recompensa`);
+  }
 
   if (Number(meta.current_value) < Number(meta.target_value)) {
     throw erroValidacao(

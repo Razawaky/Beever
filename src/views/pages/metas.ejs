@@ -51,7 +51,12 @@
             </div>
           </div>
 
-          <% if (!concluida) { %>
+          <%#
+            Três desfechos, três ações. Vencer não é punição (RN-017): a meta
+            expirada some do caminho, mas fica com a oferta de retomada — mesmo
+            alvo, mesmo progresso, prazo novo e metade da recompensa.
+          -%>
+          <% if (meta.status === 'ativa') { %>
             <form method="POST" action="/metas/<%= meta.id %>/concluir" class="mt-4">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
               <button
@@ -61,6 +66,21 @@
                 Marcar como concluída
               </button>
             </form>
+          <% } else if (meta.status === 'expirada') { %>
+            <form method="POST" action="/metas/<%= meta.id %>/renovar" class="mt-4">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <p class="mb-2 text-xs text-tinta-suave">
+                O prazo passou, mas seu progresso está guardado. Retomar dá prazo novo e rende metade.
+              </p>
+              <button
+                type="submit"
+                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+              >
+                Retomar esta meta
+              </button>
+            </form>
+          <% } else if (meta.status === 'renovada') { %>
+            <p class="mt-4 text-xs font-semibold text-tinta-suave">Retomada em uma meta nova ↓</p>
           <% } else { %>
             <p class="mt-4 text-xs font-semibold text-acerto-texto">
               Concluída ✓ · rendeu <%= meta.reward_coins %> de mel e <%= meta.reward_points %> de pólen
