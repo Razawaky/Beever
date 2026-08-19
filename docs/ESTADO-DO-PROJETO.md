@@ -4,10 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-07.7 — **a E07 está inteira**: os seis jogos existem, a
-retomada de sessão funciona e nenhuma célula semeada ficou sem jogo. Árvore
-limpa, 491 testes passando.
-**Próximo passo: a auditoria da E07**, antes de abrir a E08
+**Último commit:** auditoria da E07, com as duas lacunas de risco médio
+corrigidas — as estrelas do resultado viraram desenho (RNF-21) e a rota de
+partida ganhou limitador. Árvore limpa, 492 testes passando.
+**Próximo passo: abrir a E08** — metas e sequência
 
 ---
 
@@ -906,7 +906,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
-| E07 Jogos | **concluída, à espera de auditoria** | As sete tarefas foram entregues: o contrato, os seis jogos, a casca comum, a tela de resultado e a retomada de sessão. Nenhuma célula semeada ficou sem jogo |
+| E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
@@ -939,6 +939,9 @@ Identificadores rastreiam os documentos da E00.
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
 | DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.claude/skills/impeccable/scripts/`, que é plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
 | DT-37 | `test/integration/seguranca.test.js` falhou uma vez em três execuções da suíte completa, no caso "o dono continua alterando a própria conta", e passa sempre quando o arquivo roda sozinho (três de três). Não reproduzi o erro, então não sei se é o limitador de tentativas de login, contenção de banco sob execução paralela ou tempo. Teste que falha de vez em quando é pior do que teste que falha sempre: ensina a ignorar vermelho | T-07.6 | Rodar a suíte com `--test-concurrency=1` para isolar, e só então corrigir a causa |
+| DT-38 | Partida aberta em uma célula nunca é fechada quando o jogador vai jogar outra: a retomada é por célula, então dá para acumular partidas penduradas. Não paga nada indevido, porque cada partida exige o próprio token | L-5 do laudo da E07 | E08, junto do índice da DT-39 |
+| DT-39 | Falta índice `(user_id, cell_id)` em `game_sessions`; `buscarAbertaDaCelula` e `contarConcluidasNaCelula` filtram por essas colunas e o índice existente é `(user_id, started_at)` | L-6 do laudo da E07 | E08 |
+| DT-40 | O salvamento de progresso é falador: o orçamento grava a cada toque no `−` e no `+`, então uma partida de faixa C pode gerar dezenas de requisições. Cabe no limite global e não quebra nada, mas é desperdício | L-10 do laudo da E07 | Agrupar os toques antes de salvar; trabalho pequeno, sem urgência |
 | DT-08 | Cobertura de service ainda indireta: `purchasesService`, `tasksService`, `goalsService`, `coinsService`, `pointsService`, `profilesService` e `authService` são exercitados pelo teste de fluxo, mas não têm teste próprio de caso de borda | D-12 | Contraria a seção 8 do `PROMPT-MESTRE`; cobrir junto de cada etapa |
 | DT-09 | Dependência `cors` instalada e nunca importada | M-04 | Remover |
 | DT-10 | Fontes Lilita One e Nunito não são servidas; ambos os papéis caem em `system-ui` | T-00.3, seção 5 | E11 |
@@ -1102,15 +1105,14 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa: auditar a E07** (`/auditar-etapa`), antes de abrir a E08. O
-critério de aceite da etapa é curto e conferível: cada jogo roda em até um
-segundo, funciona no celular e a nota vem do servidor. Os dois primeiros nunca
-foram medidos — é a DT-22, e a auditoria é a hora de encará-la.
+**Próxima tarefa: abrir a E08 — metas e sequência.** A E07 está auditada e
+aprovada (`docs/07-AUDITORIA-DA-ETAPA.md`): pode avançar, zero bloqueantes. O
+aceite da etapa foi medido no que era mensurável — o jogo mais lento fecha a
+partida em 110 ms, contra o teto de um segundo.
 
-Três pontas que a auditoria deve olhar primeiro, porque foram achadas por
-verificação e não por teste: o botão "Jogar" que prometia célula com conteúdo de
-demonstração (corrigido na T-07.5), a regra da próxima célula que ignorava
-célula concluída (corrigida na T-07.6) e o teste intermitente da DT-37.
+Duas dívidas da E07 caem dentro da E08 e vale resolvê-las lá: o índice
+`(user_id, cell_id)` em `game_sessions` (L-6) e a limpeza das partidas abertas
+que ninguém fecha (L-5). O resto das lacunas é visual e vai com a DT-22, na E11.
 
 A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
 (L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas no laudo.

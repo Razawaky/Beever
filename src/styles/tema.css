@@ -165,7 +165,6 @@
    motivo das `.barra-N`. */
 .estrela {
   display: inline-block;
-  opacity: 0.25;
 }
 
 .estrela-ganha {

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body, param } from 'express-validator';
 
 import * as gameSessionsController from '../controllers/gameSessionsController.js';
+import { limiteRecompensa } from '../middlewares/rateLimiters.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { requireOnboarding } from '../middlewares/requireOnboarding.js';
 import { validate } from '../middlewares/validate.js';
@@ -19,8 +20,14 @@ const router = Router();
 
 router.use(requireAuth, requireOnboarding);
 
+// A partida é a maior fonte de XP, pólen e mel do jogo, e por isso carrega o
+// mesmo limitador das outras rotas que creditam. Salvar progresso fica de fora
+// de propósito: ele é chamado a cada decisão do jogador — a cada toque no + do
+// orçamento, por exemplo — e um limite de recompensa ali castigaria quem está
+// só jogando.
 router.post(
   '/',
+  limiteRecompensa,
   body('idCelula').isInt({ min: 1 }).withMessage('Célula inválida'),
   validate,
   gameSessionsController.abrir,
@@ -28,6 +35,7 @@ router.post(
 
 router.post(
   '/:token/resultado',
+  limiteRecompensa,
   param('token').isUUID().withMessage('Partida inválida'),
   body('respostas').isArray({ max: 100 }).withMessage('As respostas precisam vir em lista'),
   validate,

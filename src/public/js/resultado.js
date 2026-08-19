@@ -22,19 +22,38 @@ const MASCOTES = {
   animando: { imagem: '/img/beenie_vem.png', alt: 'Beenie chamando para tentar de novo', titulo: 'Boa tentativa!' },
 };
 
+const ESPACO_SVG = 'http://www.w3.org/2000/svg';
+const CONTORNO_DA_ESTRELA =
+  'M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.35 6.2 20.4l1.1-6.45-4.7-4.6 6.5-.95L12 2.5z';
+
+/**
+ * As três estrelas, desenhadas.
+ *
+ * Desenho em vez do caractere ★ porque amarelo não pode ser cor de texto sobre
+ * fundo claro (RNF-21): a mesma cor que reprova em contraste como letra passa
+ * como preenchimento de forma. A tela do favo já fazia assim.
+ */
 function mostrarEstrelas(estrelas) {
   painelDeEstrelas.replaceChildren();
   painelDeEstrelas.setAttribute('aria-label', `${estrelas} de 3 estrelas`);
 
   for (let posicao = 1; posicao <= 3; posicao += 1) {
-    const estrela = document.createElement('span');
     const ganha = posicao <= estrelas;
+    const desenho = document.createElementNS(ESPACO_SVG, 'svg');
+    const contorno = document.createElementNS(ESPACO_SVG, 'path');
 
-    estrela.textContent = ganha ? '★' : '☆';
+    contorno.setAttribute('d', CONTORNO_DA_ESTRELA);
+    contorno.setAttribute('fill', 'currentColor');
     // A animação é escalonada por classe, porque a CSP não permite `style`.
-    estrela.className = ganha ? `estrela estrela-ganha estrela-${posicao}` : 'estrela';
-    estrela.setAttribute('aria-hidden', 'true');
-    painelDeEstrelas.append(estrela);
+    desenho.setAttribute(
+      'class',
+      ganha ? `estrela estrela-ganha estrela-${posicao} h-10 w-10 text-mel` : 'estrela h-10 w-10 text-linha',
+    );
+    desenho.setAttribute('viewBox', '0 0 24 24');
+    desenho.setAttribute('aria-hidden', 'true');
+    desenho.setAttribute('focusable', 'false');
+    desenho.append(contorno);
+    painelDeEstrelas.append(desenho);
   }
 }
 

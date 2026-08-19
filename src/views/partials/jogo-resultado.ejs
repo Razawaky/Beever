@@ -18,10 +18,14 @@
   <h2 id="jogo-resultado-titulo" class="mt-2 font-display text-2xl text-tinta"></h2>
 
   <%#
-    As estrelas são texto para quem lê a tela e desenho para quem vê: o
+    As estrelas são desenho para quem vê e texto para quem lê a tela: o
     `aria-label` do grupo diz "2 de 3 estrelas", e a animação é só enfeite.
+
+    Desenho em SVG, e não o caractere ★: amarelo nunca é cor de texto sobre
+    fundo claro (RNF-21). Preenchimento amarelo em forma pode; letra amarela
+    reprova em contraste. É o mesmo caminho que a tela do favo já usava.
   -%>
-  <p id="jogo-estrelas" class="mt-3 font-display text-4xl tracking-wide text-mel"></p>
+  <p id="jogo-estrelas" class="mt-3 flex justify-center gap-2"></p>
 
   <dl class="mx-auto mt-6 grid max-w-sm grid-cols-3 gap-3">
     <div class="rounded-favo bg-cera p-3">

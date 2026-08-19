@@ -125,6 +125,9 @@ describe('tela de resultado', opcoes, () => {
     }
     // A tela nasce escondida: quem a mostra é o `resultado.js`, no fim da partida.
     assert.match(pagina.text, /id="jogo-resultado" class="hidden/);
+    // Amarelo não é cor de texto sobre fundo claro (RNF-21): as estrelas são
+    // desenho, e o container delas não pinta letra nenhuma de mel.
+    assert.doesNotMatch(pagina.text, /id="jogo-estrelas"[^>]*text-mel/);
   });
 
   it('terminar aponta para a próxima célula quando ela abre', async () => {
