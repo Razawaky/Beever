@@ -38,16 +38,26 @@ export async function listarVersoesDaCelula(idCelula) {
   );
 }
 
-/** Quais das células recebidas já têm conteúdo. A trilha usa para não abrir célula vazia. */
-export async function listarCelulasComConteudo(idsDeCelula = []) {
+/**
+ * O conteúdo atual de várias células de uma vez.
+ *
+ * A trilha usa para dois fins: saber se a célula tem conteúdo e perguntar ao
+ * validador se esse conteúdo dá para jogar. Antes só os ids voltavam, e a
+ * consequência foi um botão "Jogar" em célula com conteúdo de demonstração.
+ */
+export async function listarConteudoAtualDasCelulas(idsDeCelula = []) {
   if (idsDeCelula.length === 0) return [];
 
   const marcadores = Array(idsDeCelula.length).fill('?').join(', ');
-  const linhas = await consultar(
-    `SELECT DISTINCT ct.cell_id
+  return consultar(
+    `SELECT ct.cell_id, ct.body
        FROM contents ct
-      WHERE ct.cell_id IN (${marcadores}) AND ${ATIVO}`,
+      WHERE ct.cell_id IN (${marcadores}) AND ${ATIVO}
+        AND ct.version = (
+              SELECT MAX(recente.version)
+                FROM contents recente
+               WHERE recente.cell_id = ct.cell_id AND recente.is_active = 1 AND recente.deleted_at IS NULL
+            )`,
     idsDeCelula,
   );
-  return linhas.map((linha) => Number(linha.cell_id));
 }

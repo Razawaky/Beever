@@ -161,14 +161,17 @@ describe('repositories de conteúdo', opcoes, () => {
     assert.equal((await contentsRepository.listarVersoesDaCelula(primeira.id)).length, 2);
   });
 
-  it('diz quais células já têm conteúdo, para a trilha não abrir célula vazia', async () => {
+  it('entrega o conteúdo atual de várias células, para a trilha conferir se dá para jogar', async () => {
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
     const ids = celulas.map((celula) => Number(celula.id));
 
-    const comConteudo = await contentsRepository.listarCelulasComConteudo(ids);
-    assert.ok(comConteudo.length > 0 && comConteudo.length <= ids.length);
-    assert.ok(comConteudo.every((id) => ids.includes(id)));
-    assert.deepEqual(await contentsRepository.listarCelulasComConteudo([]), []);
+    const conteudos = await contentsRepository.listarConteudoAtualDasCelulas(ids);
+    assert.ok(conteudos.length > 0 && conteudos.length <= ids.length);
+    assert.ok(conteudos.every((linha) => ids.includes(Number(linha.cell_id)) && linha.body));
+    // Uma linha por célula: se a versão nova e a antiga voltassem juntas, a
+    // trilha decidiria pelo conteúdo velho.
+    assert.equal(new Set(conteudos.map((linha) => Number(linha.cell_id))).size, conteudos.length);
+    assert.deepEqual(await contentsRepository.listarConteudoAtualDasCelulas([]), []);
   });
 });

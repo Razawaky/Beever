@@ -195,6 +195,25 @@ async function exigirFavoVisivel(idUsuario, idFavo) {
 }
 
 /**
+ * A célula oferece o botão "Jogar"?
+ *
+ * Não basta o tipo de jogo ter validador: o conteúdo daquela célula precisa
+ * passar pelo `conferirForma`. Sem esta segunda pergunta, célula com conteúdo de
+ * demonstração mostrava o botão e o clique morria em 422 — o botão prometia o
+ * que o servidor recusaria.
+ */
+function podeJogar(slugDoTipoDeJogo, corpo) {
+  if (!corpo) return false;
+
+  try {
+    validadoresDeJogo.conferirForma(slugDoTipoDeJogo, corpo);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * As células do favo, com estado (RF-CON-02). Favo travado não lista célula: a
  * lista é a porta de entrada, e mostrá-la seria contar o que ainda não é dele.
  */
@@ -204,18 +223,15 @@ export async function listarCelulasDoFavo(idUsuario, idFavo) {
 
   const codigosDeFaixa = await faixasDoJogador(idUsuario);
   const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, codigosDeFaixa);
-  const comConteudo = new Set(await contentsRepository.listarCelulasComConteudo(celulas.map((c) => c.id)));
-  const jogaveis = validadoresDeJogo.tiposJogaveis();
+  const conteudos = await contentsRepository.listarConteudoAtualDasCelulas(celulas.map((c) => c.id));
+  const corpoPorCelula = new Map(conteudos.map((linha) => [Number(linha.cell_id), linha.body]));
 
   return {
     favo,
-    // `temJogo` é por célula, e não uma chave geral de "a E07 chegou": o quiz já
-    // existe e os outros cinco jogos não, então só as células de quiz podem
-    // oferecer o botão de jogar.
     celulas: estadosDasCelulas(celulas).map((celula) => ({
       ...celula,
-      temConteudo: comConteudo.has(Number(celula.id)),
-      temJogo: jogaveis.includes(celula.game_type_slug),
+      temConteudo: corpoPorCelula.has(Number(celula.id)),
+      temJogo: podeJogar(celula.game_type_slug, corpoPorCelula.get(Number(celula.id))),
     })),
   };
 }

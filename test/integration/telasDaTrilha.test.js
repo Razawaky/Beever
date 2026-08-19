@@ -168,6 +168,31 @@ describe('telas da trilha', opcoes, () => {
     assert.match(trilha.text, /25%/);
   });
 
+  /**
+   * O botão não pode prometer o que o servidor recusa. Antes bastava o tipo de
+   * jogo ter validador para o "Jogar" aparecer, e célula com conteúdo de
+   * demonstração levava a criança direto a um 422.
+   */
+  it('célula com conteúdo de demonstração não oferece "Jogar"', async () => {
+    const conteudoDeVerdade = await banco.conexao.query('SELECT body FROM contents WHERE cell_id = ?', [
+      celulas[1].id,
+    ]);
+    await banco.conexao.query(
+      "UPDATE contents SET body = JSON_OBJECT('tipo', 'placeholder', 'texto', 'Em produção.') WHERE cell_id = ?",
+      [celulas[1].id],
+    );
+
+    const pagina = await agente.get(`/trilha/${primeiroFavo.id}`).set('Accept', 'text/html').expect(200);
+
+    assert.doesNotMatch(pagina.text, new RegExp(`celula/${celulas[1].id}"`), 'sem link para o que não dá para jogar');
+    assert.match(pagina.text, /em breve/, 'a célula aberta avisa em vez de prometer');
+
+    await banco.conexao.query('UPDATE contents SET body = ? WHERE cell_id = ?', [
+      JSON.stringify(conteudoDeVerdade[0][0].body),
+      celulas[1].id,
+    ]);
+  });
+
   it('sem faixa etária a trilha mostra estado vazio, e não erro', async () => {
     await banco.conexao.query('UPDATE profiles SET age_band_id = NULL WHERE user_id = ?', [idUsuario]);
 
