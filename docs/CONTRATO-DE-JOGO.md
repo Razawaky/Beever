@@ -38,6 +38,12 @@ O corpo do quarto jogo é `{ tipo, enunciado, nomeDoCiclo, entradaPorCiclo, mini
 
 Como no orçamento, o `conferirForma` recusa conteúdo sem decisão possível: meta que nem guardando tudo se alcança, e meta que guardar o mínimo já alcança. A mesma conta do saldo existe no `public/js/cofre.js`, porque a tela projeta a curva enquanto o jogador decide; se uma das duas mudar, a outra muda junto.
 
+## O exemplo do Mercado Esperto
+
+O corpo do quinto jogo é `{ tipo, rodadas: [{ enunciado, unidade, opcoes: [{ texto, preco, quantidade }] }] }`, e a resposta é a lista de índices de opção, um por rodada. A diferença dele para os outros é que **o gabarito não está escrito no conteúdo**: a melhor compra é a de menor preço por unidade, calculada a partir dos dois números. Assim nenhum conteúdo consegue declarar uma "melhor compra" que a conta desmente. O `conferirForma` recusa rodada com menos de duas opções, preço ou quantidade que não sejam positivos, e empate no primeiro lugar — empate daria duas respostas certas e a contagem passaria a depender de qual delas o jogador marcou.
+
+O `paraJogar` entrega preço e quantidade inteiros, porque fazer essa conta é o jogo; o que a tela nunca mostra é o preço por unidade já calculado.
+
 ## Estado salvo, que ainda não existe
 
 A RF-JOG-07 prevê retomar uma partida interrompida, e é P1, planejada para a T-07.7. O lugar dela no contrato é uma quarta função opcional, `estadoParaSalvar(respostasParciais)`, e uma coluna de estado na partida. Nenhum jogo da E07 deve inventar seu próprio jeito de salvar antes disso: quem precisar guardar progresso parcial agora, guarda no navegador e assume que fechar a aba custa a partida.

@@ -202,6 +202,7 @@ const TELAS_DE_JOGO = {
   'arraste-e-classifique': { areaDoJogo: 'arraste', script: '/js/arraste.js' },
   'monte-o-orcamento': { areaDoJogo: 'orcamento', script: '/js/orcamento.js' },
   'cofre-do-tempo': { areaDoJogo: 'cofre', script: '/js/cofre.js' },
+  'mercado-esperto': { areaDoJogo: 'mercado', script: '/js/mercado.js' },
 };
 
 /**

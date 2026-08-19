@@ -340,11 +340,101 @@ const cofre = {
   },
 };
 
+/** Quanto custa cada unidade da opção. É a conta que o jogo ensina a fazer. */
+function precoPorUnidade(opcao) {
+  return opcao.preco / opcao.quantidade;
+}
+
+/** Qual opção sai mais barata por unidade. `-1` quando há empate no primeiro lugar. */
+function indiceDaMelhorCompra(opcoes) {
+  let melhor = 0;
+  let empatada = false;
+
+  opcoes.forEach((opcao, indice) => {
+    if (indice === 0) return;
+    if (precoPorUnidade(opcao) < precoPorUnidade(opcoes[melhor])) {
+      melhor = indice;
+      empatada = false;
+      return;
+    }
+    if (precoPorUnidade(opcao) === precoPorUnidade(opcoes[melhor])) empatada = true;
+  });
+
+  return empatada ? -1 : melhor;
+}
+
+/**
+ * Mercado Esperto (RF-JOG-05): qual embalagem vale mais a pena.
+ *
+ * Corpo esperado: `{ tipo, rodadas: [{ enunciado, unidade, opcoes: [{ texto, preco, quantidade }] }] }`.
+ * As respostas chegam como lista de índices de opção, um por rodada.
+ *
+ * O gabarito não é escrito no conteúdo: é calculado a partir de preço e
+ * quantidade. Conteúdo não pode declarar uma "melhor compra" que a conta
+ * desmente.
+ */
+const mercado = {
+  conferirForma(corpo) {
+    const rodadas = corpo?.rodadas;
+    if (!Array.isArray(rodadas) || rodadas.length === 0) {
+      throw erroValidacao('Esta célula ainda não é jogável: o conteúdo não tem rodadas');
+    }
+
+    for (const rodada of rodadas) {
+      if (!Array.isArray(rodada.opcoes) || rodada.opcoes.length < 2) {
+        throw erroValidacao('Rodada com menos de duas opções: não há o que comparar');
+      }
+      for (const opcao of rodada.opcoes) {
+        const numerosTortos =
+          !Number.isFinite(opcao.preco) || opcao.preco <= 0 || !Number.isFinite(opcao.quantidade) || opcao.quantidade <= 0;
+        if (!opcao.texto || numerosTortos) {
+          throw erroValidacao('Opção sem texto, sem preço ou sem quantidade válida');
+        }
+      }
+      // Duas opções igualmente baratas dariam duas respostas certas, e a
+      // contagem de erros passaria a depender de qual delas o jogador marcou.
+      if (indiceDaMelhorCompra(rodada.opcoes) === -1) {
+        throw erroValidacao('Rodada com empate na melhor compra: não existe resposta única');
+      }
+    }
+  },
+
+  /** Preço e quantidade são o enunciado: escondê-los tiraria a conta do jogo. */
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      rodadas: corpo.rodadas.map((rodada) => ({
+        enunciado: rodada.enunciado,
+        unidade: rodada.unidade ?? 'unidade',
+        opcoes: rodada.opcoes.map((opcao) => ({
+          texto: opcao.texto,
+          preco: opcao.preco,
+          quantidade: opcao.quantidade,
+        })),
+      })),
+    };
+  },
+
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma por rodada');
+    }
+
+    let erros = 0;
+    corpo.rodadas.forEach((rodada, indice) => {
+      if (Number(respostas[indice]) !== indiceDaMelhorCompra(rodada.opcoes)) erros += 1;
+    });
+
+    return { erros, total: corpo.rodadas.length };
+  },
+};
+
 const VALIDADORES = {
   'quiz-do-favo': quiz,
   'arraste-e-classifique': arraste,
   'monte-o-orcamento': orcamento,
   'cofre-do-tempo': cofre,
+  'mercado-esperto': mercado,
 };
 
 function escolher(slugDoTipoDeJogo) {

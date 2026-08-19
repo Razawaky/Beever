@@ -61,6 +61,28 @@ const COFRE = {
   meta: 60,
 };
 
+const MERCADO = {
+  tipo: 'mercado',
+  rodadas: [
+    {
+      enunciado: 'Qual saquinho de bala vale mais a pena?',
+      unidade: 'bala',
+      opcoes: [
+        { texto: 'Saquinho com 10 balas', preco: 5, quantidade: 10 },
+        { texto: 'Saquinho com 30 balas', preco: 12, quantidade: 30 },
+      ],
+    },
+    {
+      enunciado: 'E o suco?',
+      unidade: 'litro',
+      opcoes: [
+        { texto: 'Garrafa de 1 litro', preco: 6, quantidade: 1 },
+        { texto: 'Garrafa de 2 litros', preco: 10, quantidade: 2 },
+      ],
+    },
+  ],
+};
+
 describe('validadoresDeJogo', () => {
   describe('validarRespostas', () => {
     it('não acha erro quando tudo está certo', () => {
@@ -110,8 +132,8 @@ describe('validadoresDeJogo', () => {
     });
 
     it('recusa tipo de jogo sem validador, dizendo qual é', () => {
-      // Os quatro jogos obrigatórios já têm validador; os P1 da T-07.7, não.
-      assert.throws(() => conferirForma('mercado-esperto', QUIZ), /mercado-esperto/);
+      // O último jogo sem validador é o Ordene a Prioridade, ainda nesta tarefa.
+      assert.throws(() => conferirForma('ordene-a-prioridade', QUIZ), /ordene-a-prioridade/);
     });
   });
 
@@ -308,12 +330,67 @@ describe('validadoresDeJogo', () => {
     });
   });
 
+  describe('Mercado Esperto', () => {
+    it('a melhor compra é a mais barata por unidade, e não a mais barata na etiqueta', () => {
+      // 12 por 30 balas sai a 0,40 cada; 5 por 10 balas sai a 0,50.
+      assert.deepEqual(validarRespostas('mercado-esperto', MERCADO, [1, 1]), { erros: 0, total: 2 });
+    });
+
+    it('escolher a etiqueta mais barata conta erro quando ela rende menos', () => {
+      assert.equal(validarRespostas('mercado-esperto', MERCADO, [0, 1]).erros, 1);
+      assert.equal(validarRespostas('mercado-esperto', MERCADO, [0, 0]).erros, 2);
+    });
+
+    it('rodada sem resposta conta como erro', () => {
+      assert.equal(validarRespostas('mercado-esperto', MERCADO, [1]).erros, 1);
+    });
+
+    it('recusa rodada com menos de duas opções ou com número torto', () => {
+      const umaOpcao = { tipo: 'mercado', rodadas: [{ enunciado: 'Só uma?', opcoes: [MERCADO.rodadas[0].opcoes[0]] }] };
+      const precoZerado = {
+        tipo: 'mercado',
+        rodadas: [
+          { enunciado: 'De graça?', opcoes: [{ texto: 'A', preco: 0, quantidade: 1 }, { texto: 'B', preco: 2, quantidade: 1 }] },
+        ],
+      };
+
+      assert.throws(() => conferirForma('mercado-esperto', umaOpcao), { codigo: 'VALIDACAO' });
+      assert.throws(() => conferirForma('mercado-esperto', precoZerado), { codigo: 'VALIDACAO' });
+    });
+
+    it('recusa empate na melhor compra, que daria duas respostas certas', () => {
+      const empate = {
+        tipo: 'mercado',
+        rodadas: [
+          {
+            enunciado: 'Tanto faz?',
+            opcoes: [
+              { texto: '1 kg por 6', preco: 6, quantidade: 1 },
+              { texto: '2 kg por 12', preco: 12, quantidade: 2 },
+            ],
+          },
+        ],
+      };
+
+      assert.throws(() => conferirForma('mercado-esperto', empate), { codigo: 'VALIDACAO' });
+    });
+
+    it('entrega preço e quantidade para a tela, porque a conta é o jogo', () => {
+      const paraTela = conteudoParaJogar('mercado-esperto', MERCADO);
+
+      assert.equal(paraTela.rodadas[0].opcoes[0].preco, 5);
+      assert.equal(paraTela.rodadas[0].opcoes[0].quantidade, 10);
+      assert.equal(paraTela.rodadas[0].unidade, 'bala');
+    });
+  });
+
   it('diz quais tipos de jogo já são jogáveis', () => {
     assert.deepEqual(tiposJogaveis(), [
       'quiz-do-favo',
       'arraste-e-classifique',
       'monte-o-orcamento',
       'cofre-do-tempo',
+      'mercado-esperto',
     ]);
   });
 });

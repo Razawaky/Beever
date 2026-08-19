@@ -313,6 +313,101 @@ SELECT celula.id, 1, JSON_OBJECT(
  WHERE favo.slug = 'construir-patrimonio' AND celula.order_index = 3
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
+-- Mercado Esperto (RF-JOG-05): três células. O gabarito não é escrito aqui — é
+-- o menor preço por unidade, calculado pelo validador. Empate no primeiro lugar
+-- é recusado, então cada rodada tem uma resposta só.
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'mercado',
+    'rodadas', JSON_ARRAY(
+      JSON_OBJECT(
+        'enunciado', 'Qual saquinho de bala vale mais a pena?',
+        'unidade', 'bala',
+        'opcoes', JSON_ARRAY(
+          JSON_OBJECT('texto', 'Saquinho com 10 balas', 'preco', 5, 'quantidade', 10),
+          JSON_OBJECT('texto', 'Saquinho com 30 balas', 'preco', 12, 'quantidade', 30)
+        )
+      ),
+      JSON_OBJECT(
+        'enunciado', 'E o suco?',
+        'unidade', 'litro',
+        'opcoes', JSON_ARRAY(
+          JSON_OBJECT('texto', 'Garrafa de 1 litro', 'preco', 6, 'quantidade', 1),
+          JSON_OBJECT('texto', 'Garrafa de 2 litros', 'preco', 10, 'quantidade', 2),
+          JSON_OBJECT('texto', 'Copinho de meio litro', 'preco', 4, 'quantidade', 0.5)
+        )
+      )
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'guardar-e-gastar' AND celula.order_index = 3
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'mercado',
+    'rodadas', JSON_ARRAY(
+      JSON_OBJECT(
+        'enunciado', 'Qual pacote de arroz custa menos por quilo?',
+        'unidade', 'kg',
+        'opcoes', JSON_ARRAY(
+          JSON_OBJECT('texto', 'Pacote de 1 kg', 'preco', 6, 'quantidade', 1),
+          JSON_OBJECT('texto', 'Pacote de 5 kg', 'preco', 25, 'quantidade', 5)
+        )
+      ),
+      JSON_OBJECT(
+        'enunciado', 'E o sabão em pó?',
+        'unidade', 'kg',
+        'opcoes', JSON_ARRAY(
+          JSON_OBJECT('texto', 'Caixa de 800 g em promoção', 'preco', 12, 'quantidade', 0.8),
+          JSON_OBJECT('texto', 'Caixa de 2 kg', 'preco', 28, 'quantidade', 2),
+          JSON_OBJECT('texto', 'Sachê de 500 g', 'preco', 8, 'quantidade', 0.5)
+        )
+      ),
+      JSON_OBJECT(
+        'enunciado', 'O maior nem sempre é o mais barato. Qual leite vale mais a pena?',
+        'unidade', 'litro',
+        'opcoes', JSON_ARRAY(
+          JSON_OBJECT('texto', 'Caixa de 1 litro', 'preco', 5, 'quantidade', 1),
+          JSON_OBJECT('texto', 'Fardo com 6 litros', 'preco', 33, 'quantidade', 6)
+        )
+      )
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'dinheiro-no-dia-a-dia' AND celula.order_index = 2
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'mercado',
+    'rodadas', JSON_ARRAY(
+      JSON_OBJECT(
+        'enunciado', 'O mesmo tênis, à vista ou parcelado. Qual sai mais barato no total?',
+        'unidade', 'tênis',
+        'opcoes', JSON_ARRAY(
+          JSON_OBJECT('texto', 'À vista, 240 de uma vez', 'preco', 240, 'quantidade', 1),
+          JSON_OBJECT('texto', '10 parcelas de 28', 'preco', 280, 'quantidade', 1),
+          JSON_OBJECT('texto', '4 parcelas de 65', 'preco', 260, 'quantidade', 1)
+        )
+      ),
+      JSON_OBJECT(
+        'enunciado', 'E o celular?',
+        'unidade', 'celular',
+        'opcoes', JSON_ARRAY(
+          JSON_OBJECT('texto', 'À vista, 900', 'preco', 900, 'quantidade', 1),
+          JSON_OBJECT('texto', '12 parcelas de 82', 'preco', 984, 'quantidade', 1)
+        )
+      )
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'o-tempo-e-o-juro' AND celula.order_index = 3
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
 INSERT INTO contents (cell_id, version, body)
 SELECT celula.id, 1, JSON_OBJECT('tipo', 'placeholder', 'texto', 'Conteúdo em produção.')
   FROM cells celula
