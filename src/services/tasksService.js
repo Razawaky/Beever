@@ -1,9 +1,19 @@
 import { emTransacao } from '../config/database.js';
 import * as tasksRepository from '../repositories/tasksRepository.js';
+import {
+  dataDoDia,
+  diaDaSemana,
+  diaDoAno,
+  fimDaSemana,
+  fimDoDia,
+  inicioDaSemana,
+  inicioDoDia,
+} from '../utils/diaDoJogador.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as pointsService from './pointsService.js';
+import * as profilesService from './profilesService.js';
 import * as schedulesService from './schedulesService.js';
 
 /**
@@ -63,30 +73,6 @@ async function exigirPosse(idTarefa, idUsuario) {
 const TAREFAS_DIARIAS = 2;
 const TAREFAS_SEMANAIS = 1;
 
-function inicioDoDia(agora = new Date()) {
-  const dia = new Date(agora);
-  dia.setHours(0, 0, 0, 0);
-  return dia;
-}
-
-function inicioDaSemana(agora = new Date()) {
-  const inicio = inicioDoDia(agora);
-  inicio.setDate(inicio.getDate() - inicio.getDay());
-  return inicio;
-}
-
-function fimDoDia(agora = new Date()) {
-  const dia = inicioDoDia(agora);
-  dia.setDate(dia.getDate() + 1);
-  return dia;
-}
-
-function fimDaSemana(agora = new Date()) {
-  const fim = inicioDaSemana(agora);
-  fim.setDate(fim.getDate() + 7);
-  return fim;
-}
-
 function paraMySQL(data) {
   return data.toISOString().slice(0, 19).replace('T', ' ');
 }
@@ -98,17 +84,22 @@ function paraMySQL(data) {
  * poderia receber a mesma tarefa três dias seguidos por azar, e um teste não
  * teria como afirmar nada. A rotação garante variedade sem depender de sorte.
  */
-function escolherTipos(tipos, quantidade, agora) {
+function escolherTipos(tipos, quantidade, hoje) {
   if (tipos.length === 0) return [];
-  const diaDoAno = Math.floor((agora - new Date(agora.getFullYear(), 0, 0)) / 86400000);
+  const dia = diaDoAno(hoje);
   return Array.from({ length: Math.min(quantidade, tipos.length) }, (_, indice) => {
-    return tipos[(diaDoAno + indice) % tipos.length];
+    return tipos[(dia + indice) % tipos.length];
   });
 }
 
 export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
+  // O dia é o do jogador, não o do servidor (RN-024): em outro fuso, a virada
+  // no relógio da máquina entregava as tarefas na hora errada.
+  const fuso = await profilesService.fusoDoUsuario(idUsuario);
+  const hoje = dataDoDia(agora, fuso);
+
   const disponiveis = await schedulesService.diasDisponiveis(idUsuario);
-  const hojeVale = disponiveis.length === 0 || disponiveis.includes(agora.getDay());
+  const hojeVale = disponiveis.length === 0 || disponiveis.includes(diaDaSemana(hoje));
   if (!hojeVale) return { criadas: 0, motivo: 'dia fora da agenda do jogador' };
 
   const tipos = await tasksRepository.listarTipos();
@@ -116,18 +107,18 @@ export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
   const semanais = tipos.filter((tipo) => tipo.scope === 'semanal');
 
   const [jaDiarias, jaSemanais] = await Promise.all([
-    tasksRepository.listarAtivasPorEscopoDesde(idUsuario, 'diaria', paraMySQL(inicioDoDia(agora))),
-    tasksRepository.listarAtivasPorEscopoDesde(idUsuario, 'semanal', paraMySQL(inicioDaSemana(agora))),
+    tasksRepository.listarAtivasPorEscopoDesde(idUsuario, 'diaria', paraMySQL(inicioDoDia(hoje, fuso))),
+    tasksRepository.listarAtivasPorEscopoDesde(idUsuario, 'semanal', paraMySQL(inicioDaSemana(hoje, fuso))),
   ]);
 
   const aCriar = [
-    ...escolherTipos(diarios, TAREFAS_DIARIAS - jaDiarias.length, agora).map((tipo) => ({
+    ...escolherTipos(diarios, TAREFAS_DIARIAS - jaDiarias.length, hoje).map((tipo) => ({
       tipo,
-      prazo: paraMySQL(fimDoDia(agora)),
+      prazo: paraMySQL(fimDoDia(hoje, fuso)),
     })),
-    ...escolherTipos(semanais, TAREFAS_SEMANAIS - jaSemanais.length, agora).map((tipo) => ({
+    ...escolherTipos(semanais, TAREFAS_SEMANAIS - jaSemanais.length, hoje).map((tipo) => ({
       tipo,
-      prazo: paraMySQL(fimDaSemana(agora)),
+      prazo: paraMySQL(fimDaSemana(hoje, fuso)),
     })),
   ];
 

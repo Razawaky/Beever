@@ -12,6 +12,7 @@ import * as idempotencyService from './idempotencyService.js';
 import * as levelsService from './levelsService.js';
 import * as pointsService from './pointsService.js';
 import * as progressService from './progressService.js';
+import * as streakService from './streakService.js';
 import * as validadoresDeJogo from './validadoresDeJogo.js';
 
 /**
@@ -235,6 +236,14 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
         melGanho: resultado.mel + resultado.bonusDeMelPorNivel,
       },
     });
+  }
+
+  // A sequência avança na hora em que a célula é concluída (RN-019), e não na
+  // avaliação preguiçosa do dia seguinte: o jogador precisa ver o dia contado
+  // enquanto ainda está na tela de resultado. Fica fora da transação do crédito
+  // porque sequência não é saldo — falha aqui não pode desfazer o mel pago.
+  if (!resultado.jaEstavaFechada) {
+    await streakService.registrarDiaCumprido(idUsuario);
   }
 
   return comProximaCelula(idUsuario, partida.cell_id, resultado);

@@ -4,10 +4,11 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-08.1 — a meta vencida pode ser **retomada** (RN-017), com o
-progresso guardado e metade da recompensa; e a meta fora do prazo parou de
-pagar, que era um vazamento aberto. Árvore limpa, 498 testes passando.
-**Próximo passo: T-08.2**, o `StreakService`
+**Último commit:** T-08.2 — o `StreakService` e o **dia do jogador**: a
+sequência é avaliada de forma preguiçosa na primeira página do dia, no fuso do
+perfil, e a virada do dia parou de usar o relógio do servidor (dívida DT-23
+paga). Árvore limpa, 512 testes passando.
+**Próximo passo: T-08.3**, o consumo automático do Escudo de Sequência
 
 ---
 
@@ -266,8 +267,8 @@ semanas de uso e a sequência bater com a regra em todos os cenários.
 | Tarefa | Situação |
 |---|---|
 | T-08.1 `GoalService`: progresso por evento, conclusão única, expiração e renovação | **feita** — três das quatro metades já existiam desde a E06; esta tarefa entregou a renovação (RN-017, RF-MET-05, dívida DT-33) e fechou um vazamento: meta fora de `ativa` não paga mais |
-| T-08.2 `StreakService`: avaliação preguiçosa na primeira requisição do dia, com fuso e dias marcados | pendente — depende da DT-23, a virada do dia que ainda usa o relógio do servidor |
-| T-08.3 Consumo automático do Escudo de Sequência | pendente |
+| T-08.2 `StreakService`: avaliação preguiçosa na primeira requisição do dia, com fuso e dias marcados | **feita** — três desfechos por dia (cumprido, perdido, neutro), avaliação idempotente por evento de dia, e a DT-23 paga junto: o dia do jogador sai de `profiles.timezone` |
+| T-08.3 Consumo automático do Escudo de Sequência | pendente — o gancho já está marcado em `desfechoDoDia`, antes de o dia virar `perdido` |
 | T-08.4 Marcos de sequência com bônus | pendente |
 | T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | pendente |
 | T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | pendente |
@@ -925,7 +926,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
-| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. Faltam a sequência (T-08.2 a T-08.4), as tarefas (T-08.5), as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
+| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. Faltam o escudo (T-08.3), os marcos (T-08.4), as tarefas (T-08.5), as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
@@ -953,9 +954,9 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-19~~ | ~~`reward_configs` (54 linhas semeadas) não é lida por nenhum service~~ | auditoria da E02 | **Resolvida na T-06.1**: `rewardConfigsRepository` lê a tabela por slug do jogo, código da faixa e estrelas, com os 54 combos conferidos em teste. Quem vai consumir são os services da T-06.2 a T-06.4 |
 | ~~DT-20~~ | ~~Onboarding não coleta tempo por sessão nem preferências de som e animação, que a RN-011 e a RN-050 pedem~~ | auditoria da E02 | **Resolvida na T-04.3**: os dois passos entraram no wizard e gravam em `session_minutes`, `is_sound_enabled` e `has_reduced_motion`. As durações passaram a ser cinco (5, 10, 20, 30 e 45) por decisão de produto tomada no checkpoint da tarefa, com migration `012` e reescrita da RN-011 |
 | DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
-| DT-23 | A virada do dia usa o relógio do servidor: `tasksService.garantirTarefasDoDia` chama `new Date()` cru, enquanto a RN-024 manda usar o fuso do perfil (`profiles.timezone`, já gravado no onboarding). Quem estiver em fuso diferente recebe as tarefas do dia na hora errada — e a sequência vai herdar o mesmo defeito, porque a RN-021 depende da mesma virada | dúvida levantada na revisão da E02 | **E08**, junto da sequência: as duas dependem da mesma noção de "dia do jogador" e devem ser resolvidas de uma vez |
+| ~~DT-23~~ | ~~A virada do dia usa o relógio do servidor, enquanto a RN-024 manda usar o fuso do perfil~~ | dúvida levantada na revisão da E02 | **Resolvida na T-08.2**: `src/utils/diaDoJogador.js` resolve o dia a partir de `profiles.timezone`, e tanto a geração de tarefas quanto a sequência passaram a usá-lo. O horário de verão foi coberto: `inicioDoDia` confere o deslocamento duas vezes |
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
-| DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.claude/skills/impeccable/scripts/`, que é plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
+| DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.github/skills/impeccable/scripts/` e `.claude/skills/impeccable/scripts/`, que são plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
 | DT-37 | `test/integration/seguranca.test.js` falhou uma vez em três execuções da suíte completa, no caso "o dono continua alterando a própria conta", e passa sempre quando o arquivo roda sozinho (três de três). Não reproduzi o erro, então não sei se é o limitador de tentativas de login, contenção de banco sob execução paralela ou tempo. Teste que falha de vez em quando é pior do que teste que falha sempre: ensina a ignorar vermelho | T-07.6 | Rodar a suíte com `--test-concurrency=1` para isolar, e só então corrigir a causa |
 | DT-38 | Partida aberta em uma célula nunca é fechada quando o jogador vai jogar outra: a retomada é por célula, então dá para acumular partidas penduradas. Não paga nada indevido, porque cada partida exige o próprio token | L-5 do laudo da E07 | E08, junto do índice da DT-39 |
 | DT-39 | Falta índice `(user_id, cell_id)` em `game_sessions`; `buscarAbertaDaCelula` e `contarConcluidasNaCelula` filtram por essas colunas e o índice existente é `(user_id, started_at)` | L-6 do laudo da E07 | E08 |
@@ -1123,11 +1124,11 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa: T-08.2 — `StreakService`**, a avaliação preguiçosa da
-sequência na primeira requisição do dia, respeitando o fuso do perfil e os dias
-marcados (RN-019 a RN-021, RN-024). É a tarefa que a DT-23 espera desde a E02: a
-virada do dia usa hoje o relógio do servidor, e a sequência inteira depende de
-acertar isso.
+**Próxima tarefa: T-08.3 — o consumo automático do Escudo de Sequência**
+(RN-022, RF-SEQ-03): antes de um dia marcado virar `perdido`, gastar um escudo
+do inventário, no máximo dois acumulados. O lugar exato já está marcado em
+`streakService.desfechoDoDia`, e a coluna `streaks.shields_available` existe com
+`CHECK` desde a E01.
 
 Duas dívidas da E07 continuam esperando a E08: o índice `(user_id, cell_id)` em
 `game_sessions` (DT-39) e as partidas abertas que ninguém fecha (DT-38).
@@ -1801,3 +1802,52 @@ Para a T-08.2 saber:
    do plano de hoje — serve a qualquer regra que precise do plano.
 3. **O `ck_goals_dates` do banco recusa `due_at <= starts_at`.** Quem for
    fabricar meta vencida em teste precisa mover as duas datas, não só o prazo.
+
+---
+
+### Sessão de 2026-08-19, T-08.2: o dia passou a ser o do jogador
+
+Suíte em **512 testes, zero falhas** (498 antes).
+
+A tarefa tinha duas metades, e a segunda era a dívida DT-23, aberta desde a
+revisão da E02. Sem ela a sequência nasceria torta: quem não estivesse em São
+Paulo perderia o dia na hora errada.
+
+| Arquivo | O que é |
+|---|---|
+| `src/utils/diaDoJogador.js` | o dia no fuso do perfil: data, início e fim de dia e de semana, soma e diferença |
+| `src/repositories/streaksRepository.js` | `streaks` e `streak_events` |
+| `src/services/streakService.js` | `avaliar` e `registrarDiaCumprido` |
+| `src/repositories/gameSessionsRepository.js` | `listarConclusoesNoIntervalo` |
+| `src/services/tasksService.js` | a virada do dia deixou de usar o relógio do servidor |
+| `src/services/gameSessionService.js` | a sequência avança quando a célula é concluída |
+| `src/controllers/paginaController.js` | avaliação preguiçosa no painel e nas metas |
+| `test/unit/diaDoJogador.test.js` e `test/integration/sequencia.test.js` | 7 + 7 testes |
+
+**Zero migration.** `streaks`, `streak_events` e os quatro slugs de desfecho já
+existiam desde a E01, com a `UNIQUE (user_id, event_date)` que serve de
+idempotência da avaliação. Nada de banco novo.
+
+**O horário de verão pediu duas passagens.** A primeira versão de `inicioDoDia`
+pegava o deslocamento do meio-dia e errava a meia-noite do dia em que o fuso
+muda — Lisboa, 29 de março. Agora a função chuta e confere no instante certo, e
+o teste cobre os dois dias da virada.
+
+**A sequência anda um dia por dia.** `registrarDiaCumprido` avalia os dias
+fechados antes de somar o de hoje: sem isso, quem perdeu ontem somaria em cima
+de uma sequência que já devia estar zerada. E o dia que já tem evento não conta
+de novo, por mais células que a criança jogue.
+
+**A fonte do dia cumprido é `game_sessions`**, não `cell_progress`. A tabela de
+progresso guarda uma linha por célula e só a última conclusão: repetir a mesma
+célula amanhã apagaria o dia de hoje do histórico.
+
+Para a T-08.3 saber:
+
+1. **O gancho do escudo está marcado** em `streakService.desfechoDoDia`, no
+   caminho entre "dia marcado" e `perdido`.
+2. **A sequência ainda não aparece em tela nenhuma.** O número existe e é
+   avaliado; mostrar é a T-08.6, e é lá que ele vai ser visto pela primeira vez.
+3. **Quem for testar tempo usa `agora` injetado**, não relógio de sistema:
+   `avaliar` e `registrarDiaCumprido` recebem a data como parâmetro, e é assim
+   que os sete testes de integração viajam no tempo.

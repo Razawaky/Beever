@@ -183,3 +183,22 @@ export async function contarConcluidasNaCelula(idUsuario, idCelula) {
   );
   return Number(linhas[0]?.total ?? 0);
 }
+
+/**
+ * Quando o jogador concluiu células dentro do intervalo.
+ *
+ * Devolve os instantes crus, sem agrupar por dia: quem agrupa é o
+ * `streakService`, que sabe o fuso do jogador (RN-024). Agrupar aqui, no
+ * `DATE()` do MySQL, usaria o fuso do servidor e erraria a virada.
+ */
+export async function listarConclusoesNoIntervalo(idUsuario, inicio, fim) {
+  return consultar(
+    `SELECT gs.finished_at
+       FROM game_sessions gs
+       JOIN game_session_statuses st ON st.id = gs.status_id
+      WHERE gs.user_id = ? AND st.slug = 'concluida'
+        AND gs.finished_at >= ? AND gs.finished_at < ?
+      ORDER BY gs.finished_at`,
+    [idUsuario, inicio, fim],
+  );
+}

@@ -2,6 +2,7 @@ import { emTransacao } from '../config/database.js';
 import { logger } from '../config/logger.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
+import { FUSO_PADRAO, fusoValido } from '../utils/diaDoJogador.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
@@ -193,6 +194,17 @@ export async function obterDoUsuario(idUsuario) {
     mel: carteira.mel,
     polen: carteira.polen,
   };
+}
+
+/**
+ * O fuso do jogador, para quem precisa saber quando o dia dele vira (RN-024).
+ *
+ * Perfil sem fuso gravado cai no padrão: a virada do dia não pode depender de
+ * um campo que pode faltar.
+ */
+export async function fusoDoUsuario(idUsuario) {
+  const perfil = await profilesRepository.buscarPorUsuario(idUsuario);
+  return fusoValido(perfil?.timezone ?? FUSO_PADRAO);
 }
 
 async function exigirPosse(idPerfil, idUsuario) {

@@ -7,6 +7,7 @@ import * as inventoryService from '../services/inventoryService.js';
 import * as itemsService from '../services/itemsService.js';
 import * as profilesService from '../services/profilesService.js';
 import * as schedulesService from '../services/schedulesService.js';
+import * as streakService from '../services/streakService.js';
 import * as tasksService from '../services/tasksService.js';
 import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
@@ -64,6 +65,10 @@ export const onboarding = assincrono(async (req, res) => {
 });
 
 export const painel = assincrono(async (req, res) => {
+  // A sequência é avaliada aqui, do mesmo jeito preguiçoso da expiração de meta
+  // (RN-021): o dia fechado sem célula quebra na primeira página que o jogador
+  // abrir, sem cron para manter de pé.
+  await streakService.avaliar(req.session.usuarioId);
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
   // A ordem importa: sincronizar expira o que venceu (RN-017), e só então o
   // planejador conta quantas metas ativas restam. Invertido, a meta vencida
@@ -112,6 +117,7 @@ export const loja = assincrono(async (req, res) => {
 });
 
 export const metas = assincrono(async (req, res) => {
+  await streakService.avaliar(req.session.usuarioId);
   // As tarefas do dia nascem aqui, quando o jogador entra — geração *lazy*, como
   // o ciclo econômico —, e o progresso das metas é relido das fontes reais antes
   // de a tela mostrar qualquer número.
