@@ -174,6 +174,33 @@ describe('sessão de jogo', opcoes, () => {
     );
   });
 
+  it('a partida abandonada é recusada, e não devolve um resultado zerado (L-3)', async () => {
+    const { token } = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    await gameSessionService.abandonar(idUsuario, token);
+
+    await assert.rejects(
+      () => gameSessionService.fechar(idUsuario, token, { respostas: RESPOSTAS_CERTAS }),
+      (erro) => erro.codigo === 'VALIDACAO',
+      'desistência não é desempenho zero',
+    );
+  });
+
+  it('is_replay é gravado com o que foi pago, não com o que era verdade na abertura (L-2)', async () => {
+    // Duas partidas abertas antes de qualquer conclusão: as duas nascem como
+    // estreia, e a segunda a fechar é paga como repetição.
+    const primeira = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const segunda = await gameSessionService.abrir(idUsuario, celulas[0].id);
+
+    await gameSessionService.fechar(idUsuario, primeira.token, { respostas: RESPOSTAS_CERTAS });
+    const resultado = await gameSessionService.fechar(idUsuario, segunda.token, { respostas: RESPOSTAS_CERTAS });
+
+    const [linhas] = await conexao.query('SELECT is_replay FROM game_sessions WHERE token = ?', [
+      segunda.token,
+    ]);
+    assert.equal(resultado.ehRepeticao, true);
+    assert.equal(Number(linhas[0].is_replay), 1, 'o registro precisa dizer o que o livro diz');
+  });
+
   it('partida de outro jogador não pode ser fechada', async () => {
     const { token } = await gameSessionService.abrir(idUsuario, celulas[0].id);
     const idIntruso = await usersRepository.criar({

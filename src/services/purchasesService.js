@@ -74,9 +74,13 @@ export async function comprar(idUsuario, idItem, { chaveDeIdempotencia = null } 
     });
   }
 
+  // Retrato antes do débito. A compra é a única operação que tira mel, e a
+  // RN-010 pede o antes/depois justamente do que muda o saldo.
+  const saldoAntes = await auditService.retratoDoSaldo(idUsuario);
+
   if (!chaveDeIdempotencia) {
     const idCompra = await emTransacao((conexao) => registrarCompra(conexao, { idUsuario, idItem, preco }));
-    return concluir(idUsuario, idItem, item, preco, idCompra, pendencias);
+    return concluir(idUsuario, idItem, item, preco, idCompra, pendencias, saldoAntes);
   }
 
   const { idCompra, repetida } = await idempotencyService.executarUmaVezSo(
@@ -104,15 +108,17 @@ export async function comprar(idUsuario, idItem, { chaveDeIdempotencia = null } 
     return { idCompra, item, precoPago: preco, repetida: true, avisos: [] };
   }
 
-  return concluir(idUsuario, idItem, item, preco, idCompra, pendencias);
+  return concluir(idUsuario, idItem, item, preco, idCompra, pendencias, saldoAntes);
 }
 
 /** Auditoria e resposta, comuns aos dois caminhos da compra. */
-async function concluir(idUsuario, idItem, item, preco, idCompra, pendencias) {
-  await auditService.registrar(auditService.usuario(idUsuario), 'compra.realizada', {
+async function concluir(idUsuario, idItem, item, preco, idCompra, pendencias, saldoAntes) {
+  await auditService.registrarRecompensa(auditService.usuario(idUsuario), 'compra.realizada', {
     entidade: 'purchase',
     id: idCompra,
-    depois: { idItem, item: item.name, precoTotal: preco },
+    antes: saldoAntes,
+    depois: await auditService.retratoDoSaldo(idUsuario),
+    detalhes: { idItem, item: item.name, precoTotal: preco },
   });
 
   return {

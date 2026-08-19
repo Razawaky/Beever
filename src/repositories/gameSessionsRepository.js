@@ -88,17 +88,30 @@ export async function bloquearAbertaPorToken(conexao, token) {
  * Só fecha partida aberta (`finished_at IS NULL` no `WHERE`). Reenviar o mesmo
  * resultado devolve 0 linhas afetadas, e o service não credita nada — é a
  * mesma defesa da tarefa concluída duas vezes.
+ *
+ * `ehRepeticao` corrige o que a abertura só podia adivinhar: quem abre duas
+ * partidas antes de concluir a célula abre as duas como estreia, e a segunda
+ * acaba paga como repetição. O que vale para o relatório é o que foi pago, e
+ * isso só se sabe no fim.
+ *
+ * Ausente quer dizer "não sei", e aí o valor da abertura fica — daí o
+ * `COALESCE`. Sobrescrever com o padrão apagaria a informação de quem fecha a
+ * partida sem calcular recompensa.
  */
-export async function finalizar(conexao, { token, estrelas = 0, erros = 0, xp = 0, pontos = 0, moedas = 0 }) {
+export async function finalizar(
+  conexao,
+  { token, estrelas = 0, erros = 0, xp = 0, pontos = 0, moedas = 0, ehRepeticao = null },
+) {
   const resultado = await consultarEm(
     conexao,
     `UPDATE game_sessions
         SET status_id = (SELECT id FROM game_session_statuses WHERE slug = 'concluida'),
             finished_at = NOW(),
             duration_seconds = TIMESTAMPDIFF(SECOND, started_at, NOW()),
-            stars = ?, errors = ?, xp_awarded = ?, points_awarded = ?, coins_awarded = ?
+            stars = ?, errors = ?, xp_awarded = ?, points_awarded = ?, coins_awarded = ?,
+            is_replay = COALESCE(?, is_replay)
       WHERE token = ? AND finished_at IS NULL`,
-    [estrelas, erros, xp, pontos, moedas, token],
+    [estrelas, erros, xp, pontos, moedas, ehRepeticao === null ? null : Number(ehRepeticao), token],
   );
   return resultado.affectedRows;
 }

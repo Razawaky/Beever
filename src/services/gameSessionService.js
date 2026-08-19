@@ -4,7 +4,7 @@ import { emTransacao } from '../config/database.js';
 import * as cellsRepository from '../repositories/cellsRepository.js';
 import * as contentsRepository from '../repositories/contentsRepository.js';
 import * as gameSessionsRepository from '../repositories/gameSessionsRepository.js';
-import { erroAcessoNegado, erroNaoEncontrado } from '../utils/erros.js';
+import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as contentService from './contentService.js';
@@ -116,6 +116,7 @@ async function creditarPartida(conexao, { idUsuario, token, partida, celula, err
     xp: xp.xpCreditado,
     pontos: polen.polenCreditado,
     moedas: mel.melCreditado + bonus.melCreditado,
+    ehRepeticao: tentativa.ehRepeticao,
   });
 
   return {
@@ -145,6 +146,12 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
   const partida = await gameSessionsRepository.buscarPorToken(token);
   if (!partida) throw erroNaoEncontrado('Partida não encontrada');
   if (Number(partida.user_id) !== Number(idUsuario)) throw erroAcessoNegado('Esta partida é de outro jogador');
+  // Partida encerrada sem conclusão não tem resultado para mostrar. Devolver o
+  // registro zerado faria a tela anunciar "zero estrelas, zero mel" como se
+  // fosse desempenho, quando o que houve foi desistência.
+  if (partida.finished_at && partida.status !== 'concluida') {
+    throw erroValidacao(`Esta partida foi ${partida.status} e não pode ser concluída`);
+  }
   if (partida.finished_at) return resultadoGravado(partida);
 
   const celula = await cellsRepository.buscarPorId(partida.cell_id);

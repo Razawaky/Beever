@@ -4,10 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-06.8 — o aceite da E06 passou: cinco conclusões em paralelo
-creditam uma vez. **A E06 está entregue**, as oito tarefas. Árvore limpa,
-392 testes passando.
-**Próximo passo:** auditar a E06 (`/auditar-etapa`) antes de abrir a E07
+**Último commit:** correções L-1, L-2 e L-3 do laudo da E06. **A E06 está
+entregue e auditada**, com as três lacunas de risco médio fechadas. Árvore
+limpa, 395 testes passando.
+**Próximo passo: E07 — jogos interativos**, começando pela T-07.1 (contrato de jogo)
 
 ---
 
@@ -837,7 +837,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
-| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
+| E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
@@ -1032,12 +1032,13 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** auditar a E06 com `/auditar-etapa`, antes de abrir a E07. As
-oito tarefas estão entregues e o critério de aceite passou; o que falta é o
-laudo, no formato das auditorias da E04 e da E05. Dois pontos merecem atenção do
-auditor: **nenhuma tela mostra recompensa** — não há rota de partida até a E07,
-então o motor inteiro é verdade de teste, não de navegador —, e **cinco dos seis
-tipos de jogo não têm validador**, por decisão registrada da T-06.5.
+**Próxima tarefa:** T-07.1 — o contrato único de jogo, em
+`docs/CONTRATO-DE-JOGO.md`: como o front manda respostas e como o servidor
+valida. O mapa `VALIDADORES` de `src/services/validadoresDeJogo.js` já é o lugar
+onde os cinco jogos que faltam entram, e o quiz serve de exemplo pronto.
+
+A E06 foi **auditada e aprovada, com as três lacunas de risco médio corrigidas**
+(L-1, L-2 e L-3). Ficaram abertas sete de risco baixo, listadas abaixo.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -1317,3 +1318,26 @@ O que a etapa deixou pronto, em uma frase cada:
 O que a E06 **não** entregou, e está registrado: nenhuma tela mostra recompensa
 (rota e tela de jogo são E07), e cinco dos seis tipos de jogo seguem sem
 validador, por decisão da T-06.5.
+
+---
+
+### Sessão de 2026-08-19, encerramento da E06
+
+A etapa foi auditada (`docs/06-AUDITORIA-DA-ETAPA.md`) e as **três lacunas de
+risco médio foram corrigidas antes de abrir a E07**. Suíte em **395 testes, zero
+falhas** (392 antes), reconciliação OK.
+
+| Lacuna | Correção |
+|---|---|
+| L-1 | `compra.realizada` passou a carregar o saldo antes e depois — a T-06.7 enriqueceu quatro operações e esqueceu justamente a única que tira mel |
+| L-2 | `is_replay` é corrigido no `finalizar`, com `COALESCE`: ausente quer dizer "não sei", e o valor da abertura fica |
+| L-3 | Partida abandonada é recusada com erro de validação, em vez de devolver resultado zerado |
+
+**Uma lição que vale para as próximas etapas:** a primeira versão da L-2
+sobrescrevia `is_replay` com o padrão e apagava a informação de quem fecha
+partida sem calcular recompensa. Quem pegou foi um teste de repository escrito na
+E01, meses antes de o problema existir — teste de camada baixa continua pagando
+aluguel muito depois de escrito.
+
+Ficam abertas sete lacunas de risco baixo, cada uma com etapa marcada na seção 3
+do laudo.

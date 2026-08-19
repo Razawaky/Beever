@@ -5,14 +5,17 @@ import { after, before, describe, it } from 'node:test';
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
-import { fecharPool } from '../../src/config/database.js';
+import { emTransacao, fecharPool } from '../../src/config/database.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
 import * as profilesRepository from '../../src/repositories/profilesRepository.js';
 import * as userLevelsRepository from '../../src/repositories/userLevelsRepository.js';
 import * as usersRepository from '../../src/repositories/usersRepository.js';
 import * as walletsRepository from '../../src/repositories/walletsRepository.js';
+import * as coinsService from '../../src/services/coinsService.js';
 import * as gameSessionService from '../../src/services/gameSessionService.js';
+import * as itemsRepository from '../../src/repositories/itemsRepository.js';
+import * as purchasesService from '../../src/services/purchasesService.js';
 
 /**
  * Auditoria dos créditos, contra banco real (RN-010, RNF-17).
@@ -110,6 +113,26 @@ describe('auditoria dos créditos', opcoes, () => {
 
     assert.equal(ultima.after_state.ehRepeticao, true);
     assert.equal(ultima.after_state.melGanho, 0, 'repetir não paga mel (RN-008)');
+  });
+
+  it('a compra também registra o saldo antes e depois (L-1)', async () => {
+    const item = await itemsRepository.buscarPorSlug('patinete');
+    await emTransacao((conn) =>
+      coinsService.creditar(conn, idUsuario, Number(item.price), { motivo: 'ajuste-administrativo' }),
+    );
+
+    const compra = await purchasesService.comprar(idUsuario, item.id);
+
+    const [linhas] = await conexao.query(
+      `SELECT before_state, after_state FROM audit_logs
+        WHERE action = 'compra.realizada' AND entity_id = ?`,
+      [compra.idCompra],
+    );
+
+    const antes = linhas[0].before_state;
+    const depois = linhas[0].after_state;
+    assert.equal(depois.mel, antes.mel - Number(item.price), 'a linha precisa mostrar o mel que saiu');
+    assert.equal(depois.precoTotal, Number(item.price));
   });
 
   it('a trilha é imutável: não dá para alterar nem apagar linha (RNF-17)', async () => {
