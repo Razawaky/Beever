@@ -4,9 +4,10 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-06.3 — o pólen da célula também sai da tabela, e repetir
-não paga pólen nenhum. Árvore limpa, 367 testes passando.
-**Próximo passo: T-06.4**, o `CoinService`
+**Último commit:** T-06.4 — o mel da célula sai da tabela e o bônus de subida de
+nível enfim é pago. Árvore limpa, 372 testes passando.
+**Próximo passo: T-06.5**, o `GameSessionService`, que junta as três recompensas
+numa transação só
 
 ---
 
@@ -247,7 +248,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
-| XP e pólen creditados com o jogador jogando | `creditarPorCelula` dos dois services tem teste contra banco real, mas ninguém os chama ainda: o chamador é o `GameSessionService` da T-06.5. Nenhuma criança viu XP nem pólen subir na tela |
+| As três recompensas creditadas com o jogador jogando | `creditarPorCelula` dos três services tem teste contra banco real, mas ninguém os chama ainda: o chamador é o `GameSessionService` da T-06.5. Nenhuma criança viu XP, pólen ou mel subir na tela |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Comportamento sob concorrência | O débito atômico foi testado sequencialmente. Nunca houve teste com duas requisições simultâneas de verdade |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -267,7 +268,7 @@ mesmo contrato de recompensa.
 | T-06.1 `reward_configs` em banco e repository | **feita** — `rewardConfigsRepository`, mais a tabela `reward_modifiers` para os fatores da RN-008, com 7 testes contra banco real |
 | T-06.2 `XpService`: calcula e credita XP, resolve subida de nível | **feita** — o dono do XP é o `levelsService`, que ganhou o cálculo pela tabela, o corte da repetição e o bônus de mel do degrau; 8 testes novos |
 | T-06.3 `PointsService`: calcula e credita pólen | **feita** — `calcularPolenDaCelula` e `creditarPorCelula`, no mesmo desenho do XP; repetir paga zero pólen |
-| T-06.4 `CoinService`: calcula e credita mel, valida saldo, nunca negativo | pendente |
+| T-06.4 `CoinService`: calcula e credita mel, valida saldo, nunca negativo | **feita** — `calcularMelDaCelula`, `creditarPorCelula` e `creditarBonusDeNivel`; repetir paga zero mel e o débito além do saldo é recusado sem rastro |
 | T-06.5 `GameSessionService`: abre e fecha sessão validando respostas no servidor, orquestra os três em uma transação | pendente |
 | T-06.6 Idempotência: token de sessão consumido uma única vez | pendente |
 | T-06.7 Auditoria em todos os créditos | pendente |
@@ -344,6 +345,27 @@ Os testes das três recompensas moram num arquivo só,
 `test/integration/recompensaDaCelula.test.js` (era `xpDeCelula.test.js`): a
 partida é uma só, e montar usuário, carteira, nível e célula três vezes seria o
 mesmo cenário copiado.
+
+**O que a T-06.4 entregou.** O mel da célula, fechando as três recompensas:
+repetir uma célula rende 25% de XP, zero pólen e zero mel. E o
+`creditarBonusDeNivel`, que paga o que a curva de `levels` promete a cada degrau
+— valor calculado pelo `levelsService` desde a T-06.2 e até agora sem dono.
+
+O motivo `subida-de-nivel` fica **fixado dentro da função**, e não a cargo do
+chamador: motivo vira `reason_id` no livro, e é assim que um extrato ganha
+lançamento com o rótulo errado.
+
+A validação de saldo da RN-004 já existia desde a E02 e não foi reescrita —
+`walletsRepository.debitarMel` faz checagem e desconto na mesma instrução, sem
+janela entre conferir e debitar. O que a tarefa acrescentou foi o **teste** de
+que gastar mais do que se tem é recusado com `MEL_INSUFICIENTE` e não deixa
+lançamento para trás.
+
+Duas coisas que ficaram de fora, cada uma com lugar marcado: `is_economy_enabled`
+continua sem quem o leia, porque as três faixas têm a economia ligada e guarda
+que nunca reprova esconde a intenção (a RN-038 é E09); e a **DT-18** continua
+aberta, para a T-06.6 resolvê-la com o mecanismo de `idempotency_keys` em vez de
+uma solução paralela.
 
 **Uma decisão de produto tomada aqui:** a RN-008 fala de XP e mel, e cala sobre
 pólen. O seed zera o pólen na repetição também — pólen repetido à vontade é o
@@ -712,7 +734,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E03 Autenticação | **concluída e auditada** | T-03.1 a T-03.4 vieram prontas da E02; T-03.5 (consentimento do responsável, `c2f1eab`) e T-03.6 (dez casos de recusa e força bruta, `0a21cc9`) fecharam as tarefas. A auditoria (`docs/03-AUDITORIA-DA-ETAPA.md`) reprovou a primeira versão com dois bloqueantes e um alto — tomada de conta pelas rotas `/users/:id`, suíte presa ao dia da semana e barras de progresso apagadas pela CSP —, todos corrigidos |
 | E04 Onboarding e metas | **concluída e auditada** | T-04.1 feita (`docs/04-AUDITORIA-DO-ONBOARDING.md`): requisito a requisito, veredito peça por peça e o contrato que o planner vai precisar ler. T-04.2 feita: máquina de passos com progresso salvo no servidor, na ordem da RN-011. T-04.3 feita: sete passos, tempo por sessão e preferências gravados, catálogo conferido. T-04.4 feita: **`GoalPlannerService`** gerando as metas da RN-014, com alvo dimensionado pelo tempo declarado. T-04.5 já veio pronta da T-02.4. T-04.6 e T-04.7 feitas (`d72b18d`): a semana virou editável no perfil, sem custar progresso, e o caso de 5→2 dias com meta em andamento está coberto. **As sete tarefas estão entregues e a auditoria (`docs/04-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; três das oito lacunas já foram fechadas** |
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
-| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 feita: o pólen da célula, no mesmo desenho. Faltam T-06.4 a T-06.8 — mel, a sessão de jogo, a idempotência e a auditoria. Ver também DT-18 |
+| E06 Motor de recompensas | **em andamento** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. Faltam T-06.5 a T-06.8 — a sessão de jogo, a idempotência, a auditoria e os testes de aceite. Ver também DT-18 |
 | E07 Jogos | do zero | Base pronta: `jogo`/`conteudo` seedados e `sessaoJogoRepository` |
 | E08 Metas e sequência | parcial | Sem streak, geração automática ou expiração |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
@@ -907,12 +929,13 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa:** T-06.4 — `CoinService`, o mel. É o mesmo molde da T-06.2 e
-da T-06.3, com uma diferença que importa: mel também **sai** da carteira, e a
-RN-004 exige que nunca fique negativo. O débito já existe e é atômico
-(`walletsRepository.debitarMel`, com o `WHERE coins >= ?` na mesma instrução);
-o que falta é o cálculo do crédito da célula e o bônus de nível que a T-06.2
-deixou calculado e não pago.
+**Próxima tarefa:** T-06.5 — `GameSessionService`, o miolo da etapa: abre a
+sessão com token, fecha validando as respostas **no servidor** (RN-007, o cliente
+manda respostas e nunca pontuação) e orquestra as três recompensas numa
+transação só. As peças estão prontas e não devem ser reescritas:
+`progressService.registrarTentativa` dá estrelas e `ehRepeticao` (RN-030), e os
+três `creditarPorCelula` aceitam conexão de fora. A tabela `game_sessions` já tem
+token, `is_replay` e `duration_seconds` desde a migration `003`.
 
 A E05 está **concluída e auditada** (`docs/05-AUDITORIA-DA-ETAPA.md`): pode
 avançar, zero bloqueantes. A auditoria teve **duas passagens**: a primeira aprovou com sete lacunas, e a
@@ -1067,3 +1090,26 @@ Para a T-06.4 saber:
 2. **O bônus de nível espera lá.** `creditarXp` devolve `bonusDeMelPorNivel` desde
    a T-06.2 e ninguém o paga; o motivo `subida-de-nivel` já está semeado em
    `reward_reasons`. Quem credita é o `coinsService`, chamado pela T-06.5.
+
+---
+
+### Sessão de 2026-08-19, continuação: T-06.4
+
+Suíte em **372 testes, zero falhas** (367 antes), reconciliação OK. As três
+recompensas da célula estão calculadas e creditadas; falta quem as chame.
+
+| Arquivo | O que mudou |
+|---|---|
+| `src/services/coinsService.js` | `calcularMelDaCelula`, `creditarPorCelula` e `creditarBonusDeNivel` |
+| `test/integration/recompensaDaCelula.test.js` | 5 casos de mel: estreia, repetição pagando zero, bônus do degrau com motivo `subida-de-nivel`, cache batendo com `coin_ledger` e débito além do saldo recusado sem rastro |
+
+Para a T-06.5 saber:
+
+1. **Nada de recalcular estrelas.** A RN-030 tem dono desde a T-05.3
+   (`progressService.registrarTentativa`), que devolve `estrelas`, `ehRepeticao`
+   e o progresso do favo, e aceita conexão de fora.
+2. **A ordem do crédito é livre, a transação não.** Os três `creditarPorCelula`
+   recebem a mesma conexão; o bônus de nível só é conhecido depois do crédito de
+   XP, então ele é o último a ser pago, pelo `coinsService`.
+3. **O tempo de partida ainda não tem quem o grave.** `duration_seconds` existe
+   em `game_sessions` desde a migration `003` e é a T-06.5 que fecha a RF-CON-04.

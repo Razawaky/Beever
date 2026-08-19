@@ -13,6 +13,7 @@ import * as rewardConfigsRepository from '../../src/repositories/rewardConfigsRe
 import * as userLevelsRepository from '../../src/repositories/userLevelsRepository.js';
 import * as usersRepository from '../../src/repositories/usersRepository.js';
 import * as walletsRepository from '../../src/repositories/walletsRepository.js';
+import * as coinsService from '../../src/services/coinsService.js';
 import * as levelsService from '../../src/services/levelsService.js';
 import * as pointsService from '../../src/services/pointsService.js';
 
@@ -35,6 +36,7 @@ describe('recompensa de célula concluída', opcoes, () => {
   let conexao;
   let idUsuario;
   let celula;
+  let bonusDoNivel;
 
   before(async () => {
     banco = await criarBancoDeTeste();
@@ -77,6 +79,18 @@ describe('recompensa de célula concluída', opcoes, () => {
 
   async function polenDaTabela(estrelas) {
     return Number((await configuracaoDaTabela(estrelas)).points_amount);
+  }
+
+  async function melDaTabela(estrelas) {
+    return Number((await configuracaoDaTabela(estrelas)).coins_amount);
+  }
+
+  async function melNoLivro() {
+    const [linhas] = await conexao.query(
+      'SELECT COALESCE(SUM(amount), 0) AS total FROM coin_ledger WHERE user_id = ?',
+      [idUsuario],
+    );
+    return Number(linhas[0].total);
   }
 
   async function polenNoLivro() {
@@ -165,6 +179,47 @@ describe('recompensa de célula concluída', opcoes, () => {
     assert.equal(Number(linhas[0].points_total), await polenNoLivro());
   });
 
+  it('a estreia paga o mel que a tabela manda', async () => {
+    const esperado = await melDaTabela(3);
+    const antes = await melNoLivro();
+
+    const resultado = await emTransacao((conn) =>
+      coinsService.creditarPorCelula(conn, idUsuario, { celula, estrelas: 3, ehRepeticao: false }),
+    );
+
+    assert.equal(resultado.melCreditado, esperado);
+    assert.equal(await melNoLivro(), antes + esperado, 'o livro precisa explicar o saldo');
+  });
+
+  it('repetir não paga mel nenhum (RN-008), e não lança linha no livro', async () => {
+    const antes = await melNoLivro();
+
+    const resultado = await emTransacao((conn) =>
+      coinsService.creditarPorCelula(conn, idUsuario, { celula, estrelas: 3, ehRepeticao: true }),
+    );
+
+    assert.equal(resultado.melCreditado, 0);
+    assert.equal(await melNoLivro(), antes);
+  });
+
+  it('gastar mais mel do que se tem é recusado, e não deixa rastro', async () => {
+    const antes = await melNoLivro();
+
+    await assert.rejects(
+      () => emTransacao((conn) => coinsService.debitar(conn, idUsuario, antes + 1, { motivo: 'compra' })),
+      (erro) => erro.codigo === 'MEL_INSUFICIENTE',
+      'a RN-004 não admite saldo negativo',
+    );
+
+    assert.equal(await melNoLivro(), antes, 'a transação desfeita não pode deixar lançamento');
+  });
+
+  it('o cache de wallets.coins continua batendo com o livro de mel', async () => {
+    const [linhas] = await conexao.query('SELECT coins FROM wallets WHERE user_id = ?', [idUsuario]);
+
+    assert.equal(Number(linhas[0].coins), await melNoLivro());
+  });
+
   it('subir de nível devolve o bônus de mel da curva, sem creditar mel aqui', async () => {
     const [antes] = await conexao.query('SELECT coins FROM wallets WHERE user_id = ?', [idUsuario]);
 
@@ -178,6 +233,26 @@ describe('recompensa de célula concluída', opcoes, () => {
 
     assert.equal(resultado.subiuDeNivel, true);
     assert.ok(resultado.bonusDeMelPorNivel > 0, 'a curva promete mel ao subir de nível');
-    assert.equal(Number(depois[0].coins), Number(antes[0].coins), 'quem paga mel é o coinsService, na T-06.5');
+    assert.equal(Number(depois[0].coins), Number(antes[0].coins), 'quem paga mel é o coinsService');
+
+    bonusDoNivel = { valor: resultado.bonusDeMelPorNivel, nivel: resultado.nivel };
+  });
+
+  it('o coinsService paga o bônus do degrau, com o motivo subida-de-nivel', async () => {
+    const antes = await melNoLivro();
+
+    await emTransacao((conn) =>
+      coinsService.creditarBonusDeNivel(conn, idUsuario, bonusDoNivel.valor, { nivel: bonusDoNivel.nivel }),
+    );
+
+    assert.equal(await melNoLivro(), antes + bonusDoNivel.valor);
+
+    const [linhas] = await conexao.query(
+      `SELECT r.slug FROM coin_ledger cl
+         JOIN reward_reasons r ON r.id = cl.reason_id
+        WHERE cl.user_id = ? ORDER BY cl.id DESC LIMIT 1`,
+      [idUsuario],
+    );
+    assert.equal(linhas[0].slug, 'subida-de-nivel');
   });
 });
