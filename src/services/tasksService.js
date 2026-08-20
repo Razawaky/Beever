@@ -15,6 +15,7 @@ import * as coinsService from './coinsService.js';
 import * as pointsService from './pointsService.js';
 import * as profilesService from './profilesService.js';
 import * as schedulesService from './schedulesService.js';
+import * as taskProgressSources from './taskProgressSources.js';
 
 /**
  * Tarefas diárias e semanais.
@@ -73,6 +74,9 @@ async function exigirPosse(idTarefa, idUsuario) {
 const TAREFAS_DIARIAS = 2;
 const TAREFAS_SEMANAIS = 1;
 
+/** Teto duro da RN-047, contando o que sobrou de ontem, não cota por escopo. */
+const MAXIMO_DE_ATIVAS = 3;
+
 function paraMySQL(data) {
   return data.toISOString().slice(0, 19).replace('T', ' ');
 }
@@ -98,11 +102,23 @@ export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
   const fuso = await profilesService.fusoDoUsuario(idUsuario);
   const hoje = dataDoDia(agora, fuso);
 
+  // Expira antes de contar. Tarefa vencida ocupando vaga faria o teto de 3
+  // bloquear a geração de hoje, e o jogador ficaria sem tarefa nenhuma.
+  await emTransacao((conexao) => tasksRepository.expirarVencidasDoUsuario(idUsuario, conexao));
+
   const disponiveis = await schedulesService.diasDisponiveis(idUsuario);
   const hojeVale = disponiveis.length === 0 || disponiveis.includes(diaDaSemana(hoje));
   if (!hojeVale) return { criadas: 0, motivo: 'dia fora da agenda do jogador' };
 
-  const tipos = await tasksRepository.listarTipos();
+  const vagas = MAXIMO_DE_ATIVAS - (await tasksRepository.contarAtivas(idUsuario));
+  if (vagas <= 0) return { criadas: 0, motivo: 'o jogador já tem o máximo de tarefas ativas' };
+
+  // Tipo cuja fonte ninguém sabe medir não é proposto, pelo mesmo motivo do
+  // planejador de metas: tarefa impossível de cumprir não é tarefa.
+  const mensuraveis = taskProgressSources.fontesMensuraveis();
+  const tipos = (await tasksRepository.listarTipos()).filter((tipo) =>
+    mensuraveis.includes(tipo.progress_source),
+  );
   const diarios = tipos.filter((tipo) => tipo.scope === 'diaria');
   const semanais = tipos.filter((tipo) => tipo.scope === 'semanal');
 
@@ -120,7 +136,7 @@ export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
       tipo,
       prazo: paraMySQL(fimDaSemana(hoje, fuso)),
     })),
-  ];
+  ].slice(0, vagas);
 
   for (const { tipo, prazo } of aCriar) {
     const idTarefa = await emTransacao((conexao) =>
@@ -137,38 +153,39 @@ export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
   return { criadas: aCriar.length };
 }
 
-/**
- * Quantos passos manuais cumprem uma tarefa.
- *
- * **Isto é uma ponte, e tem data para acabar.** O progresso de verdade vem do
- * evento que o tipo declara (`cell_completed`, `vault_deposit`, `active_days`),
- * e nenhum desses existe antes da E07/E08. Até lá, o jogador marca que avançou.
- *
- * O passo é uma fração do alvo, e não uma unidade, porque alvo não é número de
- * cliques: "conclua 3 células" e "deposite 50 de mel no cofre" custam o mesmo
- * esforço de dedo, e cinquenta cliques seguidos seriam uma tarefa sobre
- * paciência, não sobre dinheiro. Três passos fecham qualquer uma.
- *
- * O teto de ganho do dia continua sendo o número de tarefas geradas — é ele que
- * fechou o buraco, não o tamanho do passo.
- */
-const PASSOS_PARA_CUMPRIR = 3;
+/** O pedaço de tempo que a tarefa mede: da criação dela até o prazo. */
+function janelaDaTarefa(tarefa, fuso) {
+  const inicio = new Date(tarefa.created_at);
+  const fim = new Date(tarefa.due_at);
+  const ultimoInstante = new Date(fim.getTime() - 1000);
+
+  return {
+    inicio: paraMySQL(inicio),
+    fim: paraMySQL(fim),
+    dataInicial: dataDoDia(inicio, fuso),
+    dataFinal: dataDoDia(ultimoInstante, fuso),
+  };
+}
 
 /**
- * Registra um passo cumprido. Ao bater o alvo a tarefa não se conclui sozinha —
- * quem fecha é `concluir`, e é lá que a recompensa é paga.
- *
- * Quem chama diz *que* avançou, nunca *quanto*: o tamanho do passo é calculado
- * aqui, a partir do alvo que o servidor gravou. Deixar o cliente escolher seria
- * devolver ao navegador o controle sobre a recompensa, que é o que a RN-007
- * proíbe e o que a auditoria da E02 pegou.
+ * Relê o progresso de cada tarefa ativa na fonte que o tipo declara (RF-TAR-02).
+ * Substitui o passo manual da DT-21: quem move a tarefa é a célula concluída, o
+ * dia jogado e o favo fechado, nunca um clique em "avancei".
  */
-export async function registrarProgresso(idTarefa, idUsuario) {
-  const tarefa = await exigirPosse(idTarefa, idUsuario);
-  const passo = Math.max(1, Math.ceil(Number(tarefa.target_value) / PASSOS_PARA_CUMPRIR));
+export async function sincronizarProgresso(idUsuario) {
+  const fuso = await profilesService.fusoDoUsuario(idUsuario);
+  const ativas = await tasksRepository.listarAtivasPorUsuario(idUsuario);
+  let atualizadas = 0;
 
-  await emTransacao((conexao) => tasksRepository.registrarProgresso(conexao, idTarefa, passo));
-  return tasksRepository.buscarPorId(idTarefa);
+  for (const tarefa of ativas) {
+    const medido = await taskProgressSources.medir(tarefa.progress_source, idUsuario, janelaDaTarefa(tarefa, fuso));
+    if (medido === null) continue;
+
+    await emTransacao((conexao) => tasksRepository.definirProgresso(conexao, tarefa.id, medido));
+    atualizadas += 1;
+  }
+
+  return { atualizadas };
 }
 
 /**

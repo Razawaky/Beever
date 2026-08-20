@@ -70,6 +70,7 @@ export const painel = assincrono(async (req, res) => {
   // abrir, sem cron para manter de pé.
   await streakService.avaliar(req.session.usuarioId);
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
+  await tasksService.sincronizarProgresso(req.session.usuarioId);
   // A ordem importa: sincronizar expira o que venceu (RN-017), e só então o
   // planejador conta quantas metas ativas restam. Invertido, a meta vencida
   // ainda contaria como ativa e o jogador passaria um dia a menos com o plano
@@ -122,6 +123,7 @@ export const metas = assincrono(async (req, res) => {
   // o ciclo econômico —, e o progresso das metas é relido das fontes reais antes
   // de a tela mostrar qualquer número.
   await tasksService.garantirTarefasDoDia(req.session.usuarioId);
+  await tasksService.sincronizarProgresso(req.session.usuarioId);
   await goalsService.sincronizarProgresso(req.session.usuarioId);
   await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
 

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { after, before, describe, it } from 'node:test';
 
 import request from 'supertest';
@@ -8,8 +9,9 @@ import request from 'supertest';
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
-import { fecharPool } from '../../src/config/database.js';
+import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
+import * as coinsService from '../../src/services/coinsService.js';
 
 /**
  * O caminho que o jogador percorre, do cadastro à compra, contra o banco real.
@@ -69,20 +71,63 @@ describe('fluxo autenticado', opcoes, () => {
     return achado[1];
   }
 
+  /** O id do jogador logado, para plantar os eventos que movem a tarefa. */
+  async function idDoJogador() {
+    const [[usuario]] = await banco.conexao.query('SELECT id FROM users WHERE email = ?', ['fluxo@beever.dev']);
+    return Number(usuario.id);
+  }
+
   /**
-   * Cumpre uma tarefa do jeito que o jogador cumpre: avançando até o alvo e só
-   * então recebendo. Não há atalho para testar — é o ponto da correção.
+   * Produz os eventos que a tarefa mede. Desde a T-08.5 não existe passo manual:
+   * quem move a tarefa é a célula concluída, o dia jogado ou o favo fechado.
+   */
+  async function gerarEventos(tarefa) {
+    const idUsuario = await idDoJogador();
+    const alvo = Number(tarefa.target_value);
+
+    if (tarefa.progress_source === 'cell_completed') {
+      const [[celula]] = await banco.conexao.query('SELECT id FROM cells ORDER BY id LIMIT 1');
+      for (let feita = 0; feita < alvo; feita += 1) {
+        await banco.conexao.query(
+          `INSERT INTO game_sessions (user_id, cell_id, status_id, token, finished_at, stars)
+           VALUES (?, ?, (SELECT id FROM game_session_statuses WHERE slug = 'concluida'), ?, NOW(), 3)`,
+          [idUsuario, celula.id, randomUUID()],
+        );
+      }
+      return;
+    }
+
+    if (tarefa.progress_source === 'active_days') {
+      for (let dia = 0; dia < alvo; dia += 1) {
+        await banco.conexao.query(
+          `INSERT IGNORE INTO streak_events (user_id, event_date, event_type_id)
+           VALUES (?, CURDATE() - INTERVAL ? DAY, (SELECT id FROM streak_event_types WHERE slug = 'cumprido'))`,
+          [idUsuario, dia],
+        );
+      }
+      return;
+    }
+
+    if (tarefa.progress_source === 'hive_completed') {
+      const [[favo]] = await banco.conexao.query('SELECT id FROM hives ORDER BY id LIMIT 1');
+      await banco.conexao.query(
+        `INSERT INTO hive_progress (user_id, hive_id, completed_cells, total_cells, percent, completed_at)
+         VALUES (?, ?, 1, 1, 100, NOW())
+         ON DUPLICATE KEY UPDATE percent = 100, completed_at = NOW()`,
+        [idUsuario, favo.id],
+      );
+    }
+  }
+
+  /**
+   * Cumpre a tarefa do jeito que o jogador cumpre: gerando o evento que ela mede
+   * e só então recebendo. Não há atalho para concluir — é o ponto da correção.
    */
   async function cumprirTarefa(idTarefa) {
-    // Três passos fecham qualquer tarefa: o tamanho do passo é fração do alvo, e
-    // quem calcula é o servidor.
-    for (let passo = 0; passo < 3; passo += 1) {
-      await agente
-        .post(`/tarefas/${idTarefa}/progresso`)
-        .set('Accept', 'application/json')
-        .send({ _csrf: csrf })
-        .expect(200);
-    }
+    const [tarefa] = (await tarefasAtivas()).filter((ativa) => Number(ativa.id) === Number(idTarefa));
+    await gerarEventos(tarefa);
+    // Abrir a tela relê o progresso na fonte.
+    await tarefasAtivas();
 
     await agente
       .post(`/tarefas/${idTarefa}/concluir`)
@@ -360,13 +405,13 @@ describe('fluxo autenticado', opcoes, () => {
     const catalogo = await agente.get('/loja/itens').set('Accept', 'application/json').expect(200);
     const barato = [...catalogo.body].sort((a, b) => Number(a.price) - Number(b.price))[0];
 
-    // Junta mel cumprindo as tarefas que o servidor propõe. Como o teto diário é
-    // fixo, o jogador de verdade levaria alguns dias — aqui o relógio não anda,
-    // então as tarefas restantes do dia bastam para o item mais barato.
-    for (const tarefa of await tarefasAtivas()) {
-      if ((await melAtual()) >= Number(barato.price)) break;
-      await cumprirTarefa(tarefa.id);
-    }
+    // Este teste é sobre a compra, não sobre como o mel foi ganho: com o teto de
+    // 3 tarefas ativas por dia, o jogador de verdade levaria dias para juntar o
+    // preço, e o relógio aqui não anda. O saldo entra direto.
+    const idUsuario = await idDoJogador();
+    await emTransacao((conexao) =>
+      coinsService.creditar(conexao, idUsuario, Number(barato.price), { motivo: 'ajuste-administrativo' }),
+    );
 
     const antes = await melAtual();
     await agente

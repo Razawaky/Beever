@@ -84,19 +84,20 @@ export async function criar(conexao, { idUsuario, idTipo, alvo = null, pontos = 
 }
 
 /**
- * Soma progresso sem passar do alvo (`LEAST`), e só enquanto a tarefa está
- * ativa. Deixar o `current_value` ultrapassar o `target_value` faria a barra
- * da interface passar de 100% e, pior, mudaria a conta de recompensa.
+ * Grava o progresso medido na fonte, que é valor absoluto e não incremento: quem
+ * conta é a consulta do evento, não o número que já estava aqui. O `LEAST` mantém
+ * o teto no alvo e o progresso só sobe, para uma partida abandonada não desfazer
+ * o que já foi cumprido.
  */
-export async function registrarProgresso(conexao, id, incremento = 1) {
+export async function definirProgresso(conexao, id, valor) {
   const resultado = await consultarEm(
     conexao,
     `UPDATE tasks
-        SET current_value = LEAST(current_value + ?, target_value)
+        SET current_value = LEAST(GREATEST(current_value, ?), target_value)
       WHERE id = ?
         AND completed_at IS NULL
         AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
-    [incremento, id],
+    [valor, id],
   );
   return resultado.affectedRows;
 }
@@ -130,7 +131,38 @@ export async function concluir(conexao, id) {
   return resultado.affectedRows;
 }
 
-/** Marca como expiradas as tarefas ativas cujo prazo passou. Roda no cron diário. */
+/**
+ * Expira as tarefas vencidas de um jogador. É a versão preguiçosa, chamada
+ * quando ele abre a página, e é ela que libera vaga para a geração do dia.
+ */
+export async function expirarVencidasDoUsuario(idUsuario, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE tasks
+        SET status_id = (SELECT id FROM goal_statuses WHERE slug = 'expirada')
+      WHERE user_id = ?
+        AND completed_at IS NULL
+        AND due_at < NOW()
+        AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
+    [idUsuario],
+  );
+  return resultado.affectedRows;
+}
+
+/** Quantas tarefas ativas o jogador tem agora. É o teto de 3 da RN-047. */
+export async function contarAtivas(idUsuario, conexao = null) {
+  const linhas = await consultarEm(
+    conexao,
+    `SELECT COUNT(*) AS total
+       FROM tasks t
+       JOIN goal_statuses st ON st.id = t.status_id
+      WHERE t.user_id = ? AND st.slug = 'ativa'`,
+    [idUsuario],
+  );
+  return Number(linhas[0]?.total ?? 0);
+}
+
+/** Marca como expiradas as tarefas ativas cujo prazo passou, no sistema inteiro. */
 export async function expirarVencidas(conexao = null) {
   const resultado = await consultarEm(
     conexao,

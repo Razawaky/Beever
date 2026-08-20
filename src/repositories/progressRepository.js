@@ -154,3 +154,15 @@ export async function listarProgressoDosFavos(idUsuario) {
     [idUsuario],
   );
 }
+
+/** Quantos favos o jogador concluiu dentro da janela. Alimenta a tarefa semanal `hive_completed`. */
+export async function contarFavosConcluidosNoIntervalo(idUsuario, inicio, fim) {
+  const linhas = await consultar(
+    `SELECT COUNT(*) AS total
+       FROM hive_progress
+      WHERE user_id = ? AND completed_at IS NOT NULL
+        AND completed_at >= ? AND completed_at < ?`,
+    [idUsuario, inicio, fim],
+  );
+  return Number(linhas[0]?.total ?? 0);
+}

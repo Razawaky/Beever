@@ -61,7 +61,7 @@ describe('tasksRepository', opcoes, () => {
   /** Leva a tarefa até o alvo, que é a única forma de poder concluí-la. */
   async function cumprir(id) {
     const alvo = Number((await tasksRepository.buscarPorId(id)).target_value);
-    await emTransacao((c) => tasksRepository.registrarProgresso(c, id, alvo));
+    await emTransacao((c) => tasksRepository.definirProgresso(c, id, alvo));
   }
 
   it('herda alvo e recompensa do tipo quando nada é informado', async () => {
@@ -91,14 +91,14 @@ describe('tasksRepository', opcoes, () => {
     assert.equal(Number(tarefa.reward_coins), 42);
   });
 
-  it('soma progresso sem passar do alvo', async () => {
+  it('grava o progresso medido sem passar do alvo', async () => {
     const { id } = await tarefaNova('progresso');
     const alvo = Number((await tasksRepository.buscarPorId(id)).target_value);
 
-    await emTransacao((c) => tasksRepository.registrarProgresso(c, id, 1));
+    await emTransacao((c) => tasksRepository.definirProgresso(c, id, 1));
     assert.equal(Number((await tasksRepository.buscarPorId(id)).current_value), 1);
 
-    await emTransacao((c) => tasksRepository.registrarProgresso(c, id, 999));
+    await emTransacao((c) => tasksRepository.definirProgresso(c, id, 999));
     assert.equal(
       Number((await tasksRepository.buscarPorId(id)).current_value),
       alvo,
@@ -136,7 +136,7 @@ describe('tasksRepository', opcoes, () => {
     await cumprir(id);
     await emTransacao((c) => tasksRepository.concluir(c, id));
 
-    const afetadas = await emTransacao((c) => tasksRepository.registrarProgresso(c, id, 5));
+    const afetadas = await emTransacao((c) => tasksRepository.definirProgresso(c, id, 5));
     assert.equal(afetadas, 0);
   });
 

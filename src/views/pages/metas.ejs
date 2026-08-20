@@ -96,7 +96,7 @@
       que ele marcou no onboarding. E concluir só funciona depois de cumprir —
       é isso que impede transformar "criar e concluir" em mel infinito.
     %>
-    <p class="mb-4 text-sm text-tinta-suave">A colmeia escolhe as tarefas do dia. Avance até completar para receber a recompensa.</p>
+    <p class="mb-4 text-sm text-tinta-suave">A colmeia escolhe as tarefas do dia. Elas avançam sozinhas conforme você joga.</p>
 
     <h2 class="mb-4 text-lg font-semibold">Minhas tarefas</h2>
 
@@ -121,16 +121,18 @@
           </div>
           <% if (concluida) { %>
             <span class="text-xs font-semibold text-acerto-texto">Concluída ✓</span>
-          <% } else { %>
-            <form method="POST" action="/tarefas/<%= tarefa.id %>/<%= cumprida ? 'concluir' : 'progresso' %>">
+          <% } else if (cumprida) { %>
+            <form method="POST" action="/tarefas/<%= tarefa.id %>/concluir">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
               <button
                 type="submit"
-                class="rounded-favo <%= cumprida ? 'bg-mel' : 'bg-cera' %> px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
               >
-                <%= cumprida ? 'Receber recompensa' : 'Avancei um passo' %>
+                Receber recompensa
               </button>
             </form>
+          <% } else { %>
+            <span class="text-xs text-tinta-suave">Em andamento</span>
           <% } %>
         </li>
       <% }) %>

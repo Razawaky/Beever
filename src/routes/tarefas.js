@@ -15,22 +15,15 @@ import { validate } from '../middlewares/validate.js';
  * pagava a recompensa cheia sem cumprir nada. Quem propõe as tarefas do dia é o
  * servidor, quando o jogador entra.
  *
- * O que sobrou é avançar e concluir — e concluir só funciona com o alvo
- * cumprido, conferido no `WHERE` do próprio UPDATE.
+ * Também não existe rota de progresso: desde a T-08.5 quem move a tarefa é o
+ * evento (célula concluída, dia jogado, favo fechado), lido pelo servidor. O que
+ * sobrou é concluir, e só com o alvo cumprido, conferido no `WHERE` do UPDATE.
  */
 const router = Router();
 
 router.use(requireAuth, requireOnboarding);
 
 router.get('/', tasksController.listar);
-
-router.post(
-  '/:id/progresso',
-  limiteRecompensa,
-  param('id').isInt({ min: 1 }),
-  validate,
-  tasksController.avancar,
-);
 
 router.post(
   '/:id/concluir',

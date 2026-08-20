@@ -4,10 +4,11 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-08.4 — os **marcos de sequência** pagam mel e gravam
-conquista em 7, 14, 30, 60 e 100 dias, uma vez por jogador, com o valor vindo
-de `achievements.reward_coins`. Árvore limpa, 524 testes passando.
-**Próximo passo: T-08.5**, a geração diária e semanal de tarefas
+**Último commit:** T-08.5 — a tarefa passou a **avançar sozinha pelo evento**
+(célula concluída, dia jogado, favo fechado), o teto de 3 ativas da RN-047 vale
+de verdade e a vencida expira ao abrir a tela. A DT-21 fecha para as três fontes
+que existem. Árvore limpa, 531 testes passando.
+**Próximo passo: T-08.6**, as telas de metas, sequência e tarefas
 
 ---
 
@@ -269,7 +270,7 @@ semanas de uso e a sequência bater com a regra em todos os cenários.
 | T-08.2 `StreakService`: avaliação preguiçosa na primeira requisição do dia, com fuso e dias marcados | **feita** — três desfechos por dia (cumprido, perdido, neutro), avaliação idempotente por evento de dia, e a DT-23 paga junto: o dia do jogador sai de `profiles.timezone` |
 | T-08.3 Consumo automático do Escudo de Sequência | **feita** — o dia perdido vira `protegido` quando há escudo, a unidade sai do inventário como `consumido` e o teto de dois da RN-022 é recusado antes de tirar mel |
 | T-08.4 Marcos de sequência com bônus | **feita** — cinco conquistas seedadas, pagamento e desbloqueio na mesma transação, e a `UNIQUE (user_id, achievement_id)` como trava contra pagar duas vezes |
-| T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | pendente |
+| T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | **feita** — expiração preguiçosa, teto de 3 ativas contando o que sobrou, progresso lido do evento e fim do passo manual (DT-21) |
 | T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | pendente |
 | T-08.7 Testes com tempo simulado: dia neutro, dia marcado perdido, escudo e virada de fuso | pendente |
 
@@ -925,7 +926,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
-| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. Faltam as tarefas (T-08.5), as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
+| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. Faltam as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
@@ -952,10 +953,11 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-18~~ | ~~Compra não é idempotente: dois cliques rápidos criam duas compras e debitam duas vezes~~ | auditoria da E02 | **Resolvida na T-06.6**: `idempotencyService.executarUmaVezSo` com a chave vinda do formulário, uma por renderização da loja. A tabela `idempotency_keys` nunca esteve semeada, ao contrário do que este documento dizia; agora ela é escrita pela aplicação |
 | ~~DT-19~~ | ~~`reward_configs` (54 linhas semeadas) não é lida por nenhum service~~ | auditoria da E02 | **Resolvida na T-06.1**: `rewardConfigsRepository` lê a tabela por slug do jogo, código da faixa e estrelas, com os 54 combos conferidos em teste. Quem vai consumir são os services da T-06.2 a T-06.4 |
 | ~~DT-20~~ | ~~Onboarding não coleta tempo por sessão nem preferências de som e animação, que a RN-011 e a RN-050 pedem~~ | auditoria da E02 | **Resolvida na T-04.3**: os dois passos entraram no wizard e gravam em `session_minutes`, `is_sound_enabled` e `has_reduced_motion`. As durações passaram a ser cinco (5, 10, 20, 30 e 45) por decisão de produto tomada no checkpoint da tarefa, com migration `012` e reescrita da RN-011 |
-| DT-21 | O passo manual de progresso de tarefa é ponte: o progresso de verdade vem de `cell_completed`, `vault_deposit` e `active_days`, que não existem. Enquanto isso, "deposite 50 de mel no cofre" se cumpre sem depositar nada | auditoria da E02 | E07/E08 |
+| ~~DT-21~~ | ~~O passo manual de progresso de tarefa é ponte: o progresso de verdade vem do evento, que não existe~~ | auditoria da E02 | **Resolvida na T-08.5** para as três fontes que existem (`cell_completed`, `active_days`, `hive_completed`): o progresso é relido do evento e a rota do passo manual foi removida. `vault_deposit` continua sem fonte, e a tarefa do cofre nasce inativa até a E09 |
 | ~~DT-23~~ | ~~A virada do dia usa o relógio do servidor, enquanto a RN-024 manda usar o fuso do perfil~~ | dúvida levantada na revisão da E02 | **Resolvida na T-08.2**: `src/utils/diaDoJogador.js` resolve o dia a partir de `profiles.timezone`, e tanto a geração de tarefas quanto a sequência passaram a usá-lo. O horário de verão foi coberto: `inicioDoDia` confere o deslocamento duas vezes |
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
-| DT-40 | A contagem de escudos vive em dois lugares: as unidades ativas em `inventory` (a verdade) e o espelho `streaks.shields_available` (que carrega o `CHECK` do teto). Os dois são escritos na mesma transação, então divergir exige falha fora do banco — mas `scripts/reconcile.js` ainda não confere esse par, como já confere o `hive_progress` | T-08.3 | Acrescentar a conferência ao `reconcile.js` na E09, junto do resto da economia |
+| DT-43 | A tarefa do cofre (`depositar-no-cofre`) nasce inativa no seed porque `vault_deposit` não tem fonte antes do cofre. Reativá-la é parte da E09, e esquecer disso deixa o catálogo de tarefas menor do que o previsto | T-08.5 | E09, junto do cofre |
+| DT-42 | A contagem de escudos vive em dois lugares: as unidades ativas em `inventory` (a verdade) e o espelho `streaks.shields_available` (que carrega o `CHECK` do teto). Os dois são escritos na mesma transação, então divergir exige falha fora do banco — mas `scripts/reconcile.js` ainda não confere esse par, como já confere o `hive_progress` | T-08.3 | Acrescentar a conferência ao `reconcile.js` na E09, junto do resto da economia |
 | DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.github/skills/impeccable/scripts/` e `.claude/skills/impeccable/scripts/`, que são plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
 | DT-37 | `test/integration/seguranca.test.js` falhou uma vez em três execuções da suíte completa, no caso "o dono continua alterando a própria conta", e passa sempre quando o arquivo roda sozinho (três de três). Não reproduzi o erro, então não sei se é o limitador de tentativas de login, contenção de banco sob execução paralela ou tempo. Teste que falha de vez em quando é pior do que teste que falha sempre: ensina a ignorar vermelho | T-07.6 | Rodar a suíte com `--test-concurrency=1` para isolar, e só então corrigir a causa |
 | DT-38 | Partida aberta em uma célula nunca é fechada quando o jogador vai jogar outra: a retomada é por célula, então dá para acumular partidas penduradas. Não paga nada indevido, porque cada partida exige o próprio token | L-5 do laudo da E07 | E08, junto do índice da DT-39 |
@@ -1124,12 +1126,11 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa: T-08.5 — `TaskService`: geração diária e semanal, no máximo
-3 ativas** (RF-TAR, RN-011). A geração preguiçosa já existe e já usa o dia do
-jogador desde a T-08.2, mas hoje são duas diárias e uma semanal sem teto
-declarado, e a DT-21 continua aberta: o progresso de tarefa é um passo manual, e
-os eventos reais (`cell_completed`, `vault_deposit`, `active_days`) já existem
-desde a E07.
+**Próxima tarefa: T-08.6 — as telas** (RF-SEQ-02, RF-MET, RF-TAR): painel de
+metas, calendário semanal da sequência e lista de tarefas. Tudo o que a E08
+construiu está invisível — sequência, escudo, marco e conquista existem no banco
+e não aparecem em nenhuma página. O `metas.ejs` já lista meta e tarefa; o que
+falta é o calendário da semana e o que a sequência tem a dizer.
 
 Duas dívidas da E07 continuam esperando a E08: o índice `(user_id, cell_id)` em
 `game_sessions` (DT-39) e as partidas abertas que ninguém fecha (DT-38).
@@ -1953,3 +1954,59 @@ Para a T-08.5 saber:
    diário e semanal pode ser escrito em cima de `dataDoDia` sem tocar em fuso.
 3. **A DT-21 continua aberta** e agora tem fonte: `cell_completed` existe desde a
    E07, e o progresso de tarefa ainda é um passo manual.
+
+---
+
+### Sessão de 2026-08-19, T-08.5: a tarefa deixou de andar por clique
+
+Suíte em **531 testes, zero falhas** (524 antes).
+
+Duas coisas estavam erradas ao mesmo tempo. O teto de 3 ativas da RN-047 não era
+respeitado, porque ninguém expirava tarefa vencida — `expirarVencidas` existia no
+repository sem nenhum chamador, e as ativas se acumulavam. E o progresso andava
+por clique em "Avancei um passo", que era a DT-21 aberta desde a auditoria da
+E02: "conclua 3 células" se cumpria com três cliques, sem jogar nada.
+
+| Arquivo | O que é |
+|---|---|
+| `src/services/taskProgressSources.js` | as três fontes que existem, medidas na janela da tarefa |
+| `src/services/tasksService.js` | expiração preguiçosa, teto de 3 e `sincronizarProgresso` |
+| `src/repositories/tasksRepository.js` | `expirarVencidasDoUsuario`, `contarAtivas`, `definirProgresso` |
+| `src/repositories/progressRepository.js` | `contarFavosConcluidosNoIntervalo` |
+| `src/controllers/tasksController.js`, `src/routes/tarefas.js`, `src/views/pages/metas.ejs` | a rota e o botão do passo manual saíram |
+| `scripts/seeds/02_age_bands_domains.sql` | `depositar-no-cofre` nasce inativo |
+| `test/integration/tarefasDoDia.test.js` | 7 testes |
+
+**A tarefa mede dentro de uma janela**, diferente da meta. "Conclua 3 células
+hoje" conta o que foi feito entre a criação da tarefa e o prazo dela, não o total
+da vida do jogador — por isso `taskProgressSources` recebe janela, e
+`goalProgressSources` não.
+
+**O progresso é valor absoluto e só sobe.** `definirProgresso` grava com
+`LEAST(GREATEST(...))`: quem conta é a consulta do evento, e uma contagem menor
+não desfaz o que já foi cumprido.
+
+**Tarefa impossível não é proposta.** `vault_deposit` não tem fonte antes do
+cofre, então a tarefa dele nasce com `is_active = 0` e o gerador ainda filtra por
+fonte mensurável — a mesma regra que o planejador de metas já aplica (RN-015).
+
+**Dois testes existentes mudaram porque o comportamento mudou.** O do repository
+trocou `registrarProgresso` por `definirProgresso`; o do fluxo autenticado passou
+a cumprir a tarefa gerando o evento em vez de clicar três vezes. No mesmo
+arquivo, o teste da compra passou a receber mel por lançamento no livro
+(`ajuste-administrativo`): com o teto de 3 tarefas por dia elas não pagam mais o
+item mais barato, e creditar direto na carteira quebrava o teste que confere
+carteira contra o livro.
+
+**Uma correção de numeração:** a dívida do espelho de escudos, registrada na
+T-08.3 como DT-40, colidia com a DT-40 do laudo da E07. Ela virou **DT-42**, e a
+dívida nova da tarefa do cofre entrou como **DT-43**.
+
+Para a T-08.6 saber:
+
+1. **`sincronizarProgresso` roda no painel e nas metas**, junto da sincronização
+   de meta e da avaliação da sequência.
+2. **A lista de tarefas na tela já não tem botão de avanço**; sobrou "Receber
+   recompensa" quando a tarefa está cumprida e "Em andamento" antes disso.
+3. **O calendário da semana precisa de `streak_events`**, que guarda um evento por
+   dia avaliado com um dos quatro desfechos.
