@@ -10,6 +10,17 @@
         </div>
       </div>
 
+      <%# A sequência fica no topo do painel, e não escondida em /metas: é o
+          gancho diário, e escondê-la atrás de um clique some com ela. %>
+      <a href="/metas" class="rounded-favo px-2 py-1 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2">
+        <p class="text-sm font-semibold text-tinta">
+          🔥 <%= semana.diasAtuais %> <%= semana.diasAtuais === 1 ? 'dia seguido' : 'dias seguidos' %>
+        </p>
+        <div class="mt-2">
+          <%- include('../partials/ui/calendario-semana', { semana, compacto: true }) %>
+        </div>
+      </a>
+
       <div class="text-left sm:text-right">
         <p class="text-lg font-semibold">🍯 <%= perfil.mel %> de mel</p>
         <p class="text-sm text-tinta-suave">🌼 <%= perfil.polen %> de pólen</p>

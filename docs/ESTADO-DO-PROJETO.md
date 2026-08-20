@@ -3,12 +3,12 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-19 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-08.5 — a tarefa passou a **avançar sozinha pelo evento**
-(célula concluída, dia jogado, favo fechado), o teto de 3 ativas da RN-047 vale
-de verdade e a vencida expira ao abrir a tela. A DT-21 fecha para as três fontes
-que existem. Árvore limpa, 531 testes passando.
-**Próximo passo: T-08.6**, as telas de metas, sequência e tarefas
+**Atualizado em:** 2026-08-20 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** T-08.6 — a sequência **saiu do banco e apareceu na tela**:
+calendário da semana com os quatro desfechos, dias seguidos, melhor marca,
+escudos guardados e os marcos conquistados, no painel e na tela de metas. Árvore
+limpa, 537 testes passando.
+**Próximo passo: T-08.7**, os testes com tempo simulado
 
 ---
 
@@ -250,6 +250,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
 | As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O mesmo caminho foi refeito na T-07.4, com a divisão do orçamento aceita e paga. O caminho foi refeito de novo na T-07.5 e na T-07.6, sempre com o servidor de pé — e foi ele que achou o botão "Jogar" mentindo e a regra errada da próxima célula. O que **ainda não** foi visto por olho humano é o gesto e o desenho: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz, o foco de teclado trocando de pergunta, **o gráfico do cofre** com suas barras e a linha da meta, **as estrelas do resultado aparecendo uma a uma** — e as quatro telas de jogo a 320 px, onde o orçamento de faixa C é o mais apertado, com cinco categorias, dois botões e um número por linha. É a DT-22 e a L-10 do laudo da E06 |
+| O calendário da semana em navegador real (T-08.6) | A marcação está coberta por teste pelo HTTP — os sete dias no painel e nas metas, com data e desfecho em cada `aria-label` — e a legenda escrita foi conferida na resposta. O que **não** foi visto por olho humano é o desenho: o anel do dia de hoje sobre o mel do painel, a borda tracejada do dia que ainda vem, a faixa compacta a 320 px ao lado do nível e o contraste do ícone branco sobre o vermelho do dia perdido. Vale o mesmo passe da DT-22 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -271,7 +272,7 @@ semanas de uso e a sequência bater com a regra em todos os cenários.
 | T-08.3 Consumo automático do Escudo de Sequência | **feita** — o dia perdido vira `protegido` quando há escudo, a unidade sai do inventário como `consumido` e o teto de dois da RN-022 é recusado antes de tirar mel |
 | T-08.4 Marcos de sequência com bônus | **feita** — cinco conquistas seedadas, pagamento e desbloqueio na mesma transação, e a `UNIQUE (user_id, achievement_id)` como trava contra pagar duas vezes |
 | T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | **feita** — expiração preguiçosa, teto de 3 ativas contando o que sobrou, progresso lido do evento e fim do passo manual (DT-21) |
-| T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | pendente |
+| T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | **feita** — `resumoDaSemana` entrega os sete dias prontos, o calendário é um partial usado nas duas telas, e cada desfecho vem com ícone e palavra, nunca só cor |
 | T-08.7 Testes com tempo simulado: dia neutro, dia marcado perdido, escudo e virada de fuso | pendente |
 
 ---
@@ -926,7 +927,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
-| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. Faltam as telas (T-08.6) e os testes com tempo simulado (T-08.7) |
+| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. Falta só os testes com tempo simulado (T-08.7) |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
@@ -1126,11 +1127,11 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa: T-08.6 — as telas** (RF-SEQ-02, RF-MET, RF-TAR): painel de
-metas, calendário semanal da sequência e lista de tarefas. Tudo o que a E08
-construiu está invisível — sequência, escudo, marco e conquista existem no banco
-e não aparecem em nenhuma página. O `metas.ejs` já lista meta e tarefa; o que
-falta é o calendário da semana e o que a sequência tem a dizer.
+**Próxima tarefa: T-08.7 — os testes com tempo simulado**: dia neutro que não
+quebra, dia marcado perdido que quebra, escudo que protege e virada de fuso. Boa
+parte desses cenários já tem teste desde a T-08.2, então a tarefa é menos
+construir do que fechar o que falta e provar a sequência longa, de várias
+semanas seguidas, com o relógio injetado em vez do relógio real.
 
 Duas dívidas da E07 continuam esperando a E08: o índice `(user_id, cell_id)` em
 `game_sessions` (DT-39) e as partidas abertas que ninguém fecha (DT-38).
@@ -2010,3 +2011,47 @@ Para a T-08.6 saber:
    recompensa" quando a tarefa está cumprida e "Em andamento" antes disso.
 3. **O calendário da semana precisa de `streak_events`**, que guarda um evento por
    dia avaliado com um dos quatro desfechos.
+
+---
+
+### Sessão de 2026-08-20, T-08.6: a sequência ficou visível
+
+A E08 tinha construído quatro tarefas de motor sem que nada disso chegasse ao
+jogador: a sequência avaliava, o escudo se gastava, o marco pagava, e a criança
+não via nenhum dos três. Esta tarefa não acrescentou regra nenhuma, só expôs o
+que já era calculado.
+
+**O resumo da semana é do service, não da view.** `streakService.resumoDaSemana`
+devolve os sete dias de domingo a sábado, cada um com data, nome, se é dia
+marcado na agenda, o desfecho gravado em `streak_events`, se é hoje e se ainda
+está no futuro — mais dias seguidos, melhor marca e escudos guardados. Cruzar
+agenda com evento é conta, e conta no EJS é o que impede o mesmo dado de virar
+JSON para um cliente futuro. O nome do dia veio junto: `schedulesService` ganhou
+`nomeDoDia`, porque a convenção de 0 a 6 é daquele service e o array de nomes não
+podia se repetir na tela.
+
+**Um partial, duas telas.** `src/views/partials/ui/calendario-semana.ejs` recebe
+o resumo pronto e um `compacto`. Em `/metas` ele aparece inteiro, com legenda; no
+`/painel` vira faixa ao lado do nível, linkando para a tela cheia. A sequência é
+o gancho diário, e escondê-la atrás de um clique era metade do efeito perdido.
+
+**O estado nunca é só a cor.** Cada dia tem ícone próprio — visto, xis, escudo ou
+o número do dia —, `aria-label` com dia, data e desfecho por extenso, e a versão
+cheia traz a legenda escrita. É a RNF-25, a mesma regra que o favo bloqueado já
+seguia.
+
+**Duas coisas menores foram junto.** Os marcos desbloqueados passaram a aparecer
+na tela de metas, lendo o `achievementsService.listarDoUsuario` que a T-08.4 já
+tinha deixado pronto, e os dois títulos que a T-08.5 deixou sobrando sobre a
+mesma lista de tarefas viraram um só.
+
+Para a T-08.7 saber:
+
+1. **`resumoDaSemana` aceita `agora` injetado**, como `avaliar` e
+   `registrarDiaCumprido`, então o teste com tempo simulado não precisa mexer no
+   relógio do processo.
+2. **`test/integration/telaDeSequencia.test.js` já fixa uma semana** de 08 a 14 de
+   março de 2026 e planta os quatro desfechos direto pelo repository; é o molde
+   mais curto para os cenários que faltam.
+3. **A tela é a única parte não verificada** desta tarefa: a marcação tem teste,
+   o desenho não foi aberto em navegador (DT-22).

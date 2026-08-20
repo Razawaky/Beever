@@ -245,6 +245,51 @@ export async function avaliar(idUsuario, agora = new Date()) {
 }
 
 /**
+ * A semana corrente do jogador, pronta para a tela (RF-SEQ-02).
+ *
+ * Devolve os sete dias de domingo a sábado, cada um com o desfecho que
+ * `streak_events` guardou, mais a sequência e os escudos. A view só desenha:
+ * cruzar agenda com evento é conta, e conta não mora no EJS.
+ */
+export async function resumoDaSemana(idUsuario, agora = new Date()) {
+  const fuso = await profilesService.fusoDoUsuario(idUsuario);
+  const hoje = dataDoDia(agora, fuso);
+  const domingo = somarDias(hoje, -diaDaSemana(hoje));
+
+  const [sequencia, agenda, eventos, escudos] = await Promise.all([
+    streaksRepository.criarSeNaoExistir(idUsuario),
+    agendaDoJogador(idUsuario),
+    streaksRepository.listarEventos(idUsuario, domingo, somarDias(domingo, 6)),
+    escudosDisponiveis(idUsuario),
+  ]);
+
+  const desfechoPorData = new Map(eventos.map((evento) => [evento.data, evento.tipo]));
+
+  const dias = [];
+  for (let passo = 0; passo < 7; passo += 1) {
+    const data = somarDias(domingo, passo);
+    dias.push({
+      data,
+      nome: schedulesService.nomeDoDia(diaDaSemana(data)),
+      marcado: ehDiaMarcado(agenda, data),
+      // Dia sem evento é dia que ainda não foi julgado: hoje e o que vem depois.
+      desfecho: desfechoPorData.get(data) ?? null,
+      ehHoje: data === hoje,
+      futuro: diferencaEmDias(hoje, data) > 0,
+    });
+  }
+
+  return {
+    dias,
+    hoje,
+    fuso,
+    diasAtuais: Number(sequencia.current_days),
+    melhorDias: Number(sequencia.best_days),
+    escudos,
+  };
+}
+
+/**
  * Conta o dia de hoje como cumprido, na hora em que a célula é concluída.
  *
  * Vem antes a avaliação dos dias fechados: sem ela, quem perdeu ontem somaria

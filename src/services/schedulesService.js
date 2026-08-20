@@ -15,6 +15,11 @@ import { erroValidacao } from '../utils/erros.js';
 
 const NOMES = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
+/** Nome do dia para a tela. Mora aqui porque a convenção de 0 a 6 é deste service. */
+export function nomeDoDia(diaSemana) {
+  return NOMES[Number(diaSemana)] ?? '';
+}
+
 function normalizarDias(dias) {
   const lista = Array.isArray(dias) ? dias : [dias];
   const normalizados = lista

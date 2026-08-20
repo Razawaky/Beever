@@ -12,6 +12,47 @@
       outra: no banco a tarefa pertence ao jogador, não à meta. Meta é onde se
       quer chegar; tarefa é o que a colmeia pede hoje.
     %>
+    <%#
+      A sequência abre a tela porque é o que muda todo dia. O calendário mostra
+      os quatro desfechos que o `streakService` gravou, e o dia de hoje ainda
+      está em aberto até a primeira célula.
+    %>
+    <section class="mb-10 rounded-favo bg-white p-6 shadow-md">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-lg font-semibold">Minha sequência</h2>
+        <p class="text-sm text-tinta-suave">
+          melhor marca: <%= semana.melhorDias %> <%= semana.melhorDias === 1 ? 'dia' : 'dias' %> ·
+          escudos guardados: <%= semana.escudos %>
+        </p>
+      </div>
+
+      <p class="mt-2 font-display text-3xl text-tinta">
+        <%= semana.diasAtuais %> <%= semana.diasAtuais === 1 ? 'dia seguido' : 'dias seguidos' %>
+      </p>
+      <p class="mb-4 text-sm text-tinta-suave">
+        <% if (semana.diasAtuais === 0) { %>
+          Conclua uma célula num dia marcado para começar sua sequência.
+        <% } else { %>
+          Continue jogando nos dias que você marcou para não perder a sequência.
+        <% } %>
+      </p>
+
+      <%- include('../partials/ui/calendario-semana', { semana, compacto: false }) %>
+
+      <% if (conquistas.length > 0) { %>
+        <div class="mt-5 border-t border-linha pt-4">
+          <h3 class="text-sm font-semibold">Marcos conquistados</h3>
+          <ul class="mt-2 flex flex-wrap gap-2">
+            <% conquistas.forEach((conquista) => { %>
+              <li class="rounded-pilula bg-cera px-3 py-1 text-xs font-semibold text-tinta">
+                <%= conquista.name %>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      <% } %>
+    </section>
+
     <h2 class="mb-4 text-lg font-semibold">Minhas metas</h2>
 
     <% if (metas.length === 0) { %>
@@ -90,15 +131,13 @@
       <% }) %>
     </div>
 
-    <h2 class="mb-2 text-lg font-semibold">Tarefas de hoje</h2>
     <%#
       O jogador não cria tarefa: a colmeia propõe as do dia, respeitando os dias
       que ele marcou no onboarding. E concluir só funciona depois de cumprir —
       é isso que impede transformar "criar e concluir" em mel infinito.
     %>
+    <h2 class="mb-2 text-lg font-semibold">Minhas tarefas</h2>
     <p class="mb-4 text-sm text-tinta-suave">A colmeia escolhe as tarefas do dia. Elas avançam sozinhas conforme você joga.</p>
-
-    <h2 class="mb-4 text-lg font-semibold">Minhas tarefas</h2>
 
     <% if (tarefas.length === 0) { %>
       <p class="text-tinta-suave">Nenhuma tarefa por enquanto.</p>

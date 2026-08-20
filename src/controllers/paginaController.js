@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import * as achievementsService from '../services/achievementsService.js';
 import * as contentService from '../services/contentService.js';
 import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
@@ -80,11 +81,12 @@ export const painel = assincrono(async (req, res) => {
   await goalsService.sincronizarProgresso(req.session.usuarioId);
   await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
 
-  const [perfil, inventario, metas, tarefas] = await Promise.all([
+  const [perfil, inventario, metas, tarefas, semana] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
     inventoryService.listarAgrupadoPorItem(req.session.usuarioId),
     goalsService.listarAtivas(req.session.usuarioId),
     tasksService.listarAtivas(req.session.usuarioId),
+    streakService.resumoDaSemana(req.session.usuarioId),
   ]);
 
   renderizarPagina(res, 'painel', {
@@ -94,6 +96,7 @@ export const painel = assincrono(async (req, res) => {
     inventario,
     metaPrincipal: metas[0] ?? null,
     tarefas,
+    semana,
   });
 });
 
@@ -127,9 +130,11 @@ export const metas = assincrono(async (req, res) => {
   await goalsService.sincronizarProgresso(req.session.usuarioId);
   await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
 
-  const [listaDeMetas, tarefas] = await Promise.all([
+  const [listaDeMetas, tarefas, semana, conquistas] = await Promise.all([
     goalsService.listarDoUsuario(req.session.usuarioId),
     tasksService.listarDoUsuario(req.session.usuarioId),
+    streakService.resumoDaSemana(req.session.usuarioId),
+    achievementsService.listarDoUsuario(req.session.usuarioId),
   ]);
 
   renderizarPagina(res, 'metas', {
@@ -137,6 +142,8 @@ export const metas = assincrono(async (req, res) => {
     classeBody: FUNDO_CERA,
     metas: listaDeMetas,
     tarefas,
+    semana,
+    conquistas,
   });
 });
 
