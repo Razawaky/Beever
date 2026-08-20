@@ -3,7 +3,17 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['node_modules/**', 'src/public/css/**', 'docs/legacy/**', 'venv/**'],
+    // As skills de plugin são modelo de MCP guardado no repositório, não código
+    // do projeto: varrer aquilo enchia o lint de erros alheios e derrubava o
+    // portão do CI. As skills próprias do Beever são markdown e não entram aqui.
+    ignores: [
+      'node_modules/**',
+      'src/public/css/**',
+      'docs/legacy/**',
+      'venv/**',
+      '.github/skills/**',
+      '.claude/skills/impeccable/**',
+    ],
   },
   js.configs.recommended,
   {
