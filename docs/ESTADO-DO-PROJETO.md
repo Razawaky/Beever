@@ -4,11 +4,11 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-20 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-08.6 — a sequência **saiu do banco e apareceu na tela**:
-calendário da semana com os quatro desfechos, dias seguidos, melhor marca,
-escudos guardados e os marcos conquistados, no painel e na tela de metas. Árvore
-limpa, 537 testes passando.
-**Próximo passo: T-08.7**, os testes com tempo simulado
+**Último commit:** T-08.7 — a sequência foi **provada em três semanas de
+relógio simulado**: vinte e um dias encadeados em Nova York, atravessando a
+entrada do horário de verão, com dia de folga, dia perdido, escudo gasto e marco
+de sete pago uma vez. Árvore limpa, 541 testes passando.
+**Próximo passo: auditar a E08**, que está com as sete tarefas entregues
 
 ---
 
@@ -273,7 +273,7 @@ semanas de uso e a sequência bater com a regra em todos os cenários.
 | T-08.4 Marcos de sequência com bônus | **feita** — cinco conquistas seedadas, pagamento e desbloqueio na mesma transação, e a `UNIQUE (user_id, achievement_id)` como trava contra pagar duas vezes |
 | T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | **feita** — expiração preguiçosa, teto de 3 ativas contando o que sobrou, progresso lido do evento e fim do passo manual (DT-21) |
 | T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | **feita** — `resumoDaSemana` entrega os sete dias prontos, o calendário é um partial usado nas duas telas, e cada desfecho vem com ícone e palavra, nunca só cor |
-| T-08.7 Testes com tempo simulado: dia neutro, dia marcado perdido, escudo e virada de fuso | pendente |
+| T-08.7 Testes com tempo simulado: dia neutro, dia marcado perdido, escudo e virada de fuso | **feita** — o aceite da etapa virou um roteiro de 21 dias com o instante injetado, e o `nomeDoDia` que a T-08.6 criou ganhou teste próprio |
 
 ---
 
@@ -927,7 +927,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
-| E08 Metas e Sequência | **em andamento** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. Falta só os testes com tempo simulado (T-08.7) |
+| E08 Metas e Sequência | **concluída, falta auditar** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **As sete tarefas estão entregues; falta auditar a etapa** |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
@@ -1127,11 +1127,11 @@ grava. Dar esse poder ao admin **não** foi feito, e é decisão registrada: o q
 falta ao administrador é calibrar as regras (DT-34), não criar meta para um
 jogador.
 
-**Próxima tarefa: T-08.7 — os testes com tempo simulado**: dia neutro que não
-quebra, dia marcado perdido que quebra, escudo que protege e virada de fuso. Boa
-parte desses cenários já tem teste desde a T-08.2, então a tarefa é menos
-construir do que fechar o que falta e provar a sequência longa, de várias
-semanas seguidas, com o relógio injetado em vez do relógio real.
+**Próximo passo: auditar a E08.** As sete tarefas estão entregues e o aceite da
+etapa passou, então o que falta é o laudo, no mesmo molde das etapas anteriores:
+requisito a requisito, com as lacunas classificadas por risco. Vale entrar nele
+sabendo que a tela da sequência ainda não foi vista em navegador (DT-22) e que a
+tarefa do cofre continua inativa até a E09 (DT-43).
 
 Duas dívidas da E07 continuam esperando a E08: o índice `(user_id, cell_id)` em
 `game_sessions` (DT-39) e as partidas abertas que ninguém fecha (DT-38).
@@ -2055,3 +2055,57 @@ Para a T-08.7 saber:
    mais curto para os cenários que faltam.
 3. **A tela é a única parte não verificada** desta tarefa: a marcação tem teste,
    o desenho não foi aberto em navegador (DT-22).
+
+---
+
+### Sessão de 2026-08-20, T-08.7: três semanas num relógio de mentira
+
+O aceite da E08 nunca foi provar cada regra sozinha — isso as tarefas anteriores
+já tinham feito, cada uma na sua janela de um ou dois dias. Era simular três
+semanas de uso e a sequência bater com a regra em todos os cenários. Nenhum teste
+fazia isso, e uma regra que só é exercitada em janelas curtas não prova que os
+desfechos se encadeiam.
+
+`test/integration/tresSemanasDeSequencia.test.js` roda vinte e um dias seguidos,
+de 1 a 21 de março de 2026, com o instante de cada dia passado por parâmetro em
+vez de lido do relógio da máquina. O roteiro é uma tabela: para cada data, se a
+criança jogou, o desfecho que aquele dia acabou tendo e quantos dias seguidos ela
+tem no fim do dia. O teste percorre a tabela chamando `avaliar` — que é o que a
+abertura de uma página faz — e `registrarDiaCumprido` nos dias jogados, conferindo
+a sequência dia a dia e, no fim, a lista inteira de eventos gravados.
+
+O jogador mora em Nova York de propósito. Em 8 de março de 2026 o relógio de lá
+adianta uma hora, então a corrida atravessa um dia de vinte e três horas, que é
+a virada de fuso que a RN-024 manda respeitar e que nenhum teste de integração
+tinha visto até agora. A agenda é de segunda a sexta, o que faz o fim de semana
+virar dia neutro no meio da corrida em vez de num teste isolado.
+
+Os cinco cenários se encadeiam num só percurso: cinco dias cumpridos, dois de
+folga que não quebram, o sétimo dia pagando o marco, um dia em branco salvo pelo
+escudo, outro em branco sem escudo que zera a sequência, e uma semana nova
+começando do um. No fim, a sequência vale cinco, a melhor marca guarda oito, o
+escudo saiu do inventário como consumido e a conquista de sete dias existe uma
+vez só.
+
+Um detalhe do arnês mereceu cuidado: a linha de `streaks` nasce com a data de
+hoje de verdade, e a avaliação varre até sessenta dias para trás. Sem fixar
+`last_evaluated_at` no primeiro dia da corrida, a primeira visita julgaria os
+meses entre o cadastro e março. Foi exatamente o que aconteceu na primeira
+execução, com um dia sobrando na lista de eventos.
+
+Foi junto o teste do `nomeDoDia`, a função que a T-08.6 criou no
+`schedulesService` e que o grafo apontava sem cobertura própria. São os sete dias,
+o dia em texto como chega do formulário, e o dia fora da faixa que devolve texto
+vazio em vez de derrubar a tela.
+
+Para a auditoria da E08 saber:
+
+1. **O `npm run lint` voltou a passar limpo.** Ele falhava com milhares de erros
+   vindos das skills de plugin guardadas em `.github/skills/` e
+   `.claude/skills/impeccable/`, que são modelo de MCP e não código do Beever.
+   As duas entraram nos `ignores` do `eslint.config.js`; as skills próprias do
+   projeto são markdown e continuam de fora da varredura por natureza.
+2. **A tela da sequência continua sem passagem por navegador** (DT-22): tudo o
+   que a T-08.6 e a T-08.7 provam é a marcação e o número, não o desenho.
+3. **A suíte inteira leva cerca de dois minutos** com o banco de pé, e este teste
+   sozinho responde por seis segundos deles.
