@@ -53,17 +53,30 @@ export async function buscarPorSlug(slug) {
  * Requisitos de compra do item (RN-036): nível mínimo, favo concluído, item
  * pré-requisito ou patrimônio mínimo. Quem decide se o jogador cumpre é o
  * service — aqui só sai a lista do que o item exige.
+ *
+ * Vem em lote porque a vitrine pede os requisitos do catálogo inteiro de uma
+ * vez, e uma consulta por item seria N+1 na abertura da loja. O nome do item
+ * pré-requisito já vem no join, para o service não voltar ao banco só por ele.
  */
-export async function listarRequisitos(idItem) {
+export async function listarRequisitosDosItens(idsDeItens) {
+  if (idsDeItens.length === 0) return [];
+
+  const marcadores = Array(idsDeItens.length).fill('?').join(', ');
   return consultar(
-    `SELECT r.id, t.slug AS requirement_type, r.required_level, r.required_hive_id,
-            r.required_item_id, r.required_patrimony
+    `SELECT r.item_id, r.id, t.slug AS requirement_type, r.required_level, r.required_hive_id,
+            r.required_item_id, r.required_patrimony, pre.name AS required_item_name
        FROM item_requirements r
        JOIN item_requirement_types t ON t.id = r.requirement_type_id
-      WHERE r.item_id = ?
-      ORDER BY r.id`,
-    [idItem],
+       LEFT JOIN items pre ON pre.id = r.required_item_id
+      WHERE r.item_id IN (${marcadores})
+      ORDER BY r.item_id, r.id`,
+    idsDeItens,
   );
+}
+
+/** Os requisitos de um item só. */
+export async function listarRequisitos(idItem) {
+  return listarRequisitosDosItens([idItem]);
 }
 
 /**

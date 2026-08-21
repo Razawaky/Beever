@@ -403,7 +403,7 @@ describe('fluxo autenticado', opcoes, () => {
 
   it('comprar debita o mel, guarda o preço e entrega a unidade', async () => {
     const catalogo = await agente.get('/loja/itens').set('Accept', 'application/json').expect(200);
-    const barato = [...catalogo.body].sort((a, b) => Number(a.price) - Number(b.price))[0];
+    const barato = [...catalogo.body.itens].sort((a, b) => Number(a.price) - Number(b.price))[0];
 
     // Este teste é sobre a compra, não sobre como o mel foi ganho: com o teto de
     // 3 tarefas ativas por dia, o jogador de verdade levaria dias para juntar o
@@ -432,9 +432,34 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(Number(extrato.body[0].total_price), Number(barato.price), 'o extrato congela o preço pago');
   });
 
+  it('a prévia explica o impacto da compra antes de confirmar', async () => {
+    const catalogo = await agente.get('/loja/itens').set('Accept', 'application/json').expect(200);
+    const barato = [...catalogo.body.itens].sort((a, b) => Number(a.price) - Number(b.price))[0];
+
+    const previa = await agente
+      .get(`/loja/itens/${barato.id}/previa`)
+      .set('Accept', 'application/json')
+      .expect(200);
+
+    assert.equal(previa.body.precoPago, Number(barato.price));
+    assert.equal(previa.body.saldoDepois, previa.body.saldoAtual - previa.body.precoPago);
+    assert.equal(typeof previa.body.custoSemanal, 'number');
+  });
+
+  it('item de troca inválido é recusado na validação da rota', async () => {
+    const catalogo = await agente.get('/loja/itens').set('Accept', 'application/json').expect(200);
+    const barato = [...catalogo.body.itens].sort((a, b) => Number(a.price) - Number(b.price))[0];
+
+    await agente
+      .post('/loja/compras')
+      .set('Accept', 'application/json')
+      .send({ idItem: barato.id, idUnidadeTrocada: 'a-casa-do-vizinho', _csrf: csrf })
+      .expect(422);
+  });
+
   it('compra sem mel suficiente é barrada com 422 e não deixa rastro', async () => {
     const catalogo = await agente.get('/loja/itens').set('Accept', 'application/json').expect(200);
-    const caro = [...catalogo.body].sort((a, b) => Number(b.price) - Number(a.price))[0];
+    const caro = [...catalogo.body.itens].sort((a, b) => Number(b.price) - Number(a.price))[0];
 
     const antes = await melAtual();
     const resposta = await agente

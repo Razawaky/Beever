@@ -4,8 +4,9 @@ import { querJson } from '../utils/resposta.js';
 
 export const criar = assincrono(async (req, res) => {
   const idItem = Number(req.body.idItem);
-  const { item, precoPago, repetida } = await purchasesService.comprar(req.session.usuarioId, idItem, {
+  const { item, precoPago, desconto, repetida } = await purchasesService.comprar(req.session.usuarioId, idItem, {
     chaveDeIdempotencia: req.body.chaveDeIdempotencia ?? null,
+    idUnidadeTrocada: req.body.idUnidadeTrocada ? Number(req.body.idUnidadeTrocada) : null,
   });
 
   if (querJson(req)) {
@@ -14,6 +15,7 @@ export const criar = assincrono(async (req, res) => {
       mensagem: `${item.name} comprado com sucesso`,
       item,
       precoPago,
+      desconto,
       repetida,
     });
   }

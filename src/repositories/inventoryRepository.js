@@ -277,3 +277,23 @@ export async function listarInadimplentesVencidas(idUsuario, ciclosLimite, conex
     [idUsuario, ciclosLimite],
   );
 }
+
+/**
+ * A unidade escolhida pelo jogador, travada para uso.
+ *
+ * Diferente de `bloquearUnidadeAtivaDoItem`, que pega a mais antiga qualquer:
+ * na troca do upgrade quem escolhe a unidade é o jogador. O dono entra no
+ * `WHERE` para ninguém dar de entrada a casa de outro.
+ */
+export async function bloquearUnidadeAtiva(conexao, idUnidade, idUsuario) {
+  const linhas = await consultarEm(
+    conexao,
+    `SELECT inv.id, inv.item_id, inv.current_value
+       FROM inventory inv
+       JOIN inventory_statuses s ON s.id = inv.status_id
+      WHERE inv.id = ? AND inv.user_id = ? AND s.slug = 'ativo'
+      FOR UPDATE`,
+    [idUnidade, idUsuario],
+  );
+  return linhas[0] ?? null;
+}

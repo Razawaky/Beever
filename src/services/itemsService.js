@@ -15,54 +15,62 @@ export async function obterAtivo(idItem) {
   return item;
 }
 
+/** O que um requisito exige do jogador, na língua da criança. Null quer dizer cumprido. */
+function avaliarRequisito(requisito, { nivel, idsPossuidos }) {
+  switch (requisito.requirement_type) {
+    case 'nivel-minimo': {
+      const exigido = Number(requisito.required_level);
+      if (nivel && nivel.nivel >= exigido) return null;
+      return { tipo: requisito.requirement_type, mensagem: `Chegue ao nível ${exigido}` };
+    }
+    case 'item-prerequisito': {
+      if (idsPossuidos.has(Number(requisito.required_item_id))) return null;
+      return {
+        tipo: requisito.requirement_type,
+        mensagem: `Compre antes: ${requisito.required_item_name ?? 'outro item'}`,
+      };
+    }
+    default:
+      // favo-concluido e patrimonio-minimo: sem fonte de verdade até a E05/T-09.3.
+      return {
+        tipo: requisito.requirement_type,
+        mensagem: 'Este requisito ainda não pode ser verificado',
+        naoVerificavelAinda: true,
+      };
+  }
+}
+
 /**
- * Confere os requisitos de compra do item (RN-036).
+ * Confere os requisitos de compra (RN-033) de um lote de itens e devolve um Map
+ * de id do item para a lista do que falta. Em lote porque a vitrine pergunta
+ * pelo catálogo inteiro de uma vez.
  *
  * Devolve a lista do que não foi cumprido em vez de lançar no primeiro
  * problema: a loja precisa poder dizer "falta nível 5 **e** o patinete", não
  * uma exigência de cada vez.
- *
- * `favo-concluido` e `patrimonio-minimo` ainda não têm como ser verificados —
- * trilha e patrimônio são E05 e E09. Ficam registrados como pendentes em vez de
- * passarem calados, porque requisito que ninguém checa é requisito que não
- * existe.
  */
-export async function requisitosNaoCumpridos(idItem, idUsuario) {
-  const requisitos = await itemsRepository.listarRequisitos(idItem);
-  if (requisitos.length === 0) return [];
+export async function requisitosNaoCumpridosDosItens(idsDeItens, idUsuario) {
+  const pendentesPorItem = new Map(idsDeItens.map((id) => [Number(id), []]));
 
-  const nivel = await levelsService.obterDoUsuario(idUsuario);
-  const pendentes = [];
+  const requisitos = await itemsRepository.listarRequisitosDosItens(idsDeItens);
+  if (requisitos.length === 0) return pendentesPorItem;
+
+  const [nivel, unidades] = await Promise.all([
+    levelsService.obterDoUsuario(idUsuario),
+    inventoryRepository.listarPorUsuario(idUsuario),
+  ]);
+  const idsPossuidos = new Set(unidades.map((unidade) => Number(unidade.item_id)));
 
   for (const requisito of requisitos) {
-    switch (requisito.requirement_type) {
-      case 'nivel-minimo': {
-        const exigido = Number(requisito.required_level);
-        if (!nivel || nivel.nivel < exigido) {
-          pendentes.push({ tipo: requisito.requirement_type, mensagem: `Chegue ao nível ${exigido}` });
-        }
-        break;
-      }
-      case 'item-prerequisito': {
-        const possui = await inventoryRepository.possuiItem(idUsuario, requisito.required_item_id);
-        if (!possui) {
-          const prerequisito = await itemsRepository.buscarAtivoPorId(requisito.required_item_id);
-          pendentes.push({
-            tipo: requisito.requirement_type,
-            mensagem: `Compre antes: ${prerequisito?.name ?? 'outro item'}`,
-          });
-        }
-        break;
-      }
-      default:
-        // favo-concluido e patrimonio-minimo: sem fonte de verdade até a E05/E09.
-        pendentes.push({
-          tipo: requisito.requirement_type,
-          mensagem: 'Este requisito ainda não pode ser verificado',
-          naoVerificavelAinda: true,
-        });
-    }
+    const pendencia = avaliarRequisito(requisito, { nivel, idsPossuidos });
+    if (pendencia) pendentesPorItem.get(Number(requisito.item_id))?.push(pendencia);
   }
 
-  return pendentes;
+  return pendentesPorItem;
+}
+
+/** Os requisitos que faltam para um item só — o caminho da compra. */
+export async function requisitosNaoCumpridos(idItem, idUsuario) {
+  const pendentesPorItem = await requisitosNaoCumpridosDosItens([Number(idItem)], idUsuario);
+  return pendentesPorItem.get(Number(idItem)) ?? [];
 }
