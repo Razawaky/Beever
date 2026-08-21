@@ -4,11 +4,13 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-20 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-08.7 — a sequência foi **provada em três semanas de
-relógio simulado**: vinte e um dias encadeados em Nova York, atravessando a
-entrada do horário de verão, com dia de folga, dia perdido, escudo gasto e marco
-de sete pago uma vez. Árvore limpa, 541 testes passando.
-**Próximo passo: auditar a E08**, que está com as sete tarefas entregues
+**Último commit:** auditoria da E08 — o laudo está em
+`docs/08-AUDITORIA-DA-ETAPA.md` e **as três lacunas de maior risco foram
+corrigidas na mesma sessão**: o fuso do MySQL passou a ser fixado em UTC, três
+tipos de meta ganharam fonte de progresso e a avaliação da sequência passou a
+travar o jogador, para dois acessos simultâneos não queimarem dois escudos no
+mesmo dia. Árvore limpa, 543 testes passando.
+**Próximo passo: abrir a E09 — economia (loja, inventário, patrimônio, cofre)**
 
 ---
 
@@ -274,6 +276,7 @@ semanas de uso e a sequência bater com a regra em todos os cenários.
 | T-08.5 `TaskService`: geração diária e semanal, no máximo 3 ativas | **feita** — expiração preguiçosa, teto de 3 ativas contando o que sobrou, progresso lido do evento e fim do passo manual (DT-21) |
 | T-08.6 Views: painel de metas, calendário semanal de sequência, lista de tarefas | **feita** — `resumoDaSemana` entrega os sete dias prontos, o calendário é um partial usado nas duas telas, e cada desfecho vem com ícone e palavra, nunca só cor |
 | T-08.7 Testes com tempo simulado: dia neutro, dia marcado perdido, escudo e virada de fuso | **feita** — o aceite da etapa virou um roteiro de 21 dias com o instante injetado, e o `nomeDoDia` que a T-08.6 criou ganhou teste próprio |
+| Auditoria da etapa (`docs/08-AUDITORIA-DA-ETAPA.md`) | **feita** — veredito "pode avançar, zero bloqueantes"; as lacunas L-1, L-2 e L-3 foram corrigidas na mesma sessão e as sete restantes viraram dívida (DT-44 a DT-49) |
 
 ---
 
@@ -927,7 +930,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E05 Conteúdo e trilha | **concluída e auditada** | T-05.1 feita: os quatro repositories da trilha. T-05.2 feita: `contentService` com os estados de desbloqueio. T-05.3 feita: `progressService` traduzindo erros em estrelas. T-05.4 feita: as duas telas da trilha. T-05.5 feita: conteúdo nas três faixas. T-05.6 feita: os três critérios de aceite testados de ponta a ponta. A auditoria (`docs/05-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes; das sete lacunas, duas foram corrigidas na hora |
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
-| E08 Metas e Sequência | **concluída, falta auditar** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **As sete tarefas estão entregues; falta auditar a etapa** |
+| E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
 | E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
@@ -958,6 +961,13 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-23~~ | ~~A virada do dia usa o relógio do servidor, enquanto a RN-024 manda usar o fuso do perfil~~ | dúvida levantada na revisão da E02 | **Resolvida na T-08.2**: `src/utils/diaDoJogador.js` resolve o dia a partir de `profiles.timezone`, e tanto a geração de tarefas quanto a sequência passaram a usá-lo. O horário de verão foi coberto: `inicioDoDia` confere o deslocamento duas vezes |
 | DT-22 | Nenhuma tela foi aberta em navegador real desde o layout base: 320 px, foco de teclado, contraste AA e 60 fps seguem não verificados | auditoria da E02 | E11 |
 | DT-43 | A tarefa do cofre (`depositar-no-cofre`) nasce inativa no seed porque `vault_deposit` não tem fonte antes do cofre. Reativá-la é parte da E09, e esquecer disso deixa o catálogo de tarefas menor do que o previsto | T-08.5 | E09, junto do cofre |
+| DT-44 | Tarefa expirada com o alvo já batido ainda paga: `tasksService.concluir` não confere o status e o `WHERE` do `tasksRepository.concluir` exige `completed_at IS NULL` e alvo cumprido, mas não `status = 'ativa'`. O `goalsService.concluir` faz essa checagem | auditoria da E08 (L-4) | Uma condição no `WHERE`, na E09 |
+| DT-45 | A fonte `cell_completed` conta partidas, não células distintas: repetir três vezes a célula mais fácil cumpre "Conclua 3 células hoje". O crédito da partida já reduz a repetição pela RN-008, a tarefa não | auditoria da E08 (L-5) | Contar `DISTINCT cell_id`, na E09 |
+| DT-46 | `gameSessionService` chama `registrarDiaCumprido(idUsuario)` sem passar o instante, então o caminho que o jogador percorre de verdade não é simulável no tempo: o aceite de três semanas exercita o `streakService` direto | auditoria da E08 (L-6) | Propagar o instante da partida, quando houver motivo de tocar no arquivo |
+| DT-47 | A auditoria da quebra de sequência grava uma linha por varredura, com o `antes` do início dela: quem some duas semanas, quebra, emenda e quebra de novo deixa uma linha só, com o número errado | auditoria da E08 (L-7) | Uma linha por quebra, na E09 |
+| DT-48 | `achievementsService` grava `motivo: 'marco-de-sequencia'` para qualquer conquista. Hoje só a sequência desbloqueia, então nada está errado no livro; a primeira conquista de favo entra rotulada errado | auditoria da E08 (L-8) | Motivo vindo da conquista, quando a segunda família de conquista existir |
+| DT-49 | O calendário da semana marca o dia de hoje com `ring-2 ring-tinta`, que é contorno preto em badge, vetado pelo checklist da seção 8 do design system; os números dos dias não usam `tabular-nums` | auditoria da E08 (L-9) | Junto com a passagem por navegador da DT-22 |
+| DT-50 | O cabeçalho de `tasksService.js` ainda diz que a geração automática das tarefas é a E08 e que ali existe a criação avulsa: a geração existe desde a T-08.5 e a criação avulsa foi removida | auditoria da E08 (L-10) | Reescrever o bloco, quando o arquivo for tocado |
 | DT-42 | A contagem de escudos vive em dois lugares: as unidades ativas em `inventory` (a verdade) e o espelho `streaks.shields_available` (que carrega o `CHECK` do teto). Os dois são escritos na mesma transação, então divergir exige falha fora do banco — mas `scripts/reconcile.js` ainda não confere esse par, como já confere o `hive_progress` | T-08.3 | Acrescentar a conferência ao `reconcile.js` na E09, junto do resto da economia |
 | DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.github/skills/impeccable/scripts/` e `.claude/skills/impeccable/scripts/`, que são plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
 | DT-37 | `test/integration/seguranca.test.js` falhou uma vez em três execuções da suíte completa, no caso "o dono continua alterando a própria conta", e passa sempre quando o arquivo roda sozinho (três de três). Não reproduzi o erro, então não sei se é o limitador de tentativas de login, contenção de banco sob execução paralela ou tempo. Teste que falha de vez em quando é pior do que teste que falha sempre: ensina a ignorar vermelho | T-07.6 | Rodar a suíte com `--test-concurrency=1` para isolar, e só então corrigir a causa |
@@ -2109,3 +2119,75 @@ Para a auditoria da E08 saber:
    que a T-08.6 e a T-08.7 provam é a marcação e o número, não o desenho.
 3. **A suíte inteira leva cerca de dois minutos** com o banco de pé, e este teste
    sozinho responde por seis segundos deles.
+
+### Sessão de 2026-08-20, auditoria da E08: três consertos e um veredito revisto
+
+A auditoria da E08 está em `docs/08-AUDITORIA-DA-ETAPA.md`. O aceite da etapa —
+simular três semanas e a sequência bater com a regra — já estava cumprido e
+provado, então o laudo olhou para o que a frase do aceite não cobria. Achou dez
+lacunas, nenhuma bloqueante, e as três de maior risco foram corrigidas na mesma
+sessão.
+
+O primeiro veredito escrito classificou duas delas como bloqueantes e estava
+errado. Bloqueante é regra de negócio violada, recompensa errada paga ou dado em
+risco; nenhuma das duas passava nesse teste. A classificação foi corrigida antes
+de o documento ser escrito, e a lição ficou registrada no próprio laudo: quando
+tudo é bloqueante, nada é.
+
+**O fuso do banco não estava fixado.** O `@@global.time_zone` era `SYSTEM` e só
+valia UTC porque a imagem `mysql:8.4` sobe assim. A aplicação grava e lê tudo em
+UTC — o driver usa `timezone: 'Z'` —, mas `finished_at`, `completed_at` e o
+`due_at < NOW()` da expiração usam o relógio do servidor MySQL. Num host em fuso
+local os dois lados discordariam, a atribuição de partida ao dia sairia errada e
+a RN-024 quebraria em silêncio, sem teste nenhum acusar, porque o contêiner de
+teste é UTC. O compose passou a subir o banco com `--default-time-zone=+00:00`.
+É o tipo de defeito que só aparece no servidor, e o conserto é uma linha.
+
+**Três dos sete tipos de meta não tinham fonte de progresso.** O seed cria os
+sete tipos da RN-015, mas só `coin_balance` e `user_level` sabiam se medir.
+Célula, favo e sequência dependem de dados que a E06, a E07 e a própria E08 já
+tinham entregado. Nada quebrava — o planejador nunca sorteia o que não sabe
+medir —, mas o jogador de semana cheia recebia assunto repetido. As três fontes
+foram escritas, com duas contagens novas no `progressRepository` para célula e
+favo concluídos na vida inteira, porque o alvo da meta é absoluto ("chegue a 43
+células"), e a leitura de `current_days` para a sequência: a de hoje, não o
+recorde, senão a meta de manter sequência nunca cairia junto com a quebra.
+
+As réguas de alvo dos três tipos entraram no seed com teto curto de propósito. A
+régua multiplica o alvo pelo tamanho da sessão, que vai a 45 minutos, e o plano
+de um dia por semana tem só quatro dias marcados em 28: sem teto, a meta de
+sequência nasceria pedindo mais dias do que existem no prazo, contra a RN-015.
+Os números continuam sendo chute educado, e a DT-31 segue de pé — agora com três
+linhas a mais para calibrar no playtest.
+
+**A avaliação da sequência não travava o jogador.** Duas requisições simultâneas
+na primeira visita do dia julgavam o mesmo dia perdido e cada uma gastava um
+escudo para salvar um dia só; o `INSERT IGNORE` gravava um evento e o segundo
+escudo, 400 de mel, sumia sem proteger nada. A varredura inteira passou a rodar
+dentro de uma transação que começa por `usersRepository.travarPorId`, o mesmo
+cuidado que o planejador de metas já tomava, e o consumo do escudo deixou de
+abrir transação própria para cair junto com o evento do dia. O marco e a
+auditoria ficaram fora da trava, porque a conquista abre transação própria e a
+UNIQUE do banco já impede pagar duas vezes.
+
+O teste dessa correção dispara duas avaliações em paralelo e exige que sobre um
+escudo guardado. Antes de dar a correção por boa, a trava foi desligada e o teste
+falhou — teste de corrida que passa nos dois mundos não prova nada.
+
+Três testes existentes assumiam o mundo de dois tipos de meta e precisaram
+mudar: um esperava assunto repetido com três metas, outro contava com a meta de
+mel sair no sorteio. Agora um afirma o contrário e os outros fixam o tipo de
+propósito, com o motivo escrito no comentário.
+
+Para a E09 saber:
+
+1. **Faltam duas fontes de progresso de meta**, `patrimony_total` e
+   `vault_balance`, e as duas nascem na E09. Quando entrarem, os sete tipos da
+   RN-015 passam a ser sorteáveis, e a tarefa `depositar-no-cofre` sai do estado
+   inativo do seed (DT-43).
+2. **A DT-44 e a DT-45 são de tarefa, não de meta**, e as duas são conserto de
+   poucas linhas: o status no `WHERE` da conclusão e a contagem por célula
+   distinta.
+3. **O seed precisa rodar de novo** em qualquer banco já criado antes desta
+   sessão, senão as réguas de alvo dos três tipos novos não existem e o
+   planejador continua sorteando só dois assuntos.

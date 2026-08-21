@@ -3,6 +3,7 @@ import * as gameSessionsRepository from '../repositories/gameSessionsRepository.
 import * as inventoryRepository from '../repositories/inventoryRepository.js';
 import * as itemsRepository from '../repositories/itemsRepository.js';
 import * as streaksRepository from '../repositories/streaksRepository.js';
+import * as usersRepository from '../repositories/usersRepository.js';
 import { dataDoDia, diaDaSemana, diferencaEmDias, inicioDoDia, somarDias } from '../utils/diaDoJogador.js';
 import * as achievementsService from './achievementsService.js';
 import * as auditService from './auditService.js';
@@ -85,23 +86,21 @@ export async function sincronizarEscudos(conexao, idUsuario) {
 /**
  * Gasta um escudo, se houver. Devolve `true` quando o dia foi salvo.
  *
- * Tudo numa transação porque são três escritas que só fazem sentido juntas:
- * travar a unidade, marcá-la consumida e refazer o espelho da contagem.
+ * Usa a conexão da avaliação, e não uma transação própria: o escudo consumido e
+ * o evento do dia que ele salvou têm de cair juntos ou não cair.
  */
-async function consumirEscudo(idUsuario) {
+async function consumirEscudo(conexao, idUsuario) {
   const idItem = await idDoEscudo();
   if (!idItem) return false;
 
-  return emTransacao(async (conexao) => {
-    const unidade = await inventoryRepository.bloquearUnidadeAtivaDoItem(conexao, idUsuario, idItem);
-    if (!unidade) return false;
+  const unidade = await inventoryRepository.bloquearUnidadeAtivaDoItem(conexao, idUsuario, idItem);
+  if (!unidade) return false;
 
-    const consumiu = await inventoryRepository.marcarComoConsumido(conexao, unidade.id);
-    if (!consumiu) return false;
+  const consumiu = await inventoryRepository.marcarComoConsumido(conexao, unidade.id);
+  if (!consumiu) return false;
 
-    await sincronizarEscudos(conexao, idUsuario);
-    return true;
-  });
+  await sincronizarEscudos(conexao, idUsuario);
+  return true;
 }
 
 async function agendaDoJogador(idUsuario) {
@@ -165,65 +164,82 @@ async function conferirMarco(idUsuario, diasAtuais) {
 export async function avaliar(idUsuario, agora = new Date()) {
   const fuso = await profilesService.fusoDoUsuario(idUsuario);
   const hoje = dataDoDia(agora, fuso);
-  const sequencia = await streaksRepository.criarSeNaoExistir(idUsuario);
+  await streaksRepository.criarSeNaoExistir(idUsuario);
 
-  const primeiroDia = primeiroDiaNaoAvaliado(sequencia, hoje, fuso);
-  const dias = diasFechados(primeiroDia, hoje);
+  // A varredura inteira roda com o jogador travado. Sem a trava, duas
+  // requisições simultâneas na primeira visita do dia julgam o mesmo dia
+  // perdido e cada uma gasta um escudo para salvar um dia só.
+  const varredura = await emTransacao(async (conexao) => {
+    await usersRepository.travarPorId(conexao, idUsuario);
+    const sequencia = await streaksRepository.buscarPorUsuario(idUsuario, conexao);
 
-  let diasAtuais = Number(sequencia.current_days);
-  let melhorDias = Number(sequencia.best_days);
-  let ultimoDiaContado = sequencia.last_counted_date;
-  let quebrou = false;
-  const protegidos = [];
-  const marcos = [];
+    const primeiroDia = primeiroDiaNaoAvaliado(sequencia, hoje, fuso);
+    const dias = diasFechados(primeiroDia, hoje);
 
-  if (dias.length > 0) {
-    const [agenda, cumpridos, jaAvaliados] = await Promise.all([
-      agendaDoJogador(idUsuario),
-      diasComCelulaConcluida(idUsuario, primeiroDia, hoje, fuso),
-      streaksRepository.listarEventos(idUsuario, primeiroDia, hoje),
-    ]);
+    let diasAtuais = Number(sequencia.current_days);
+    let melhorDias = Number(sequencia.best_days);
+    let ultimoDiaContado = sequencia.last_counted_date;
+    let quebrou = false;
+    const protegidos = [];
+    const marcos = [];
 
-    const comDesfecho = new Set(jaAvaliados.map((evento) => evento.data));
+    if (dias.length > 0) {
+      const [agenda, cumpridos, jaAvaliados] = await Promise.all([
+        agendaDoJogador(idUsuario),
+        diasComCelulaConcluida(idUsuario, primeiroDia, hoje, fuso),
+        streaksRepository.listarEventos(idUsuario, primeiroDia, hoje, conexao),
+      ]);
 
-    for (const dia of dias) {
-      if (comDesfecho.has(dia)) continue;
+      const comDesfecho = new Set(jaAvaliados.map((evento) => evento.data));
 
-      let tipo = desfechoDoDia(agenda, dia, cumpridos.has(dia));
+      for (const dia of dias) {
+        if (comDesfecho.has(dia)) continue;
 
-      // O escudo só é gasto quando há sequência para salvar: proteger um dia de
-      // quem já está zerado queimaria 400 de mel para não mudar nada.
-      if (tipo === 'perdido' && diasAtuais > 0 && (await consumirEscudo(idUsuario))) {
-        tipo = 'protegido';
-        protegidos.push(dia);
-      }
+        let tipo = desfechoDoDia(agenda, dia, cumpridos.has(dia));
 
-      await streaksRepository.registrarEvento({ idUsuario, data: dia, tipo });
+        // O escudo só é gasto quando há sequência para salvar: proteger um dia de
+        // quem já está zerado queimaria 400 de mel para não mudar nada.
+        if (tipo === 'perdido' && diasAtuais > 0 && (await consumirEscudo(conexao, idUsuario))) {
+          tipo = 'protegido';
+          protegidos.push(dia);
+        }
 
-      if (tipo === 'cumprido') {
-        diasAtuais += 1;
-        ultimoDiaContado = dia;
-        melhorDias = Math.max(melhorDias, diasAtuais);
+        await streaksRepository.registrarEvento({ idUsuario, data: dia, tipo }, conexao);
 
-        const marco = await conferirMarco(idUsuario, diasAtuais);
-        if (marco) marcos.push(marco);
-      }
+        if (tipo === 'cumprido') {
+          diasAtuais += 1;
+          ultimoDiaContado = dia;
+          melhorDias = Math.max(melhorDias, diasAtuais);
+          if (MARCOS.includes(diasAtuais)) marcos.push(diasAtuais);
+        }
 
-      if (tipo === 'perdido' && diasAtuais > 0) {
-        quebrou = true;
-        diasAtuais = 0;
+        if (tipo === 'perdido' && diasAtuais > 0) {
+          quebrou = true;
+          diasAtuais = 0;
+        }
       }
     }
-  }
 
-  await streaksRepository.atualizar(idUsuario, {
-    diasAtuais,
-    melhorDias,
-    ultimoDiaContado,
-    avaliadoEm: paraMySQL(agora),
+    await streaksRepository.atualizar(
+      idUsuario,
+      { diasAtuais, melhorDias, ultimoDiaContado, avaliadoEm: paraMySQL(agora) },
+      conexao,
+    );
+
+    return { sequencia, diasAtuais, melhorDias, ultimoDiaContado, quebrou, protegidos, marcos };
   });
 
-  if (quebrou) {
+  const { diasAtuais, melhorDias, ultimoDiaContado, protegidos, sequencia } = varredura;
+
+  // Marco e auditoria ficam fora da trava: pagar conquista abre transação
+  // própria, e a UNIQUE do banco já impede pagar o mesmo marco duas vezes.
+  const marcos = [];
+  for (const diaDeMarco of varredura.marcos) {
+    const marco = await conferirMarco(idUsuario, diaDeMarco);
+    if (marco) marcos.push(marco);
+  }
+
+  if (varredura.quebrou) {
     await auditService.registrar(auditService.sistema(), 'sequencia.quebrada', {
       entidade: 'streak',
       id: Number(sequencia.id),

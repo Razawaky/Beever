@@ -28,6 +28,9 @@ const MINUTOS_DE_REFERENCIA = 10;
 const TITULOS = {
   coin_balance: (alvo) => `Chegue a ${alvo} de mel`,
   user_level: (alvo) => `Chegue ao nível ${alvo}`,
+  cell_completed: (alvo) => `Chegue a ${alvo} células concluídas`,
+  hive_completed: (alvo) => `Chegue a ${alvo} favos concluídos`,
+  streak_days: (alvo) => `Chegue a ${alvo} dias seguidos`,
 };
 
 function titularMeta(tipo, alvo) {

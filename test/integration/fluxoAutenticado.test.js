@@ -490,12 +490,20 @@ describe('fluxo autenticado', opcoes, () => {
   });
 
   it('meta alcançada paga o que a dificuldade declara', async () => {
-    // Pega uma meta de mel do planejador e baixa o alvo para o que o jogador já
-    // tem: o progresso de "acumular mel" é lido da carteira, então ela passa a
-    // estar cumprida sem inventar meta que o jogo não geraria.
+    // Pega uma meta do planejador, passa o tipo dela para "acumular mel" e baixa
+    // o alvo para o que o jogador já tem: o progresso do mel é lido da carteira,
+    // então ela passa a estar cumprida sem inventar meta que o jogo não geraria.
+    // O tipo é fixado porque o sorteio é aleatório entre cinco assuntos, e o que
+    // este caso mede é o pagamento, não o sorteio.
     const lista = await agente.get('/metas').set('Accept', 'application/json').expect(200);
-    const meta = lista.body.find((linha) => linha.progress_source === 'coin_balance' && linha.status === 'ativa');
-    assert.ok(meta, 'o planejador precisa ter dado ao menos uma meta de mel');
+    const meta = lista.body.find((linha) => linha.status === 'ativa');
+    assert.ok(meta, 'o planejador precisa ter dado ao menos uma meta ativa');
+
+    await banco.conexao.query(
+      `UPDATE goals SET goal_type_id = (SELECT id FROM goal_types WHERE slug = 'acumular-mel')
+        WHERE id = ?`,
+      [meta.id],
+    );
 
     const alvo = Math.max(1, (await melAtual()) - 1);
     await banco.conexao.query('UPDATE goals SET target_value = ? WHERE id = ?', [alvo, meta.id]);

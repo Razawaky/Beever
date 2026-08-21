@@ -150,12 +150,20 @@ ON DUPLICATE KEY UPDATE
 -- Enquanto a E06 não creditar XP em jogo, a meta de nível fica parada — está na
 -- dívida técnica, com dono naquela etapa.
 --
+-- O teto de célula, favo e sequência é baixo de propósito. A régua multiplica o
+-- alvo pelo tamanho da sessão, que vai a 45 minutos, e o plano de 1 dia por
+-- semana só tem 4 dias marcados em 28: sem teto curto, a meta de sequência
+-- nasceria pedindo mais dias do que existem no prazo, contra a RN-015.
+--
 -- Ajustar isto depois do playtest é editar estas linhas e rodar o seed.
 INSERT INTO goal_target_rules (goal_type_id, base_per_session, min_increment, max_increment, rounding_step)
 SELECT tipo.id, dados.base, dados.minimo, dados.maximo, dados.passo
   FROM (
     SELECT 'acumular-mel' AS tipo, 25.000 AS base,  50 AS minimo, 500 AS maximo, 25 AS passo
     UNION ALL SELECT 'atingir-nivel',      0.100,       1,          1,           1
+    UNION ALL SELECT 'concluir-celulas',   1.000,       2,         12,           1
+    UNION ALL SELECT 'concluir-favo',      0.100,       1,          1,           1
+    UNION ALL SELECT 'manter-sequencia',   0.250,       2,          3,           1
   ) AS dados
   JOIN goal_types tipo ON tipo.slug = dados.tipo
 ON DUPLICATE KEY UPDATE

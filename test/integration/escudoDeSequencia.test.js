@@ -179,6 +179,21 @@ describe('escudo de sequência', opcoes, () => {
     assert.equal(await streakService.escudosDisponiveis(idUsuario), 0);
   });
 
+  /**
+   * A lacuna L-3 da auditoria da E08: sem a trava do jogador, duas requisições
+   * simultâneas na primeira visita do dia julgavam o mesmo dia perdido e cada
+   * uma queimava um escudo para salvar um dia só.
+   */
+  it('duas visitas ao mesmo tempo gastam um escudo só', async () => {
+    await prepararSequencia({ diasAtuais: 5, avaliadaEm: `${ONTEM} 09:00:00`, escudos: 2 });
+
+    await Promise.all([streakService.avaliar(idUsuario, AGORA), streakService.avaliar(idUsuario, AGORA)]);
+
+    assert.deepEqual(await lerEventos(), [{ data: ONTEM, tipo: 'protegido' }]);
+    assert.deepEqual(await lerEscudosNoInventario(), ['consumido', 'ativo'], 'o segundo escudo continua guardado');
+    assert.equal(Number((await lerSequencia()).current_days), 5);
+  });
+
   it('um escudo salva um dia só: o segundo dia em branco quebra', async () => {
     await prepararSequencia({ diasAtuais: 5, avaliadaEm: `${ANTEONTEM} 09:00:00`, escudos: 1 });
 

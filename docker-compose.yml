@@ -10,7 +10,12 @@ services:
     # (RNF-17). Com log binário ligado, criar gatilho exige SUPER — que o
     # usuário da aplicação não tem e não deve ter. Esta variável permite que o
     # dono do banco crie os seus próprios gatilhos sem virar superusuário.
-    command: ['--log-bin-trust-function-creators=1']
+    #
+    # O fuso é fixado em UTC porque a aplicação grava e lê tudo em UTC (o driver
+    # usa `timezone: 'Z'`), enquanto `NOW()` seguiria o relógio do sistema. Num
+    # host em fuso local os dois lados discordariam e a virada do dia da RN-024
+    # sairia errada, sem nenhum teste acusar.
+    command: ['--log-bin-trust-function-creators=1', '--default-time-zone=+00:00']
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${DB_NAME:-beever}

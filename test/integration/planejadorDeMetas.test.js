@@ -11,6 +11,7 @@ import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as coinsService from '../../src/services/coinsService.js';
+import * as goalProgressSources from '../../src/services/goalProgressSources.js';
 import * as goalsService from '../../src/services/goalsService.js';
 
 /**
@@ -28,7 +29,13 @@ import * as goalsService from '../../src/services/goalsService.js';
 const pular = await motivoParaPular();
 const opcoes = pular ? { skip: pular } : {};
 
-const TIPOS_MENSURAVEIS = ['acumular-mel', 'atingir-nivel'];
+const TIPOS_MENSURAVEIS = [
+  'acumular-mel',
+  'atingir-nivel',
+  'concluir-celulas',
+  'concluir-favo',
+  'manter-sequencia',
+];
 const DIA_EM_MS = 24 * 60 * 60 * 1000;
 
 describe('planejador de metas', opcoes, () => {
@@ -151,11 +158,12 @@ describe('planejador de metas', opcoes, () => {
   });
 
   /**
-   * Sete dias pedem três metas, e o MVP só sabe medir dois tipos — mel e nível.
-   * O terceiro repete um assunto, com alvo maior, para não virar cópia da
-   * primeira meta na tela.
+   * Sete dias pedem três metas, e há cinco tipos mensuráveis: cada uma sai de um
+   * assunto diferente. O alvo repetido só apareceria se o planejador ficasse sem
+   * tipo livre, o que deixou de acontecer quando célula, favo e sequência
+   * ganharam fonte de progresso.
    */
-  it('7 dias rendem 3 metas de 7 dias, e o tipo repetido pede mais', async () => {
+  it('7 dias rendem 3 metas de 7 dias, cada uma de um assunto', async () => {
     const jogador = await jogadorPronto({
       apelido: 'planner-semana-cheia',
       dias: ['0', '1', '2', '3', '4', '5', '6'],
@@ -168,19 +176,14 @@ describe('planejador de metas', opcoes, () => {
       assert.equal(diasAte(meta.due_at), 7);
     }
 
-    const porTipo = new Map();
-    for (const meta of jogador.metas) {
-      porTipo.set(meta.tipo, [...(porTipo.get(meta.tipo) ?? []), Number(meta.target_value)]);
-    }
-    const repetido = [...porTipo.values()].find((alvos) => alvos.length > 1);
-    assert.ok(repetido, 'com dois tipos e três metas, um assunto se repete');
-    assert.notEqual(repetido[0], repetido[1], 'metas do mesmo tipo não podem ter o mesmo alvo');
+    const tipos = jogador.metas.map((meta) => meta.tipo);
+    assert.equal(new Set(tipos).size, 3, 'havendo tipo livre, o planejador não repete assunto');
   });
 
   /**
-   * RN-015: "nunca gera meta impossível". Patrimônio, favo, células, sequência e
-   * cofre estão semeados como tipo, mas ninguém sabe medi-los antes da E05, da
-   * E08 e da E09 — uma meta dessas ficaria parada em zero para sempre.
+   * RN-015: "nunca gera meta impossível". Patrimônio e cofre estão semeados como
+   * tipo, mas ninguém sabe medi-los antes da E09 — uma meta dessas ficaria
+   * parada em zero para sempre.
    */
   it('não sorteia tipo que o sistema ainda não sabe medir', async () => {
     const jogador = await jogadorPronto({ apelido: 'planner-mensuravel', dias: ['2', '4'], minutos: 10 });
@@ -193,6 +196,46 @@ describe('planejador de metas', opcoes, () => {
       );
       assert.match(meta.title, /Chegue a/);
     }
+  });
+
+  /**
+   * As três fontes que a auditoria da E08 encontrou semeadas e sem
+   * implementação. O que este caso prova é que elas leem o número de verdade em
+   * vez de ficar paradas em zero — e que a sequência lida é a de hoje, não o
+   * recorde, senão a meta de manter sequência nunca cairia com a quebra.
+   */
+  it('célula, favo e sequência medem o progresso de verdade', async () => {
+    const jogador = await jogadorPronto({ apelido: 'planner-fontes', dias: ['1', '3'], minutos: 10 });
+
+    assert.equal(await goalProgressSources.medir('cell_completed', jogador.idUsuario), 0);
+    assert.equal(await goalProgressSources.medir('hive_completed', jogador.idUsuario), 0);
+    assert.equal(await goalProgressSources.medir('streak_days', jogador.idUsuario), 0);
+
+    const [[celula]] = await banco.conexao.query(
+      'SELECT id, hive_id FROM cells WHERE is_active = 1 AND deleted_at IS NULL LIMIT 1',
+    );
+    await banco.conexao.query(
+      `INSERT INTO cell_progress (user_id, cell_id, stars, attempts, first_completed_at, last_completed_at)
+       VALUES (?, ?, 2, 1, NOW(), NOW())`,
+      [jogador.idUsuario, celula.id],
+    );
+    await banco.conexao.query(
+      `INSERT INTO hive_progress (user_id, hive_id, completed_cells, total_cells, percent, completed_at)
+       VALUES (?, ?, 1, 1, 100, NOW())`,
+      [jogador.idUsuario, celula.hive_id],
+    );
+    await banco.conexao.query(
+      'INSERT INTO streaks (user_id, current_days, best_days) VALUES (?, 4, 9)',
+      [jogador.idUsuario],
+    );
+
+    assert.equal(await goalProgressSources.medir('cell_completed', jogador.idUsuario), 1);
+    assert.equal(await goalProgressSources.medir('hive_completed', jogador.idUsuario), 1);
+    assert.equal(
+      await goalProgressSources.medir('streak_days', jogador.idUsuario),
+      4,
+      'a fonte lê a sequência de hoje, não a melhor marca',
+    );
   });
 
   it('abrir o painel de novo não cria meta a mais', async () => {
@@ -217,35 +260,72 @@ describe('planejador de metas', opcoes, () => {
    * credita o mel antes — é o mesmo caminho que o jogo usa ao pagar tarefa.
    */
   it('repõe a meta concluída, mantendo a conta sempre com meta ativa', async () => {
-    // Semana cheia de propósito: com três metas e dois tipos, a meta de mel
-    // sempre está entre elas, e o teste não depende do sorteio.
-    const jogador = await jogadorPronto({
-      apelido: 'planner-reposicao',
-      dias: ['0', '1', '2', '3', '4', '5', '6'],
-      minutos: 10,
-    });
-    const [meta] = jogador.metas.filter((linha) => linha.tipo === 'acumular-mel');
-    assert.ok(meta, 'com três metas e dois tipos, uma delas é de mel');
+    // O que este caso mede é a reposição, não o sorteio. Com cinco tipos no
+    // catálogo, a meta de mel pode não sair — e é a única que o teste sabe
+    // concluir creditando saldo. Os outros tipos saem do sorteio e voltam no
+    // fim, para nenhum caso depender da ordem de execução.
+    const regras = await semSorteioDeOutrosTipos();
 
-    await emTransacao((conexao) =>
-      coinsService.creditar(conexao, jogador.idUsuario, Number(meta.target_value), {
-        motivo: 'ajuste-administrativo',
-      }),
-    );
+    try {
+      const jogador = await jogadorPronto({
+        apelido: 'planner-reposicao',
+        dias: ['0', '1', '2', '3', '4', '5', '6'],
+        minutos: 10,
+      });
+      const [meta] = jogador.metas.filter((linha) => linha.tipo === 'acumular-mel');
+      assert.ok(meta, 'sem os outros tipos no sorteio, toda meta é de mel');
 
-    await goalsService.concluir(Number(meta.id), jogador.idUsuario);
+      await emTransacao((conexao) =>
+        coinsService.creditar(conexao, jogador.idUsuario, Number(meta.target_value), {
+          motivo: 'ajuste-administrativo',
+        }),
+      );
 
-    const depois = await metasAtivas(jogador.idUsuario);
-    assert.equal(depois.length, 3, 'a faixa de semana cheia pede três metas ativas, e elas existem de novo');
+      await goalsService.concluir(Number(meta.id), jogador.idUsuario);
 
-    const ids = depois.map((linha) => Number(linha.id));
-    assert.ok(!ids.includes(Number(meta.id)), 'a meta concluída saiu das ativas');
+      const depois = await metasAtivas(jogador.idUsuario);
+      assert.equal(depois.length, 3, 'a faixa de semana cheia pede três metas ativas, e elas existem de novo');
 
-    const reposta = depois.find((linha) => !jogador.metas.some((antiga) => Number(antiga.id) === Number(linha.id)));
-    assert.ok(reposta, 'nasceu uma meta no lugar da concluída');
-    assert.ok(
-      Number(reposta.target_value) > Number(reposta.current_value),
-      'a meta que substitui também não nasce cumprida, mesmo com o saldo alto',
-    );
+      const ids = depois.map((linha) => Number(linha.id));
+      assert.ok(!ids.includes(Number(meta.id)), 'a meta concluída saiu das ativas');
+
+      const reposta = depois.find(
+        (linha) => !jogador.metas.some((antiga) => Number(antiga.id) === Number(linha.id)),
+      );
+      assert.ok(reposta, 'nasceu uma meta no lugar da concluída');
+      assert.ok(
+        Number(reposta.target_value) > Number(reposta.current_value),
+        'a meta que substitui também não nasce cumprida, mesmo com o saldo alto',
+      );
+    } finally {
+      await restaurarRegrasDeAlvo(regras);
+    }
   });
+
+  /** Tira do catálogo tudo que não for meta de mel e devolve o que foi tirado. */
+  async function semSorteioDeOutrosTipos() {
+    const [regras] = await banco.conexao.query('SELECT * FROM goal_target_rules');
+    await banco.conexao.query(
+      `DELETE FROM goal_target_rules
+        WHERE goal_type_id <> (SELECT id FROM goal_types WHERE slug = 'acumular-mel')`,
+    );
+    return regras;
+  }
+
+  async function restaurarRegrasDeAlvo(regras) {
+    for (const regra of regras) {
+      await banco.conexao.query(
+        `INSERT IGNORE INTO goal_target_rules
+           (goal_type_id, base_per_session, min_increment, max_increment, rounding_step)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          regra.goal_type_id,
+          regra.base_per_session,
+          regra.min_increment,
+          regra.max_increment,
+          regra.rounding_step,
+        ],
+      );
+    }
+  }
 });

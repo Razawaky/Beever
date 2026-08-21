@@ -155,6 +155,32 @@ export async function listarProgressoDosFavos(idUsuario) {
   );
 }
 
+/**
+ * Quantas células o jogador já concluiu na vida. Alimenta a meta
+ * `cell_completed`, cujo alvo é absoluto: "chegue a 43 células".
+ */
+export async function contarCelulasConcluidas(idUsuario) {
+  const linhas = await consultar(
+    `SELECT COUNT(*) AS total
+       FROM cell_progress cp
+       JOIN cells c ON c.id = cp.cell_id
+      WHERE cp.user_id = ? AND ${CONCLUIDA} AND ${CELULA_ATIVA}`,
+    [idUsuario],
+  );
+  return Number(linhas[0]?.total ?? 0);
+}
+
+/** Quantos favos o jogador já concluiu na vida. Alimenta a meta `hive_completed`. */
+export async function contarFavosConcluidos(idUsuario) {
+  const linhas = await consultar(
+    `SELECT COUNT(*) AS total
+       FROM hive_progress
+      WHERE user_id = ? AND completed_at IS NOT NULL`,
+    [idUsuario],
+  );
+  return Number(linhas[0]?.total ?? 0);
+}
+
 /** Quantos favos o jogador concluiu dentro da janela. Alimenta a tarefa semanal `hive_completed`. */
 export async function contarFavosConcluidosNoIntervalo(idUsuario, inicio, fim) {
   const linhas = await consultar(
