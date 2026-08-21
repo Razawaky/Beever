@@ -129,3 +129,20 @@ export async function definirMeta(conexao, idUsuario, { valor = null, prazo = nu
   );
   return resultado.affectedRows;
 }
+
+/**
+ * Quanto o jogador depositou numa janela de tempo. É o que a tarefa
+ * `depositar-no-cofre` mede: vale o que foi guardado entre a criação da tarefa
+ * e o prazo dela, não o total da vida.
+ */
+export async function totalDepositadoEntre(idUsuario, inicio, fim) {
+  const linhas = await consultar(
+    `SELECT COALESCE(SUM(t.amount), 0) AS total
+       FROM vault_transactions t
+       JOIN vault_transaction_types tt ON tt.id = t.transaction_type_id
+      WHERE t.user_id = ? AND tt.slug = 'deposito'
+        AND t.created_at >= ? AND t.created_at <= ?`,
+    [idUsuario, noSegundoCheio(inicio), fim],
+  );
+  return Number(linhas[0]?.total ?? 0);
+}

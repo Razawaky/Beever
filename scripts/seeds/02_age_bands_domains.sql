@@ -177,14 +177,13 @@ AS novo
 ON DUPLICATE KEY UPDATE name = novo.name;
 
 -- RN-046: compromissos curtos fora da trilha, que rendem pólen e um pouco de mel.
--- `depositar-no-cofre` nasce inativo: o cofre é E09 e ninguém sabe medir
--- `vault_deposit` ainda. Tarefa que o jogador não consegue cumprir não é
--- proposta, mesma regra do planejador de metas (RN-015).
+-- `depositar-no-cofre` ficou inativo até a T-09.4, quando o cofre passou a
+-- existir e `vault_deposit` ganhou fonte. Está ativo desde então.
 INSERT INTO task_types (slug, name, scope_id, progress_source, default_target, reward_points, reward_coins, is_active)
 SELECT dados.slug, dados.name, escopo.id, dados.progress_source, dados.alvo, dados.polen, dados.mel, dados.ativo
   FROM (
     SELECT 'concluir-3-celulas'  AS slug, 'Conclua 3 células hoje'        AS name, 'diaria'  AS escopo, 'cell_completed' AS progress_source, 3   AS alvo, 15 AS polen, 20 AS mel, 1 AS ativo
-    UNION ALL SELECT 'depositar-no-cofre', 'Deposite 50 de mel no cofre',        'diaria',  'vault_deposit',   50,  10, 15, 0
+    UNION ALL SELECT 'depositar-no-cofre', 'Deposite 50 de mel no cofre',        'diaria',  'vault_deposit',   50,  10, 15, 1
     UNION ALL SELECT 'jogar-3-dias',       'Jogue em 3 dias diferentes',         'semanal', 'active_days',      3,  40, 60, 1
     UNION ALL SELECT 'concluir-favo-semana','Conclua um favo esta semana',       'semanal', 'hive_completed',   1,  50, 80, 1
   ) AS dados

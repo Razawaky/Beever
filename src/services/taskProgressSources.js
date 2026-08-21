@@ -1,6 +1,7 @@
 import * as gameSessionsRepository from '../repositories/gameSessionsRepository.js';
 import * as progressRepository from '../repositories/progressRepository.js';
 import * as streaksRepository from '../repositories/streaksRepository.js';
+import * as vaultsRepository from '../repositories/vaultsRepository.js';
 
 /**
  * Onde cada tipo de tarefa busca o número que mede o progresso.
@@ -21,9 +22,12 @@ export const FONTES_DE_PROGRESSO = {
   async hive_completed(idUsuario, janela) {
     return progressRepository.contarFavosConcluidosNoIntervalo(idUsuario, janela.inicio, janela.fim);
   },
+  async vault_deposit(idUsuario, janela) {
+    return vaultsRepository.totalDepositadoEntre(idUsuario, janela.inicio, janela.fim);
+  },
 };
 
-/** Fontes que o sistema sabe medir hoje. `vault_deposit` entra quando o cofre existir (E09). */
+/** Fontes que o sistema sabe medir hoje. */
 export function fontesMensuraveis() {
   return Object.keys(FONTES_DE_PROGRESSO);
 }

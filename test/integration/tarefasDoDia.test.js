@@ -12,6 +12,7 @@ import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as schedulesService from '../../src/services/schedulesService.js';
+import { fontesMensuraveis } from '../../src/services/taskProgressSources.js';
 import * as tasksService from '../../src/services/tasksService.js';
 import { dataDoDia, diaDaSemana } from '../../src/utils/diaDoJogador.js';
 
@@ -195,18 +196,21 @@ describe('tarefas do dia', opcoes, () => {
     assert.equal(Number(depois.current_value), Number(tarefa.target_value));
   });
 
-  it('não propõe tarefa cuja fonte ninguém sabe medir', async () => {
+  it('só propõe tarefa cuja fonte o sistema sabe medir', async () => {
     const [linhas] = await banco.conexao.query(
-      `SELECT tt.slug
+      `SELECT tt.progress_source
          FROM tasks t JOIN task_types tt ON tt.id = t.task_type_id
         WHERE t.user_id = ?`,
       [idUsuario],
     );
 
+    const mensuraveis = fontesMensuraveis();
     assert.ok(
-      linhas.every((linha) => linha.slug !== 'depositar-no-cofre'),
-      'o cofre é E09: a tarefa dele não é proposta antes disso',
+      linhas.every((linha) => mensuraveis.includes(linha.progress_source)),
+      'tarefa sem fonte medível não pode ser proposta',
     );
+    // Desde a T-09.4 o cofre existe, então `vault_deposit` entrou na lista.
+    assert.ok(mensuraveis.includes('vault_deposit'));
   });
 
   it('a rota do passo manual deixou de existir', async () => {

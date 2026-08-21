@@ -12,6 +12,7 @@ import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as coinsService from '../../src/services/coinsService.js';
+import * as vaultService from '../../src/services/vaultService.js';
 
 /**
  * O caminho que o jogador percorre, do cadastro à compra, contra o banco real.
@@ -105,6 +106,16 @@ describe('fluxo autenticado', opcoes, () => {
           [idUsuario, dia],
         );
       }
+      return;
+    }
+
+    if (tarefa.progress_source === 'vault_deposit') {
+      // A tarefa do cofre mede mel guardado, então o jogador precisa ter mel
+      // para guardar antes de cumpri-la.
+      await emTransacao((conexao) =>
+        coinsService.creditar(conexao, idUsuario, alvo, { motivo: 'ajuste-administrativo' }),
+      );
+      await vaultService.depositar(idUsuario, alvo);
       return;
     }
 
@@ -457,6 +468,49 @@ describe('fluxo autenticado', opcoes, () => {
       .set('Accept', 'application/json')
       .send({ idItem: barato.id, idUnidadeTrocada: 'a-casa-do-vizinho', _csrf: csrf })
       .expect(422);
+  });
+
+  it('guardar e tirar mel do cofre pelas rotas do cofre', async () => {
+    const idUsuario = await idDoJogador();
+    await emTransacao((conexao) =>
+      coinsService.creditar(conexao, idUsuario, 300, { motivo: 'ajuste-administrativo' }),
+    );
+    const antes = await melAtual();
+    const cofreAntes = (await agente.get('/cofre').set('Accept', 'application/json').expect(200)).body.saldo;
+
+    const deposito = await agente
+      .post('/cofre/depositos')
+      .set('Accept', 'application/json')
+      .send({ valor: 200, _csrf: csrf })
+      .expect(201);
+    assert.equal(deposito.body.saldo, cofreAntes + 200);
+    assert.equal(await melAtual(), antes - 200);
+
+    const saque = await agente
+      .post('/cofre/saques')
+      .set('Accept', 'application/json')
+      .send({ valor: 50, _csrf: csrf })
+      .expect(201);
+    assert.equal(saque.body.saldo, cofreAntes + 150);
+    assert.equal(await melAtual(), antes - 150);
+
+    const resumo = await agente
+      .get('/cofre?porSemana=100&semanas=3')
+      .set('Accept', 'application/json')
+      .expect(200);
+    assert.equal(resumo.body.saldo, cofreAntes + 150);
+    assert.equal(resumo.body.projecao.length, 3);
+    assert.ok(resumo.body.extrato.length >= 2, 'depósito e saque no extrato');
+  });
+
+  it('tirar do cofre mais do que há é recusado com 422', async () => {
+    const resposta = await agente
+      .post('/cofre/saques')
+      .set('Accept', 'application/json')
+      .send({ valor: 999999, _csrf: csrf })
+      .expect(422);
+
+    assert.equal(resposta.body.codigo, 'COFRE_INSUFICIENTE');
   });
 
   it('compra sem mel suficiente é barrada com 422 e não deixa rastro', async () => {
