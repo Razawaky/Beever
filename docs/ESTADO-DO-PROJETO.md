@@ -3,14 +3,19 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-20 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** auditoria da E08 — o laudo está em
+**Atualizado em:** 2026-08-21 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** T-09.1 — os repositories da economia abriram o schema que a
+E01 já tinha: cofre com extrato, ciclo econômico idempotente, foto do
+patrimônio, comportamentos do item e as operações de ciclo no inventário. Árvore
+limpa, 565 testes passando.
+**Próximo passo: T-09.2 — `ShopService`**
+
+**Commit anterior:** auditoria da E08 — o laudo está em
 `docs/08-AUDITORIA-DA-ETAPA.md` e **as três lacunas de maior risco foram
 corrigidas na mesma sessão**: o fuso do MySQL passou a ser fixado em UTC, três
 tipos de meta ganharam fonte de progresso e a avaliação da sequência passou a
 travar o jogador, para dois acessos simultâneos não queimarem dois escudos no
-mesmo dia. Árvore limpa, 543 testes passando.
-**Próximo passo: abrir a E09 — economia (loja, inventário, patrimônio, cofre)**
+mesmo dia.
 
 ---
 
@@ -263,7 +268,26 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E08 — metas e sequência.** A etapa junta três assuntos que dependem da mesma
+**E09 — economia: loja, inventário, patrimônio e cofre.** É a etapa que fecha o
+laço do jogo: o mel ganho na trilha passa a ter onde ser gasto, guardado e
+perdido. O aceite é entrar depois de seis semanas sem acessar e receber todos os
+ciclos de uma vez, com extrato claro e nada de saldo negativo.
+
+| Tarefa | Situação |
+|---|---|
+| T-09.1 Repositories de item, compra, inventário e cofre | **feita** — o schema da economia já existia desde a E01 e estava sem porta: entraram `vaultsRepository`, `economicCyclesRepository` e `patrimonyRepository`, mais os comportamentos do item e as operações de ciclo no inventário |
+| T-09.2 `ShopService`: requisitos, compra transacional com `price_at_purchase`, upgrades com desconto | pendente |
+| T-09.3 `PatrimonyService`: carteira + cofre + bens, com cosmético fora da conta | pendente |
+| T-09.4 `VaultService`: depósito, saque, rendimento por ciclo, meta e projeção | pendente |
+| T-09.5 `EconomicCycleService`: ciclos preguiçosos e idempotentes | pendente |
+| T-09.6 Regras por faixa: depreciação, custo fixo e inadimplência desligados na Faixa A | pendente |
+| T-09.7 Views: loja, confirmação com impacto explicado, inventário e cofre | pendente |
+| T-09.8 Aviso na Colmeia dos eventos do ciclo | pendente |
+| T-09.9 Testes: saldo insuficiente, compra dupla, seis semanas offline, item vendido por inadimplência, patrimônio no centavo | pendente |
+
+---
+
+**E08 — metas e sequência** (concluída e auditada, guardada aqui como histórico). A etapa junta três assuntos que dependem da mesma
 noção de "dia do jogador": meta, sequência e tarefa. O aceite é simular três
 semanas de uso e a sequência bater com a regra em todos os cenários.
 
@@ -931,7 +955,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
-| E09 Economia | parcial | Loja e inventário prontos; sem patrimônio, cofre, ciclos econômicos, upgrades |
+| E09 Economia | **em andamento** | T-09.1 feita: os repositories da economia abriram o schema que a E01 já tinha — cofre com extrato, ciclo econômico idempotente por número, foto do patrimônio, comportamentos do item e as operações de ciclo no inventário (valor com piso e teto, inadimplência que conta ciclos). Falta a camada de service inteira: loja, patrimônio, cofre e ciclo |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
@@ -968,6 +992,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-48 | `achievementsService` grava `motivo: 'marco-de-sequencia'` para qualquer conquista. Hoje só a sequência desbloqueia, então nada está errado no livro; a primeira conquista de favo entra rotulada errado | auditoria da E08 (L-8) | Motivo vindo da conquista, quando a segunda família de conquista existir |
 | DT-49 | O calendário da semana marca o dia de hoje com `ring-2 ring-tinta`, que é contorno preto em badge, vetado pelo checklist da seção 8 do design system; os números dos dias não usam `tabular-nums` | auditoria da E08 (L-9) | Junto com a passagem por navegador da DT-22 |
 | DT-50 | O cabeçalho de `tasksService.js` ainda diz que a geração automática das tarefas é a E08 e que ali existe a criação avulsa: a geração existe desde a T-08.5 e a criação avulsa foi removida | auditoria da E08 (L-10) | Reescrever o bloco, quando o arquivo for tocado |
+| DT-51 | A suíte completa falhou uma vez em quatro execuções na T-09.1, com quatro casos, e passou nas três seguintes. A saída não foi guardada, então nem os nomes dos casos se sabe. É o mesmo sintoma da DT-37, agora com mais bancos descartáveis disputando o MySQL | T-09.1 | Rodar com `--test-concurrency=1` e guardar a saída na próxima ocorrência |
 | DT-42 | A contagem de escudos vive em dois lugares: as unidades ativas em `inventory` (a verdade) e o espelho `streaks.shields_available` (que carrega o `CHECK` do teto). Os dois são escritos na mesma transação, então divergir exige falha fora do banco — mas `scripts/reconcile.js` ainda não confere esse par, como já confere o `hive_progress` | T-08.3 | Acrescentar a conferência ao `reconcile.js` na E09, junto do resto da economia |
 | DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.github/skills/impeccable/scripts/` e `.claude/skills/impeccable/scripts/`, que são plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
 | DT-37 | `test/integration/seguranca.test.js` falhou uma vez em três execuções da suíte completa, no caso "o dono continua alterando a própria conta", e passa sempre quando o arquivo roda sozinho (três de três). Não reproduzi o erro, então não sei se é o limitador de tentativas de login, contenção de banco sob execução paralela ou tempo. Teste que falha de vez em quando é pior do que teste que falha sempre: ensina a ignorar vermelho | T-07.6 | Rodar a suíte com `--test-concurrency=1` para isolar, e só então corrigir a causa |
@@ -2191,3 +2216,61 @@ Para a E09 saber:
 3. **O seed precisa rodar de novo** em qualquer banco já criado antes desta
    sessão, senão as réguas de alvo dos três tipos novos não existem e o
    planejador continua sorteando só dois assuntos.
+
+### Sessão de 2026-08-21, T-09.1: a economia ganhou porta
+
+O schema inteiro da economia existe desde a E01 — `vaults`, `vault_transactions`,
+`economic_cycles`, `patrimony_snapshots`, os cinco comportamentos de item e os
+quatro estados de inventário, todos semeados. O que faltava era acesso: nenhum
+repository lia nada disso, e as cinco tarefas seguintes da E09 iam todas esbarrar
+na mesma parede. Esta tarefa não criou tabela nenhuma.
+
+**O cofre.** `vaultsRepository` faz o par saldo e extrato. O saque tem
+`balance >= ?` no próprio `WHERE`, como o `debitarMel` da carteira: zero linha
+afetada quer dizer saldo insuficiente, e o cofre nunca fica negativo nem depende
+de uma leitura anterior ter sido honesta. O `balance_after` de cada movimento é
+gravado por quem acabou de mexer no saldo, dentro da mesma transação, para o
+extrato nunca discordar do cofre. `totalSacadoDesde` existe por causa da RN-043,
+que manda o mel sacado não render no ciclo do saque.
+
+Um detalhe pegou o teste e vale registrar: `created_at` guarda segundo cheio, sem
+fração, então comparar com um instante de milissegundos perdia o saque gravado no
+mesmo segundo do corte. O corte passou a ser arredondado para baixo dentro do
+repository. É o tipo de erro que some no teste e aparece em produção.
+
+**O ciclo.** `economicCyclesRepository.registrar` é `INSERT IGNORE` e devolve
+`true` só na primeira vez. É essa a trava da RN-036: o jogador que some seis
+semanas volta e recebe seis ciclos, e quem abrir duas abas ao voltar não recebe
+doze. O `summary` em JSON guarda o que aconteceu no ciclo, e é dele que sai o
+extrato da Colmeia da T-09.8.
+
+**O patrimônio.** `patrimony_snapshots` ficou explicitamente como foto para o
+gráfico, não como fonte. Quem responde quanto o jogador tem hoje é o
+`PatrimonyService` da T-09.3, somando carteira, cofre e bens na hora, porque a
+RN-039 pede valor auditável e saldo em cache é a mentira mais cara de depurar.
+Regravar o mesmo dia sobrescreve, pela UNIQUE de usuário e data.
+
+**O valor do item no ciclo.** `aplicarCicloDeValor` faz a conta inteira dentro do
+`UPDATE`, com o piso e o teto do próprio item e a referência no que a unidade
+custou, não no preço de hoje na loja. O sinal vem de `valuation_rate`: positivo
+valoriza, negativo deprecia — é a mesma coluna de onde o seed deriva os
+comportamentos, então não há dois lugares dizendo se o item sobe ou desce.
+Calcular fora e gravar depois abriria a janela entre ler e escrever, que é
+exatamente o buraco que a auditoria da E08 fechou na sequência.
+
+**A inadimplência** conta ciclos em `overdue_cycles` em vez de virar dívida
+(RN-037), e a unidade inadimplente continua aparecendo no ciclo seguinte — ela
+segue cobrando até ser vendida. Quem vende, e por quanto, é o service.
+
+Para a T-09.2 saber:
+
+1. **`purchasesRepository` não precisou de nada novo.** O desconto do upgrade sai
+   do `current_value` da unidade que o jogador já tem, que o inventário já
+   entrega, e `buscarUltimaDoItem` já cobre o reenvio idempotente.
+2. **`itemsRepository.listarUpgradesDe`** responde quais itens são melhoria de
+   um que o jogador possui — é por aí que a loja monta a oferta com desconto.
+3. **Os comportamentos vêm em lote** (`listarComportamentosDosItens`), porque o
+   ciclo de quem ficou semanas fora pediria uma consulta por unidade.
+4. **A suíte falhou uma vez em quatro execuções**, com quatro casos, e passou nas
+   três seguintes. A saída não foi guardada e a causa não foi reproduzida; ficou
+   como DT-51, irmã da DT-37.

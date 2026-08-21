@@ -65,3 +65,46 @@ export async function listarRequisitos(idItem) {
     [idItem],
   );
 }
+
+/**
+ * Os comportamentos econômicos de um lote de itens (RN-034 e RN-035).
+ *
+ * Recebe uma lista de ids e devolve uma linha por par item/comportamento,
+ * porque um item pode ter mais de um — carro deprecia **e** cobra custo fixo. O
+ * ciclo econômico pede os comportamentos de tudo que o jogador possui de uma
+ * vez, e uma consulta por unidade seria N+1 na entrada de quem ficou semanas
+ * fora.
+ */
+export async function listarComportamentosDosItens(idsDeItens) {
+  if (idsDeItens.length === 0) return [];
+
+  const marcadores = Array(idsDeItens.length).fill('?').join(', ');
+  return consultar(
+    `SELECT m.item_id, b.slug AS behavior, b.name AS behavior_name
+       FROM item_behaviors_map m
+       JOIN item_behaviors b ON b.id = m.behavior_id
+      WHERE m.item_id IN (${marcadores})
+      ORDER BY m.item_id, b.id`,
+    idsDeItens,
+  );
+}
+
+/** Os comportamentos de um item só. Atalho para a tela da loja explicar o que a compra faz. */
+export async function listarComportamentos(idItem) {
+  return listarComportamentosDosItens([idItem]);
+}
+
+/**
+ * Os itens que são melhoria deste (`upgrade_of_item_id`). É o que a loja usa
+ * para oferecer a casa maior a quem já tem a menor, com o desconto da RF-LOJ.
+ */
+export async function listarUpgradesDe(idItem) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM items i
+       JOIN item_categories c ON c.id = i.category_id
+      WHERE i.upgrade_of_item_id = ? AND i.is_active = 1 AND i.deleted_at IS NULL
+      ORDER BY i.price`,
+    [idItem],
+  );
+}

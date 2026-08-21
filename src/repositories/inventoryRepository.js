@@ -177,3 +177,103 @@ export async function marcarComoConsumido(conexao, id) {
   );
   return (resultado.affectedRows ?? 0) === 1;
 }
+
+/**
+ * As unidades que o ciclo econômico precisa olhar: as que ainda estão com o
+ * jogador, com os números do item que decidem o efeito de cada ciclo.
+ *
+ * Inclui as inadimplentes de propósito — elas continuam cobrando e continuam
+ * contando os ciclos em atraso até serem vendidas pela RN-037.
+ */
+export async function listarParaCiclo(idUsuario, conexao = null) {
+  return consultarEm(
+    conexao,
+    `SELECT inv.id, inv.item_id, inv.current_value, inv.overdue_cycles, s.slug AS status,
+            i.slug AS item_slug, i.name AS item_name, i.price,
+            i.valuation_rate, i.valuation_floor_pct, i.valuation_cap_pct,
+            i.upkeep_cost, i.income_per_cycle, i.counts_in_patrimony
+       FROM inventory inv
+       ${JOINS}
+      WHERE inv.user_id = ? AND s.slug IN ('ativo', 'inadimplente')
+      ORDER BY inv.id`,
+    [idUsuario],
+  );
+}
+
+/**
+ * Aplica um ciclo de valorização ou depreciação na unidade (RN-034).
+ *
+ * A conta inteira mora na instrução, com o piso e o teto do próprio item: ler o
+ * valor, calcular fora e gravar depois abriria a janela entre a leitura e a
+ * escrita, que é onde dois ciclos simultâneos estouram o limite. O sinal vem de
+ * `valuation_rate` — positivo valoriza, negativo deprecia —, e a referência do
+ * piso e do teto é o que a unidade custou, não o preço de hoje na loja.
+ */
+export async function aplicarCicloDeValor(conexao, id) {
+  const referencia = 'COALESCE(p.price_at_purchase, i.price)';
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE inventory inv
+       JOIN items i ON i.id = inv.item_id
+       LEFT JOIN purchases p ON p.id = inv.purchase_id
+        SET inv.current_value = LEAST(
+              GREATEST(
+                ROUND(inv.current_value * (1 + i.valuation_rate / 100)),
+                FLOOR(${referencia} * i.valuation_floor_pct / 100)
+              ),
+              FLOOR(${referencia} * i.valuation_cap_pct / 100)
+            )
+      WHERE inv.id = ?`,
+    [id],
+  );
+  return resultado.affectedRows;
+}
+
+/**
+ * Marca a unidade como inadimplente e conta mais um ciclo em atraso (RN-037).
+ * Chamada quando o saldo não cobriu o custo fixo — nunca vira dívida negativa,
+ * o item é que fica devendo.
+ */
+export async function marcarInadimplente(conexao, id) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE inventory
+        SET status_id = (SELECT id FROM inventory_statuses WHERE slug = 'inadimplente'),
+            overdue_cycles = overdue_cycles + 1
+      WHERE id = ?
+        AND status_id IN (SELECT id FROM inventory_statuses WHERE slug IN ('ativo', 'inadimplente'))`,
+    [id],
+  );
+  return resultado.affectedRows;
+}
+
+/** O jogador pagou o que devia: a unidade volta a ativa e o atraso zera. */
+export async function regularizar(conexao, id) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE inventory
+        SET status_id = (SELECT id FROM inventory_statuses WHERE slug = 'ativo'),
+            overdue_cycles = 0
+      WHERE id = ?
+        AND status_id = (SELECT id FROM inventory_statuses WHERE slug = 'inadimplente')`,
+    [id],
+  );
+  return resultado.affectedRows;
+}
+
+/**
+ * As unidades que já passaram do limite de ciclos em atraso e a RN-037 manda
+ * vender por 50%. Quem vende é o service — aqui só sai a lista.
+ */
+export async function listarInadimplentesVencidas(idUsuario, ciclosLimite, conexao = null) {
+  return consultarEm(
+    conexao,
+    `SELECT inv.id, inv.item_id, inv.current_value, inv.overdue_cycles,
+            i.slug AS item_slug, i.name AS item_name
+       FROM inventory inv
+       ${JOINS}
+      WHERE inv.user_id = ? AND s.slug = 'inadimplente' AND inv.overdue_cycles >= ?
+      ORDER BY inv.id`,
+    [idUsuario, ciclosLimite],
+  );
+}
