@@ -424,7 +424,9 @@ describe('fluxo autenticado', opcoes, () => {
 
     const inventario = await agente.get('/loja/inventario').set('Accept', 'application/json').expect(200);
     assert.ok(
-      inventario.body.some((grupo) => Number(grupo.itemId) === Number(barato.id)),
+      [...inventario.body.bens, ...inventario.body.cosmeticos].some(
+        (grupo) => Number(grupo.itemId) === Number(barato.id),
+      ),
       'o item comprado aparece no inventário',
     );
 

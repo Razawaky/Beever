@@ -4,17 +4,21 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-21 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-09.2 — a loja virou service: `shopService` monta a vitrine e
-a prévia da compra, e o upgrade passou a abater o valor do bem entregue,
-gravando `price_at_purchase` e `discount_applied` na mesma transação. Árvore
-limpa, 575 testes passando.
-**Próximo passo: T-09.3 — `PatrimonyService`**
+**Último commit:** T-09.3 — o patrimônio ganhou dono: `patrimonyService` soma
+carteira, cofre e bens na hora (RN-039), com cosmético de fora, e apareceu no
+topo da loja, na prévia da compra e no inventário. Árvore limpa, 581 testes
+passando.
+**Próximo passo: T-09.4 — `VaultService`**
 
-**Commit anterior:** T-09.1 — os repositories da economia abriram o schema que a
+**Commit anterior:** T-09.2 — a loja virou service: `shopService` monta a vitrine
+e a prévia da compra, e o upgrade passou a abater o valor do bem entregue,
+gravando `price_at_purchase` e `discount_applied` na mesma transação.
+
+**Commit de antes:** T-09.1 — os repositories da economia abriram o schema que a
 E01 já tinha: cofre com extrato, ciclo econômico idempotente, foto do
 patrimônio, comportamentos do item e as operações de ciclo no inventário.
 
-**Commit de antes:** auditoria da E08 — o laudo está em
+**Antes disso:** auditoria da E08 — o laudo está em
 `docs/08-AUDITORIA-DA-ETAPA.md` e **as três lacunas de maior risco foram
 corrigidas na mesma sessão**: o fuso do MySQL passou a ser fixado em UTC, três
 tipos de meta ganharam fonte de progresso e a avaliação da sequência passou a
@@ -281,7 +285,7 @@ ciclos de uma vez, com extrato claro e nada de saldo negativo.
 |---|---|
 | T-09.1 Repositories de item, compra, inventário e cofre | **feita** — o schema da economia já existia desde a E01 e estava sem porta: entraram `vaultsRepository`, `economicCyclesRepository` e `patrimonyRepository`, mais os comportamentos do item e as operações de ciclo no inventário |
 | T-09.2 `ShopService`: requisitos, compra transacional com `price_at_purchase`, upgrades com desconto | **feita** — `shopService` responde a vitrine e a prévia de impacto, os requisitos passaram a ser avaliados em lote e a compra aceita a entrega de uma unidade como desconto |
-| T-09.3 `PatrimonyService`: carteira + cofre + bens, com cosmético fora da conta | pendente |
+| T-09.3 `PatrimonyService`: carteira + cofre + bens, com cosmético fora da conta | **feita** — a soma é feita na hora a cada chamada, a foto diária virou só gráfico, e o patrimônio entrou na vitrine, na prévia da compra, no inventário e no requisito `patrimonio-minimo` |
 | T-09.4 `VaultService`: depósito, saque, rendimento por ciclo, meta e projeção | pendente |
 | T-09.5 `EconomicCycleService`: ciclos preguiçosos e idempotentes | pendente |
 | T-09.6 Regras por faixa: depreciação, custo fixo e inadimplência desligados na Faixa A | pendente |
@@ -959,7 +963,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
-| E09 Economia | **em andamento** | T-09.1 feita: os repositories da economia abriram o schema que a E01 já tinha — cofre com extrato, ciclo econômico idempotente por número, foto do patrimônio, comportamentos do item e as operações de ciclo no inventário (valor com piso e teto, inadimplência que conta ciclos). T-09.2 feita: a loja ganhou service próprio, com vitrine respondida por jogador, prévia de impacto e upgrade com desconto pelo bem entregue. Faltam patrimônio, cofre e ciclo |
+| E09 Economia | **em andamento** | T-09.1 feita: os repositories da economia abriram o schema que a E01 já tinha — cofre com extrato, ciclo econômico idempotente por número, foto do patrimônio, comportamentos do item e as operações de ciclo no inventário (valor com piso e teto, inadimplência que conta ciclos). T-09.2 feita: a loja ganhou service próprio, com vitrine respondida por jogador, prévia de impacto e upgrade com desconto pelo bem entregue. T-09.3 feita: `patrimonyService` responde carteira mais cofre mais bens, com cosmético fora, e o requisito de patrimônio mínimo deixou de ser um aviso. Faltam cofre e ciclo |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
@@ -996,9 +1000,11 @@ Identificadores rastreiam os documentos da E00.
 | DT-48 | `achievementsService` grava `motivo: 'marco-de-sequencia'` para qualquer conquista. Hoje só a sequência desbloqueia, então nada está errado no livro; a primeira conquista de favo entra rotulada errado | auditoria da E08 (L-8) | Motivo vindo da conquista, quando a segunda família de conquista existir |
 | DT-49 | O calendário da semana marca o dia de hoje com `ring-2 ring-tinta`, que é contorno preto em badge, vetado pelo checklist da seção 8 do design system; os números dos dias não usam `tabular-nums` | auditoria da E08 (L-9) | Junto com a passagem por navegador da DT-22 |
 | DT-50 | O cabeçalho de `tasksService.js` ainda diz que a geração automática das tarefas é a E08 e que ali existe a criação avulsa: a geração existe desde a T-08.5 e a criação avulsa foi removida | auditoria da E08 (L-10) | Reescrever o bloco, quando o arquivo for tocado |
-| DT-52 | A vitrine ainda não devolve o patrimônio que a RF-LOJ-01 manda mostrar no topo da loja, porque a soma auditável de carteira, cofre e bens é do `PatrimonyService`. O `shopService` devolve só o mel | T-09.2 | T-09.3, acrescentando o patrimônio à vitrine |
+| ~~DT-52~~ | ~~A vitrine ainda não devolve o patrimônio que a RF-LOJ-01 manda mostrar no topo da loja~~ | T-09.2 | **Resolvida na T-09.3**: a vitrine e a prévia da compra devolvem a composição inteira |
+| DT-55 | A vitrine soma o patrimônio duas vezes por chamada: uma no `shopService` e outra dentro de `requisitosNaoCumpridosDosItens`, que precisa dele para o requisito de patrimônio mínimo. São consultas pequenas e a loja abre bem dentro do RNF, mas é trabalho repetido | T-09.3 | Passar o patrimônio já calculado, se a loja começar a pesar |
+| DT-56 | A foto diária do patrimônio só é gravada quando o jogador abre alguma tela que soma o patrimônio. Quem passa o dia sem entrar não tem ponto no gráfico — o que é fiel ao uso, mas deixa buracos na curva | T-09.3 | Ver na T-09.5, quando o ciclo econômico rodar |
+| DT-57 | As views de `/loja` e do inventário continuam no formato antigo: `paginaController` usa `listarCatalogo` e `listarAgrupadoPorItem`, sem patrimônio no topo, sem separação de bens e cosméticos e sem a composição | T-09.3 | T-09.7, junto das views da economia |
 | DT-53 | A venda voluntária por 60% (RF-LOJ-08, RN-040) não existe: o único caminho que tira um bem do inventário é a entrega no upgrade. É P1, mas `marcarComoVendido` já está pronto para ela | T-09.2 | Quando os P1 da loja entrarem |
-| DT-54 | A página `/loja` continua renderizando o catálogo cru de `itemsService.listarCatalogo`, sem os bloqueios, o desconto e o "quanto falta" que o `shopService` já calcula. O JSON de `/loja/itens` é que traz a vitrine | T-09.2 | T-09.7, junto das views da loja |
 | DT-51 | A suíte completa falhou uma vez em quatro execuções na T-09.1, com quatro casos, e passou nas três seguintes. A saída não foi guardada, então nem os nomes dos casos se sabe. É o mesmo sintoma da DT-37, agora com mais bancos descartáveis disputando o MySQL | T-09.1 | Rodar com `--test-concurrency=1` e guardar a saída na próxima ocorrência |
 | DT-42 | A contagem de escudos vive em dois lugares: as unidades ativas em `inventory` (a verdade) e o espelho `streaks.shields_available` (que carrega o `CHECK` do teto). Os dois são escritos na mesma transação, então divergir exige falha fora do banco — mas `scripts/reconcile.js` ainda não confere esse par, como já confere o `hive_progress` | T-08.3 | Acrescentar a conferência ao `reconcile.js` na E09, junto do resto da economia |
 | DT-36 | `npm run lint` roda `eslint .` e acusa 3242 erros, **todos** em `.github/skills/impeccable/scripts/` e `.claude/skills/impeccable/scripts/`, que são plugin e não código do projeto. Nenhum arquivo de `src/`, `test/` ou `scripts/` tem erro. Como está, o CI reprova a pipeline por código que não é nosso | T-07.3 | Acrescentar `.claude/` ao `ignores` do `eslint.config.js`, antes de a E13 ligar o CI |
@@ -2317,3 +2323,32 @@ no join, para o service não voltar ao banco só por ele.
 página `/loja` continua no catálogo cru até a T-09.7 — está registrado como
 DT-54, ao lado do patrimônio que falta no topo (DT-52) e da venda voluntária que
 ainda não existe (DT-53).
+
+
+### Sessão de 2026-08-21, T-09.3: o patrimônio ganhou dono
+
+A conta da RN-039 estava espalhada. A trilha chamava de patrimônio o valor dos
+bens, sem carteira nem cofre, e por isso o favo com requisito de patrimônio
+media a coisa errada; a loja mostrava só o mel; e o requisito
+`patrimonio-minimo` dos itens voltava como "não dá para verificar". Entrou
+`patrimonyService`, que soma carteira, cofre e bens toda vez que é chamado. Não
+existe total guardado em coluna nenhuma: a regra pede valor auditável, e
+auditável é o que dá para recontar.
+
+**A foto continua sendo foto.** `patrimony_snapshots` alimenta o gráfico de
+evolução e nada mais. É gravada preguiçosamente, no mesmo desenho da sequência:
+o dia sem foto ganha a primeira, e o dia cujo total mudou recebe a reescrita
+pela UNIQUE de usuário e data. Sem essa comparação, toda abertura de loja viraria
+uma escrita.
+
+**O que passou a enxergar o patrimônio.** A vitrine e a prévia da compra
+devolvem a composição, então a tela consegue dizer para onde o patrimônio vai
+antes de a criança confirmar. O inventário separa bens de cosméticos e traz o
+valor pago de cada unidade, que veio de um join novo com `purchases`. O
+requisito `patrimonio-minimo` dos itens deixou de ser aviso e passou a bloquear
+de verdade, e o desbloqueio de favo da RN-028 passou a medir o patrimônio
+completo em vez de só os bens.
+
+**Cofre de quem nunca depositou.** A leitura devolve zero e não cria linha em
+`vaults` — quem cria o cofre é o primeiro depósito, na T-09.4. Leitura que
+escreve é o tipo de surpresa que ninguém procura no lugar certo depois.

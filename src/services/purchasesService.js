@@ -39,9 +39,9 @@ async function exigirVagaParaEscudo(idUsuario, item) {
  * Recusa a compra que não cumpre os requisitos do item (RN-033) e devolve o que
  * ficou apenas como aviso.
  *
- * Requisito que ainda não tem fonte de verdade (favo concluído, patrimônio
- * mínimo — E05 e T-09.3) não bloqueia: travar a loja por uma checagem que
- * ninguém sabe fazer deixaria itens do catálogo impossíveis de comprar.
+ * Requisito que ainda não tem fonte de verdade (favo concluído, que é E05) não
+ * bloqueia: travar a loja por uma checagem que ninguém sabe fazer deixaria itens
+ * do catálogo impossíveis de comprar.
  */
 async function exigirRequisitos(idItem, idUsuario) {
   const pendencias = await itemsService.requisitosNaoCumpridos(idItem, idUsuario);

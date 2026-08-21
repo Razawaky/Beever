@@ -5,6 +5,7 @@ import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as progressRepository from '../repositories/progressRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado } from '../utils/erros.js';
 import * as inventoryService from './inventoryService.js';
+import * as patrimonyService from './patrimonyService.js';
 import * as validadoresDeJogo from './validadoresDeJogo.js';
 
 /**
@@ -125,14 +126,16 @@ async function contextoDoJogador(idUsuario) {
     profilesRepository.buscarDetalhadoPorUsuario(idUsuario),
     profilesRepository.listarFaixasEtarias(),
     progressRepository.listarProgressoDosFavos(idUsuario),
-    inventoryService.valorEmPatrimonio(idUsuario),
+    patrimonyService.obterDoUsuario(idUsuario),
     inventoryService.idsPossuidos(idUsuario),
   ]);
 
   return {
     codigosVisiveis: faixasVisiveis(faixas, perfil?.faixa_etaria),
     progressoPorFavo: new Map(progressos.map((linha) => [Number(linha.hive_id), linha])),
-    patrimonio,
+    // O favo com requisito de patrimônio (RN-028) mede o patrimônio da RN-039,
+    // que inclui carteira e cofre, e não só o valor dos bens.
+    patrimonio: patrimonio.total,
     // `idsPossuidos` já devolve um Set de números.
     itensPossuidos,
   };

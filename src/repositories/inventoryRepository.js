@@ -22,11 +22,12 @@ const CAMPOS = `inv.id, inv.item_id, inv.purchase_id, inv.current_value, inv.ove
                 inv.is_equipped, inv.acquired_at, inv.sold_at, inv.sold_value,
                 s.slug AS status, i.name AS item_name, i.slug AS item_slug,
                 i.counts_in_patrimony, i.upkeep_cost, i.income_per_cycle,
-                c.name AS category_name`;
+                c.name AS category_name, p.price_at_purchase AS purchase_price`;
 
 const JOINS = `JOIN items i ON i.id = inv.item_id
                JOIN item_categories c ON c.id = i.category_id
-               JOIN inventory_statuses s ON s.id = inv.status_id`;
+               JOIN inventory_statuses s ON s.id = inv.status_id
+               LEFT JOIN purchases p ON p.id = inv.purchase_id`;
 
 export async function listarPorUsuario(idUsuario) {
   return consultar(

@@ -1,6 +1,6 @@
 import * as inventoryRepository from '../repositories/inventoryRepository.js';
-import * as coinsService from './coinsService.js';
 import * as itemsService from './itemsService.js';
+import * as patrimonyService from './patrimonyService.js';
 
 /**
  * A loja já respondida para o jogador: o que dá para comprar, o que falta e
@@ -40,9 +40,9 @@ function ofertaDeTroca(item, unidades) {
 
 /** O catálogo com o estado de compra de cada item para este jogador. */
 export async function listarVitrine(idUsuario) {
-  const [catalogo, carteira, unidades] = await Promise.all([
+  const [catalogo, patrimonio, unidades] = await Promise.all([
     itemsService.listarCatalogo(),
-    coinsService.obterCarteira(idUsuario),
+    patrimonyService.obterDoUsuario(idUsuario),
     inventoryRepository.listarPorUsuario(idUsuario),
   ]);
 
@@ -65,12 +65,13 @@ export async function listarVitrine(idUsuario) {
       troca,
       bloqueios,
       avisos: pendencias.filter((pendencia) => pendencia.naoVerificavelAinda),
-      podeComprar: bloqueios.length === 0 && carteira.mel >= preco,
-      faltamDeMel: Math.max(preco - carteira.mel, 0),
+      podeComprar: bloqueios.length === 0 && patrimonio.carteira >= preco,
+      faltamDeMel: Math.max(preco - patrimonio.carteira, 0),
     };
   });
 
-  return { mel: carteira.mel, itens };
+  // Mel e patrimônio ficam no topo da loja (RF-LOJ-01).
+  return { mel: patrimonio.carteira, patrimonio, itens };
 }
 
 /**
@@ -83,8 +84,8 @@ export async function listarVitrine(idUsuario) {
  */
 export async function previaDaCompra(idUsuario, idItem, { idUnidadeTrocada = null } = {}) {
   const item = await itemsService.obterAtivo(idItem);
-  const [carteira, unidades, pendencias] = await Promise.all([
-    coinsService.obterCarteira(idUsuario),
+  const [patrimonio, unidades, pendencias] = await Promise.all([
+    patrimonyService.obterDoUsuario(idUsuario),
     inventoryRepository.listarPorUsuario(idUsuario),
     itemsService.requisitosNaoCumpridos(idItem, idUsuario),
   ]);
@@ -105,22 +106,31 @@ export async function previaDaCompra(idUsuario, idItem, { idUnidadeTrocada = nul
       : null;
   }
 
-  const precoPago = Number(item.price) - (troca?.desconto ?? 0);
+  const desconto = troca?.desconto ?? 0;
+  const precoPago = Number(item.price) - desconto;
+  const entraNoPatrimonio = Boolean(item.counts_in_patrimony);
   const bloqueios = pendencias.filter((pendencia) => !pendencia.naoVerificavelAinda);
+
+  // O bem novo entra pelo preço de tabela e o entregue sai pelo desconto: é
+  // assim que a tela consegue dizer "seu patrimônio vai para X" (RF-LOJ-05).
+  const patrimonioDepois =
+    patrimonio.total - precoPago + (entraNoPatrimonio ? Number(item.price) : 0) - desconto;
 
   return {
     item,
     precoDeTabela: Number(item.price),
-    desconto: troca?.desconto ?? 0,
+    desconto,
     precoPago,
     troca,
-    saldoAtual: carteira.mel,
-    saldoDepois: carteira.mel - precoPago,
+    saldoAtual: patrimonio.carteira,
+    saldoDepois: patrimonio.carteira - precoPago,
+    patrimonioAtual: patrimonio.total,
+    patrimonioDepois,
     custoSemanal: Number(item.upkeep_cost),
     rendaSemanal: Number(item.income_per_cycle),
-    entraNoPatrimonio: Boolean(item.counts_in_patrimony),
+    entraNoPatrimonio,
     bloqueios,
     avisos: pendencias.filter((pendencia) => pendencia.naoVerificavelAinda),
-    podeComprar: bloqueios.length === 0 && carteira.mel >= precoPago,
+    podeComprar: bloqueios.length === 0 && patrimonio.carteira >= precoPago,
   };
 }

@@ -1,6 +1,7 @@
 import * as inventoryRepository from '../repositories/inventoryRepository.js';
 import * as itemsRepository from '../repositories/itemsRepository.js';
 import * as levelsService from './levelsService.js';
+import * as patrimonyService from './patrimonyService.js';
 import { erroNaoEncontrado } from '../utils/erros.js';
 
 /** Catálogo da loja e os requisitos de compra de cada item. */
@@ -16,7 +17,7 @@ export async function obterAtivo(idItem) {
 }
 
 /** O que um requisito exige do jogador, na língua da criança. Null quer dizer cumprido. */
-function avaliarRequisito(requisito, { nivel, idsPossuidos }) {
+function avaliarRequisito(requisito, { nivel, idsPossuidos, patrimonio }) {
   switch (requisito.requirement_type) {
     case 'nivel-minimo': {
       const exigido = Number(requisito.required_level);
@@ -30,8 +31,13 @@ function avaliarRequisito(requisito, { nivel, idsPossuidos }) {
         mensagem: `Compre antes: ${requisito.required_item_name ?? 'outro item'}`,
       };
     }
+    case 'patrimonio-minimo': {
+      const exigido = Number(requisito.required_patrimony);
+      if (patrimonio >= exigido) return null;
+      return { tipo: requisito.requirement_type, mensagem: `Tenha ${exigido} de patrimônio` };
+    }
     default:
-      // favo-concluido e patrimonio-minimo: sem fonte de verdade até a E05/T-09.3.
+      // favo-concluido ainda não tem fonte de verdade: a conclusão de favo é E05.
       return {
         tipo: requisito.requirement_type,
         mensagem: 'Este requisito ainda não pode ser verificado',
@@ -55,14 +61,15 @@ export async function requisitosNaoCumpridosDosItens(idsDeItens, idUsuario) {
   const requisitos = await itemsRepository.listarRequisitosDosItens(idsDeItens);
   if (requisitos.length === 0) return pendentesPorItem;
 
-  const [nivel, unidades] = await Promise.all([
+  const [nivel, unidades, patrimonio] = await Promise.all([
     levelsService.obterDoUsuario(idUsuario),
     inventoryRepository.listarPorUsuario(idUsuario),
+    patrimonyService.obterDoUsuario(idUsuario),
   ]);
   const idsPossuidos = new Set(unidades.map((unidade) => Number(unidade.item_id)));
 
   for (const requisito of requisitos) {
-    const pendencia = avaliarRequisito(requisito, { nivel, idsPossuidos });
+    const pendencia = avaliarRequisito(requisito, { nivel, idsPossuidos, patrimonio: patrimonio.total });
     if (pendencia) pendentesPorItem.get(Number(requisito.item_id))?.push(pendencia);
   }
 
