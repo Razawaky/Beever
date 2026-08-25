@@ -79,8 +79,9 @@ export const painel = assincrono(async (req, res) => {
 
   renderizarPagina(res, 'painel', {
     titulo: `${colmeia.jogador.apelido} — Beever`,
-    // Sem espaço no topo: o cabeçalho da Colmeia é grudado e começa na borda.
-    classeBody: 'min-h-screen bg-cera pb-10 text-tinta antialiased',
+    // Sem espaço no topo, porque o cabeçalho é grudado; e folga embaixo no
+    // celular, para o botão "Continuar" não tapar o fim da página.
+    classeBody: 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10',
     colmeia,
   });
 });
@@ -221,12 +222,16 @@ export const perfil = assincrono(async (req, res) => {
 export const trilha = assincrono(async (req, res) => {
   const trilha = await contentService.listarTrilha(req.session.usuarioId);
   const favoAtual = trilha.find((favo) => favo.estado === 'disponivel' && !favo.concluido) ?? null;
+  // A trilha já está lida: passar adiante evita cobrar do banco as mesmas
+  // consultas de novo (RNF-04).
+  const proximaCelula = await contentService.proximaCelulaPendente(req.session.usuarioId, trilha);
 
   renderizarPagina(res, 'trilha', {
     titulo: 'Minha trilha — Beever',
-    classeBody: FUNDO_CERA,
+    classeBody: 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10',
     trilha,
     favoAtual,
+    proximaCelula,
   });
 });
 

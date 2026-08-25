@@ -59,11 +59,9 @@
               <%= favoAtual.celulasConcluidas %> de <%= favoAtual.celulasTotais || '?' %> células ·
               <%= favoAtual.percentual %>%
             </p>
-            <a
-              href="/trilha/<%= favoAtual.id %>"
-              class="mt-6 block rounded-pilula bg-mel px-6 py-3 text-center font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
-              >Continuar</a
-            >
+            <div class="mt-6">
+              <%- include('../partials/ui/botao-continuar', { proximaCelula }) %>
+            </div>
           <% } else { %>
             <h2 class="font-display text-xl">Trilha completa!</h2>
             <p class="mt-2 text-sm text-tinta-suave">
@@ -76,13 +74,10 @@
       </aside>
     </div>
 
-    <%# No celular o "continuar" não fica escondido no fim da rolagem. %>
-    <% if (favoAtual) { %>
-      <a
-        href="/trilha/<%= favoAtual.id %>"
-        class="fixed inset-x-6 bottom-6 z-10 rounded-pilula bg-mel px-6 py-4 text-center font-semibold text-tinta shadow-xl transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2 md:hidden"
-        >Continuar: <%= favoAtual.title %></a
-      >
-    <% } %>
+    <%# No celular o "continuar" não fica escondido no fim da rolagem. Acima de
+        `md` quem manda é o botão do painel lateral. %>
+    <div class="md:hidden">
+      <%- include('../partials/ui/botao-continuar', { proximaCelula, fixo: true }) %>
+    </div>
   <% } %>
 </main>

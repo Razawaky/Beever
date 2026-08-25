@@ -48,6 +48,12 @@
       <% } %>
     </div>
 
+    <%# A ação principal da Colmeia. No celular ela fica grudada no rodapé, e o
+        corpo reserva a folga para não tapar o fim da página. %>
+    <div class="px-8 pt-6">
+      <%- include('../partials/ui/botao-continuar', { proximaCelula: colmeia.proximaCelula, fixo: true }) %>
+    </div>
+
     <%# Tarefa é o que a colmeia pede hoje; meta é onde o jogador quer chegar.
         A ordem na tela é a ordem do jogo. %>
     <div class="px-8 pt-8">

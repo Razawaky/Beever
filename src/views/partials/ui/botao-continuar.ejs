@@ -1,0 +1,26 @@
+<%#
+  A ação principal da tela (RF-HOM-07): leva direto à próxima célula que o
+  jogador tem para jogar, e não à lista do favo — "Continuar" promete continuar,
+  não escolher.
+
+  Sem próxima célula o botão troca de texto e de destino em vez de sumir: tela
+  sem ação principal deixa a criança sem saber o que fazer.
+
+  `fixo` gruda o botão no rodapé do celular e o devolve ao fluxo a partir de
+  `sm`, porque no desktop um botão colado na base de uma tela larga parece erro.
+  É um link: funciona sem JavaScript e com teclado.
+-%>
+<%
+  const temCelula = Boolean(proximaCelula);
+  const destino = temCelula ? `/trilha/${proximaCelula.idFavo}/celula/${proximaCelula.id}` : '/trilha';
+  const texto = temCelula ? `Continuar: ${proximaCelula.titulo}` : 'Ver minha trilha';
+  const posicao = locals.fixo
+    ? 'fixed inset-x-4 bottom-4 z-20 shadow-xl sm:static sm:inset-auto sm:shadow-md'
+    : 'block';
+%>
+<a
+  href="<%= destino %>"
+  class="<%= posicao %> rounded-pilula bg-mel px-6 py-4 text-center font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+>
+  <%= texto %>
+</a>

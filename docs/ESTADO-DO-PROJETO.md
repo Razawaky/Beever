@@ -4,28 +4,31 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-10.5 — as tarefas do dia ganharam bloco na Colmeia, com
+**Último commit:** T-10.6 — a Colmeia ganhou ação principal: o botão
+"Continuar" leva direto à próxima célula jogável, fixo no rodapé do celular, e a
+tela `/trilha` passou a usar o mesmo partial — o "Continuar" de lá levava à
+lista do favo, e agora as duas telas prometem a mesma coisa. Árvore limpa, 713
+testes passando.
+**Próximo passo: T-10.7 — testes de integração e medição de tempo da Colmeia**
+
+**Commit anterior:** T-10.5 — as tarefas do dia ganharam bloco na Colmeia, com
 recebimento no lugar (o formulário diz para onde voltar, conferido contra lista
 branca), e o aviso do ciclo parou de sumir ao recarregar: agora ele vale para o
-dia do jogador, lendo `processed_at`. **DT-63 paga.** Árvore limpa, 708 testes
-passando.
-**Próximo passo: T-10.6 — botão "Continuar" para a próxima célula pendente**
+dia do jogador, lendo `processed_at`. **DT-63 paga.**
 
-**Commit anterior:** T-10.4 — a trilha entrou na Colmeia em hexágonos: os favos
+**Commit de antes:** T-10.4 — a trilha entrou na Colmeia em hexágonos: os favos
 vêm todos, com foco no que está em andamento e no seguinte, e os mais avançados
 pequenos e travados com o motivo escrito. O foco é decidido no `homeService`, e
 o `favo-card` ganhou modo compacto.
 
-**Commit de antes:** T-10.3 — a meta que vence primeiro virou o segundo assunto da
+**Antes disso:** T-10.3 — a meta que vence primeiro virou o segundo assunto da
 Colmeia: card em largura inteira com título, progresso, prazo em palavra e o que
 ela paga, e as outras numa lista curta. `resumirMeta`, `ordenarPorVencimento` e
 `urgenciaDoPrazo` passaram a morar no `goalsService`, e a tela `/metas` usa o
 mesmo card.
 
-**Antes disso:** T-10.2 — o topo da Colmeia virou componente: `badge-recurso`,
-`barra-progresso` e `cabecalho-colmeia` desenham nível com barra de XP, mel,
-patrimônio e sequência, grudados no topo ao rolar. Os mesmos componentes já
-valem na loja, no inventário e no cofre.
+**Antes disso:** T-10.2 — o topo da Colmeia virou componente, com nível, mel,
+patrimônio e sequência grudados no topo ao rolar.
 
 **Antes disso:** T-10.1 — a Colmeia ganhou dono: `homeService` responde os nove
 blocos da home numa chamada só, com o "sem N+1" da RNF-04 virando teste que
@@ -321,7 +324,7 @@ argumento a favor da rede que a T-02.1 montou.
 | As quatro telas da economia em navegador real (T-09.7) | A marcação está coberta por teste pelo HTTP — patrimônio no topo, categorias, as frases do comportamento, o impacto da compra, bens separados de enfeites, depósito e meta pelo formulário — e o caminho inteiro foi percorrido com o servidor de pé e a conta demo. O que **não** foi visto por olho humano é o desenho: a rosca da composição e a linha da projeção pintadas no `canvas`, a vitrine a 320 px com três colunas virando uma, e o foco de teclado passeando pelos formulários do cofre. Vale o passe da DT-22 |
 | A frase da faixa na loja (T-09.6) | A vitrine e a prévia da compra devolvem custo zero, `perdeValor` falso e a frase que explica para a Faixa A, com teste contra banco real. Como as telas da loja ainda estão no formato antigo (DT-57), nada disso chega à criança nem foi visto por olho humano: entra junto das views da T-09.7 |
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
-| A Colmeia agregada, o cabeçalho, a meta, a trilha e as tarefas em navegador real (T-10.1 a T-10.5) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, como o card da meta e a lista das outras se comportam a 320 px, se a trilha serpenteante da home não empurra texto para fora da tela no celular, e o botão de receber recompensa da tarefa lado a lado com o texto a 320 px. Entra no passe da DT-22 |
+| A Colmeia inteira em navegador real (T-10.1 a T-10.6) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, como o card da meta e a lista das outras se comportam a 320 px, se a trilha serpenteante da home não empurra texto para fora da tela no celular, o botão de receber recompensa da tarefa lado a lado com o texto a 320 px, e o "Continuar" grudado no rodapé sem tapar o fim da rolagem. Entra no passe da DT-22 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -343,7 +346,7 @@ avançado, com pelo menos 50 células e 10 itens.
 | T-10.3 Bloco da meta mais próxima do vencimento | **feita** — `card-meta` e `estado-vazio` novos, a urgência do prazo virou palavra no `goalsService` (`hoje`, `apertado`, `tranquilo`, `sem-prazo`), e `/metas` passou a usar o mesmo card |
 | T-10.4 Trilha de favos em hexágonos com estados | **feita** — a trilha inteira aparece na Colmeia, com `marcarFocoDaTrilha` destacando o favo em andamento e o seguinte; os demais vêm compactos e travados, com o motivo escrito |
 | T-10.5 Tarefas do dia + eventos do ciclo | **feita** — `card-tarefa` compartilhado com `/metas`, recebimento sem trocar o jogador de tela (lista branca em `paginaDeVolta`) e o aviso do ciclo passando a valer para o dia do jogador, o que paga a DT-63 |
-| T-10.6 Botão "Continuar" resolvendo a próxima célula pendente | pendente |
+| T-10.6 Botão "Continuar" resolvendo a próxima célula pendente | **feita** — `botao-continuar` leva direto à célula, troca para "Ver minha trilha" quando não há pendente, e o teste abre o destino em vez de só conferir o `href` |
 | T-10.7 Testes de integração + medição de tempo da página (RNF-01) | pendente |
 
 ---
@@ -2769,3 +2772,20 @@ estava gravado desde a E01 — a dívida pedia coluna de "visto" e, olhando o
 schema de novo, não precisava. Dois testes do aviso foram reescritos porque
 afirmavam o comportamento antigo, e o novo par diz o contrato de hoje:
 recarregar mantém, dois dias depois só o histórico fica.
+
+### Sessão de 2026-08-25, T-10.6 e uma promessa antiga corrigida
+
+O botão "Continuar" virou partial único, usado pela Colmeia e pela trilha. Ele
+recebe a próxima célula e decide o par destino/texto: com célula, vai direto ao
+jogo; sem célula, troca para "Ver minha trilha" em vez de sumir, porque tela sem
+ação principal deixa a criança sem saber o que fazer. É um link, então funciona
+sem JavaScript e com teclado, e no celular fica grudado no rodapé com o corpo da
+página reservando a folga.
+
+No caminho apareceu uma promessa antiga quebrada: o "Continuar" da tela
+`/trilha` levava à **lista do favo**, não ao jogo. Agora as duas telas prometem
+a mesma coisa e vão para o mesmo lugar.
+
+O teste que mais vale deste lote não confere o `href`: ele abre o destino e
+exige 200 com o título da célula na página. Botão que promete o que o servidor
+recusa já aconteceu aqui na T-07.5, e conferir só a marcação não pega isso.
