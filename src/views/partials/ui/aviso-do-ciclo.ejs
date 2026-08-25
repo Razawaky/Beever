@@ -1,0 +1,40 @@
+<%#
+  O que a economia fez enquanto o jogador estava fora (RF-HOM-09).
+
+  O destaque só aparece na visita em que os ciclos foram aplicados — é quando a
+  notícia é notícia. Embaixo fica o histórico curto, para conferir depois.
+%>
+<% if (avisoDoCiclo) { %>
+  <div class="rounded-favo bg-mel p-6" role="status">
+    <h2 class="font-display text-xl">
+      <% if (avisoDoCiclo.semanas === 1) { %>
+        Passou uma semana por aqui
+      <% } else { %>
+        Você ficou <%= avisoDoCiclo.semanas %> semanas fora
+      <% } %>
+    </h2>
+    <ul class="mt-3 grid gap-2 text-sm">
+      <% avisoDoCiclo.frases.forEach((frase) => { %>
+        <li>🐝 <%= frase %></li>
+      <% }) %>
+    </ul>
+  </div>
+<% } %>
+
+<% if (eventosDoCiclo.length > 0) { %>
+  <details class="mt-4 rounded-favo bg-cera p-6">
+    <summary class="cursor-pointer font-semibold">O que já aconteceu na sua economia</summary>
+    <ul class="mt-3 grid gap-3 text-sm">
+      <% eventosDoCiclo.forEach((evento) => { %>
+        <li>
+          <p class="text-tinta-suave"><%= new Date(evento.quando).toLocaleDateString('pt-BR') %></p>
+          <ul class="mt-1 grid gap-1">
+            <% evento.frases.forEach((frase) => { %>
+              <li><%= frase %></li>
+            <% }) %>
+          </ul>
+        </li>
+      <% }) %>
+    </ul>
+  </details>
+<% } %>

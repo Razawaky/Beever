@@ -71,7 +71,7 @@ export const painel = assincrono(async (req, res) => {
   // O ciclo econômico vem antes de tudo (RN-036): quem passou semanas fora
   // recebe os ciclos aqui, e só então a página lê saldo, inventário e metas —
   // do contrário a Colmeia mostraria o mel de antes das contas.
-  await economicCycleService.processarPendentes(req.session.usuarioId);
+  const ciclosDaVisita = await economicCycleService.processarPendentes(req.session.usuarioId);
   // A sequência é avaliada aqui, do mesmo jeito preguiçoso da expiração de meta
   // (RN-021): o dia fechado sem célula quebra na primeira página que o jogador
   // abrir, sem cron para manter de pé.
@@ -87,12 +87,13 @@ export const painel = assincrono(async (req, res) => {
   await goalsService.sincronizarProgresso(req.session.usuarioId);
   await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
 
-  const [perfil, inventario, metas, tarefas, semana] = await Promise.all([
+  const [perfil, inventario, metas, tarefas, semana, eventosDoCiclo] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
     inventoryService.listarAgrupadoPorItem(req.session.usuarioId),
     goalsService.listarAtivas(req.session.usuarioId),
     tasksService.listarAtivas(req.session.usuarioId),
     streakService.resumoDaSemana(req.session.usuarioId),
+    economicCycleService.listarEventosRecentes(req.session.usuarioId),
   ]);
 
   renderizarPagina(res, 'painel', {
@@ -103,6 +104,8 @@ export const painel = assincrono(async (req, res) => {
     metaPrincipal: metas[0] ?? null,
     tarefas,
     semana,
+    avisoDoCiclo: economicCycleService.avisoDosCiclos(ciclosDaVisita),
+    eventosDoCiclo,
   });
 });
 

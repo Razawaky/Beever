@@ -47,6 +47,14 @@
       </div>
     </div>
 
+    <%# O que a economia fez enquanto o jogador estava fora vem antes da trilha:
+        é notícia, e notícia velha não é notícia. %>
+    <% if (avisoDoCiclo || eventosDoCiclo.length > 0) { %>
+      <div class="px-8 pt-8">
+        <%- include('../partials/ui/aviso-do-ciclo', { avisoDoCiclo, eventosDoCiclo }) %>
+      </div>
+    <% } %>
+
     <%# A trilha é o que o jogador vem fazer: primeiro card, largura inteira. %>
     <div class="px-8 pt-8">
       <a

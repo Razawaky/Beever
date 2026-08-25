@@ -289,3 +289,86 @@ export async function processarPendentes(idUsuario, agora = new Date()) {
 export async function listarUltimos(idUsuario, limite = 10) {
   return economicCyclesRepository.listarUltimos(idUsuario, limite);
 }
+
+/** Soma os números de vários ciclos, para o aviso falar de tudo de uma vez. */
+function somarCiclos(resumos) {
+  const total = {
+    valorizacao: 0,
+    depreciacao: 0,
+    renda: 0,
+    custo: 0,
+    rendimentoDoCofre: 0,
+    bonusDeMeta: 0,
+    inadimplentes: [],
+    vendidos: [],
+  };
+
+  for (const resumo of resumos) {
+    total.valorizacao += resumo.valorizacao ?? 0;
+    total.depreciacao += resumo.depreciacao ?? 0;
+    total.renda += resumo.renda ?? 0;
+    total.custo += resumo.custo ?? 0;
+    total.rendimentoDoCofre += resumo.rendimentoDoCofre ?? 0;
+    total.bonusDeMeta += resumo.metaDoCofre?.bonus ?? 0;
+    total.inadimplentes.push(...(resumo.inadimplentes ?? []));
+    total.vendidos.push(...(resumo.vendidos ?? []));
+  }
+
+  return total;
+}
+
+/**
+ * O que aconteceu na economia, em frases (RF-HOM-09).
+ *
+ * Vários ciclos viram um aviso só, com os números somados: seis blocos iguais
+ * empilhados viram parede de texto, e quem passou seis semanas fora é justamente
+ * quem mais precisa entender o que mudou. Ciclo silencioso não vira aviso —
+ * aviso vazio ensina a ignorar avisos.
+ *
+ * Conta pura, sem banco: é o que deixa o teste cobrir os casos difíceis.
+ */
+export function avisoDosCiclos(resumos) {
+  const aplicados = (resumos ?? []).filter((resumo) => resumo && !resumo.pulado);
+  if (aplicados.length === 0) return null;
+
+  const total = somarCiclos(aplicados);
+  const frases = [];
+
+  if (total.renda > 0) frases.push(`Seus negócios renderam ${total.renda} de mel.`);
+  if (total.rendimentoDoCofre > 0) frases.push(`Seu cofre rendeu ${total.rendimentoDoCofre} de mel.`);
+  if (total.bonusDeMeta > 0) frases.push(`Você bateu a meta do cofre e ganhou ${total.bonusDeMeta} de mel.`);
+  if (total.custo > 0) frases.push(`As contas dos seus itens custaram ${total.custo} de mel.`);
+  if (total.valorizacao > 0) frases.push(`Seus bens ganharam ${total.valorizacao} de valor.`);
+  if (total.depreciacao > 0) frases.push(`Seus bens perderam ${total.depreciacao} de valor.`);
+
+  for (const nome of new Set(total.inadimplentes)) {
+    frases.push(`Faltou mel para pagar as contas de ${nome}. Duas semanas sem pagar e o item é vendido.`);
+  }
+
+  // A regra da venda forçada é dura; o texto não precisa ser. Diz o motivo e o
+  // valor, sem culpar a criança.
+  for (const vendido of total.vendidos) {
+    frases.push(
+      `${vendido.item} foi vendido por ${vendido.valor} de mel porque as contas dele ficaram duas semanas sem pagar.`,
+    );
+  }
+
+  if (frases.length === 0) return null;
+  return { semanas: aplicados.length, frases };
+}
+
+/** O `summary` vem como objeto do MySQL, mas nem todo driver concorda com isso. */
+function comoResumo(summary) {
+  if (typeof summary === 'string') return JSON.parse(summary);
+  return summary;
+}
+
+/** O histórico curto que fica embaixo do aviso, para conferir depois. */
+export async function listarEventosRecentes(idUsuario, limite = 5) {
+  const ciclos = await economicCyclesRepository.listarUltimos(idUsuario, limite);
+
+  return ciclos
+    .map((ciclo) => ({ quando: ciclo.processed_at, aviso: avisoDosCiclos([comoResumo(ciclo.summary)]) }))
+    .filter((evento) => evento.aviso !== null)
+    .map((evento) => ({ quando: evento.quando, frases: evento.aviso.frases }));
+}
