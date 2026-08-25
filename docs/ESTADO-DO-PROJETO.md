@@ -1020,7 +1020,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-49 | O calendário da semana marca o dia de hoje com `ring-2 ring-tinta`, que é contorno preto em badge, vetado pelo checklist da seção 8 do design system; os números dos dias não usam `tabular-nums` | auditoria da E08 (L-9) | Junto com a passagem por navegador da DT-22 |
 | DT-50 | O cabeçalho de `tasksService.js` ainda diz que a geração automática das tarefas é a E08 e que ali existe a criação avulsa: a geração existe desde a T-08.5 e a criação avulsa foi removida | auditoria da E08 (L-10) | Reescrever o bloco, quando o arquivo for tocado |
 | ~~DT-52~~ | ~~A vitrine ainda não devolve o patrimônio que a RF-LOJ-01 manda mostrar no topo da loja~~ | T-09.2 | **Resolvida na T-09.3**: a vitrine e a prévia da compra devolvem a composição inteira |
-| DT-61 | O banco de desenvolvimento não aceita `db:migrate`: as migrations `004` e `007` foram editadas depois de aplicadas, nas T-08.3 e T-08.4, e o runner recusa por checksum — corretamente. A migration `016` da faixa não entrou lá, embora a suíte a aplique do zero a cada execução | T-09.6 | Recriar o banco de desenvolvimento com `npm run db:reset -- --sim` seguido de `db:migrate` e `db:seed` |
+| ~~DT-61~~ | ~~O banco de desenvolvimento não aceita `db:migrate`: as migrations `004` e `007` foram editadas depois de aplicadas, nas T-08.3 e T-08.4, e o runner recusa por checksum~~ | T-09.6 | **Resolvida na mesma sessão**: o banco foi recriado com `db:reset -- --sim`, e o ciclo `db:migrate` (16 migrations), `db:seed` e `db:reconcile` rodou limpo do zero |
 | DT-59 | O ciclo econômico só é processado no `/painel`. Quem entra direto na loja, no inventário ou no cofre vê o saldo de antes das contas da semana, até passar pela Colmeia | T-09.5 | Subir a chamada para um middleware das telas autenticadas, junto das views da T-09.7 |
 | DT-60 | Acima de doze ciclos por visita, os mais antigos são marcados como processados sem efeito: quem some por um ano não paga o custo fixo nem recebe a renda daquele tempo. É escolha de produto, para a volta não zerar o inventário na primeira tela | T-09.5 | Rever quando houver jogador real sumindo por tanto tempo |
 | DT-58 | O prazo da meta do cofre (`goal_due_at`) é guardado e devolvido, mas nada acontece quando ele vence: a meta não expira nem avisa. A RN-044 fala em meta com prazo, sem dizer o que fazer ao vencer | T-09.4 | Decidir com o produto, junto da tela do cofre na T-09.7 |
@@ -2475,7 +2475,8 @@ antiga, e ninguém deve ser punido por ter feito aniversário. O caminho contrá
 — entrar numa faixa que cobra — passa a cobrar no ciclo seguinte, sem aviso na
 tela, e isso ainda vai precisar de um.
 
-Ficou registrado como DT-61 que o banco de desenvolvimento recusa `db:migrate`
-por causa das migrations `004` e `007`, editadas depois de aplicadas em sessões
-anteriores. A suíte não sofre com isso, porque cria o banco do zero a cada
-execução.
+O banco de desenvolvimento recusou `db:migrate` por causa das migrations `004` e
+`007`, editadas depois de aplicadas em sessões anteriores — o guarda de checksum
+fazendo o que deve. Foi recriado do zero na mesma sessão, com as 16 migrations
+aplicadas, seed completo e `db:reconcile` fechando os livros. Era a DT-61, já
+paga.
