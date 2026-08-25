@@ -65,3 +65,18 @@ export async function listarUltimos(idUsuario, limite = 10) {
     [idUsuario],
   );
 }
+
+/**
+ * Grava o extrato do ciclo, que só existe depois dos efeitos aplicados.
+ *
+ * A marca do ciclo entra antes de tudo, para travar quem chegar junto; o
+ * resumo entra no fim, na mesma transação, quando já se sabe o que aconteceu.
+ */
+export async function gravarResumo(conexao, { idUsuario, numeroDoCiclo, resumo }) {
+  const resultado = await consultarEm(
+    conexao,
+    'UPDATE economic_cycles SET summary = ? WHERE user_id = ? AND cycle_number = ?',
+    [JSON.stringify(resumo), idUsuario, numeroDoCiclo],
+  );
+  return resultado.affectedRows;
+}

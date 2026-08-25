@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import * as achievementsService from '../services/achievementsService.js';
 import * as contentService from '../services/contentService.js';
+import * as economicCycleService from '../services/economicCycleService.js';
 import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
 import * as inventoryService from '../services/inventoryService.js';
@@ -66,6 +67,10 @@ export const onboarding = assincrono(async (req, res) => {
 });
 
 export const painel = assincrono(async (req, res) => {
+  // O ciclo econômico vem antes de tudo (RN-036): quem passou semanas fora
+  // recebe os ciclos aqui, e só então a página lê saldo, inventário e metas —
+  // do contrário a Colmeia mostraria o mel de antes das contas.
+  await economicCycleService.processarPendentes(req.session.usuarioId);
   // A sequência é avaliada aqui, do mesmo jeito preguiçoso da expiração de meta
   // (RN-021): o dia fechado sem célula quebra na primeira página que o jogador
   // abrir, sem cron para manter de pé.
