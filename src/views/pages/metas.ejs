@@ -56,41 +56,17 @@
     <h2 class="mb-4 text-lg font-semibold">Minhas metas</h2>
 
     <% if (metas.length === 0) { %>
-      <p class="mb-10 text-tinta-suave">Suas metas aparecem aqui assim que a colmeia montar seu plano.</p>
+      <div class="mb-10">
+        <%- include('../partials/ui/estado-vazio', {
+          mensagem: 'Suas metas aparecem aqui assim que a colmeia montar seu plano.',
+        }) %>
+      </div>
     <% } %>
 
     <div class="mb-12 space-y-6">
       <% metas.forEach((meta) => { %>
-        <% const atual = Number(meta.current_value); %>
-        <% const alvo = Number(meta.target_value); %>
-        <% const percentual = alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)); %>
-        <% const concluida = meta.status === 'concluida'; %>
-        <section class="rounded-favo bg-white p-6 shadow-md">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <h3 class="text-lg font-bold <%= concluida ? 'line-through text-tinta-suave' : '' %>">
-                <%= meta.title %>
-              </h3>
-              <p class="mt-1 text-sm text-tinta-suave"><%= atual %> de <%= alvo %></p>
-              <p class="mt-1 text-xs text-tinta-suave">
-                Prazo: <%= new Date(meta.due_at).toLocaleDateString('pt-BR') %> ·
-                <%= meta.status %> · dificuldade <%= meta.difficulty %>
-              </p>
-            </div>
-            <div class="w-24 text-right">
-              <span class="text-sm font-semibold"><%= percentual %>%</span>
-              <div
-                class="mt-1 h-2 overflow-hidden rounded-pilula bg-linha"
-                role="progressbar"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="<%= percentual %>"
-                aria-label="Progresso da meta"
-              >
-                <div class="h-full bg-mel <%= classeDaBarra(percentual) %>"></div>
-              </div>
-            </div>
-          </div>
+        <div>
+          <%- include('../partials/ui/card-meta', { meta, mostrarDetalhes: true }) %>
 
           <%#
             Três desfechos, três ações. Vencer não é punição (RN-017): a meta
@@ -98,36 +74,36 @@
             alvo, mesmo progresso, prazo novo e metade da recompensa.
           -%>
           <% if (meta.status === 'ativa') { %>
-            <form method="POST" action="/metas/<%= meta.id %>/concluir" class="mt-4">
+            <form method="POST" action="/metas/<%= meta.id %>/concluir" class="mt-3">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
               <button
                 type="submit"
-                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
               >
                 Marcar como concluída
               </button>
             </form>
           <% } else if (meta.status === 'expirada') { %>
-            <form method="POST" action="/metas/<%= meta.id %>/renovar" class="mt-4">
+            <form method="POST" action="/metas/<%= meta.id %>/renovar" class="mt-3">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
               <p class="mb-2 text-xs text-tinta-suave">
                 O prazo passou, mas seu progresso está guardado. Retomar dá prazo novo e rende metade.
               </p>
               <button
                 type="submit"
-                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
+                class="rounded-favo bg-mel px-3 py-1.5 text-xs font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
               >
                 Retomar esta meta
               </button>
             </form>
           <% } else if (meta.status === 'renovada') { %>
-            <p class="mt-4 text-xs font-semibold text-tinta-suave">Retomada em uma meta nova ↓</p>
+            <p class="mt-3 text-xs font-semibold text-tinta-suave">Retomada em uma meta nova &darr;</p>
           <% } else { %>
-            <p class="mt-4 text-xs font-semibold text-acerto-texto">
-              Concluída ✓ · rendeu <%= meta.reward_coins %> de mel e <%= meta.reward_points %> de pólen
+            <p class="mt-3 text-xs font-semibold text-acerto-texto">
+              Concluída ✓ · rendeu <%= meta.melDaRecompensa %> de mel e <%= meta.polenDaRecompensa %> de pólen
             </p>
           <% } %>
-        </section>
+        </div>
       <% }) %>
     </div>
 

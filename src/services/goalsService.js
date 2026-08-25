@@ -1,6 +1,7 @@
 import { emTransacao } from '../config/database.js';
 import * as goalsRepository from '../repositories/goalsRepository.js';
 import * as rewardConfigsRepository from '../repositories/rewardConfigsRepository.js';
+import { dataDoDia, diferencaEmDias } from '../utils/diaDoJogador.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
@@ -17,6 +18,68 @@ import * as pointsService from './pointsService.js';
  * Não cria meta. Quem escolhe tipo, alvo, prazo e dificuldade é o
  * `goalPlannerService`, pela disponibilidade do jogador (RF-MET-01, RN-014).
  */
+
+// A partir daqui a meta é anunciada como apertada na tela.
+const DIAS_DE_PRAZO_APERTADO = 2;
+
+/**
+ * O prazo em palavra, e não só em número (RNF-25): a meta que vence hoje some
+ * numa tela cheia se a única diferença for a quantidade de dias.
+ *
+ * Pura, para poder ser testada sem banco.
+ */
+export function urgenciaDoPrazo(diasRestantes) {
+  if (diasRestantes === null) return { nivel: 'sem-prazo', icone: '🗓️', frase: 'Sem prazo' };
+  if (diasRestantes <= 0) return { nivel: 'hoje', icone: '⏰', frase: 'Termina hoje' };
+  if (diasRestantes <= DIAS_DE_PRAZO_APERTADO) {
+    return { nivel: 'apertado', icone: '⏳', frase: `Faltam ${diasRestantes} ${diasRestantes === 1 ? 'dia' : 'dias'}` };
+  }
+
+  return { nivel: 'tranquilo', icone: '🗓️', frase: `Faltam ${diasRestantes} dias` };
+}
+
+/**
+ * A meta pronta para a tela: percentual, dias até o prazo, urgência em palavra e
+ * o que ela paga (RF-HOM-04, RF-MET-02). Conta de meta não mora na view.
+ *
+ * Pura, para poder ser testada sem banco.
+ */
+export function resumirMeta(meta, { hoje, fuso }) {
+  const atual = Number(meta.current_value);
+  const alvo = Number(meta.target_value);
+  const prazo = meta.due_at ? dataDoDia(new Date(meta.due_at), fuso) : null;
+  const diasRestantes = prazo ? diferencaEmDias(hoje, prazo) : null;
+
+  return {
+    id: Number(meta.id),
+    titulo: meta.title,
+    atual,
+    alvo,
+    percentual: alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)),
+    status: meta.status,
+    dificuldade: meta.difficulty,
+    prazo,
+    diasRestantes,
+    urgencia: urgenciaDoPrazo(diasRestantes),
+    melDaRecompensa: Number(meta.reward_coins),
+    polenDaRecompensa: Number(meta.reward_points),
+  };
+}
+
+/**
+ * As metas na ordem do vencimento, que é a ordem em que elas importam para quem
+ * lê a tela. Meta sem prazo não disputa o destaque, mas continua na lista
+ * resumida das outras (RF-HOM-05).
+ *
+ * Pura, para poder ser testada sem banco.
+ */
+export function ordenarPorVencimento(metas) {
+  const comPrazo = metas.filter((meta) => meta.due_at);
+  const semPrazo = metas.filter((meta) => !meta.due_at);
+  comPrazo.sort((uma, outra) => new Date(uma.due_at) - new Date(outra.due_at));
+
+  return [...comPrazo, ...semPrazo];
+}
 
 export async function listarDoUsuario(idUsuario) {
   return goalsRepository.listarPorUsuario(idUsuario);

@@ -4,28 +4,30 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-10.2 — o topo da Colmeia virou componente: `badge-recurso`,
+**Último commit:** T-10.3 — a meta que vence primeiro virou o segundo assunto da
+Colmeia: card em largura inteira com título, progresso, prazo em palavra e o que
+ela paga, e as outras numa lista curta. `resumirMeta`, `ordenarPorVencimento` e
+`urgenciaDoPrazo` passaram a morar no `goalsService`, e a tela `/metas` usa o
+mesmo card. Árvore limpa, 688 testes passando.
+**Próximo passo: T-10.4 — trilha de favos em hexágonos com estados**
+
+**Commit anterior:** T-10.2 — o topo da Colmeia virou componente: `badge-recurso`,
 `barra-progresso` e `cabecalho-colmeia` desenham nível com barra de XP, mel,
 patrimônio e sequência, grudados no topo ao rolar. Os mesmos componentes já
-valem na loja, no inventário e no cofre. Árvore limpa, 677 testes passando.
-**Próximo passo: T-10.3 — bloco da meta mais próxima do vencimento**
+valem na loja, no inventário e no cofre.
 
-**Commit anterior:** T-10.1 — a Colmeia ganhou dono: `homeService` aplica os
+**Commit de antes:** T-10.1 — a Colmeia ganhou dono: `homeService` aplica os
 efeitos da visita e responde os nove blocos da home numa chamada só, o
 `paginaController.painel` virou três linhas e o `/painel` passou a servir JSON
 pelo mesmo endereço. O "sem N+1" da RNF-04 virou teste que conta as consultas de
 uma visita e exige o mesmo número depois de o jogador acumular item.
 
-**Commit de antes:** E09 concluída e auditada — o laudo está em
+**Antes disso:** E09 concluída e auditada — o laudo está em
 `docs/09-AUDITORIA-DA-ETAPA.md` e as três lacunas de conserto barato foram
 corrigidas na mesma sessão: a página do cofre passou a validar a query, os
 botões perderam o contorno preto e o dinheiro virou numeral tabular. A E12
 também ganhou escopo escrito, com as decisões de modelagem adiadas para a
 abertura dela.
-
-**Antes disso:** T-09.9 — a E09 passou no próprio aceite: um arquivo
-percorre a travessia inteira do jogador, e entrar depois de seis semanas aplica
-os seis ciclos uma única vez, com patrimônio fechando na soma.
 
 **Antes disso:** T-09.8 — o ciclo passou a falar: o resumo em JSON de cada
 semana vira frase na Colmeia, com vários ciclos somados num aviso só, o motivo da
@@ -314,7 +316,7 @@ argumento a favor da rede que a T-02.1 montou.
 | As quatro telas da economia em navegador real (T-09.7) | A marcação está coberta por teste pelo HTTP — patrimônio no topo, categorias, as frases do comportamento, o impacto da compra, bens separados de enfeites, depósito e meta pelo formulário — e o caminho inteiro foi percorrido com o servidor de pé e a conta demo. O que **não** foi visto por olho humano é o desenho: a rosca da composição e a linha da projeção pintadas no `canvas`, a vitrine a 320 px com três colunas virando uma, e o foco de teclado passeando pelos formulários do cofre. Vale o passe da DT-22 |
 | A frase da faixa na loja (T-09.6) | A vitrine e a prévia da compra devolvem custo zero, `perdeValor` falso e a frase que explica para a Faixa A, com teste contra banco real. Como as telas da loja ainda estão no formato antigo (DT-57), nada disso chega à criança nem foi visto por olho humano: entra junto das views da T-09.7 |
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
-| A Colmeia agregada e o cabeçalho novo em navegador real (T-10.1 e T-10.2) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência. Entra no passe da DT-22 |
+| A Colmeia agregada, o cabeçalho e o bloco da meta em navegador real (T-10.1 a T-10.3) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, e como o card da meta e a lista das outras se comportam a 320 px. Entra no passe da DT-22 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -333,7 +335,7 @@ avançado, com pelo menos 50 células e 10 itens.
 |---|---|
 | T-10.1 `HomeService`/agregador: uma consulta agregada por bloco, sem N+1 (RNF-04) | **feita** — `homeService` aplica os efeitos da visita e responde os nove blocos numa chamada, o controller virou três linhas e o `/painel` passou a servir JSON pelo mesmo endereço |
 | T-10.2 Cabeçalho: nível + barra de XP, saldo de mel, patrimônio, sequência | **feita** — três partials novos (`badge-recurso`, `barra-progresso`, `cabecalho-colmeia`), topo grudado ao rolar e os mesmos componentes já aplicados na loja, no inventário e no cofre |
-| T-10.3 Bloco da meta mais próxima do vencimento | pendente |
+| T-10.3 Bloco da meta mais próxima do vencimento | **feita** — `card-meta` e `estado-vazio` novos, a urgência do prazo virou palavra no `goalsService` (`hoje`, `apertado`, `tranquilo`, `sem-prazo`), e `/metas` passou a usar o mesmo card |
 | T-10.4 Trilha de favos em hexágonos com estados | pendente |
 | T-10.5 Tarefas do dia + eventos do ciclo | pendente |
 | T-10.6 Botão "Continuar" resolvendo a próxima célula pendente | pendente |
@@ -1075,6 +1077,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view: é aritmética de dinheiro numa camada que deveria só exibir | auditoria da E09 | Subir a conta para o `inventoryService`, junto do agrupamento que ele já faz |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
+| DT-71 | O caminho das artes do Beenie está escrito em seis views (`login`, `trilha` duas vezes, `painel`, `jogo-resultado` e agora `estado-vazio`). Como a arte é provisória, trocá-la hoje é editar seis arquivos | T-10.3 | Um partial `mascote` recebendo a pose, como manda a seção 3 do design system, na E11 |
 | DT-70 | O topo grudado existe só na Colmeia: loja, inventário e cofre continuam com cabeçalho próprio, que rola junto e sai da tela junto com o saldo. Os badges já são os mesmos, o cabeçalho não | T-10.2 | Estender o `cabecalho-colmeia` às telas da economia, quando elas forem revistas |
 | DT-69 | O teste de N+1 da Colmeia conta o `pool.execute`, então escrita em laço dentro de uma transação passa despercebida: a conexão emprestada não passa pelo contador. Cobre o caso que importa hoje, que é leitura de tela | T-10.1 | Contar também a conexão da transação, se alguma tela começar a escrever em laço |
 | DT-59 | O ciclo econômico só é processado no `/painel`. Quem entra direto na loja, no inventário ou no cofre vê o saldo de antes das contas da semana, até passar pela Colmeia | T-09.5 | Subir a chamada para um middleware das telas autenticadas, junto das views da T-09.7 |
@@ -2702,3 +2705,21 @@ que é o par que a tela inteira usa, e a palavra fica no rótulo acima.
 Um teste de fora da tarefa foi ajustado: `fluxoAutenticado` procurava "de mel" no
 painel, e o saldo agora é rótulo mais número. É a mesma tela reescrita por esta
 tarefa, então a asserção passou a procurar "Seu mel", com o comentário do porquê.
+
+### Sessão de 2026-08-25, T-10.3 e duas armadilhas de teste
+
+A formatação da meta mudou de dono: `resumirMeta` e `ordenarPorVencimento`
+saíram do `homeService` e foram para o `goalsService`, que é quem responde por
+meta. A Colmeia agora só escolhe qual vai ao destaque e quais ficam na lista.
+Junto entrou `urgenciaDoPrazo`, que traduz o prazo em palavra — hoje, apertado,
+tranquilo e sem prazo —, cada um com ícone e frase, porque cor sozinha não
+anuncia urgência (RNF-25). A tela `/metas` passou a usar o mesmo `card-meta`, e
+com isso o EJS parou de calcular percentual e de formatar data.
+
+Duas armadilhas apareceram nos testes, e as duas valem para quem escrever teste
+de prazo daqui em diante. A primeira: cravar `Faltam N dias` na asserção falha
+pelo calendário, porque com um dia a frase é "Faltam 1 dia" e com zero é
+"Termina hoje" — a frase certa é a que o service devolve. A segunda: marcar a
+meta com `due_at = NOW()` não a faz vencer hoje, faz vencer no passado, e a
+RN-017 a expira antes de a tela existir. O prazo tem de ser o último instante do
+dia do jogador, lembrando que `fimDoDia` devolve o começo do dia seguinte.

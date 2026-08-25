@@ -172,10 +172,16 @@ export const metas = assincrono(async (req, res) => {
     achievementsService.listarDoUsuario(req.session.usuarioId),
   ]);
 
+  // A meta chega resumida pelo service, como na Colmeia: percentual, prazo em
+  // palavra e recompensa saem de um lugar só (RF-MET-02).
+  const metasResumidas = listaDeMetas.map((meta) =>
+    goalsService.resumirMeta(meta, { hoje: semana.hoje, fuso: semana.fuso }),
+  );
+
   renderizarPagina(res, 'metas', {
     titulo: 'Metas — Beever',
     classeBody: FUNDO_CERA,
-    metas: listaDeMetas,
+    metas: metasResumidas,
     tarefas,
     semana,
     conquistas,

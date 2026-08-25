@@ -1,4 +1,3 @@
-import { dataDoDia, diferencaEmDias } from '../utils/diaDoJogador.js';
 import * as contentService from './contentService.js';
 import * as economicCycleService from './economicCycleService.js';
 import * as goalPlannerService from './goalPlannerService.js';
@@ -34,42 +33,6 @@ export async function prepararVisita(idUsuario) {
   return ciclosDaVisita;
 }
 
-/**
- * A meta pronta para a tela: percentual, dias até o prazo e quanto de mel ela
- * paga (RF-HOM-04). Conta de meta não mora na view.
- *
- * Pura, para poder ser testada sem banco.
- */
-export function resumirMeta(meta, { hoje, fuso }) {
-  const atual = Number(meta.current_value);
-  const alvo = Number(meta.target_value);
-
-  return {
-    id: Number(meta.id),
-    titulo: meta.title,
-    atual,
-    alvo,
-    percentual: alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)),
-    diasRestantes: meta.due_at ? diferencaEmDias(hoje, dataDoDia(new Date(meta.due_at), fuso)) : null,
-    melDaRecompensa: Number(meta.reward_coins),
-  };
-}
-
-/**
- * As metas na ordem do vencimento, que é a ordem em que elas importam para
- * quem lê a tela. Meta sem prazo não disputa o destaque, mas continua na lista
- * resumida das outras (RF-HOM-05).
- *
- * Pura, para poder ser testada sem banco.
- */
-export function ordenarPorVencimento(metas) {
-  const comPrazo = metas.filter((meta) => meta.due_at);
-  const semPrazo = metas.filter((meta) => !meta.due_at);
-  comPrazo.sort((uma, outra) => new Date(uma.due_at) - new Date(outra.due_at));
-
-  return [...comPrazo, ...semPrazo];
-}
-
 /** A Colmeia inteira do jogador, com os efeitos da visita já aplicados. */
 export async function obterColmeia(idUsuario) {
   const ciclosDaVisita = await prepararVisita(idUsuario);
@@ -87,9 +50,11 @@ export async function obterColmeia(idUsuario) {
   // A trilha já lida é passada adiante: pedir de novo cobraria do banco as
   // mesmas consultas duas vezes na mesma tela (RNF-04).
   const proximaCelula = await contentService.proximaCelulaPendente(idUsuario, trilha);
-  const resumidas = ordenarPorVencimento(metas).map((meta) =>
-    resumirMeta(meta, { hoje: semana.hoje, fuso: semana.fuso }),
-  );
+  // Quem sabe resumir meta é o `goalsService`: a Colmeia só escolhe qual vai
+  // para o destaque (RF-HOM-04) e qual fica na lista das outras (RF-HOM-05).
+  const resumidas = goalsService
+    .ordenarPorVencimento(metas)
+    .map((meta) => goalsService.resumirMeta(meta, { hoje: semana.hoje, fuso: semana.fuso }));
 
   return {
     jogador: {

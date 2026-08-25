@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { ordenarPorVencimento, resumirMeta } from '../../src/services/homeService.js';
+import { ordenarPorVencimento, resumirMeta, urgenciaDoPrazo } from '../../src/services/goalsService.js';
 
 /**
- * As contas da Colmeia que não precisam de banco (RF-HOM-04 e 05).
+ * A meta pronta para a tela, sem banco (RF-HOM-04, RF-HOM-05 e RF-MET-02).
  *
- * O que estes testes protegem: a meta chega pronta à tela — percentual, dias até
- * o prazo e mel da recompensa —, e quem ganha o destaque é sempre a que vence
- * primeiro, não a que foi criada primeiro.
+ * O que estes testes protegem: a meta chega pronta — percentual, dias até o
+ * prazo, urgência em palavra e recompensa —, e quem ganha o destaque é sempre a
+ * que vence primeiro, não a que foi criada primeiro.
  */
 
 const DIA = { hoje: '2026-08-25', fuso: 'America/Sao_Paulo' };
@@ -20,6 +20,9 @@ function meta(atributos) {
     current_value: 2,
     target_value: 5,
     reward_coins: 40,
+    reward_points: 15,
+    status: 'ativa',
+    difficulty: 'media',
     due_at: '2026-08-30T00:00:00.000Z',
     ...atributos,
   };
@@ -68,6 +71,40 @@ describe('resumo da meta na Colmeia', () => {
     const resumo = resumirMeta(meta({ reward_coins: 40 }), DIA);
 
     assert.equal(resumo.melDaRecompensa, 40);
+    assert.equal(resumo.polenDaRecompensa, 15);
+  });
+});
+
+describe('urgência do prazo da meta', () => {
+  it('a que vence hoje é anunciada em palavra, não só em número', () => {
+    assert.deepEqual(urgenciaDoPrazo(0), { nivel: 'hoje', icone: '⏰', frase: 'Termina hoje' });
+  });
+
+  it('dois dias ou menos contam como apertado', () => {
+    assert.equal(urgenciaDoPrazo(1).nivel, 'apertado');
+    assert.equal(urgenciaDoPrazo(1).frase, 'Faltam 1 dia');
+    assert.equal(urgenciaDoPrazo(2).nivel, 'apertado');
+  });
+
+  it('daí em diante é prazo tranquilo', () => {
+    assert.equal(urgenciaDoPrazo(3).nivel, 'tranquilo');
+    assert.equal(urgenciaDoPrazo(30).frase, 'Faltam 30 dias');
+  });
+
+  it('meta sem prazo diz que não tem prazo, em vez de mentir um número', () => {
+    assert.equal(urgenciaDoPrazo(null).nivel, 'sem-prazo');
+    assert.equal(urgenciaDoPrazo(null).frase, 'Sem prazo');
+  });
+
+  it('prazo vencido não vira número negativo na tela', () => {
+    assert.equal(urgenciaDoPrazo(-3).nivel, 'hoje');
+  });
+
+  it('a urgência viaja dentro do resumo da meta', () => {
+    const resumo = resumirMeta(meta({ due_at: '2026-08-26T03:00:00.000Z' }), DIA);
+
+    assert.equal(resumo.diasRestantes, 1);
+    assert.equal(resumo.urgencia.nivel, 'apertado');
   });
 });
 
