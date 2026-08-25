@@ -12,7 +12,7 @@ import { marcarFocoDaTrilha } from '../../src/services/homeService.js';
  */
 
 function favo(atributos) {
-  return { id: 1, title: 'Favo', estado: 'disponivel', concluido: false, ...atributos };
+  return { id: 1, title: 'Favo', aberto: true, concluido: false, ...atributos };
 }
 
 describe('foco da trilha', () => {
@@ -20,8 +20,8 @@ describe('foco da trilha', () => {
     const trilha = marcarFocoDaTrilha([
       favo({ id: 1, concluido: true }),
       favo({ id: 2 }),
-      favo({ id: 3, estado: 'travado-por-percentual' }),
-      favo({ id: 4, estado: 'travado-por-percentual' }),
+      favo({ id: 3, aberto: false }),
+      favo({ id: 4, aberto: false }),
     ]);
 
     assert.deepEqual(

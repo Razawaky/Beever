@@ -106,7 +106,9 @@ export function estadosDasCelulas(celulas) {
     const motivo = estado === ESTADOS.travadoPorCelulaAnterior ? 'Conclua a célula anterior para abrir esta' : null;
 
     anteriorConcluida = concluida;
-    return { ...celula, concluida, estado, motivo };
+    // `aberta` sai daqui pronta: comparar o estado com texto na view espalha o
+    // vocabulário de `ESTADOS` por arquivos que não são donos dele.
+    return { ...celula, concluida, aberta: estado !== ESTADOS.travadoPorCelulaAnterior, estado, motivo };
   });
 }
 
@@ -174,6 +176,8 @@ export async function listarTrilha(idUsuario) {
 
     trilha.push({
       ...favo,
+      // Mesma ideia da célula: quem responde "está aberto?" é o dono da regra.
+      aberto: estado === ESTADOS.disponivel,
       percentual: Number(progresso?.percent ?? 0),
       celulasConcluidas: Number(progresso?.completed_cells ?? 0),
       celulasTotais: totais.get(Number(favo.id)) ?? Number(progresso?.total_cells ?? 0),

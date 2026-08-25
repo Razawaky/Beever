@@ -10,7 +10,7 @@
   `compacto` é o formato da Colmeia para os favos fora do foco: hexágono menor,
   sem descrição e sem barra, para a home não virar uma segunda trilha.
 -%>
-<% const aberto = favo.estado === 'disponivel'; %>
+<% const aberto = favo.aberto; %>
 <% const concluido = favo.concluido; %>
 <% const compacto = Boolean(locals.compacto); %>
 <% const tamanhoDoHexagono = compacto ? 'h-16 w-16' : 'h-24 w-24'; %>

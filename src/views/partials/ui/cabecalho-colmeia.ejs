@@ -10,7 +10,9 @@
         <%= jogador.apelido.charAt(0).toUpperCase() %>
       </div>
       <div class="min-w-[9rem]">
-        <p class="font-bold text-tinta"><%= jogador.apelido %></p>
+        <%# O apelido é o título da página: sem `h1` a tela mais visitada do jogo
+            começa a hierarquia em `h2`, e quem navega por cabeçalhos se perde. %>
+        <h1 class="text-lg font-bold text-tinta"><%= jogador.apelido %></h1>
         <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">
           Nível <%= jogador.nivel?.nivel ?? 1 %>
         </p>

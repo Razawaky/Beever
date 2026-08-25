@@ -9,7 +9,13 @@ jogador com 60 células, 50 concluídas e 12 itens responde inteira e correta em
 **87 a 102 ms**, contra o teto de 2 s da RNF-01, e o número de consultas não
 muda quando o jogador acumula mais item. **E10 concluída.** Árvore limpa, 718
 testes passando.
-**Próximo passo: auditoria da E10, e depois E11 — Landing page**
+**Auditoria da E10 feita**: o laudo está em `docs/10-AUDITORIA-DA-ETAPA.md`, com
+veredito "pode avançar, zero bloqueantes". Três lacunas foram corrigidas na mesma
+sessão — a Colmeia voltou a ter `h1`, a chegada do jogador passou a ter uma dona
+só (`prepararVisita`, agora também em `/metas` e `/perfil`) e o vocabulário de
+estado do favo voltou para o `contentService`, com `aberto` e `aberta` prontos.
+720 testes passando.
+**Próximo passo: E11 — Landing page**
 
 **Commit anterior:** T-10.6 — a Colmeia ganhou ação principal: o botão
 "Continuar" leva direto à próxima célula jogável, fixo no rodapé do celular, e a
@@ -1088,13 +1094,13 @@ Identificadores rastreiam os documentos da E00.
 | DT-64 | A auditoria do ciclo é grossa para a RN-010: seis semanas com renda, custo, venda forçada e rendimento viram uma linha só em `audit_logs` por visita, e o detalhe por movimento existe apenas em `coin_ledger` | auditoria da E09 | Decidir se a trilha grava por movimento ou se o livro basta como detalhe, junto da consulta de auditoria da T-12.4 |
 | DT-65 | Depósito e saque do cofre não têm chave de idempotência: dois cliques no botão guardam duas vezes. Não fere a RNF-16, que fala de recompensa e compra, mas é o mesmo clique ansioso que a loja já trata | auditoria da E09 | Reaproveitar o `idempotencyService` da compra |
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
-| DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view: é aritmética de dinheiro numa camada que deveria só exibir | auditoria da E09 | Subir a conta para o `inventoryService`, junto do agrupamento que ele já faz |
+| DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view, e `perfil.ejs` calcula o percentual da meta do mesmo jeito: é aritmética numa camada que deveria só exibir, e as outras telas de meta já leem o resumo pronto do service | auditoria da E09, ampliada pela da E10 | Subir a conta para o `inventoryService` e usar `goalsService.resumirMeta` no perfil |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
 | DT-72 | A Colmeia custa 60 consultas por visita. Nenhuma cresce com favo, célula ou item — isso está provado —, mas há leitura repetida na mesma requisição: perfil, faixas etárias e a curva de níveis são buscados por mais de um service | T-10.7 | Medir quais se repetem e passar o dado adiante, como a trilha já é passada para `proximaCelulaPendente`. Vale atacar depois da auditoria da E10 |
 | DT-71 | O caminho das artes do Beenie está escrito em seis views (`login`, `trilha` duas vezes, `painel`, `jogo-resultado` e agora `estado-vazio`). Como a arte é provisória, trocá-la hoje é editar seis arquivos | T-10.3 | Um partial `mascote` recebendo a pose, como manda a seção 3 do design system, na E11 |
 | DT-70 | O topo grudado existe só na Colmeia: loja, inventário e cofre continuam com cabeçalho próprio, que rola junto e sai da tela junto com o saldo. Os badges já são os mesmos, o cabeçalho não | T-10.2 | Estender o `cabecalho-colmeia` às telas da economia, quando elas forem revistas |
 | DT-69 | O teste de N+1 da Colmeia conta o `pool.execute`, então escrita em laço dentro de uma transação passa despercebida: a conexão emprestada não passa pelo contador. Cobre o caso que importa hoje, que é leitura de tela | T-10.1 | Contar também a conexão da transação, se alguma tela começar a escrever em laço |
-| DT-59 | O ciclo econômico só é processado no `/painel`. Quem entra direto na loja, no inventário ou no cofre vê o saldo de antes das contas da semana, até passar pela Colmeia | T-09.5 | Subir a chamada para um middleware das telas autenticadas, junto das views da T-09.7 |
+| DT-59 | O ciclo econômico é processado na Colmeia, na tela de metas e no perfil, que chamam `homeService.prepararVisita`. Quem entra direto na loja, no inventário, no cofre ou na trilha ainda vê o saldo de antes das contas da semana | T-09.5 | Subir a chamada para um middleware das telas autenticadas. A auditoria da E10 reduziu o alcance ao unificar a chegada num ponto só |
 | DT-60 | Acima de doze ciclos por visita, os mais antigos são marcados como processados sem efeito: quem some por um ano não paga o custo fixo nem recebe a renda daquele tempo. É escolha de produto, para a volta não zerar o inventário na primeira tela | T-09.5 | Rever quando houver jogador real sumindo por tanto tempo |
 | DT-58 | O prazo da meta do cofre (`goal_due_at`) é guardado e devolvido, mas nada acontece quando ele vence: a meta não expira nem avisa. A RN-044 fala em meta com prazo, sem dizer o que fazer ao vencer | T-09.4 | Decidir com o produto, junto da tela do cofre na T-09.7 |
 | DT-55 | A vitrine soma o patrimônio duas vezes por chamada: uma no `shopService` e outra dentro de `requisitosNaoCumpridosDosItens`, que precisa dele para o requisito de patrimônio mínimo. São consultas pequenas e a loja abre bem dentro do RNF, mas é trabalho repetido | T-09.3 | Passar o patrimônio já calculado, se a loja começar a pesar |
@@ -2817,3 +2823,23 @@ Fica um achado registrado como DT-72: a Colmeia custa 60 consultas por visita.
 Nenhuma cresce com o dado, então não fere requisito, mas há leitura repetida na
 mesma requisição — perfil, faixas etárias e curva de níveis são buscados por
 mais de um service.
+
+### Sessão de 2026-08-25, auditoria da E10 e as três lacunas fechadas
+
+O laudo está em `docs/10-AUDITORIA-DA-ETAPA.md`: pode avançar, zero
+bloqueantes. Três lacunas foram corrigidas na mesma sessão.
+
+A primeira era regressão da própria etapa: ao virar componente, o topo da
+Colmeia escreveu o apelido como parágrafo, e a tela mais visitada do jogo ficou
+sem `h1` enquanto todas as outras tinham. Voltou a ser título, com teste.
+
+A segunda era duplicação de regra: `paginaController.metas` repetia à mão cinco
+dos seis passos de `prepararVisita`, sem o ciclo econômico. Agora a tela de metas
+e a de perfil chamam o mesmo ponto, então a chegada do jogador tem uma dona só —
+e a DT-59 encolheu, porque só loja, inventário, cofre e trilha continuam de fora.
+
+A terceira era vocabulário vazado: `contentService` exporta `ESTADOS`, e mesmo
+assim `'disponivel'` aparecia escrito à mão em duas views, num controller e num
+service. A trilha e a lista de células passaram a devolver `aberto` e `aberta`
+prontos. Vale como regra: quando a view precisa comparar estado com texto, o
+service não terminou de responder a pergunta.

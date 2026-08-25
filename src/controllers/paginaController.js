@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 
 import * as achievementsService from '../services/achievementsService.js';
 import * as contentService from '../services/contentService.js';
-import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
 import * as homeService from '../services/homeService.js';
 import * as inventoryService from '../services/inventoryService.js';
@@ -157,14 +156,10 @@ export const cofre = assincrono(async (req, res) => {
 });
 
 export const metas = assincrono(async (req, res) => {
-  await streakService.avaliar(req.session.usuarioId);
-  // As tarefas do dia nascem aqui, quando o jogador entra — geração *lazy*, como
-  // o ciclo econômico —, e o progresso das metas é relido das fontes reais antes
-  // de a tela mostrar qualquer número.
-  await tasksService.garantirTarefasDoDia(req.session.usuarioId);
-  await tasksService.sincronizarProgresso(req.session.usuarioId);
-  await goalsService.sincronizarProgresso(req.session.usuarioId);
-  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
+  // A chegada do jogador tem uma dona só: o `homeService`. Esta tela repetia
+  // cinco dos seis passos à mão, sem o ciclo econômico, e mostrava o saldo de
+  // antes das contas da semana.
+  await homeService.prepararVisita(req.session.usuarioId);
 
   const [listaDeMetas, tarefas, semana, conquistas] = await Promise.all([
     goalsService.listarDoUsuario(req.session.usuarioId),
@@ -194,9 +189,8 @@ export const metas = assincrono(async (req, res) => {
  * campos têm rota e ainda não têm tela (DT-12).
  */
 export const perfil = assincrono(async (req, res) => {
-  // Mesma ordem do painel: expira o que venceu, completa o plano e só então lê.
-  await goalsService.sincronizarProgresso(req.session.usuarioId);
-  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
+  // Mesma chegada da Colmeia e da tela de metas, pelo mesmo caminho.
+  await homeService.prepararVisita(req.session.usuarioId);
 
   const [dados, semana, metas] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
@@ -221,7 +215,7 @@ export const perfil = assincrono(async (req, res) => {
  */
 export const trilha = assincrono(async (req, res) => {
   const trilha = await contentService.listarTrilha(req.session.usuarioId);
-  const favoAtual = trilha.find((favo) => favo.estado === 'disponivel' && !favo.concluido) ?? null;
+  const favoAtual = trilha.find((favo) => favo.aberto && !favo.concluido) ?? null;
   // A trilha já está lida: passar adiante evita cobrar do banco as mesmas
   // consultas de novo (RNF-04).
   const proximaCelula = await contentService.proximaCelulaPendente(req.session.usuarioId, trilha);

@@ -141,6 +141,24 @@ describe('aviso do ciclo na Colmeia', opcoes, () => {
     assert.match(html, /Seus negócios renderam/);
   });
 
+  it('entrar por /metas também fecha as semanas que passaram', async () => {
+    // A chegada do jogador tem uma dona só desde a auditoria da E10: quem entra
+    // direto na tela de metas não pode ver o saldo de antes das contas.
+    const [[antes]] = await banco.conexao.query(
+      'SELECT COUNT(*) AS total FROM economic_cycles WHERE user_id = ?',
+      [idUsuario],
+    );
+    await contaCriadaHaSemanas(5);
+
+    await agente.get('/metas').set('Accept', 'text/html').expect(200);
+
+    const [[depois]] = await banco.conexao.query(
+      'SELECT COUNT(*) AS total FROM economic_cycles WHERE user_id = ?',
+      [idUsuario],
+    );
+    assert.ok(Number(depois.total) > Number(antes.total), 'os ciclos pendentes rodaram na tela de metas');
+  });
+
   it('no dia seguinte o destaque sai e sobra o histórico', async () => {
     await banco.conexao.query('UPDATE economic_cycles SET processed_at = processed_at - INTERVAL 2 DAY WHERE user_id = ?', [
       idUsuario,

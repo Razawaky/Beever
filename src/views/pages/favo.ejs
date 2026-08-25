@@ -44,7 +44,7 @@
 
   <ol class="space-y-4">
     <% celulas.forEach((celula) => { %>
-      <% const aberta = celula.estado === 'disponivel' || celula.estado === 'concluido'; %>
+      <% const aberta = celula.aberta; %>
       <li>
         <%
           const moldura = celula.concluida

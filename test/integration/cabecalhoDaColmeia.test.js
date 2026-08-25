@@ -96,6 +96,13 @@ describe('cabeçalho da Colmeia', opcoes, () => {
     assert.match(html, /🌼 0 de pólen/);
   });
 
+  it('a Colmeia tem título de página, como todas as outras telas', async () => {
+    // O apelido era o `h1` antes de o topo virar componente, e voltou a ser: sem
+    // ele a hierarquia da tela mais visitada começa em `h2`, e quem navega por
+    // cabeçalhos não acha a página.
+    assert.match(html, /<h1[^>]*>\s*topo\s*<\/h1>/);
+  });
+
   it('a barra de XP anuncia o valor e desenha a largura por classe', async () => {
     assert.match(html, /aria-label="Progresso até o próximo nível"/);
     assert.match(html, /role="progressbar"[\s\S]*?aria-valuenow="\d+"/);

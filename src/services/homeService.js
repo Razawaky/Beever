@@ -41,7 +41,7 @@ export async function prepararVisita(idUsuario) {
  * Pura, para poder ser testada sem banco.
  */
 export function marcarFocoDaTrilha(trilha) {
-  const atual = trilha.findIndex((favo) => favo.estado === 'disponivel' && !favo.concluido);
+  const atual = trilha.findIndex((favo) => favo.aberto && !favo.concluido);
 
   return trilha.map((favo, posicao) => ({
     ...favo,
