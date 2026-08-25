@@ -4,18 +4,23 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-09.8 — o ciclo passou a falar: o resumo em JSON de cada
-semana vira frase na Colmeia, com vários ciclos somados num aviso só, o motivo da
-venda forçada escrito sem culpa e um histórico curto embaixo. Árvore limpa, 646
-testes passando.
-**Próximo passo: T-09.9 — testes de aceite da E09**
+**Último commit:** T-09.9 — a E09 passou no próprio aceite: um arquivo percorre a
+travessia inteira do jogador, e o critério do roadmap está provado — entrar
+depois de seis semanas aplica os seis ciclos uma única vez, com extrato claro,
+patrimônio fechando na soma e nenhuma linha negativa no livro. **E09 concluída.**
+Árvore limpa, 655 testes passando.
+**Próximo passo: auditoria da E09, antes de abrir a E10 (Colmeia)**
 
-**Commit anterior:** T-09.7 — a economia ganhou tela: a loja mostra patrimônio e
+**Commit anterior:** T-09.8 — o ciclo passou a falar: o resumo em JSON de cada
+semana vira frase na Colmeia, com vários ciclos somados num aviso só, o motivo da
+venda forçada escrito sem culpa e um histórico curto embaixo.
+
+**Commit de antes:** T-09.7 — a economia ganhou tela: a loja mostra patrimônio e
 mel no topo e agrupa por categoria, a compra passa por uma confirmação que diz
 para onde vai o patrimônio, o inventário separa bens de enfeites e o cofre tem
 página com depósito, saque, meta, extrato e projeção.
 
-**Commit de antes:** T-09.6 — a Faixa A ganhou economia sem punição: custo fixo,
+**Antes disso:** T-09.6 — a Faixa A ganhou economia sem punição: custo fixo,
 depreciação e inadimplência desligados por interruptor em `age_bands`, lidos num
 ponto só (`profilesService.regrasEconomicasDoUsuario`) pelo ciclo e pela loja.
 
@@ -318,7 +323,7 @@ ciclos de uma vez, com extrato claro e nada de saldo negativo.
 | T-09.6 Regras por faixa: depreciação, custo fixo e inadimplência desligados na Faixa A | **feita** — os interruptores moram em `age_bands`, `regrasEconomicasDoUsuario` é o ponto único de leitura, e a inadimplência não ganhou coluna porque é consequência do custo fixo |
 | T-09.7 Views: loja, confirmação com impacto explicado, inventário e cofre | **feita** — quatro telas: vitrine por categoria com patrimônio no topo, confirmação com endereço próprio, inventário separando bens de enfeites e a página do cofre inteira, todas funcionando sem JavaScript |
 | T-09.8 Aviso na Colmeia dos eventos do ciclo | **feita** — `avisoDosCiclos` traduz o resumo em frases e soma vários ciclos num aviso só; o destaque aparece na visita em que os ciclos rodaram e o histórico fica embaixo, num `details` |
-| T-09.9 Testes: saldo insuficiente, compra dupla, seis semanas offline, item vendido por inadimplência, patrimônio no centavo | pendente |
+| T-09.9 Testes: saldo insuficiente, compra dupla, seis semanas offline, item vendido por inadimplência, patrimônio no centavo | **feita** — `aceiteDaEconomia.test.js` percorre os cinco cenários sobre o mesmo jogador, incluindo o teto de 2 s da visita que aplica seis ciclos |
 
 ---
 
@@ -990,7 +995,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
-| E09 Economia | **em andamento** | T-09.1 feita: os repositories da economia abriram o schema que a E01 já tinha — cofre com extrato, ciclo econômico idempotente por número, foto do patrimônio, comportamentos do item e as operações de ciclo no inventário (valor com piso e teto, inadimplência que conta ciclos). T-09.2 feita: a loja ganhou service próprio, com vitrine respondida por jogador, prévia de impacto e upgrade com desconto pelo bem entregue. T-09.3 feita: `patrimonyService` responde carteira mais cofre mais bens, com cosmético fora, e o requisito de patrimônio mínimo deixou de ser um aviso. T-09.4 feita: o cofre guarda, devolve, rende e projeta, e a tarefa `depositar-no-cofre` voltou ao catálogo. T-09.5 feita: o ciclo semanal acontece, contado pelo calendário do jogador e aplicado de uma vez na volta, com resumo por ciclo em JSON. T-09.6 feita: a Faixa A vive a economia sem punição, por interruptor em `age_bands` lido num ponto só. T-09.7 feita: as quatro telas da economia existem e funcionam sem JavaScript. T-09.8 feita: o resumo de cada ciclo virou frase na Colmeia. Falta só a T-09.9, de testes de aceite |
+| E09 Economia | **concluída** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. Falta a auditoria da etapa e o passe de olho humano nas telas |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
@@ -2546,3 +2551,24 @@ O destaque aparece só na visita em que os ciclos rodaram, e embaixo dele fica u
 `details` com o histórico lido do extrato. Guardar "visto" no banco pedia coluna
 nova e uma regra de leitura só para um aviso — ficou como DT-63, para a E10
 decidir quando a Colmeia de verdade for montada.
+### Sessão de 2026-08-25, T-09.9: a E09 passou no próprio aceite
+
+O critério do roadmap virou teste executável: entrar depois de seis semanas
+aplica todos os ciclos uma única vez, com extrato claro e nada de saldo
+negativo. Os cinco cenários rodam em ordem sobre o mesmo jogador — ele compra,
+guarda no cofre, fica sem mel, some seis semanas e volta —, porque cada efeito
+isolado já tinha teste próprio e o que faltava provar era a travessia.
+
+**Nenhum defeito de produção apareceu**, e vale registrar o que isso significa:
+a economia foi construída em oito tarefas com teste a cada passo, e o aceite
+confirmou o conjunto em vez de descobrir buraco. Os dois erros da primeira
+execução eram do próprio teste — um nome de função errado e o token CSRF lido de
+`/loja`, que desde a T-09.7 não tem mais formulário de compra.
+
+**O tempo entrou como asserção**, e não como promessa: a visita que aplica seis
+ciclos é a requisição mais pesada do app e passa abaixo dos 2 s do RNF-01. Se
+alguém empurrar a Colmeia para cinco segundos, o aceite acusa antes do usuário.
+
+A E09 está fechada em código. O que ela ainda deve é o passe de olho humano nas
+quatro telas e no aviso do ciclo (DT-22), e a auditoria da etapa, no formato das
+que a E06 e a E08 tiveram.
