@@ -198,3 +198,19 @@
     animation: none;
   }
 }
+
+/*
+ * Os canvas da economia. A largura vem do CSS e os atributos `width`/`height`
+ * do HTML seguem como proporção do desenho — a CSP proíbe estilo inline
+ * (RNF-11), então a medida não pode ir em atributo `style`.
+ */
+.grafico-rosca {
+  width: 112px;
+  height: 112px;
+}
+
+.grafico-linha {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}

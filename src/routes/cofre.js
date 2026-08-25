@@ -39,12 +39,14 @@ router.post(
   vaultController.sacar,
 );
 
-router.put(
-  '/meta',
+const validacaoDaMeta = [
   body('valor').optional({ values: 'null' }).isInt({ min: 1 }).withMessage('A meta precisa ser maior que zero'),
   body('prazo').optional({ values: 'falsy' }).isISO8601().withMessage('Prazo inválido'),
   validate,
-  vaultController.definirMeta,
-);
+];
+
+router.put('/meta', validacaoDaMeta, vaultController.definirMeta);
+// O formulário da tela só sabe GET e POST; o PUT continua valendo para a API.
+router.post('/meta', validacaoDaMeta, vaultController.definirMeta);
 
 export default router;

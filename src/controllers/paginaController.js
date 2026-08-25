@@ -6,11 +6,12 @@ import * as economicCycleService from '../services/economicCycleService.js';
 import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
 import * as inventoryService from '../services/inventoryService.js';
-import * as itemsService from '../services/itemsService.js';
 import * as profilesService from '../services/profilesService.js';
 import * as schedulesService from '../services/schedulesService.js';
+import * as shopService from '../services/shopService.js';
 import * as streakService from '../services/streakService.js';
 import * as tasksService from '../services/tasksService.js';
+import * as vaultService from '../services/vaultService.js';
 import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
 
@@ -106,22 +107,72 @@ export const painel = assincrono(async (req, res) => {
 });
 
 export const loja = assincrono(async (req, res) => {
-  const [perfil, itens, possuidos] = await Promise.all([
+  const [perfil, vitrine] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
-    itemsService.listarCatalogo(),
-    inventoryService.idsPossuidos(req.session.usuarioId),
+    shopService.listarVitrine(req.session.usuarioId),
   ]);
 
-  // Uma chave de idempotência por renderização: dois cliques no mesmo botão
-  // mandam a mesma chave e compram uma vez só, e recarregar a loja traz chave
-  // nova, então comprar o mesmo item de propósito continua possível.
   renderizarPagina(res, 'loja', {
     titulo: 'Loja — Beever',
     classeBody: FUNDO_CERA,
     perfil,
-    itens,
-    possuidos,
+    vitrine,
+    scripts: ['/js/graficos.js'],
+  });
+});
+
+/**
+ * A confirmação da compra (RF-LOJ-05) tem endereço próprio, e não um balão na
+ * loja: funciona sem JavaScript, dá para voltar, e o impacto vem pronto do
+ * service — a tela não faz conta nenhuma.
+ */
+export const confirmarCompra = assincrono(async (req, res) => {
+  const [perfil, previa] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    shopService.previaDaCompra(req.session.usuarioId, Number(req.params.idItem)),
+  ]);
+
+  // Uma chave de idempotência por renderização: dois cliques no mesmo botão
+  // mandam a mesma chave e compram uma vez só, e abrir a confirmação de novo
+  // traz chave nova, então comprar o mesmo item de propósito continua possível.
+  renderizarPagina(res, 'confirmar-compra', {
+    titulo: `Comprar ${previa.item.name} — Beever`,
+    classeBody: FUNDO_CERA,
+    perfil,
+    previa,
     chaveDeCompra: randomUUID(),
+  });
+});
+
+export const inventario = assincrono(async (req, res) => {
+  const [perfil, resumo] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    inventoryService.resumoDoUsuario(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'inventario', {
+    titulo: 'Meus itens — Beever',
+    classeBody: FUNDO_CERA,
+    perfil,
+    resumo,
+    scripts: ['/js/graficos.js'],
+  });
+});
+
+export const cofre = assincrono(async (req, res) => {
+  const porSemana = req.query.porSemana ? Number(req.query.porSemana) : 0;
+  const [perfil, cofreDoJogador] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    vaultService.obterDoUsuario(req.session.usuarioId, { porSemana }),
+  ]);
+
+  renderizarPagina(res, 'cofre', {
+    titulo: 'Meu cofre — Beever',
+    classeBody: FUNDO_CERA,
+    perfil,
+    cofre: cofreDoJogador,
+    porSemana,
+    scripts: ['/js/graficos.js'],
   });
 });
 

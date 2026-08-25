@@ -65,7 +65,7 @@
       <section class="rounded-favo bg-cera p-6">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="text-lg font-semibold">Inventário</h2>
-          <a href="/loja" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ir para a loja &rarr;</a>
+          <a href="/inventario" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver meus itens &rarr;</a>
         </div>
         <% if (inventario.length === 0) { %>
           <div class="flex h-48 items-center justify-center rounded-lg bg-white text-sm text-tinta-suave">
@@ -115,6 +115,23 @@
           </div>
         <% } %>
       </section>
+    </div>
+
+    <%# A loja e o cofre são o outro lado do jogo: sem porta no painel, só
+        chega lá quem digita o endereço. %>
+    <div class="grid gap-4 px-8 pb-8 sm:grid-cols-2">
+      <a
+        href="/loja"
+        class="rounded-favo bg-cera p-5 font-semibold transition hover:bg-mel/20 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        🛒 Ir para a loja
+      </a>
+      <a
+        href="/cofre"
+        class="rounded-favo bg-cera p-5 font-semibold transition hover:bg-mel/20 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        🏦 Meu cofre
+      </a>
     </div>
 
     <div class="border-t border-linha px-8 py-6">

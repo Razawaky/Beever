@@ -327,7 +327,8 @@ describe('fluxo autenticado', opcoes, () => {
     assert.match(painel.text, /de mel/);
 
     const loja = await agente.get('/loja').set('Accept', 'text/html').expect(200);
-    assert.match(loja.text, /Comprar|Sem mel/);
+    // A vitrine da T-09.7 leva para a confirmação em vez de comprar direto.
+    assert.match(loja.text, /Quero este|Ainda não/);
   });
 
   it('as barras de progresso sobrevivem à CSP das páginas autenticadas', async () => {
