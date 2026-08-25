@@ -4,18 +4,26 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-09.9 — a E09 passou no próprio aceite: um arquivo percorre a
-travessia inteira do jogador, e o critério do roadmap está provado — entrar
-depois de seis semanas aplica os seis ciclos uma única vez, com extrato claro,
-patrimônio fechando na soma e nenhuma linha negativa no livro. **E09 concluída.**
-Árvore limpa, 655 testes passando.
-**Auditoria da E09 feita**: o laudo está em `docs/09-AUDITORIA-DA-ETAPA.md` e as
-três lacunas de conserto barato foram corrigidas na mesma sessão — a página do
-cofre passou a validar a query, os botões perderam o contorno preto e o dinheiro
-virou numeral tabular.
-**Próximo passo: E10 — Colmeia (Home)**
+**Último commit:** T-10.1 — a Colmeia ganhou dono: `homeService` aplica os
+efeitos da visita e responde os nove blocos da home numa chamada só, o
+`paginaController.painel` virou três linhas e o `/painel` passou a servir JSON
+pelo mesmo endereço. O "sem N+1" da RNF-04 virou teste que conta as consultas de
+uma visita e exige o mesmo número depois de o jogador acumular item.
+Árvore limpa, 672 testes passando.
+**Próximo passo: T-10.2 — cabeçalho da Colmeia**
 
-**Commit anterior:** T-09.8 — o ciclo passou a falar: o resumo em JSON de cada
+**Commit anterior:** E09 concluída e auditada — o laudo está em
+`docs/09-AUDITORIA-DA-ETAPA.md` e as três lacunas de conserto barato foram
+corrigidas na mesma sessão: a página do cofre passou a validar a query, os
+botões perderam o contorno preto e o dinheiro virou numeral tabular. A E12
+também ganhou escopo escrito, com as decisões de modelagem adiadas para a
+abertura dela.
+
+**Commit de antes:** T-09.9 — a E09 passou no próprio aceite: um arquivo
+percorre a travessia inteira do jogador, e entrar depois de seis semanas aplica
+os seis ciclos uma única vez, com patrimônio fechando na soma.
+
+**Antes disso:** T-09.8 — o ciclo passou a falar: o resumo em JSON de cada
 semana vira frase na Colmeia, com vários ciclos somados num aviso só, o motivo da
 venda forçada escrito sem culpa e um histórico curto embaixo.
 
@@ -302,6 +310,7 @@ argumento a favor da rede que a T-02.1 montou.
 | As quatro telas da economia em navegador real (T-09.7) | A marcação está coberta por teste pelo HTTP — patrimônio no topo, categorias, as frases do comportamento, o impacto da compra, bens separados de enfeites, depósito e meta pelo formulário — e o caminho inteiro foi percorrido com o servidor de pé e a conta demo. O que **não** foi visto por olho humano é o desenho: a rosca da composição e a linha da projeção pintadas no `canvas`, a vitrine a 320 px com três colunas virando uma, e o foco de teclado passeando pelos formulários do cofre. Vale o passe da DT-22 |
 | A frase da faixa na loja (T-09.6) | A vitrine e a prévia da compra devolvem custo zero, `perdeValor` falso e a frase que explica para a Faixa A, com teste contra banco real. Como as telas da loja ainda estão no formato antigo (DT-57), nada disso chega à criança nem foi visto por olho humano: entra junto das views da T-09.7 |
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
+| A Colmeia agregada em navegador real (T-10.1) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e a mesma URL desenha a página em 171 ms, sem `style` na marcação. O que **não** foi visto por olho humano é o bloco novo de patrimônio no lugar do card de inventário, e como o prazo da meta se comporta a 320 px ao lado da barra. Entra no passe da DT-22 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -312,7 +321,24 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E09 — economia: loja, inventário, patrimônio e cofre.** É a etapa que fecha o
+**E10 — Colmeia (Home).** É a tela mais visitada do jogo, e hoje ela é um painel
+que cresceu por acúmulo. O aceite é a Colmeia carregar em até 2 s com um jogador
+avançado, com pelo menos 50 células e 10 itens.
+
+| Tarefa | Situação |
+|---|---|
+| T-10.1 `HomeService`/agregador: uma consulta agregada por bloco, sem N+1 (RNF-04) | **feita** — `homeService` aplica os efeitos da visita e responde os nove blocos numa chamada, o controller virou três linhas e o `/painel` passou a servir JSON pelo mesmo endereço |
+| T-10.2 Cabeçalho: nível + barra de XP, saldo de mel, patrimônio, sequência | pendente |
+| T-10.3 Bloco da meta mais próxima do vencimento | pendente |
+| T-10.4 Trilha de favos em hexágonos com estados | pendente |
+| T-10.5 Tarefas do dia + eventos do ciclo | pendente |
+| T-10.6 Botão "Continuar" resolvendo a próxima célula pendente | pendente |
+| T-10.7 Testes de integração + medição de tempo da página (RNF-01) | pendente |
+
+---
+
+**E09 — economia: loja, inventário, patrimônio e cofre** (concluída e auditada,
+guardada aqui como histórico). É a etapa que fecha o
 laço do jogo: o mel ganho na trilha passa a ter onde ser gasto, guardado e
 perdido. O aceite é entrar depois de seis semanas sem acessar e receber todos os
 ciclos de uma vez, com extrato claro e nada de saldo negativo.
@@ -999,8 +1025,8 @@ A T-02.3 devolveu a aplicação ao ar.
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
-| E09 Economia | **concluída** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. Falta a auditoria da etapa e o passe de olho humano nas telas |
-| E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
+| E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
+| E10 Colmeia | em andamento | T-10.1 feita: o `homeService` responde a home inteira numa chamada, com a contagem de consultas virando teste. Faltam as seis tarefas de tela, da T-10.2 à T-10.7 |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
 | E13 Conquistas e liga | do zero | P1, cortável |
@@ -1045,6 +1071,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view: é aritmética de dinheiro numa camada que deveria só exibir | auditoria da E09 | Subir a conta para o `inventoryService`, junto do agrupamento que ele já faz |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
+| DT-69 | O teste de N+1 da Colmeia conta o `pool.execute`, então escrita em laço dentro de uma transação passa despercebida: a conexão emprestada não passa pelo contador. Cobre o caso que importa hoje, que é leitura de tela | T-10.1 | Contar também a conexão da transação, se alguma tela começar a escrever em laço |
 | DT-59 | O ciclo econômico só é processado no `/painel`. Quem entra direto na loja, no inventário ou no cofre vê o saldo de antes das contas da semana, até passar pela Colmeia | T-09.5 | Subir a chamada para um middleware das telas autenticadas, junto das views da T-09.7 |
 | DT-60 | Acima de doze ciclos por visita, os mais antigos são marcados como processados sem efeito: quem some por um ano não paga o custo fixo nem recebe a renda daquele tempo. É escolha de produto, para a volta não zerar o inventário na primeira tela | T-09.5 | Rever quando houver jogador real sumindo por tanto tempo |
 | DT-58 | O prazo da meta do cofre (`goal_due_at`) é guardado e devolvido, mas nada acontece quando ele vence: a meta não expira nem avisa. A RN-044 fala em meta com prazo, sem dizer o que fazer ao vencer | T-09.4 | Decidir com o produto, junto da tela do cofre na T-09.7 |
@@ -2624,3 +2651,28 @@ negócio. As quatro que já se sabe que existem estão escritas na seção da E1
 roadmap: onde a arte fica guardada, o que conta como variação, a derivação de
 `item_behaviors_map` que hoje mora dentro do seed, e como a atividade cadastrada
 entra no sorteio por faixa.
+
+### Sessão de 2026-08-25, T-10.1 e a abertura da E10
+
+A Colmeia passou a ter um dono. Antes, `paginaController.painel` chamava seis
+efeitos preguiçosos em sequência e sete leituras num `Promise.all` — a regra de
+"o que acontece quando o jogador chega" morava no controller, que é a camada que
+menos deveria decidir isso. Agora `homeService.prepararVisita` aplica os efeitos
+na mesma ordem de antes e `obterColmeia` devolve os nove blocos da RF-HOM
+prontos, com percentual, prazo e recompensa da meta já calculados.
+
+Duas decisões valem lembrar. A primeira é que a próxima célula do "Continuar"
+recebe a trilha já lida em vez de pedi-la de novo: sem isso a mesma página
+cobraria do banco as consultas da trilha duas vezes, e a busca olha só o
+primeiro favo aberto e não concluído, porque varrer todos custaria uma consulta
+por favo. A segunda é que o "sem N+1" da RNF-04 virou teste de verdade: a suíte
+instrumenta o `pool.execute`, mede uma visita, acrescenta doze unidades ao
+inventário e exige o mesmo número de consultas depois. Medir só o tempo passaria
+verde com N+1 enquanto o banco de teste estivesse vazio, que é justamente quando
+o defeito não aparece.
+
+O `/painel` passou a responder JSON pelo mesmo endereço, como as telas da
+economia. A view foi adaptada aos campos novos e o card de inventário virou o
+bloco de patrimônio da RF-HOM-02, já que o dado passou a existir; as telas
+próprias de cada bloco são as tarefas T-10.2 a T-10.7. A DT-59 continua aberta,
+mas ficou mais barata: agora basta chamar `prepararVisita` de um middleware.

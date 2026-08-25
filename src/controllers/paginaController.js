@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto';
 
 import * as achievementsService from '../services/achievementsService.js';
 import * as contentService from '../services/contentService.js';
-import * as economicCycleService from '../services/economicCycleService.js';
 import * as goalPlannerService from '../services/goalPlannerService.js';
 import * as goalsService from '../services/goalsService.js';
+import * as homeService from '../services/homeService.js';
 import * as inventoryService from '../services/inventoryService.js';
 import * as profilesService from '../services/profilesService.js';
 import * as schedulesService from '../services/schedulesService.js';
@@ -14,6 +14,7 @@ import * as tasksService from '../services/tasksService.js';
 import * as vaultService from '../services/vaultService.js';
 import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
+import { querJson } from '../utils/resposta.js';
 
 /**
  * Controller só das páginas que renderizam EJS a partir de GET simples —
@@ -67,45 +68,19 @@ export const onboarding = assincrono(async (req, res) => {
   });
 });
 
+/**
+ * A Colmeia (RF-HOM-01 a 09). O controller não orquestra nada: quem aplica os
+ * efeitos da visita e monta os blocos é o `homeService`, e o mesmo endereço
+ * responde JSON para quem pedir.
+ */
 export const painel = assincrono(async (req, res) => {
-  // O ciclo econômico vem antes de tudo (RN-036): quem passou semanas fora
-  // recebe os ciclos aqui, e só então a página lê saldo, inventário e metas —
-  // do contrário a Colmeia mostraria o mel de antes das contas.
-  const ciclosDaVisita = await economicCycleService.processarPendentes(req.session.usuarioId);
-  // A sequência é avaliada aqui, do mesmo jeito preguiçoso da expiração de meta
-  // (RN-021): o dia fechado sem célula quebra na primeira página que o jogador
-  // abrir, sem cron para manter de pé.
-  await streakService.avaliar(req.session.usuarioId);
-  await tasksService.garantirTarefasDoDia(req.session.usuarioId);
-  await tasksService.sincronizarProgresso(req.session.usuarioId);
-  // A ordem importa: sincronizar expira o que venceu (RN-017), e só então o
-  // planejador conta quantas metas ativas restam. Invertido, a meta vencida
-  // ainda contaria como ativa e o jogador passaria um dia a menos com o plano
-  // cheio. O planejador completa o que falta e não faz nada quando já está
-  // cheio, então chamar aqui é barato e conserta sozinho a conta que ficou sem
-  // meta — inclusive a que concluiu todas (RN-018).
-  await goalsService.sincronizarProgresso(req.session.usuarioId);
-  await goalPlannerService.garantirMetasAtivas(req.session.usuarioId);
-
-  const [perfil, inventario, metas, tarefas, semana, eventosDoCiclo] = await Promise.all([
-    profilesService.obterDoUsuario(req.session.usuarioId),
-    inventoryService.listarAgrupadoPorItem(req.session.usuarioId),
-    goalsService.listarAtivas(req.session.usuarioId),
-    tasksService.listarAtivas(req.session.usuarioId),
-    streakService.resumoDaSemana(req.session.usuarioId),
-    economicCycleService.listarEventosRecentes(req.session.usuarioId),
-  ]);
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  if (querJson(req)) return res.json(colmeia);
 
   renderizarPagina(res, 'painel', {
-    titulo: `${perfil.apelido} — Beever`,
+    titulo: `${colmeia.jogador.apelido} — Beever`,
     classeBody: 'min-h-screen bg-cera py-10 text-tinta antialiased',
-    perfil,
-    inventario,
-    metaPrincipal: metas[0] ?? null,
-    tarefas,
-    semana,
-    avisoDoCiclo: economicCycleService.avisoDosCiclos(ciclosDaVisita),
-    eventosDoCiclo,
+    colmeia,
   });
 });
 

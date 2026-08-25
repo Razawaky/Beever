@@ -224,19 +224,48 @@ export async function listarCelulasDoFavo(idUsuario, idFavo) {
   const favo = await exigirFavoVisivel(idUsuario, idFavo);
   if (favo.estado !== ESTADOS.disponivel) throw erroAcessoNegado(favo.motivo);
 
+  return { favo, celulas: await celulasDoFavo(idUsuario, favo) };
+}
+
+/**
+ * As células de um favo já resolvido, com estado, conteúdo e jogo. Não confere
+ * se o favo está aberto: quem chama já sabe disso, e conferir de novo custaria
+ * a trilha inteira mais uma vez.
+ */
+async function celulasDoFavo(idUsuario, favo) {
   const codigosDeFaixa = await faixasDoJogador(idUsuario);
   const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, codigosDeFaixa);
   const conteudos = await contentsRepository.listarConteudoAtualDasCelulas(celulas.map((c) => c.id));
   const corpoPorCelula = new Map(conteudos.map((linha) => [Number(linha.cell_id), linha.body]));
 
-  return {
-    favo,
-    celulas: estadosDasCelulas(celulas).map((celula) => ({
-      ...celula,
-      temConteudo: corpoPorCelula.has(Number(celula.id)),
-      temJogo: podeJogar(celula.game_type_slug, corpoPorCelula.get(Number(celula.id))),
-    })),
-  };
+  return estadosDasCelulas(celulas).map((celula) => ({
+    ...celula,
+    temConteudo: corpoPorCelula.has(Number(celula.id)),
+    temJogo: podeJogar(celula.game_type_slug, corpoPorCelula.get(Number(celula.id))),
+  }));
+}
+
+/**
+ * A próxima célula que o jogador tem para jogar na trilha (RF-HOM-07), para o
+ * botão "Continuar" da Colmeia.
+ *
+ * Olha só o primeiro favo aberto e ainda não concluído: varrer os demais
+ * custaria uma consulta por favo, e quem fechou aquele favo já tem a trilha
+ * inteira na tela para escolher. Recebe a trilha pronta quando quem chama já a
+ * leu, para não repetir consulta na mesma página.
+ */
+export async function proximaCelulaPendente(idUsuario, trilha = null) {
+  const favos = trilha ?? (await listarTrilha(idUsuario));
+  const favo = favos.find((linha) => linha.estado === ESTADOS.disponivel && !linha.concluido);
+  if (!favo) return null;
+
+  const celulas = await celulasDoFavo(idUsuario, favo);
+  const proxima = celulas.find(
+    (celula) => !celula.concluida && celula.temJogo && celula.estado === ESTADOS.disponivel,
+  );
+  if (!proxima) return null;
+
+  return { id: Number(proxima.id), titulo: proxima.title, idFavo: Number(favo.id), tituloDoFavo: favo.title };
 }
 
 /**
