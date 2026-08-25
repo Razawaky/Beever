@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { param } from 'express-validator';
+import { param, query } from 'express-validator';
 
 import * as healthController from '../controllers/healthController.js';
 import * as homeController from '../controllers/homeController.js';
 import * as paginaController from '../controllers/paginaController.js';
 import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { somentePagina } from '../middlewares/somentePagina.js';
-import { validateEnderecoDePagina } from '../middlewares/validate.js';
+import { validate, validateEnderecoDePagina } from '../middlewares/validate.js';
 import cofreRouter from './cofre.js';
 import lojaRouter from './loja.js';
 import metasRouter from './metas.js';
@@ -49,7 +49,17 @@ router.get(
   paginaController.confirmarCompra,
 );
 router.get('/inventario', requireOnboarding, paginaController.inventario);
-router.get('/cofre', somentePagina, requireOnboarding, paginaController.cofre);
+// A projeção do cofre entra por query, e a página valida o mesmo que a rota
+// JSON já validava: sem isso, `?porSemana=abc` desenhava a projeção inteira
+// como NaN, e um número absurdo passava direto.
+router.get(
+  '/cofre',
+  somentePagina,
+  requireOnboarding,
+  query('porSemana').optional({ values: 'falsy' }).isInt({ min: 0, max: 1000000 }),
+  validate,
+  paginaController.cofre,
+);
 router.get('/metas', somentePagina, requireOnboarding, paginaController.metas);
 router.get('/perfil', somentePagina, requireOnboarding, paginaController.perfil);
 router.get('/trilha', requireOnboarding, paginaController.trilha);

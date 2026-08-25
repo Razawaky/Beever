@@ -204,6 +204,19 @@ describe('telas da economia', opcoes, () => {
     assert.match(html, /Semana 8/, 'a projeção padrão vai a oito semanas');
   });
 
+  it('a página do cofre recusa projeção com lixo na query, como a rota JSON já fazia', async () => {
+    // A página nasceu sem o validador que o router de domínio tinha: `abc`
+    // desenhava a projeção inteira como NaN, e número absurdo passava direto.
+    for (const query of ['porSemana=abc', 'porSemana=-500', 'porSemana=99999999999']) {
+      const resposta = await agente.get(`/cofre?${query}`).set('Accept', 'text/html');
+      assert.equal(resposta.status, 422, `"${query}" precisa ser recusado`);
+      assert.ok(!resposta.text.includes('NaN'), 'nenhuma tela pode mostrar NaN para a criança');
+    }
+
+    const valida = await agente.get('/cofre?porSemana=100').set('Accept', 'text/html').expect(200);
+    assert.match(valida.text, /Guardando <strong>100<\/strong>/);
+  });
+
   it('a meta do cofre é declarada pelo formulário da página', async () => {
     const html = await pagina('/cofre');
     const csrf = /name="_csrf" value="([^"]+)"/.exec(html)[1];

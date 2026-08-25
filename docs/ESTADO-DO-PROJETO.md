@@ -9,7 +9,11 @@ travessia inteira do jogador, e o critério do roadmap está provado — entrar
 depois de seis semanas aplica os seis ciclos uma única vez, com extrato claro,
 patrimônio fechando na soma e nenhuma linha negativa no livro. **E09 concluída.**
 Árvore limpa, 655 testes passando.
-**Próximo passo: auditoria da E09, antes de abrir a E10 (Colmeia)**
+**Auditoria da E09 feita**: o laudo está em `docs/09-AUDITORIA-DA-ETAPA.md` e as
+três lacunas de conserto barato foram corrigidas na mesma sessão — a página do
+cofre passou a validar a query, os botões perderam o contorno preto e o dinheiro
+virou numeral tabular.
+**Próximo passo: E10 — Colmeia (Home)**
 
 **Commit anterior:** T-09.8 — o ciclo passou a falar: o resumo em JSON de cada
 semana vira frase na Colmeia, com vários ciclos somados num aviso só, o motivo da
@@ -1036,6 +1040,11 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-61~~ | ~~O banco de desenvolvimento não aceita `db:migrate`: as migrations `004` e `007` foram editadas depois de aplicadas, nas T-08.3 e T-08.4, e o runner recusa por checksum~~ | T-09.6 | **Resolvida na mesma sessão**: o banco foi recriado com `db:reset -- --sim`, e o ciclo `db:migrate` (16 migrations), `db:seed` e `db:reconcile` rodou limpo do zero |
 | DT-62 | A tela do cofre mostra o prazo da meta e o formulário aceita a data, mas o campo não vem preenchido com o prazo já gravado: salvar de novo sem tocar na data apaga o prazo. É irmão da DT-58, que decide o que fazer quando o prazo vence | T-09.7 | Resolver junto da DT-58, quando o produto decidir o comportamento do vencimento |
 | DT-63 | O aviso do ciclo aparece só na visita em que os ciclos rodaram; quem fecha a Colmeia antes de ler perde o destaque e precisa abrir o histórico para reencontrar o que aconteceu. Guardar "visto" pedia coluna nova e regra de leitura só para um aviso | T-09.8 | Rever na E10, quando a Colmeia de verdade for montada |
+| DT-64 | A auditoria do ciclo é grossa para a RN-010: seis semanas com renda, custo, venda forçada e rendimento viram uma linha só em `audit_logs` por visita, e o detalhe por movimento existe apenas em `coin_ledger` | auditoria da E09 | Decidir se a trilha grava por movimento ou se o livro basta como detalhe, junto da consulta de auditoria da T-12.4 |
+| DT-65 | Depósito e saque do cofre não têm chave de idempotência: dois cliques no botão guardam duas vezes. Não fere a RNF-16, que fala de recompensa e compra, mas é o mesmo clique ansioso que a loja já trata | auditoria da E09 | Reaproveitar o `idempotencyService` da compra |
+| DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
+| DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view: é aritmética de dinheiro numa camada que deveria só exibir | auditoria da E09 | Subir a conta para o `inventoryService`, junto do agrupamento que ele já faz |
+| DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
 | DT-59 | O ciclo econômico só é processado no `/painel`. Quem entra direto na loja, no inventário ou no cofre vê o saldo de antes das contas da semana, até passar pela Colmeia | T-09.5 | Subir a chamada para um middleware das telas autenticadas, junto das views da T-09.7 |
 | DT-60 | Acima de doze ciclos por visita, os mais antigos são marcados como processados sem efeito: quem some por um ano não paga o custo fixo nem recebe a renda daquele tempo. É escolha de produto, para a volta não zerar o inventário na primeira tela | T-09.5 | Rever quando houver jogador real sumindo por tanto tempo |
 | DT-58 | O prazo da meta do cofre (`goal_due_at`) é guardado e devolvido, mas nada acontece quando ele vence: a meta não expira nem avisa. A RN-044 fala em meta com prazo, sem dizer o que fazer ao vencer | T-09.4 | Decidir com o produto, junto da tela do cofre na T-09.7 |
@@ -2572,3 +2581,26 @@ alguém empurrar a Colmeia para cinco segundos, o aceite acusa antes do usuário
 A E09 está fechada em código. O que ela ainda deve é o passe de olho humano nas
 quatro telas e no aviso do ciclo (DT-22), e a auditoria da etapa, no formato das
 que a E06 e a E08 tiveram.
+### Sessão de 2026-08-25, auditoria da E09
+
+O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`. A parte estrutural passou
+inteira: nenhuma SQL fora de repository, recompensa só no servidor, compra e
+ciclo em transação com trava no banco, ciclo repetido recusado pela UNIQUE e
+saldo negativo recusado pelo CHECK.
+
+**A lacuna de risco real era de entrada não validada.** A página `/cofre` aceitava
+qualquer coisa na query enquanto a rota JSON do mesmo caminho recusava:
+`?porSemana=abc` respondia 200 com a projeção inteira escrita como `NaN`. A
+página passou a usar a mesma regra, e o caso virou teste — é o tipo de buraco
+que nasce quando uma rota de página é acrescentada ao lado de um router de
+domínio que já validava.
+
+Junto dela foram fechadas duas do checklist visual: dois botões do cofre usavam
+contorno preto, proibido pela seção 8 do design system, e passaram a marcar
+profundidade por sombra; e o dinheiro das quatro telas virou numeral tabular,
+para a coluna do extrato e da projeção não dançar a cada dígito.
+
+Cinco lacunas viraram dívida: DT-64 a DT-68. E fica o alerta de escopo do laudo —
+o estado diz "E09 concluída" enquanto RF-LOJ-08, RF-LOJ-09 e RF-INV-05 não
+existem. São P1 declarados, mas o roadmap precisa dizer isso com todas as letras
+antes da defesa.

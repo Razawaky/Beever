@@ -10,7 +10,7 @@
     <h3 class="mt-1 text-lg font-bold"><%= item.name %></h3>
     <p class="mt-2 text-sm text-tinta-suave"><%= item.description_kid %></p>
 
-    <ul class="mt-4 grid gap-1 text-sm">
+    <ul class="mt-4 grid gap-1 text-sm tabular-nums">
       <% if (item.perdeValor) { %>
         <li>📉 Perde valor toda semana</li>
       <% } else if (Number(item.valuation_rate) > 0) { %>
@@ -46,13 +46,13 @@
   <div class="mt-6 flex items-end justify-between gap-4">
     <div>
       <% if (item.troca) { %>
-        <p class="text-xs text-tinta-suave">
+        <p class="text-xs tabular-nums text-tinta-suave">
           Entregando <%= item.troca.itemTrocado %>: −<%= item.troca.desconto %>
         </p>
       <% } %>
-      <p class="text-lg font-semibold">🍯 <%= item.precoComDesconto %></p>
+      <p class="text-lg font-semibold tabular-nums">🍯 <%= item.precoComDesconto %></p>
       <% if (!item.podeComprar && item.bloqueios.length === 0) { %>
-        <p class="text-xs text-tinta-suave">faltam <%= item.faltamDeMel %> de mel</p>
+        <p class="text-xs tabular-nums text-tinta-suave">faltam <%= item.faltamDeMel %> de mel</p>
       <% } %>
     </div>
 

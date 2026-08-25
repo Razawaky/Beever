@@ -35,7 +35,7 @@
               <span class="rounded-pilula bg-cera px-3 py-1 text-sm">x<%= grupo.quantidade %></span>
             </div>
 
-            <dl class="mt-4 grid gap-1 text-sm">
+            <dl class="mt-4 grid gap-1 text-sm tabular-nums">
               <div class="flex justify-between">
                 <dt class="text-tinta-suave">Você pagou</dt>
                 <dd>🍯 <%= grupo.valorPago %></dd>
@@ -50,7 +50,7 @@
               </div>
             </dl>
 
-            <ul class="mt-3 grid gap-1 text-sm">
+            <ul class="mt-3 grid gap-1 text-sm tabular-nums">
               <% if (grupo.rendaSemanal > 0) { %>
                 <li>🍯 Rende <%= grupo.rendaSemanal * grupo.quantidade %> de mel por semana</li>
               <% } %>
