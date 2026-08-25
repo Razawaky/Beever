@@ -4,19 +4,24 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-09.5 — a semana passou a acontecer: `economicCycleService`
+**Último commit:** T-09.6 — a Faixa A ganhou economia sem punição: custo fixo,
+depreciação e inadimplência desligados por interruptor em `age_bands`, lidos num
+ponto só (`profilesService.regrasEconomicasDoUsuario`) pelo ciclo e pela loja. O
+catálogo continua igual para todas as faixas, com o custo zerado e uma frase
+explicando. Árvore limpa, 624 testes passando.
+**Próximo passo: T-09.7 — views da economia (loja, compra, inventário e cofre)**
+
+**Commit anterior:** T-09.5 — a semana passou a acontecer: `economicCycleService`
 conta os ciclos pelo calendário do jogador e aplica os que faltam de uma vez, na
 Colmeia, cada um na própria transação — valor, renda, custo fixo, venda forçada
-por inadimplência e rendimento do cofre, nessa ordem. Árvore limpa, 617 testes
-passando.
-**Próximo passo: T-09.6 — regras por faixa (RN-038)**
+por inadimplência e rendimento do cofre, nessa ordem.
 
-**Commit anterior:** T-09.4 — o cofre abriu: `vaultService` guarda e devolve mel
+**Commit de antes:** T-09.4 — o cofre abriu: `vaultService` guarda e devolve mel
 com extrato, rende 2% por ciclo sem pagar sobre o que foi sacado, paga o bônus
 da meta e projeta as semanas à frente. A tarefa `depositar-no-cofre` foi
 reativada (DT-43 paga).
 
-**Commit de antes:** T-09.3 — o patrimônio ganhou dono: `patrimonyService` soma
+**Antes disso:** T-09.3 — o patrimônio ganhou dono: `patrimonyService` soma
 carteira, cofre e bens na hora (RN-039), com cosmético de fora, e apareceu no
 topo da loja, na prévia da compra e no inventário.
 
@@ -277,6 +282,7 @@ argumento a favor da rede que a T-02.1 montou.
 | As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O mesmo caminho foi refeito na T-07.4, com a divisão do orçamento aceita e paga. O caminho foi refeito de novo na T-07.5 e na T-07.6, sempre com o servidor de pé — e foi ele que achou o botão "Jogar" mentindo e a regra errada da próxima célula. O que **ainda não** foi visto por olho humano é o gesto e o desenho: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz, o foco de teclado trocando de pergunta, **o gráfico do cofre** com suas barras e a linha da meta, **as estrelas do resultado aparecendo uma a uma** — e as quatro telas de jogo a 320 px, onde o orçamento de faixa C é o mais apertado, com cinco categorias, dois botões e um número por linha. É a DT-22 e a L-10 do laudo da E06 |
 | O calendário da semana em navegador real (T-08.6) | A marcação está coberta por teste pelo HTTP — os sete dias no painel e nas metas, com data e desfecho em cada `aria-label` — e a legenda escrita foi conferida na resposta. O que **não** foi visto por olho humano é o desenho: o anel do dia de hoje sobre o mel do painel, a borda tracejada do dia que ainda vem, a faixa compacta a 320 px ao lado do nível e o contraste do ícone branco sobre o vermelho do dia perdido. Vale o mesmo passe da DT-22 |
 | A loja e o inventário novos em navegador real (T-09.2 e T-09.3) | A vitrine, a prévia da compra, o upgrade com desconto, a separação de bens e cosméticos e a composição do patrimônio estão cobertos por teste contra banco real e pelo HTTP, mas só no JSON. As telas de `/loja` e do inventário continuam renderizando o formato antigo, então nada disso foi visto por olho humano — nem o patrimônio no topo, nem a frase que explica o impacto da compra, nem o botão de troca do upgrade. É a DT-57, que a T-09.7 fecha |
+| A frase da faixa na loja (T-09.6) | A vitrine e a prévia da compra devolvem custo zero, `perdeValor` falso e a frase que explica para a Faixa A, com teste contra banco real. Como as telas da loja ainda estão no formato antigo (DT-57), nada disso chega à criança nem foi visto por olho humano: entra junto das views da T-09.7 |
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
 | A tela do cofre (T-09.4) | O cofre inteiro — depósito, saque, extrato, meta com bônus, rendimento e projeção — está coberto por teste contra banco real e pelas rotas, mas não existe página `/cofre`: a tela é a T-09.7. Nada disso foi visto por olho humano, e a projeção em especial só faz sentido desenhada |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
@@ -301,7 +307,7 @@ ciclos de uma vez, com extrato claro e nada de saldo negativo.
 | T-09.3 `PatrimonyService`: carteira + cofre + bens, com cosmético fora da conta | **feita** — a soma é feita na hora a cada chamada, a foto diária virou só gráfico, e o patrimônio entrou na vitrine, na prévia da compra, no inventário e no requisito `patrimonio-minimo` |
 | T-09.4 `VaultService`: depósito, saque, rendimento por ciclo, meta e projeção | **feita** — depósito e saque numa transação com o cofre travado, extrato com saldo depois de cada linha, rendimento que desconta o sacado no ciclo, bônus de meta vindo de `reward_modifiers` e projeção como conta pura |
 | T-09.5 `EconomicCycleService`: ciclos preguiçosos e idempotentes | **feita** — o número do ciclo sai do calendário do jogador, cada ciclo é uma transação com a marca antes dos efeitos, e a Colmeia processa o que ficou pendente antes de mostrar saldo |
-| T-09.6 Regras por faixa: depreciação, custo fixo e inadimplência desligados na Faixa A | pendente |
+| T-09.6 Regras por faixa: depreciação, custo fixo e inadimplência desligados na Faixa A | **feita** — os interruptores moram em `age_bands`, `regrasEconomicasDoUsuario` é o ponto único de leitura, e a inadimplência não ganhou coluna porque é consequência do custo fixo |
 | T-09.7 Views: loja, confirmação com impacto explicado, inventário e cofre | pendente |
 | T-09.8 Aviso na Colmeia dos eventos do ciclo | pendente |
 | T-09.9 Testes: saldo insuficiente, compra dupla, seis semanas offline, item vendido por inadimplência, patrimônio no centavo | pendente |
@@ -976,7 +982,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E06 Motor de recompensas | **concluída e auditada** | T-06.1 feita: `rewardConfigsRepository` e a tabela `reward_modifiers`, que tira da frente a DT-19. T-06.2 feita: o XP de célula sai da tabela, com o corte da repetição e o bônus de nível calculado — **DT-03 paga**. T-06.3 e T-06.4 feitas: pólen e mel no mesmo desenho, mais o bônus de nível enfim pago. T-06.5 feita: a partida abre, fecha validando no servidor e paga tudo numa transação. T-06.6 feita: idempotência da partida e da compra, com a DT-18 paga. T-06.7 feita: todo crédito deixa rastro com saldo antes e depois. T-06.8 feita: o aceite da etapa passou, com cinco conclusões e cinco compras em paralelo. **As oito tarefas estão entregues; falta auditar a etapa.** Ver também DT-18 |
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
-| E09 Economia | **em andamento** | T-09.1 feita: os repositories da economia abriram o schema que a E01 já tinha — cofre com extrato, ciclo econômico idempotente por número, foto do patrimônio, comportamentos do item e as operações de ciclo no inventário (valor com piso e teto, inadimplência que conta ciclos). T-09.2 feita: a loja ganhou service próprio, com vitrine respondida por jogador, prévia de impacto e upgrade com desconto pelo bem entregue. T-09.3 feita: `patrimonyService` responde carteira mais cofre mais bens, com cosmético fora, e o requisito de patrimônio mínimo deixou de ser um aviso. T-09.4 feita: o cofre guarda, devolve, rende e projeta, e a tarefa `depositar-no-cofre` voltou ao catálogo. T-09.5 feita: o ciclo semanal acontece, contado pelo calendário do jogador e aplicado de uma vez na volta, com resumo por ciclo em JSON. Faltam as regras por faixa, as views e o aviso na Colmeia |
+| E09 Economia | **em andamento** | T-09.1 feita: os repositories da economia abriram o schema que a E01 já tinha — cofre com extrato, ciclo econômico idempotente por número, foto do patrimônio, comportamentos do item e as operações de ciclo no inventário (valor com piso e teto, inadimplência que conta ciclos). T-09.2 feita: a loja ganhou service próprio, com vitrine respondida por jogador, prévia de impacto e upgrade com desconto pelo bem entregue. T-09.3 feita: `patrimonyService` responde carteira mais cofre mais bens, com cosmético fora, e o requisito de patrimônio mínimo deixou de ser um aviso. T-09.4 feita: o cofre guarda, devolve, rende e projeta, e a tarefa `depositar-no-cofre` voltou ao catálogo. T-09.5 feita: o ciclo semanal acontece, contado pelo calendário do jogador e aplicado de uma vez na volta, com resumo por ciclo em JSON. T-09.6 feita: a Faixa A vive a economia sem punição, por interruptor em `age_bands` lido num ponto só. Faltam as views e o aviso na Colmeia |
 | E10 Colmeia | parcial | `painel.ejs` existe, mas não é a Colmeia de RF-HOM |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
@@ -1014,6 +1020,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-49 | O calendário da semana marca o dia de hoje com `ring-2 ring-tinta`, que é contorno preto em badge, vetado pelo checklist da seção 8 do design system; os números dos dias não usam `tabular-nums` | auditoria da E08 (L-9) | Junto com a passagem por navegador da DT-22 |
 | DT-50 | O cabeçalho de `tasksService.js` ainda diz que a geração automática das tarefas é a E08 e que ali existe a criação avulsa: a geração existe desde a T-08.5 e a criação avulsa foi removida | auditoria da E08 (L-10) | Reescrever o bloco, quando o arquivo for tocado |
 | ~~DT-52~~ | ~~A vitrine ainda não devolve o patrimônio que a RF-LOJ-01 manda mostrar no topo da loja~~ | T-09.2 | **Resolvida na T-09.3**: a vitrine e a prévia da compra devolvem a composição inteira |
+| DT-61 | O banco de desenvolvimento não aceita `db:migrate`: as migrations `004` e `007` foram editadas depois de aplicadas, nas T-08.3 e T-08.4, e o runner recusa por checksum — corretamente. A migration `016` da faixa não entrou lá, embora a suíte a aplique do zero a cada execução | T-09.6 | Recriar o banco de desenvolvimento com `npm run db:reset -- --sim` seguido de `db:migrate` e `db:seed` |
 | DT-59 | O ciclo econômico só é processado no `/painel`. Quem entra direto na loja, no inventário ou no cofre vê o saldo de antes das contas da semana, até passar pela Colmeia | T-09.5 | Subir a chamada para um middleware das telas autenticadas, junto das views da T-09.7 |
 | DT-60 | Acima de doze ciclos por visita, os mais antigos são marcados como processados sem efeito: quem some por um ano não paga o custo fixo nem recebe a renda daquele tempo. É escolha de produto, para a volta não zerar o inventário na primeira tela | T-09.5 | Rever quando houver jogador real sumindo por tanto tempo |
 | DT-58 | O prazo da meta do cofre (`goal_due_at`) é guardado e devolvido, mas nada acontece quando ele vence: a meta não expira nem avisa. A RN-044 fala em meta com prazo, sem dizer o que fazer ao vencer | T-09.4 | Decidir com o produto, junto da tela do cofre na T-09.7 |
@@ -2441,3 +2448,34 @@ Para a T-09.6 e a T-09.8 saberem: o filtro da faixa etária tem um lugar só, no
 custo fixo e inadimplência. E o `summary` de cada ciclo já sai no formato que o
 aviso da Colmeia vai ler: valorização, depreciação, renda, custo, inadimplentes,
 vendidos, rendimento do cofre e meta.
+### Sessão de 2026-08-25, T-09.6: a Faixa A vive a economia sem punição
+
+A RN-038 desliga três coisas para a criança de 6 a 8 anos, e só uma delas tinha
+interruptor: `age_bands.is_upkeep_enabled` cobria o custo fixo desde a E01. A
+depreciação ficaria sem fonte, então entrou a migration `016` com
+`is_depreciation_enabled`. A inadimplência não ganhou coluna de propósito — ela
+é consequência de não pagar o custo, e quem não cobra não tem como ficar
+devendo. Uma lista de faixas escrita no service seria o valor mágico que a
+RN-006 proíbe no resto da economia.
+
+**A leitura tem um ponto só.** `profilesService.regrasEconomicasDoUsuario`
+devolve os três interruptores, e nem o ciclo nem a loja conhecem a letra da
+faixa. Perfil sem faixa gravada joga com tudo ligado, que é a regra das faixas B
+e C — o padrão seguro é punir menos, nunca mais.
+
+**A loja não esconde item.** O catálogo é o mesmo para todo mundo: a criança de
+6 anos vê a moto igual ao irmão de 12, com o custo semanal em zero e uma frase
+dizendo que ali aquele item não cobra nada nem perde valor. Esconder seria mais
+fiel à leitura literal da regra e criaria dois catálogos para manter, além de
+empobrecer a loja da faixa mais nova.
+
+**Mudar de faixa perdoa a dívida.** Quem estava inadimplente e passou para uma
+faixa sem custo fixo é regularizado no ciclo seguinte: a dívida era da regra
+antiga, e ninguém deve ser punido por ter feito aniversário. O caminho contrário
+— entrar numa faixa que cobra — passa a cobrar no ciclo seguinte, sem aviso na
+tela, e isso ainda vai precisar de um.
+
+Ficou registrado como DT-61 que o banco de desenvolvimento recusa `db:migrate`
+por causa das migrations `004` e `007`, editadas depois de aplicadas em sessões
+anteriores. A suíte não sofre com isso, porque cria o banco do zero a cada
+execução.

@@ -207,6 +207,27 @@ export async function fusoDoUsuario(idUsuario) {
   return fusoValido(perfil?.timezone ?? FUSO_PADRAO);
 }
 
+/**
+ * Os interruptores da economia para este jogador (RN-038).
+ *
+ * Ponto único: o ciclo econômico e a loja perguntam aqui, e nenhum dos dois
+ * conhece a letra da faixa. Perfil sem faixa gravada joga com tudo ligado, que
+ * é a regra das faixas B e C.
+ */
+export async function regrasEconomicasDoUsuario(idUsuario) {
+  const faixa = await profilesRepository.buscarFaixaDoUsuario(idUsuario);
+  const custoFixo = faixa ? Boolean(faixa.is_upkeep_enabled) : true;
+
+  return {
+    faixa: faixa?.code ?? null,
+    custoFixo,
+    depreciacao: faixa ? Boolean(faixa.is_depreciation_enabled) : true,
+    // A inadimplência é consequência do custo fixo: quem não paga conta nenhuma
+    // não tem como ficar devendo.
+    inadimplencia: custoFixo,
+  };
+}
+
 async function exigirPosse(idPerfil, idUsuario) {
   const perfil = await profilesRepository.buscarPorId(idPerfil);
   if (!perfil) throw erroNaoEncontrado('Perfil não encontrado');

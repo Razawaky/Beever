@@ -6,15 +6,17 @@
 
 -- Faixas etárias. RN-038: na faixa A não existe custo fixo, depreciação nem
 -- inadimplência — a criança de 6 a 8 anos só vê ganho. É por isso que
--- `is_upkeep_enabled` é 0 nela.
-INSERT INTO age_bands (code, name, min_age, max_age, is_economy_enabled, is_upkeep_enabled) VALUES
-  ('A', 'Faixa A — primeiros passos',  6,  8, 1, 0),
-  ('B', 'Faixa B — explorando',        9, 11, 1, 1),
-  ('C', 'Faixa C — planejando',       12, 15, 1, 1)
+-- `is_upkeep_enabled` e `is_depreciation_enabled` são 0 nela; a inadimplência
+-- não tem coluna porque é consequência de não pagar o custo.
+INSERT INTO age_bands (code, name, min_age, max_age, is_economy_enabled, is_upkeep_enabled, is_depreciation_enabled) VALUES
+  ('A', 'Faixa A — primeiros passos',  6,  8, 1, 0, 0),
+  ('B', 'Faixa B — explorando',        9, 11, 1, 1, 1),
+  ('C', 'Faixa C — planejando',       12, 15, 1, 1, 1)
 AS novo
 ON DUPLICATE KEY UPDATE
   name = novo.name, min_age = novo.min_age, max_age = novo.max_age,
-  is_economy_enabled = novo.is_economy_enabled, is_upkeep_enabled = novo.is_upkeep_enabled;
+  is_economy_enabled = novo.is_economy_enabled, is_upkeep_enabled = novo.is_upkeep_enabled,
+  is_depreciation_enabled = novo.is_depreciation_enabled;
 
 -- Avatares do mascote, a partir das imagens que já existem em src/public/img.
 INSERT INTO avatars (slug, name, image_path) VALUES

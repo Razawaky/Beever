@@ -134,8 +134,28 @@ export async function buscarDetalhadoPorUsuario(idUsuario) {
  */
 export async function listarFaixasEtarias() {
   return consultar(
-    'SELECT id, code, name, min_age, max_age, is_economy_enabled, is_upkeep_enabled FROM age_bands ORDER BY min_age',
+    `SELECT id, code, name, min_age, max_age, is_economy_enabled, is_upkeep_enabled,
+            is_depreciation_enabled
+       FROM age_bands ORDER BY min_age`,
   );
+}
+
+/**
+ * A faixa do jogador com os interruptores da RN-038.
+ *
+ * Existe separada da leitura detalhada porque o ciclo econômico e a loja
+ * precisam dos interruptores, não dos rótulos de tela.
+ */
+export async function buscarFaixaDoUsuario(idUsuario) {
+  const linhas = await consultar(
+    `SELECT f.id, f.code, f.name, f.is_economy_enabled, f.is_upkeep_enabled,
+            f.is_depreciation_enabled
+       FROM profiles p
+       JOIN age_bands f ON f.id = p.age_band_id
+      WHERE p.user_id = ?`,
+    [idUsuario],
+  );
+  return linhas[0] ?? null;
 }
 
 /**

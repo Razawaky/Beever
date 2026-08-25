@@ -1,6 +1,7 @@
 import * as inventoryRepository from '../repositories/inventoryRepository.js';
 import * as itemsService from './itemsService.js';
 import * as patrimonyService from './patrimonyService.js';
+import * as profilesService from './profilesService.js';
 
 /**
  * A loja já respondida para o jogador: o que dá para comprar, o que falta e
@@ -38,12 +39,34 @@ function ofertaDeTroca(item, unidades) {
   };
 }
 
+/**
+ * O que este item cobra e perde para este jogador (RN-038).
+ *
+ * O catálogo é o mesmo para todo mundo: a criança de 6 anos vê a moto igual ao
+ * irmão de 12, e a diferença aparece como cuidado, não como bloqueio. Por isso
+ * o número é zerado e a frase explica, em vez de o item sumir da vitrine.
+ */
+function comportamentoNaFaixa(item, regras) {
+  const custoSemanal = regras.custoFixo ? Number(item.upkeep_cost) : 0;
+  const perdeValor = regras.depreciacao && Number(item.valuation_rate) < 0;
+  const desligado =
+    (!regras.custoFixo && Number(item.upkeep_cost) > 0) ||
+    (!regras.depreciacao && Number(item.valuation_rate) < 0);
+
+  return {
+    custoSemanal,
+    perdeValor,
+    avisoDaFaixa: desligado ? 'Na sua idade, este item não cobra nada por semana nem perde valor.' : null,
+  };
+}
+
 /** O catálogo com o estado de compra de cada item para este jogador. */
 export async function listarVitrine(idUsuario) {
-  const [catalogo, patrimonio, unidades] = await Promise.all([
+  const [catalogo, patrimonio, unidades, regras] = await Promise.all([
     itemsService.listarCatalogo(),
     patrimonyService.obterDoUsuario(idUsuario),
     inventoryRepository.listarPorUsuario(idUsuario),
+    profilesService.regrasEconomicasDoUsuario(idUsuario),
   ]);
 
   const pendenciasPorItem = await itemsService.requisitosNaoCumpridosDosItens(
@@ -59,6 +82,8 @@ export async function listarVitrine(idUsuario) {
 
     return {
       ...item,
+      ...comportamentoNaFaixa(item, regras),
+      rendaSemanal: Number(item.income_per_cycle),
       quantidadePossuida: unidadesAtivasDoItem(unidades, item.id).length,
       precoDeTabela: Number(item.price),
       precoComDesconto: preco,
@@ -84,10 +109,11 @@ export async function listarVitrine(idUsuario) {
  */
 export async function previaDaCompra(idUsuario, idItem, { idUnidadeTrocada = null } = {}) {
   const item = await itemsService.obterAtivo(idItem);
-  const [patrimonio, unidades, pendencias] = await Promise.all([
+  const [patrimonio, unidades, pendencias, regras] = await Promise.all([
     patrimonyService.obterDoUsuario(idUsuario),
     inventoryRepository.listarPorUsuario(idUsuario),
     itemsService.requisitosNaoCumpridos(idItem, idUsuario),
+    profilesService.regrasEconomicasDoUsuario(idUsuario),
   ]);
 
   const oferta = ofertaDeTroca(item, unidades);
@@ -126,7 +152,7 @@ export async function previaDaCompra(idUsuario, idItem, { idUnidadeTrocada = nul
     saldoDepois: patrimonio.carteira - precoPago,
     patrimonioAtual: patrimonio.total,
     patrimonioDepois,
-    custoSemanal: Number(item.upkeep_cost),
+    ...comportamentoNaFaixa(item, regras),
     rendaSemanal: Number(item.income_per_cycle),
     entraNoPatrimonio,
     bloqueios,

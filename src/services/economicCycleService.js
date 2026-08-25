@@ -64,8 +64,12 @@ export function separarPendentes({ ultimoProcessado, cicloAtual }) {
  * A conta mora no `UPDATE` do repository, com piso e teto do item, então o
  * valor novo é lido de volta para o extrato saber quanto subiu e quanto caiu.
  */
-async function aplicarValores(conexao, idUsuario, unidades) {
-  const mudam = unidades.filter((unidade) => Number(unidade.valuation_rate) !== 0);
+async function aplicarValores(conexao, idUsuario, unidades, regras) {
+  const mudam = unidades.filter((unidade) => {
+    const taxa = Number(unidade.valuation_rate);
+    if (taxa === 0) return false;
+    return taxa > 0 || regras.depreciacao;
+  });
   if (mudam.length === 0) return { valorizacao: 0, depreciacao: 0 };
 
   for (const unidade of mudam) {
@@ -113,9 +117,20 @@ async function creditarRenda(conexao, idUsuario, unidades) {
  * estoura quando falta mel, e aqui faltar mel não é erro — é inadimplência, que
  * a regra manda tratar sem nunca virar dívida negativa.
  */
-async function cobrarCustoFixo(conexao, idUsuario, unidades) {
+async function cobrarCustoFixo(conexao, idUsuario, unidades, regras) {
   let custo = 0;
   const inadimplentes = [];
+
+  // Faixa sem custo fixo também perdoa o que ficou devendo antes: a dívida era
+  // da regra antiga, e ninguém deve ser punido por ter feito aniversário.
+  if (!regras.custoFixo) {
+    for (const unidade of unidades) {
+      if (unidade.status === 'inadimplente') {
+        await inventoryRepository.regularizar(conexao, unidade.id);
+      }
+    }
+    return { custo, inadimplentes };
+  }
 
   for (const unidade of unidades) {
     const valor = Number(unidade.upkeep_cost);
@@ -145,7 +160,9 @@ async function cobrarCustoFixo(conexao, idUsuario, unidades) {
 }
 
 /** Vende por 50% o que passou de dois ciclos devendo (RN-037), com aviso no extrato. */
-async function venderInadimplentesVencidas(conexao, idUsuario) {
+async function venderInadimplentesVencidas(conexao, idUsuario, regras) {
+  if (!regras.inadimplencia) return [];
+
   const vencidas = await inventoryRepository.listarInadimplentesVencidas(
     idUsuario,
     CICLOS_PARA_VENDA_FORCADA,
@@ -178,20 +195,20 @@ async function venderInadimplentesVencidas(conexao, idUsuario) {
  * para quem chegou depois, e esse ciclo sai sem tocar em nada. A ordem dos
  * efeitos é fixa: valor, renda, custo, venda forçada e por último o cofre.
  */
-async function processarUm(idUsuario, numeroDoCiclo, { fuso, semanaDaConta }) {
+async function processarUm(idUsuario, numeroDoCiclo, { fuso, semanaDaConta, regras }) {
   const inicioDoCiclo = inicioDoDia(somarDias(semanaDaConta, numeroDoCiclo * 7), fuso);
 
   return emTransacao(async (conexao) => {
     const primeiraVez = await economicCyclesRepository.registrar(conexao, { idUsuario, numeroDoCiclo });
     if (!primeiraVez) return null;
 
-    // RN-038: a Faixa A não deprecia, não paga custo fixo e não fica
-    // inadimplente. O filtro por faixa entra aqui na T-09.6.
+    // RN-038: `regras` diz o que esta faixa vive. A Faixa A não deprecia, não
+    // paga custo fixo e não fica inadimplente — valorização e renda continuam.
     const unidades = await inventoryRepository.listarParaCiclo(idUsuario, conexao);
-    const valores = await aplicarValores(conexao, idUsuario, unidades);
+    const valores = await aplicarValores(conexao, idUsuario, unidades, regras);
     const { renda } = await creditarRenda(conexao, idUsuario, unidades);
-    const { custo, inadimplentes } = await cobrarCustoFixo(conexao, idUsuario, unidades);
-    const vendidos = await venderInadimplentesVencidas(conexao, idUsuario);
+    const { custo, inadimplentes } = await cobrarCustoFixo(conexao, idUsuario, unidades, regras);
+    const vendidos = await venderInadimplentesVencidas(conexao, idUsuario, regras);
     const cofre = await vaultService.aplicarRendimento(conexao, idUsuario, { desde: inicioDoCiclo });
 
     const resumo = {
@@ -239,6 +256,7 @@ export async function processarPendentes(idUsuario, agora = new Date()) {
   const { pular, aplicar } = separarPendentes({ ultimoProcessado, cicloAtual });
   if (pular.length === 0 && aplicar.length === 0) return [];
 
+  const regras = await profilesService.regrasEconomicasDoUsuario(idUsuario);
   const semanaDaConta = semanaDe(dataDoDia(new Date(usuario.created_at), fuso));
   for (const numero of pular) {
     await marcarSemEfeito(idUsuario, numero);
@@ -247,7 +265,7 @@ export async function processarPendentes(idUsuario, agora = new Date()) {
   const antes = await auditService.retratoDoSaldo(idUsuario);
   const resumos = [];
   for (const numero of aplicar) {
-    const resumo = await processarUm(idUsuario, numero, { fuso, semanaDaConta });
+    const resumo = await processarUm(idUsuario, numero, { fuso, semanaDaConta, regras });
     if (resumo) resumos.push(resumo);
   }
 
