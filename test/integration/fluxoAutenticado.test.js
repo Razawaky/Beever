@@ -324,7 +324,8 @@ describe('fluxo autenticado', opcoes, () => {
   it('o painel e a loja renderizam com os dados da sessão', async () => {
     const painel = await agente.get('/painel').set('Accept', 'text/html').expect(200);
     assert.match(painel.text, /jogadora/);
-    assert.match(painel.text, /de mel/);
+    // O topo virou componente na T-10.2: o saldo agora é rótulo mais número.
+    assert.match(painel.text, /Seu mel/);
 
     const loja = await agente.get('/loja').set('Accept', 'text/html').expect(200);
     // A vitrine da T-09.7 leva para a confirmação em vez de comprar direto.

@@ -79,7 +79,8 @@ export const painel = assincrono(async (req, res) => {
 
   renderizarPagina(res, 'painel', {
     titulo: `${colmeia.jogador.apelido} — Beever`,
-    classeBody: 'min-h-screen bg-cera py-10 text-tinta antialiased',
+    // Sem espaço no topo: o cabeçalho da Colmeia é grudado e começa na borda.
+    classeBody: 'min-h-screen bg-cera pb-10 text-tinta antialiased',
     colmeia,
   });
 });

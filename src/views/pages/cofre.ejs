@@ -7,14 +7,18 @@
   <div class="mx-auto flex max-w-4xl items-center justify-between gap-4">
     <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
     <h1 class="text-2xl font-bold">Meu cofre</h1>
-    <p class="font-semibold tabular-nums">🍯 <%= perfil.mel %> na carteira</p>
+    <%- include('../partials/ui/badge-recurso', { icone: '🍯', rotulo: 'Na carteira', valor: perfil.mel }) %>
   </div>
 </header>
 
 <main class="mx-auto max-w-4xl px-6 py-10">
   <section class="rounded-favo bg-white p-6 shadow-md">
-    <p class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Guardado no cofre</p>
-    <p class="mt-1 text-4xl font-bold tabular-nums">🍯 <%= cofre.saldo %></p>
+    <%- include('../partials/ui/badge-recurso', {
+      icone: '🍯',
+      rotulo: 'Guardado no cofre',
+      valor: cofre.saldo,
+      grande: true,
+    }) %>
     <p class="mt-2 text-sm text-tinta-suave">
       Rende <%= cofre.taxaPercentual %>% por semana. Mel que você tira não rende na semana da retirada.
     </p>
