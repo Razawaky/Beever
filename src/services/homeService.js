@@ -33,6 +33,22 @@ export async function prepararVisita(idUsuario) {
   return ciclosDaVisita;
 }
 
+/**
+ * Marca em qual favo a Colmeia põe o foco (RF-HOM-06): o que está em andamento e
+ * o seguinte. Os demais continuam na trilha, com o estado que já tinham — sumir
+ * com eles tiraria a régua do que a criança está construindo.
+ *
+ * Pura, para poder ser testada sem banco.
+ */
+export function marcarFocoDaTrilha(trilha) {
+  const atual = trilha.findIndex((favo) => favo.estado === 'disponivel' && !favo.concluido);
+
+  return trilha.map((favo, posicao) => ({
+    ...favo,
+    emFoco: atual >= 0 && (posicao === atual || posicao === atual + 1),
+  }));
+}
+
 /** A Colmeia inteira do jogador, com os efeitos da visita já aplicados. */
 export async function obterColmeia(idUsuario) {
   const ciclosDaVisita = await prepararVisita(idUsuario);
@@ -67,7 +83,7 @@ export async function obterColmeia(idUsuario) {
     sequencia: semana,
     metaEmDestaque: resumidas[0] ?? null,
     outrasMetas: resumidas.slice(1),
-    trilha,
+    trilha: marcarFocoDaTrilha(trilha),
     proximaCelula,
     tarefas,
     ciclo: {

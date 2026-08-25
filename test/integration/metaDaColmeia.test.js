@@ -139,8 +139,11 @@ describe('bloco da meta na Colmeia', opcoes, () => {
     }
 
     // Uma barra por meta na lista transformaria três metas em três destaques.
-    const barras = html.match(/role="progressbar"/g) ?? [];
-    assert.equal(barras.length, 2, 'só a barra do nível e a do destaque');
+    // A contagem é do trecho da lista, e não da página: a trilha da T-10.4
+    // trouxe as barras dos favos em foco para a mesma tela.
+    const lista = html.split('Suas outras metas')[1].split('Seus itens')[0];
+    const barras = lista.match(/role="progressbar"/g) ?? [];
+    assert.equal(barras.length, 0, 'a lista das outras metas não desenha barra');
   });
 
   it('a meta que vence hoje é anunciada em palavra, não em número', async () => {

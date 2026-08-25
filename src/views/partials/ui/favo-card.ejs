@@ -6,9 +6,14 @@
 
   Favo travado aparece, e diz o que falta: esconder tiraria a régua de progresso,
   e a criança precisa ver o que está construindo.
+
+  `compacto` é o formato da Colmeia para os favos fora do foco: hexágono menor,
+  sem descrição e sem barra, para a home não virar uma segunda trilha.
 -%>
 <% const aberto = favo.estado === 'disponivel'; %>
 <% const concluido = favo.concluido; %>
+<% const compacto = Boolean(locals.compacto); %>
+<% const tamanhoDoHexagono = compacto ? 'h-16 w-16' : 'h-24 w-24'; %>
 <%
   const preenchimento = concluido ? 'bg-ambar' : aberto ? 'bg-mel' : 'bg-linha';
   const rotuloDeEstado = concluido ? 'concluído' : aberto ? 'disponível' : 'bloqueado';
@@ -18,10 +23,10 @@
   <% if (aberto || concluido) { %>
     <a
       href="/trilha/<%= favo.id %>"
-      class="favo-hexagono <%= preenchimento %> group relative flex h-24 w-24 shrink-0 items-center justify-center focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-4"
+      class="favo-hexagono <%= preenchimento %> <%= tamanhoDoHexagono %> group relative flex shrink-0 items-center justify-center focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-4"
       aria-label="Abrir favo <%= favo.title %> — <%= rotuloDeEstado %>, <%= favo.percentual %>% concluído"
     >
-      <span class="font-display text-3xl text-tinta"><%= favo.order_index %></span>
+      <span class="font-display <%= compacto ? 'text-xl' : 'text-3xl' %> text-tinta"><%= favo.order_index %></span>
       <% if (concluido) { %>
         <svg class="absolute -bottom-1 h-7 w-7" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path
@@ -35,7 +40,7 @@
     </a>
   <% } else { %>
     <div
-      class="favo-hexagono <%= preenchimento %> flex h-24 w-24 shrink-0 items-center justify-center"
+      class="favo-hexagono <%= preenchimento %> <%= tamanhoDoHexagono %> flex shrink-0 items-center justify-center"
       role="img"
       aria-label="Favo <%= favo.title %> bloqueado"
     >
@@ -50,15 +55,19 @@
   <% } %>
 
   <div class="min-w-0">
-    <h3 class="font-display text-xl <%= aberto || concluido ? 'text-tinta' : 'text-tinta-suave' %>">
+    <h3 class="font-display <%= compacto ? 'text-lg' : 'text-xl' %> <%= aberto || concluido ? 'text-tinta' : 'text-tinta-suave' %>">
       <%= favo.title %>
     </h3>
 
-    <% if (favo.description) { %>
+    <% if (favo.description && !compacto) { %>
       <p class="mt-0.5 text-sm text-tinta-suave"><%= favo.description %></p>
     <% } %>
 
-    <% if (aberto || concluido) { %>
+    <% if ((aberto || concluido) && compacto) { %>
+      <p class="mt-1 text-xs tabular-nums text-tinta-suave">
+        <%= favo.celulasConcluidas %> de <%= favo.celulasTotais || '?' %> células · <%= favo.percentual %>%
+      </p>
+    <% } else if (aberto || concluido) { %>
       <div
         class="mt-2 h-2 w-40 overflow-hidden rounded-pilula bg-cera"
         role="progressbar"

@@ -4,30 +4,31 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-10.3 — a meta que vence primeiro virou o segundo assunto da
+**Último commit:** T-10.4 — a trilha entrou na Colmeia em hexágonos: os favos
+vêm todos, com foco no que está em andamento e no seguinte, e os mais avançados
+pequenos e travados com o motivo escrito. O foco é decidido no `homeService`, e
+o `favo-card` ganhou modo compacto. Árvore limpa, 699 testes passando.
+**Próximo passo: T-10.5 — tarefas do dia e eventos do ciclo**
+
+**Commit anterior:** T-10.3 — a meta que vence primeiro virou o segundo assunto da
 Colmeia: card em largura inteira com título, progresso, prazo em palavra e o que
 ela paga, e as outras numa lista curta. `resumirMeta`, `ordenarPorVencimento` e
 `urgenciaDoPrazo` passaram a morar no `goalsService`, e a tela `/metas` usa o
-mesmo card. Árvore limpa, 688 testes passando.
-**Próximo passo: T-10.4 — trilha de favos em hexágonos com estados**
+mesmo card.
 
-**Commit anterior:** T-10.2 — o topo da Colmeia virou componente: `badge-recurso`,
+**Commit de antes:** T-10.2 — o topo da Colmeia virou componente: `badge-recurso`,
 `barra-progresso` e `cabecalho-colmeia` desenham nível com barra de XP, mel,
 patrimônio e sequência, grudados no topo ao rolar. Os mesmos componentes já
 valem na loja, no inventário e no cofre.
 
-**Commit de antes:** T-10.1 — a Colmeia ganhou dono: `homeService` aplica os
+**Antes disso:** T-10.1 — a Colmeia ganhou dono: `homeService` aplica os
 efeitos da visita e responde os nove blocos da home numa chamada só, o
 `paginaController.painel` virou três linhas e o `/painel` passou a servir JSON
 pelo mesmo endereço. O "sem N+1" da RNF-04 virou teste que conta as consultas de
 uma visita e exige o mesmo número depois de o jogador acumular item.
 
-**Antes disso:** E09 concluída e auditada — o laudo está em
-`docs/09-AUDITORIA-DA-ETAPA.md` e as três lacunas de conserto barato foram
-corrigidas na mesma sessão: a página do cofre passou a validar a query, os
-botões perderam o contorno preto e o dinheiro virou numeral tabular. A E12
-também ganhou escopo escrito, com as decisões de modelagem adiadas para a
-abertura dela.
+**Antes disso:** E09 concluída e auditada, com as três lacunas baratas do laudo
+corrigidas na mesma sessão e o escopo da E12 escrito.
 
 **Antes disso:** T-09.8 — o ciclo passou a falar: o resumo em JSON de cada
 semana vira frase na Colmeia, com vários ciclos somados num aviso só, o motivo da
@@ -316,7 +317,7 @@ argumento a favor da rede que a T-02.1 montou.
 | As quatro telas da economia em navegador real (T-09.7) | A marcação está coberta por teste pelo HTTP — patrimônio no topo, categorias, as frases do comportamento, o impacto da compra, bens separados de enfeites, depósito e meta pelo formulário — e o caminho inteiro foi percorrido com o servidor de pé e a conta demo. O que **não** foi visto por olho humano é o desenho: a rosca da composição e a linha da projeção pintadas no `canvas`, a vitrine a 320 px com três colunas virando uma, e o foco de teclado passeando pelos formulários do cofre. Vale o passe da DT-22 |
 | A frase da faixa na loja (T-09.6) | A vitrine e a prévia da compra devolvem custo zero, `perdeValor` falso e a frase que explica para a Faixa A, com teste contra banco real. Como as telas da loja ainda estão no formato antigo (DT-57), nada disso chega à criança nem foi visto por olho humano: entra junto das views da T-09.7 |
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
-| A Colmeia agregada, o cabeçalho e o bloco da meta em navegador real (T-10.1 a T-10.3) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, e como o card da meta e a lista das outras se comportam a 320 px. Entra no passe da DT-22 |
+| A Colmeia agregada, o cabeçalho, o bloco da meta e a trilha em navegador real (T-10.1 a T-10.4) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, como o card da meta e a lista das outras se comportam a 320 px, e se a trilha serpenteante da home não empurra texto para fora da tela no celular. Entra no passe da DT-22 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
 | Revisão do conjunto das fases 1–3 | Agora commitado em `a2e596b` (52 arquivos, +1525 linhas). A suíte passa, mas o conjunto nunca passou por revisão de código como um todo |
@@ -336,7 +337,7 @@ avançado, com pelo menos 50 células e 10 itens.
 | T-10.1 `HomeService`/agregador: uma consulta agregada por bloco, sem N+1 (RNF-04) | **feita** — `homeService` aplica os efeitos da visita e responde os nove blocos numa chamada, o controller virou três linhas e o `/painel` passou a servir JSON pelo mesmo endereço |
 | T-10.2 Cabeçalho: nível + barra de XP, saldo de mel, patrimônio, sequência | **feita** — três partials novos (`badge-recurso`, `barra-progresso`, `cabecalho-colmeia`), topo grudado ao rolar e os mesmos componentes já aplicados na loja, no inventário e no cofre |
 | T-10.3 Bloco da meta mais próxima do vencimento | **feita** — `card-meta` e `estado-vazio` novos, a urgência do prazo virou palavra no `goalsService` (`hoje`, `apertado`, `tranquilo`, `sem-prazo`), e `/metas` passou a usar o mesmo card |
-| T-10.4 Trilha de favos em hexágonos com estados | pendente |
+| T-10.4 Trilha de favos em hexágonos com estados | **feita** — a trilha inteira aparece na Colmeia, com `marcarFocoDaTrilha` destacando o favo em andamento e o seguinte; os demais vêm compactos e travados, com o motivo escrito |
 | T-10.5 Tarefas do dia + eventos do ciclo | pendente |
 | T-10.6 Botão "Continuar" resolvendo a próxima célula pendente | pendente |
 | T-10.7 Testes de integração + medição de tempo da página (RNF-01) | pendente |
@@ -2723,3 +2724,23 @@ pelo calendário, porque com um dia a frase é "Faltam 1 dia" e com zero é
 meta com `due_at = NOW()` não a faz vencer hoje, faz vencer no passado, e a
 RN-017 a expira antes de a tela existir. O prazo tem de ser o último instante do
 dia do jogador, lembrando que `fimDoDia` devolve o começo do dia seguinte.
+
+### Sessão de 2026-08-25, T-10.4 e a trilha na Colmeia
+
+A decisão de produto aqui foi do usuário e mudou o plano: em vez de recortar a
+trilha e mostrar só o trecho atual, a Colmeia exibe todos os favos, com foco no
+que está em andamento e no seguinte, e os mais avançados aparecem pequenos e
+travados. A régua do que ainda vem é parte do que motiva, e escondê-la deixaria
+a home mais curta e mais pobre.
+
+Quem decide o foco é o `homeService.marcarFocoDaTrilha`, função pura que acha o
+primeiro favo disponível e não concluído e marca ele e o vizinho seguinte. A
+view só desenha, e o `favo-card` ganhou modo compacto — hexágono menor, sem
+descrição e com o progresso em texto no lugar da barra. Nenhum CSS novo: a
+Colmeia herda o serpenteante de `trilha.css`.
+
+Uma asserção de fora precisou de ajuste, e a lição é geral: `metaDaColmeia`
+contava as barras de progresso da página inteira para provar que a lista das
+outras metas não desenha barra. Com a trilha na mesma tela, a contagem passou a
+ser do trecho da lista — que é o que aquele teste sempre quis afirmar. Contagem
+global vira teste frágil assim que a tela ganha vizinho.

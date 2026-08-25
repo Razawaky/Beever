@@ -20,18 +20,32 @@
       </div>
     <% } %>
 
-    <%# A trilha é o que o jogador vem fazer: primeiro card, largura inteira. %>
+    <%# A trilha é o que o jogador vem fazer, então vem inteira: o favo em
+        andamento e o seguinte ficam grandes, e os mais avançados aparecem
+        pequenos e travados, como régua do que ainda vem. %>
     <div class="px-8 pt-8">
-      <a
-        href="/trilha"
-        class="flex items-center justify-between gap-4 rounded-favo bg-cera p-6 transition hover:bg-mel/20 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
-      >
-        <div>
-          <h2 class="font-display text-xl">Minha trilha</h2>
-          <p class="mt-1 text-sm text-tinta-suave">Continue de onde você parou nos favos.</p>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="font-display text-xl">Minha trilha</h2>
+        <a href="/trilha" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver trilha inteira &rarr;</a>
+      </div>
+
+      <% if (colmeia.trilha.length === 0) { %>
+        <div class="mt-4">
+          <%- include('../partials/ui/estado-vazio', {
+            mensagem: 'Sua trilha aparece assim que houver conteúdo para a sua idade.',
+          }) %>
         </div>
-        <img src="/img/beenie_vem.png" alt="" class="h-16 w-auto" />
-      </a>
+      <% } else { %>
+        <ol class="favo-trilha mt-4 space-y-6">
+          <% colmeia.trilha.forEach((favo) => { %>
+            <li>
+              <div class="<%= favo.emFoco ? 'rounded-favo bg-cera p-4' : 'opacity-80' %>">
+                <%- include('../partials/ui/favo-card', { favo, compacto: !favo.emFoco }) %>
+              </div>
+            </li>
+          <% }) %>
+        </ol>
+      <% } %>
     </div>
 
     <%# A meta que vence primeiro é o segundo assunto da Colmeia, em largura
