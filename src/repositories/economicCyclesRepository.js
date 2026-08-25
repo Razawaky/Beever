@@ -72,6 +72,17 @@ export async function listarUltimos(idUsuario, limite = 10) {
  * A marca do ciclo entra antes de tudo, para travar quem chegar junto; o
  * resumo entra no fim, na mesma transação, quando já se sabe o que aconteceu.
  */
+/** Os ciclos aplicados a partir de um instante — o aviso do dia sai daqui. */
+export async function listarProcessadosDesde(idUsuario, instante) {
+  return consultar(
+    `SELECT id, cycle_number, processed_at, summary
+       FROM economic_cycles
+      WHERE user_id = ? AND processed_at >= ?
+      ORDER BY cycle_number`,
+    [idUsuario, instante],
+  );
+}
+
 export async function gravarResumo(conexao, { idUsuario, numeroDoCiclo, resumo }) {
   const resultado = await consultarEm(
     conexao,

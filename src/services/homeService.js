@@ -51,9 +51,9 @@ export function marcarFocoDaTrilha(trilha) {
 
 /** A Colmeia inteira do jogador, com os efeitos da visita já aplicados. */
 export async function obterColmeia(idUsuario) {
-  const ciclosDaVisita = await prepararVisita(idUsuario);
+  await prepararVisita(idUsuario);
 
-  const [perfil, patrimonio, semana, metas, tarefas, trilha, eventosDoCiclo] = await Promise.all([
+  const [perfil, patrimonio, semana, metas, tarefas, trilha, eventosDoCiclo, avisoDoCiclo] = await Promise.all([
     profilesService.obterDoUsuario(idUsuario),
     patrimonyService.obterDoUsuario(idUsuario),
     streakService.resumoDaSemana(idUsuario),
@@ -61,6 +61,7 @@ export async function obterColmeia(idUsuario) {
     tasksService.listarAtivas(idUsuario),
     contentService.listarTrilha(idUsuario),
     economicCycleService.listarEventosRecentes(idUsuario),
+    economicCycleService.avisoDoDia(idUsuario),
   ]);
 
   // A trilha já lida é passada adiante: pedir de novo cobraria do banco as
@@ -85,9 +86,11 @@ export async function obterColmeia(idUsuario) {
     outrasMetas: resumidas.slice(1),
     trilha: marcarFocoDaTrilha(trilha),
     proximaCelula,
-    tarefas,
+    tarefas: tarefas.map(tasksService.resumirTarefa),
     ciclo: {
-      aviso: economicCycleService.avisoDosCiclos(ciclosDaVisita),
+      // O destaque é do dia do jogador, e não da visita: recarregar a Colmeia
+      // não pode apagar a notícia (DT-63).
+      aviso: avisoDoCiclo,
       eventos: eventosDoCiclo,
     },
   };

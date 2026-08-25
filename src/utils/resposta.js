@@ -23,3 +23,16 @@ export function responder(req, res, { json, html }) {
   if (querJson(req)) return res.json(json);
   return html();
 }
+
+/**
+ * Para onde o jogador volta depois de uma ação de formulário.
+ *
+ * É lista branca, e não o `Referer` nem o valor cru do formulário: destino
+ * vindo do cliente sem conferência é redirecionamento aberto, que é
+ * vulnerabilidade e não conveniência.
+ */
+const PAGINAS_DE_VOLTA = ['/painel', '/metas'];
+
+export function paginaDeVolta(destino, padrao = '/metas') {
+  return PAGINAS_DE_VOLTA.includes(destino) ? destino : padrao;
+}

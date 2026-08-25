@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { ordenarPorVencimento, resumirMeta, urgenciaDoPrazo } from '../../src/services/goalsService.js';
+import { resumirTarefa } from '../../src/services/tasksService.js';
 
 /**
  * A meta pronta para a tela, sem banco (RF-HOM-04, RF-HOM-05 e RF-MET-02).
@@ -136,5 +137,42 @@ describe('ordem das metas na Colmeia', () => {
 
   it('sem meta nenhuma devolve lista vazia', () => {
     assert.deepEqual(ordenarPorVencimento([]), []);
+  });
+});
+
+describe('resumo da tarefa na Colmeia', () => {
+  function tarefa(atributos) {
+    return {
+      id: 7,
+      title: 'Conclua 3 células hoje',
+      current_value: 1,
+      target_value: 3,
+      reward_coins: 20,
+      reward_points: 10,
+      scope: 'diaria',
+      status: 'ativa',
+      ...atributos,
+    };
+  }
+
+  it('traduz progresso em percentual e responde se já dá para receber', () => {
+    const resumo = resumirTarefa(tarefa({ current_value: 1, target_value: 3 }));
+
+    assert.equal(resumo.percentual, 33);
+    assert.equal(resumo.cumprida, false);
+    assert.equal(resumo.concluida, false);
+  });
+
+  it('alvo batido conta como cumprida, mesmo passando do alvo', () => {
+    const resumo = resumirTarefa(tarefa({ current_value: 5, target_value: 3 }));
+
+    assert.equal(resumo.cumprida, true);
+    assert.equal(resumo.percentual, 100);
+  });
+
+  it('tarefa já concluída é anunciada como concluída, e não como pendente', () => {
+    const resumo = resumirTarefa(tarefa({ current_value: 3, target_value: 3, status: 'concluida' }));
+
+    assert.equal(resumo.concluida, true);
   });
 });

@@ -182,7 +182,7 @@ export const metas = assincrono(async (req, res) => {
     titulo: 'Metas — Beever',
     classeBody: FUNDO_CERA,
     metas: metasResumidas,
-    tarefas,
+    tarefas: tarefas.map(tasksService.resumirTarefa),
     semana,
     conquistas,
   });

@@ -364,6 +364,21 @@ function comoResumo(summary) {
 }
 
 /** O histórico curto que fica embaixo do aviso, para conferir depois. */
+/**
+ * O aviso da economia do dia (RF-HOM-09).
+ *
+ * Antes, o destaque saía só dos ciclos aplicados naquela requisição, e quem
+ * recarregava a Colmeia perdia a notícia (dívida DT-63). Agora ele vale para
+ * tudo que rodou no dia do jogador: notícia do dia, e não da requisição.
+ */
+export async function avisoDoDia(idUsuario, agora = new Date()) {
+  const fuso = await profilesService.fusoDoUsuario(idUsuario);
+  const comecoDoDia = inicioDoDia(dataDoDia(agora, fuso), fuso);
+  const ciclos = await economicCyclesRepository.listarProcessadosDesde(idUsuario, comecoDoDia);
+
+  return avisoDosCiclos(ciclos.map((ciclo) => comoResumo(ciclo.summary)));
+}
+
 export async function listarEventosRecentes(idUsuario, limite = 5) {
   const ciclos = await economicCyclesRepository.listarUltimos(idUsuario, limite);
 

@@ -130,11 +130,25 @@ describe('aviso do ciclo na Colmeia', opcoes, () => {
     );
   });
 
-  it('recarregar a Colmeia tira o destaque e deixa o histórico', async () => {
+  it('recarregar a Colmeia não apaga a notícia, e o histórico continua embaixo', async () => {
+    // Até a T-10.5 o destaque era da requisição em que os ciclos rodaram, e
+    // quem recarregava perdia o aviso (dívida DT-63). Agora ele vale para o dia
+    // do jogador: notícia do dia, e não da visita.
     const html = await painel();
 
-    assert.ok(!html.includes('semanas fora'), 'o destaque é da visita em que os ciclos rodaram');
+    assert.match(html, /Você ficou 3 semanas fora/);
     assert.match(html, /O que já aconteceu na sua economia/);
     assert.match(html, /Seus negócios renderam/);
+  });
+
+  it('no dia seguinte o destaque sai e sobra o histórico', async () => {
+    await banco.conexao.query('UPDATE economic_cycles SET processed_at = processed_at - INTERVAL 2 DAY WHERE user_id = ?', [
+      idUsuario,
+    ]);
+
+    const html = await painel();
+
+    assert.ok(!html.includes('semanas fora'), 'notícia de ontem não é notícia');
+    assert.match(html, /O que já aconteceu na sua economia/);
   });
 });

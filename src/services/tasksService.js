@@ -39,6 +39,31 @@ export async function listarDoUsuario(idUsuario) {
   return tasksRepository.listarPorUsuario(idUsuario);
 }
 
+/**
+ * A tarefa pronta para a tela (RF-HOM-08): progresso em percentual e a resposta
+ * de "já dá para receber?". Conta de tarefa não mora na view.
+ *
+ * Pura, para poder ser testada sem banco.
+ */
+export function resumirTarefa(tarefa) {
+  const atual = Number(tarefa.current_value);
+  const alvo = Number(tarefa.target_value);
+
+  return {
+    id: Number(tarefa.id),
+    titulo: tarefa.title,
+    atual,
+    alvo,
+    percentual: alvo === 0 ? 0 : Math.min(100, Math.round((atual / alvo) * 100)),
+    escopo: tarefa.scope,
+    status: tarefa.status,
+    concluida: tarefa.status === 'concluida',
+    cumprida: atual >= alvo,
+    melDaRecompensa: Number(tarefa.reward_coins),
+    polenDaRecompensa: Number(tarefa.reward_points),
+  };
+}
+
 export async function listarAtivas(idUsuario) {
   return tasksRepository.listarAtivasPorUsuario(idUsuario);
 }
