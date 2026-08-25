@@ -234,11 +234,51 @@ foram corrigidos; o que sobrou virou DT-24, DT-25 e DT-26.
 |---|---|
 | T-12.1 | Autenticação e middleware de admin via join |
 | T-12.2 | CRUD de favos, células e conteúdo |
-| T-12.3 | CRUD de itens, preços e comportamento econômico |
-| T-12.4 | Consulta de auditoria com filtros |
-| T-12.5 | Métricas agregadas (P1) |
+| T-12.3 | CRUD de itens, preços e comportamento econômico, com ilustração própria |
+| T-12.4 | Cadastro de atividades novas nos tipos de jogo que já existem, com mídia |
+| T-12.5 | Distribuição adaptativa: a atividade cadastrada entra no sorteio da faixa a que pertence |
+| T-12.6 | Consulta de auditoria com filtros |
+| T-12.7 | Dashboard e métricas agregadas (P1) |
 
-**Aceite:** usuário comum recebe 403 em toda rota admin; toda ação admin aparece na auditoria.
+**Aceite:** usuário comum recebe 403 em toda rota admin; toda ação admin aparece na auditoria; item e atividade cadastrados pelo painel aparecem para o jogador sem `db:seed`.
+
+### Escopo acordado com o usuário (2026-08-25)
+
+A E12 concentra tudo o que o administrador cria sem programador no meio: painel
+com métricas, cadastro de itens novos, e cadastro de atividades e fases nos
+formatos que o motor já entende — múltipla escolha, arrastar e classificar,
+listas suspensas, e conteúdo com vídeo ou imagem servindo de quadrinho
+interativo. O administrador cadastra a atividade e ela passa a fazer parte do
+acervo sorteado, de forma adaptativa, por faixa etária. Imagem entra em `jpg` ou
+`webp`.
+
+### Decisões adiadas para a abertura da E12
+
+Nenhuma delas é tomada antes, e todas podem exigir migration nova ou revisão de
+regra de negócio — o que está explicitamente aceito.
+
+**Onde a arte mora.** `items` não tem coluna de imagem hoje; quem tem é
+`avatars`, com `image_path`. Falta decidir a coluna, o formato aceito, o limite
+de tamanho e, principalmente, onde o arquivo fica: caminho dentro do contêiner
+funciona no MVP e quebra assim que houver mais de uma instância atrás do
+balanceador, pela mesma razão que tirou a sessão da memória.
+
+**O que é variação.** Existe a linha de evolução (`items.upgrade_of_item_id`,
+casa pequena → média → grande) e ela sustenta o upgrade com desconto. Não existe
+variação cosmética do mesmo item — cor, tamanho, skin —, que hoje seria um item
+próprio com slug e preço próprios. Modelar isso é decisão da E12.
+
+**O mapa de comportamentos.** `item_behaviors_map` é derivado das colunas
+numéricas dentro de `scripts/seeds/03_items_catalog.sql`. Um CRUD que gravasse
+só `valuation_rate` e `upkeep_cost` deixaria o mapa desatualizado, então a
+derivação precisa sair do SQL e virar regra de service antes de existir tela de
+cadastro.
+
+**Como a atividade nova entra no sorteio.** O conteúdo dos jogos já é JSON
+validado pela aplicação, com `version` no registro, e a segmentação por faixa
+existe (RN-029). Falta decidir se a atividade cadastrada entra num acervo
+sorteável, como é dimensionada a dificuldade por faixa e o que acontece com a
+atividade que o administrador desativa depois de alguém já ter jogado.
 
 ---
 

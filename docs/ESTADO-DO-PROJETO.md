@@ -1129,6 +1129,7 @@ Não reabrir sem motivo novo.
 | As opções de avatar, objetivo, tempo e preferências vêm do banco para a tela, no rascunho do onboarding; o wizard não guarda lista própria, e o service confere o que chega contra esse mesmo catálogo | checkpoint de abertura da T-04.3, fechando a DT-27 |
 | **D-4 resolvida:** "dias da semana → quantas metas ativas" mora em tabela própria (`goal_plan_rules`), não em colunas de `goal_difficulties` nem em constante de código. As duas coisas coincidem hoje, mas respondem perguntas diferentes | checkpoint de abertura da T-04.4 |
 | O alvo da meta é dimensionado pelo tempo que o jogador declarou (dias × minutos × prazo), é absoluto — "chegue a 300 de mel" — e vive preso entre um piso e um teto. Os números moram em `goal_target_rules`, para serem recalibrados depois do playtest sem deploy | checkpoint de abertura da T-04.4, a pedido do usuário, com os parâmetros usados por plataformas infantojuvenis |
+| **Tudo o que o administrador cria sem programador no meio é escopo da E12**: painel com métricas, cadastro de itens com ilustração própria (`jpg` ou `webp`), e cadastro de atividades e fases nos formatos que o motor já entende — múltipla escolha, arrastar e classificar, listas suspensas e conteúdo com vídeo ou imagem como quadrinho interativo —, entrando no acervo sorteado de forma adaptativa por faixa etária. As decisões de modelagem ficam para a abertura da etapa, **mesmo que exijam migration nova ou revisão de regra de negócio**: onde a arte mora, o que conta como variação de item, a derivação de `item_behaviors_map` saindo do seed e como a atividade nova entra no sorteio | decisão do usuário em 2026-08-25, detalhada em `02-ROADMAP-ETAPAS.md`, E12 |
 | O planejador sorteia apenas entre tipos de meta que o sistema sabe medir. Abrir o leque conforme E05, E08 e E09 entregarem suas fontes é acrescentar linha em `goal_target_rules`, não mexer no planejador | T-04.4, implementando a RN-015 |
 | Quando o jogador reduz a disponibilidade e passa a ter mais metas do que a faixa nova pede, **as excedentes não são canceladas nem apagadas: ficam ativas até vencer**. Quem não concluiu no prazo não é recompensado — o progresso feito é preservado, e a meta vencida apenas deixa de pagar, sem punição (RN-017). Isso é compatível com a RN-013, que proíbe perder progresso ao editar a semana | decisão do usuário na abertura da T-04.6 |
 
@@ -2604,3 +2605,22 @@ Cinco lacunas viraram dívida: DT-64 a DT-68. E fica o alerta de escopo do laudo
 o estado diz "E09 concluída" enquanto RF-LOJ-08, RF-LOJ-09 e RF-INV-05 não
 existem. São P1 declarados, mas o roadmap precisa dizer isso com todas as letras
 antes da defesa.
+### Sessão de 2026-08-25, escopo da E12 combinado
+
+A pergunta que abriu isso era simples — o administrador pode cadastrar itens
+novos, com ilustração própria e variações? A resposta hoje é não, e por três
+motivos diferentes: o CRUD de itens é a T-12.3 e não começou, `items` não tem
+coluna de imagem nenhuma, e variação só existe no sentido de linha de evolução
+(`upgrade_of_item_id`), não no sentido de cor ou tamanho do mesmo item.
+
+Ficou decidido que a E12 concentra tudo isso e cresce de escopo: além do CRUD e
+da auditoria, entra o dashboard e entra o cadastro de atividades e fases nos
+formatos que o motor já entende, com o administrador podendo alimentar o acervo
+que é sorteado de forma adaptativa por faixa etária. Imagem em `jpg` ou `webp`.
+
+**As decisões de modelagem não são tomadas agora**, e o usuário aceitou
+explicitamente que elas podem custar migration nova ou revisão de regra de
+negócio. As quatro que já se sabe que existem estão escritas na seção da E12 do
+roadmap: onde a arte fica guardada, o que conta como variação, a derivação de
+`item_behaviors_map` que hoje mora dentro do seed, e como a atividade cadastrada
+entra no sorteio por faixa.
