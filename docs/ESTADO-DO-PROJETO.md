@@ -4,28 +4,31 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-10.6 — a Colmeia ganhou ação principal: o botão
+**Último commit:** T-10.7 — o aceite da E10 está provado: a Colmeia de um
+jogador com 60 células, 50 concluídas e 12 itens responde inteira e correta em
+**87 a 102 ms**, contra o teto de 2 s da RNF-01, e o número de consultas não
+muda quando o jogador acumula mais item. **E10 concluída.** Árvore limpa, 718
+testes passando.
+**Próximo passo: auditoria da E10, e depois E11 — Landing page**
+
+**Commit anterior:** T-10.6 — a Colmeia ganhou ação principal: o botão
 "Continuar" leva direto à próxima célula jogável, fixo no rodapé do celular, e a
 tela `/trilha` passou a usar o mesmo partial — o "Continuar" de lá levava à
-lista do favo, e agora as duas telas prometem a mesma coisa. Árvore limpa, 713
-testes passando.
-**Próximo passo: T-10.7 — testes de integração e medição de tempo da Colmeia**
+lista do favo, e agora as duas telas prometem a mesma coisa.
 
-**Commit anterior:** T-10.5 — as tarefas do dia ganharam bloco na Colmeia, com
+**Commit de antes:** T-10.5 — as tarefas do dia ganharam bloco na Colmeia, com
 recebimento no lugar (o formulário diz para onde voltar, conferido contra lista
 branca), e o aviso do ciclo parou de sumir ao recarregar: agora ele vale para o
 dia do jogador, lendo `processed_at`. **DT-63 paga.**
 
-**Commit de antes:** T-10.4 — a trilha entrou na Colmeia em hexágonos: os favos
+**Antes disso:** T-10.4 — a trilha entrou na Colmeia em hexágonos: os favos
 vêm todos, com foco no que está em andamento e no seguinte, e os mais avançados
 pequenos e travados com o motivo escrito. O foco é decidido no `homeService`, e
 o `favo-card` ganhou modo compacto.
 
 **Antes disso:** T-10.3 — a meta que vence primeiro virou o segundo assunto da
-Colmeia: card em largura inteira com título, progresso, prazo em palavra e o que
-ela paga, e as outras numa lista curta. `resumirMeta`, `ordenarPorVencimento` e
-`urgenciaDoPrazo` passaram a morar no `goalsService`, e a tela `/metas` usa o
-mesmo card.
+Colmeia, com o resumo da meta morando no `goalsService` e o mesmo card servindo
+a tela `/metas`.
 
 **Antes disso:** T-10.2 — o topo da Colmeia virou componente, com nível, mel,
 patrimônio e sequência grudados no topo ao rolar.
@@ -335,9 +338,11 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E10 — Colmeia (Home).** É a tela mais visitada do jogo, e hoje ela é um painel
-que cresceu por acúmulo. O aceite é a Colmeia carregar em até 2 s com um jogador
-avançado, com pelo menos 50 células e 10 itens.
+**E10 — Colmeia (Home).** É a tela mais visitada do jogo, e era um painel que
+cresceu por acúmulo. O aceite era a Colmeia carregar em até 2 s com um jogador
+avançado, com pelo menos 50 células e 10 itens — **provado em
+`test/integration/aceiteDaColmeia.test.js`: 87 a 102 ms, com os nove blocos
+conferidos.** As sete tarefas estão entregues; falta a auditoria da etapa.
 
 | Tarefa | Situação |
 |---|---|
@@ -347,7 +352,7 @@ avançado, com pelo menos 50 células e 10 itens.
 | T-10.4 Trilha de favos em hexágonos com estados | **feita** — a trilha inteira aparece na Colmeia, com `marcarFocoDaTrilha` destacando o favo em andamento e o seguinte; os demais vêm compactos e travados, com o motivo escrito |
 | T-10.5 Tarefas do dia + eventos do ciclo | **feita** — `card-tarefa` compartilhado com `/metas`, recebimento sem trocar o jogador de tela (lista branca em `paginaDeVolta`) e o aviso do ciclo passando a valer para o dia do jogador, o que paga a DT-63 |
 | T-10.6 Botão "Continuar" resolvendo a próxima célula pendente | **feita** — `botao-continuar` leva direto à célula, troca para "Ver minha trilha" quando não há pendente, e o teste abre o destino em vez de só conferir o `href` |
-| T-10.7 Testes de integração + medição de tempo da página (RNF-01) | pendente |
+| T-10.7 Testes de integração + medição de tempo da página (RNF-01) | **feita** — `aceiteDaColmeia.test.js` monta o jogador avançado (5 favos, 60 células, 50 concluídas, 12 itens, cofre com saldo), confere os nove blocos, mede o tempo três vezes e prova que o número de consultas não cresce com o dado |
 
 ---
 
@@ -1040,7 +1045,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E07 Jogos | **concluída e auditada** | As sete tarefas entregues e o laudo em `docs/07-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes. As duas lacunas de risco médio foram corrigidas; oito de risco baixo ficam abertas |
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
-| E10 Colmeia | em andamento | T-10.1 feita: o `homeService` responde a home inteira numa chamada, com a contagem de consultas virando teste. Faltam as seis tarefas de tela, da T-10.2 à T-10.7 |
+| E10 Colmeia | **concluída** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado. Falta a auditoria da etapa |
 | E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
 | E13 Conquistas e liga | do zero | P1, cortável |
@@ -1085,6 +1090,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view: é aritmética de dinheiro numa camada que deveria só exibir | auditoria da E09 | Subir a conta para o `inventoryService`, junto do agrupamento que ele já faz |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
+| DT-72 | A Colmeia custa 60 consultas por visita. Nenhuma cresce com favo, célula ou item — isso está provado —, mas há leitura repetida na mesma requisição: perfil, faixas etárias e a curva de níveis são buscados por mais de um service | T-10.7 | Medir quais se repetem e passar o dado adiante, como a trilha já é passada para `proximaCelulaPendente`. Vale atacar depois da auditoria da E10 |
 | DT-71 | O caminho das artes do Beenie está escrito em seis views (`login`, `trilha` duas vezes, `painel`, `jogo-resultado` e agora `estado-vazio`). Como a arte é provisória, trocá-la hoje é editar seis arquivos | T-10.3 | Um partial `mascote` recebendo a pose, como manda a seção 3 do design system, na E11 |
 | DT-70 | O topo grudado existe só na Colmeia: loja, inventário e cofre continuam com cabeçalho próprio, que rola junto e sai da tela junto com o saldo. Os badges já são os mesmos, o cabeçalho não | T-10.2 | Estender o `cabecalho-colmeia` às telas da economia, quando elas forem revistas |
 | DT-69 | O teste de N+1 da Colmeia conta o `pool.execute`, então escrita em laço dentro de uma transação passa despercebida: a conexão emprestada não passa pelo contador. Cobre o caso que importa hoje, que é leitura de tela | T-10.1 | Contar também a conexão da transação, se alguma tela começar a escrever em laço |
@@ -2789,3 +2795,25 @@ a mesma coisa e vão para o mesmo lugar.
 O teste que mais vale deste lote não confere o `href`: ele abre o destino e
 exige 200 com o título da célula na página. Botão que promete o que o servidor
 recusa já aconteceu aqui na T-07.5, e conferir só a marcação não pega isso.
+
+### Sessão de 2026-08-25, T-10.7 e o aceite da E10
+
+O aceite da etapa virou arquivo: `aceiteDaColmeia.test.js` monta um jogador
+avançado — 5 favos, 60 células com quiz válido, 50 concluídas, 12 itens, 4000 de
+mel e 1500 no cofre — e prova as duas metades do critério sobre ele. A Colmeia
+vem inteira e correta, com o patrimônio fechando na soma da RN-039, e responde
+em 87 a 102 ms contra o teto de 2 s. Os números medidos vão para a saída do
+teste por `t.diagnostic`, para a evidência ficar registrada a cada execução em
+vez de sumir num "passou".
+
+A primeira versão da guarda de N+1 comparava as consultas do jogador avançado
+com as de um jogador novo, e falhava de vez em quando por um. A investigação
+valeu a lição: **os dois jogadores têm planos de metas diferentes**, porque o
+plano é sorteado, e uma meta de nível lê a curva de `levels` a mais. Diferença
+de sorteio, não de tamanho de dado. A guarda passou a comparar o **mesmo**
+jogador antes e depois de ganhar oito itens, que é o que a RNF-04 quer dizer.
+
+Fica um achado registrado como DT-72: a Colmeia custa 60 consultas por visita.
+Nenhuma cresce com o dado, então não fere requisito, mas há leitura repetida na
+mesma requisição — perfil, faixas etárias e curva de níveis são buscados por
+mais de um service.
