@@ -35,16 +35,20 @@
   --color-tinta-suave: #4a4a4a;
 
   /* Semânticos: sempre acompanhados de ícone + palavra, nunca cor sozinha.
-     Os valores da identidade servem para preenchimento, ícone e borda. Como
-     texto pequeno eles reprovam em AA sobre branco e cera (acerto 3,43:1,
-     atenção 3,01:1, erro 4,47:1 sobre cera), então cada um tem uma variante
-     escurecida só para texto — mesma cor, luminosidade suficiente. */
+     Os valores da identidade servem para preenchimento, ícone e borda; como
+     texto pequeno eles reprovam em AA, então cada um tem variante escurecida.
+
+     As três variantes de texto foram recalculadas na T-11.7 para também
+     sobreviverem ao daltonismo: sob deuteranopia, protanopia e tritanopia elas
+     continuam com 4,5:1 sobre cera e separadas entre si em luminância, que é o
+     que resta quando a diferença de matiz some. `test/unit/contraste.test.js`
+     é quem cobra. */
   --color-acerto: #2e9e4f;
-  --color-acerto-texto: #268044;
+  --color-acerto-texto: #28824b;
   --color-atencao: #e07a1f;
-  --color-atencao-texto: #9e5309;
+  --color-atencao-texto: #7d550a;
   --color-erro: #d93a3a;
-  --color-erro-texto: #c42b2b;
+  --color-erro-texto: #aa0a23;
 
   /* Favo é o canto padrão de botão e card; pílula é barra, badge e avatar. */
   --radius-favo: 20px;

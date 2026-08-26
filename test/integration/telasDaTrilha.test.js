@@ -198,6 +198,6 @@ describe('telas da trilha', opcoes, () => {
 
     const pagina = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
     assert.match(pagina.text, /ainda está sendo montada/);
-    assert.match(pagina.text, /beenie_vem\.png/, 'estado vazio tem mascote e ação, nunca só "nada aqui"');
+    assert.match(pagina.text, /beenie_vem\.webp/, 'estado vazio tem mascote e ação, nunca só "nada aqui"');
   });
 });

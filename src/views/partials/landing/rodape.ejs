@@ -6,7 +6,7 @@
   <div class="mx-auto max-w-5xl px-6">
     <div class="flex flex-col gap-8 sm:flex-row sm:justify-between">
       <div>
-        <img src="/img/beever_logo_white.png" alt="Beever" width="1028" height="326" class="h-8 w-auto" />
+        <img src="/img/beever_logo_white.webp" alt="Beever" width="1028" height="326" class="h-8 w-auto" />
         <p class="mt-4 max-w-xs text-sm text-cera/60">
           Educação financeira que parece brincadeira, para crianças e adolescentes de 6 a 15 anos.
         </p>
@@ -64,6 +64,25 @@
           </ul>
         </div>
       </nav>
+    </div>
+
+    <%#
+      Nem todo mundo que precisa de menos movimento tem a preferência ligada no
+      sistema — crianças usam o aparelho de outra pessoa, e a régua do projeto
+      inclui TDAH e autismo. Então a página oferece o controle direto, e ele
+      lembra da escolha no próprio navegador.
+
+      Nasce escondido: sem JavaScript não há movimento nenhum para desligar.
+    -%>
+    <div class="mt-10 hidden" id="controle-de-movimento">
+      <button
+        type="button"
+        id="botao-reduzir-movimento"
+        class="min-h-11 rounded-favo border border-white/20 px-4 py-2 text-sm text-cera/70 transition hover:border-mel hover:text-mel focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        aria-pressed="false"
+      >
+        Reduzir movimento desta página
+      </button>
     </div>
 
     <div class="mt-10 border-t border-white/10 pt-6 text-sm text-cera/50">

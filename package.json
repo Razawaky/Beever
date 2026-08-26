@@ -20,7 +20,8 @@
     "lint": "eslint .",
     "test": "NODE_ENV=test node --test \"test/**/*.test.js\"",
     "test:db": "TESTES_DE_BANCO=1 NODE_ENV=test node --test \"test/**/*.test.js\"",
-    "vendor:js": "cp node_modules/lenis/dist/lenis.min.js src/public/js/vendor/lenis.min.js && cp node_modules/lenis/dist/lenis.css src/styles/lenis.css"
+    "vendor:js": "cp node_modules/lenis/dist/lenis.min.js src/public/js/vendor/lenis.min.js && cp node_modules/lenis/dist/lenis.css src/styles/lenis.css",
+    "img:webp": "for f in src/public/img/*.png; do magick \"$f\" -quality 82 -define webp:method=6 \"${f%.png}.webp\"; done"
   },
   "license": "MIT",
   "dependencies": {

@@ -4,6 +4,9 @@
  * SVG ou WebP, então trocar o desenho é mexer só aqui — a extensão não importa
  * para quem consome.
  *
+ * Os PNG originais continuam em `src/public/img`: o WebP é gerado deles por
+ * `npm run img:webp`, e é ele que vai para a tela.
+ *
  * `largura` e `altura` são as do arquivo e existem para o navegador reservar o
  * espaço antes de baixar a imagem, o que evita salto de layout (RNF-03).
  *
@@ -12,19 +15,19 @@
  */
 export const MASCOTES = {
   acolhendo: {
-    arquivo: '/img/beenie_howdy.png',
+    arquivo: '/img/beenie_howdy.webp',
     alt: 'Beenie acenando',
     largura: 612,
     altura: 812,
   },
   chamando: {
-    arquivo: '/img/beenie_vem.png',
+    arquivo: '/img/beenie_vem.webp',
     alt: 'Beenie chamando para começar',
     largura: 482,
     altura: 746,
   },
   entrando: {
-    arquivo: '/img/beenie_login_render.png',
+    arquivo: '/img/beenie_login_render.webp',
     alt: 'Beenie na porta do Beever',
     largura: 1000,
     altura: 1017,

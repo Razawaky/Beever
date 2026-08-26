@@ -162,6 +162,9 @@ function ligarMiniQuiz() {
   });
 }
 
+// Guardada porque o controle de movimento do rodapé precisa pausá-la.
+let rolagemSuave = null;
+
 function ligarMovimento() {
   const lenis = new globalThis.Lenis({
     // Um pouco mais longa que o padrão: a página é vitrine, e a rolagem
@@ -175,6 +178,8 @@ function ligarMovimento() {
     // `requestAnimationFrame` fazendo a mesma coisa.
     autoRaf: true,
   });
+
+  rolagemSuave = lenis;
 
   lenis.on('scroll', ({ scroll }) => {
     moverCamadas(scroll);
@@ -204,9 +209,60 @@ function ligarMovimento() {
   });
 }
 
+/**
+ * O controle de movimento da própria página.
+ *
+ * A preferência do sistema manda, mas nem todo mundo que precisa dela a tem
+ * ligada: criança costuma usar o aparelho de outra pessoa. Este botão desliga o
+ * movimento na hora e lembra da escolha no navegador, o que atende quem se
+ * distrai ou se incomoda com animação — a régua de TDAH e autismo do projeto.
+ */
+function ligarControleDeMovimento() {
+  const caixa = document.getElementById('controle-de-movimento');
+  const botao = document.getElementById('botao-reduzir-movimento');
+  if (!caixa || !botao) return;
+
+  caixa.classList.remove('hidden');
+
+  function aplicar(reduzido) {
+    document.documentElement.classList.toggle('landing-com-movimento', !reduzido);
+    botao.setAttribute('aria-pressed', String(reduzido));
+    botao.textContent = reduzido ? 'Ligar o movimento desta página' : 'Reduzir movimento desta página';
+
+    // A rolagem suave também é movimento: pausá-la devolve a rolagem do
+    // navegador, que é o comportamento previsível que se espera aqui.
+    if (reduzido) rolagemSuave?.stop();
+    else rolagemSuave?.start();
+  }
+
+  // Quem já pediu menos movimento no sistema encontra o botão no estado certo.
+  if (querMenosMovimento) aplicar(true);
+
+  botao.addEventListener('click', () => {
+    const reduzido = botao.getAttribute('aria-pressed') === 'true';
+    aplicar(!reduzido);
+    // `localStorage` pode falhar em janela anônima; a escolha vale a visita.
+    try {
+      window.localStorage.setItem('beever-movimento', reduzido ? 'ligado' : 'reduzido');
+    } catch {
+      /* sem memória do navegador, a escolha vale só enquanto a página estiver aberta */
+    }
+  });
+
+  let guardado = null;
+  try {
+    guardado = window.localStorage.getItem('beever-movimento');
+  } catch {
+    /* idem */
+  }
+
+  if (guardado === 'reduzido') aplicar(true);
+}
+
 // O mini quiz é conteúdo interativo, não enfeite: ele vale mesmo para quem pediu
 // menos movimento.
 ligarMiniQuiz();
+ligarControleDeMovimento();
 
 if (!querMenosMovimento) {
   // A classe avisa o CSS que o movimento agora é feito aqui: as camadas param

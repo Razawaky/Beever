@@ -51,7 +51,9 @@ describe('landing — herói', opcoes, () => {
   });
 
   it('o mascote reserva o próprio espaço, para a página não saltar', () => {
-    const imagem = /<img[^>]*src="\/img\/beenie_howdy\.png"[^>]*>/.exec(html);
+    // A arte virou WebP na T-11.7: 119 KB de PNG viraram 33 KB, e o catálogo é
+    // o único lugar que sabe disso.
+    const imagem = /<img[^>]*src="\/img\/beenie_howdy\.webp"[^>]*>/.exec(html);
 
     assert.ok(imagem, 'a Beenie está no herói');
     assert.match(imagem[0], /width="612"/);

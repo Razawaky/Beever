@@ -93,7 +93,7 @@ describe('aplicação', () => {
     // T-11.6 ela ganhou rodapé próprio, com os créditos e o aviso do mel.
     it('a landing tem casca própria, e a tela de entrar não tem casca nenhuma', async () => {
       const home = await request(app).get('/').set('Accept', 'text/html').expect(200);
-      assert.match(home.text, /beever_logo_white\.png/, 'o cabeçalho da landing usa o logo claro');
+      assert.match(home.text, /beever_logo_white\.webp/, 'o cabeçalho da landing usa o logo claro');
       assert.match(home.text, /projeto de conclusão de curso/, 'o rodapé da landing traz os créditos');
       assert.ok(!home.text.includes('bg-cera">\n    <div class="mx-auto flex max-w-5xl'), 'sem o cabeçalho do app');
 

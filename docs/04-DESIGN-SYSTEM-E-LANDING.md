@@ -290,6 +290,34 @@ Regras rígidas:
 
 ## 7. Acessibilidade — piso obrigatório
 
+### 7.0 Quem o Beever precisa servir (decidido em 2026-08-26)
+
+Acessibilidade aqui não para no contraste e no teclado. O público é criança e
+adolescente, e três frentes entram em toda tela nova, junto com o resto do
+plano.
+
+**Daltonismo.** Cor nunca é o único portador de informação: acerto, erro,
+atenção e estado de favo sempre vêm com ícone e palavra. Além disso, as cores
+que precisam ser distinguidas entre si têm de continuar distinguíveis sob
+deuteranopia, protanopia e tritanopia — o que se confere por diferença de
+luminância, e não por impressão de quem enxerga as três. `test/unit/contraste.test.js`
+faz essa conta e reprova o commit; foi ele que obrigou a recalcular
+`--color-acerto-texto`, `--color-atencao-texto` e `--color-erro-texto` na T-11.7,
+porque atenção e erro viravam a mesma cor sob protanopia.
+
+**TDAH.** Uma ação principal por tela, texto curto, e nada de movimento em laço
+competindo com o que está sendo lido. A landing tem um laço só, a flutuação da
+Beenie, e ele é desligável. Recompensa aparece na hora e sempre do mesmo jeito.
+
+**Autismo.** A régua é previsibilidade: navegação estável, linguagem literal sem
+ironia, nenhuma mudança brusca de layout, nada de piscar, e movimento sempre
+desligável. Por isso a landing tem o controle "Reduzir movimento desta página" no
+rodapé, que não depende da preferência do sistema estar ligada — criança costuma
+usar o aparelho de outra pessoa — e que guarda a escolha no navegador. Dentro do
+app, o mesmo papel é do `profiles.has_reduced_motion`.
+
+
+
 - Contraste AA em todo par de cores; verificado, não estimado.
 - Alvos de toque ≥ 44×44 px, com espaçamento entre eles.
 - Foco de teclado **visível e no traço da identidade**: anel preto de 2 px + contorno âmbar de 3 px (ver 2.2), nunca `outline: none` sem substituto.
