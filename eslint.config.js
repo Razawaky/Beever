@@ -9,6 +9,8 @@ export default [
     ignores: [
       'node_modules/**',
       'src/public/css/**',
+      // Código de terceiro copiado como está (Lenis); não é nosso para arrumar.
+      'src/public/js/vendor/**',
       'docs/legacy/**',
       'venv/**',
       '.github/skills/**',

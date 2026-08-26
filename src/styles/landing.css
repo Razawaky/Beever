@@ -4,6 +4,11 @@
    Regra da seção 6.3 que vale para tudo aqui: só `transform` e `opacity` são
    animados. Nada de `top`, `height` ou `box-shadow` em movimento. */
 
+/* Folha do Lenis, copiada de `node_modules` pelo `npm run vendor:js`. Ela ajusta
+   a altura do documento e impede que iframe e área com rolagem própria briguem
+   com a rolagem suave. */
+@import './lenis.css';
+
 /* O padrão de favo do fundo é SVG embutido, e não imagem: some do orçamento de
    rede e escala sem borrar. O tom é mel com pouca opacidade, para ser textura e
    nunca ruído por cima do texto. */
@@ -78,6 +83,38 @@
   .camada-frente {
     animation-name: subir-rapido;
   }
+}
+
+/* Com JavaScript ligado, quem move as camadas é o `landing.js`, alimentado pelo
+   Lenis. A linha do tempo de rolagem sai de cena para as camadas não andarem
+   duas vezes; ela continua sendo o caminho de quem está sem JavaScript. */
+.landing-com-movimento .camada-fundo,
+.landing-com-movimento .camada-meio,
+.landing-com-movimento .camada-frente {
+  animation: none;
+}
+
+/* Revelação das seções: o elemento nasce um pouco abaixo e transparente, e o
+   `IntersectionObserver` só acrescenta a classe que o traz ao lugar.
+
+   O estado de partida vive dentro de `.landing-com-movimento`, que só existe
+   quando o script rodou. Sem JavaScript nada fica escondido esperando um
+   observador que não vai chegar. */
+.landing-com-movimento .revela {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-com-movimento .revela-atrasada {
+  transition-delay: 140ms;
+}
+
+.landing-com-movimento .revelado {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }
 
 /* A Beenie entra voando uma vez e depois só flutua (a flutuação em loop é a

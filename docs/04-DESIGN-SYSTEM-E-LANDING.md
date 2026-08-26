@@ -218,11 +218,16 @@ entregue segue o documento — mel sólido, canto de favo, sem contorno, levanta
 
 **Situação depois da T-11.3.** O herói existe, em `partials/landing/`, e a
 landing deixou de usar o cabeçalho e o rodapé do app — ela tem casca própria,
-escura, com o logo branco. O parallax é CSS puro: três camadas de favos em SVG
-embutido, movidas por `animation-timeline: scroll()` dentro de `@supports`, sem
-uma linha de JavaScript na página. Onde o navegador não suporta a linha do tempo
-de rolagem, as camadas ficam paradas. As nove seções restantes são T-11.4 e
-T-11.6, e a coluna de mel da 6.1 é T-11.5.
+escura, com o logo branco. As nove seções restantes são T-11.4 e T-11.6, e a
+coluna de mel da 6.1 é T-11.5.
+
+O movimento tem dois caminhos, e os dois entregam a mesma página. Com JavaScript,
+o Lenis conduz a rolagem suave e alimenta o parallax das três camadas pelo evento
+de rolagem, mais a revelação por `IntersectionObserver`; a classe
+`landing-com-movimento` no `<html>` é o que liga esse caminho. Sem JavaScript, as
+camadas se movem por `animation-timeline: scroll()` em CSS, e nada do conteúdo
+fica escondido — o estado de partida da revelação vive dentro daquela classe de
+propósito. Com `prefers-reduced-motion`, nenhum dos dois roda.
 
 ### 6.1 Elemento-assinatura
 
@@ -252,8 +257,9 @@ Revelação:   IntersectionObserver → adiciona classe → transição CSS de o
              Um observer para todos os alvos, nunca um por elemento.
 Parallax:    listener de scroll com requestAnimationFrame e flag de throttle;
              aplicar só translate3d. Ler scrollY uma vez por frame, nunca dentro do loop.
-Smooth:      CSS scroll-behavior: smooth. Biblioteca de scroll suave (Lenis) só se
-             o usuário aprovar em checkpoint — é dependência e risco de acessibilidade.
+Smooth:      Lenis, aprovado pelo usuário em 2026-08-26 e auto-hospedado em
+             /js/vendor/lenis.min.js (a CSP recusa CDN). Ele mantém o próprio laço
+             de quadros (autoRaf) e alimenta o parallax pelo evento de rolagem.
 Moderno:     onde suportado, usar animation-timeline: view() / scroll() em CSS puro
              (@supports), com o caminho JS como fallback. Menos JS, mais fluido.
 Mascote:     SVG com <animateMotion> em path, ou keyframes de translate/rotate.

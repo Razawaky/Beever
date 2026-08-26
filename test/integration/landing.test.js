@@ -72,8 +72,23 @@ describe('landing — herói', opcoes, () => {
     assert.match(html, /dinheiro de brincadeira/i);
   });
 
-  it('não depende de JavaScript nem escreve estilo na marcação', () => {
-    assert.doesNotMatch(html, /<script/);
+  it('serve o Lenis e o script da landing, os dois do próprio projeto', () => {
+    // A CSP é `script-src 'self'`: script de CDN seria bloqueado pelo navegador.
+    assert.match(html, /<script src="\/js\/vendor\/lenis\.min\.js"/);
+    assert.match(html, /<script src="\/js\/landing\.js"/);
+    assert.doesNotMatch(html, /<script[^>]*src="https?:/);
+  });
+
+  it('o conteúdo não depende do script, e nada de estilo na marcação', () => {
+    // O estado escondido da revelação vive sob `.landing-com-movimento`, classe
+    // que só o script acrescenta: sem ele, nada fica invisível esperando.
+    assert.doesNotMatch(html, /class="[^"]*landing-com-movimento/);
     assert.doesNotMatch(html, /style="/);
+  });
+
+  it('as camadas dizem a própria velocidade de parallax', () => {
+    for (const velocidade of ['0.08', '0.18', '0.32']) {
+      assert.match(html, new RegExp(`data-parallax="${velocidade}"`));
+    }
   });
 });
