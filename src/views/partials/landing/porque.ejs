@@ -1,0 +1,62 @@
+<%#
+  Seção 2 da ordem da RF-LAN-03: o problema, em uma frase, e três números com
+  fonte. Nenhum número aqui é estimativa — cada um tem a fonte escrita embaixo,
+  porque é isso que um responsável confere antes de autorizar.
+-%>
+<section id="por-que" class="border-t border-white/10 bg-breu py-16 sm:py-24">
+  <div class="mx-auto max-w-5xl px-6">
+    <h2 class="revela font-display text-3xl text-cera sm:text-4xl">
+      O problema não é falta de dinheiro. É nunca ter aprendido a cuidar dele.
+    </h2>
+
+    <p class="revela revela-atrasada mt-5 max-w-2xl text-lg text-cera/80">
+      Quase ninguém aprende isso na escola, e a conta chega anos depois — quando o
+      hábito já está formado.
+    </p>
+
+    <dl class="mt-12 grid gap-6 sm:grid-cols-3">
+      <%
+        const NUMEROS = [
+          {
+            valor: 81.7,
+            sufixo: ' mi',
+            titulo: 'de brasileiros com o nome negativado',
+            detalhe: 'Quase metade dos adultos do país.',
+            fonte: 'Serasa, Mapa da Inadimplência, fevereiro de 2026',
+          },
+          {
+            valor: 42,
+            sufixo: '%',
+            titulo: 'já estavam nessa situação há dez anos',
+            detalhe: 'O ciclo se repete quando ninguém ensina a sair dele.',
+            fonte: 'Serasa, 10 anos do Mapa da Inadimplência',
+          },
+          {
+            valor: 54.9,
+            sufixo: '%',
+            titulo: 'dos jovens de 15 anos alcançam o nível básico',
+            detalhe: 'O Brasil fez 416 pontos em educação financeira, contra 498 da média da OCDE.',
+            fonte: 'Pisa 2022, OCDE',
+          },
+        ];
+      %>
+      <% NUMEROS.forEach((numero) => { %>
+        <div class="revela rounded-favo border border-white/10 bg-white/5 p-6">
+          <%# `data-contador` é o alvo do `landing.js`: o número sobe de zero até
+              este valor quando a seção entra na tela. Sem script, ele já nasce
+              escrito, que é o que importa. -%>
+          <dt
+            class="font-display text-4xl tabular-nums text-mel"
+            data-contador="<%= numero.valor %>"
+            data-contador-sufixo="<%= numero.sufixo %>"
+          >
+            <%= numero.valor.toLocaleString('pt-BR') %><%= numero.sufixo %>
+          </dt>
+          <dd class="mt-2 font-semibold text-cera"><%= numero.titulo %></dd>
+          <dd class="mt-2 text-sm text-cera/70"><%= numero.detalhe %></dd>
+          <dd class="mt-4 text-xs text-cera/50">Fonte: <%= numero.fonte %></dd>
+        </div>
+      <% }); %>
+    </dl>
+  </div>
+</section>

@@ -4,13 +4,20 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-11.3, segunda parte — o usuário aprovou biblioteca de
+**Último commit:** T-11.4 — a landing ganhou as seis seções de conteúdo, na
+ordem da RF-LAN-03: o problema com três números **de fonte citada** (Serasa e
+Pisa 2022), os três passos, a trilha por faixa etária, os seis jogos com um mini
+quiz jogável na própria página, a economia que faz item perder e ganhar valor, e
+a sequência que só cobra nos dias escolhidos. Os números sobem contando ao entrar
+na tela. 739 testes passando.
+**Próximo passo: T-11.5 — sistema de animação de scroll e a coluna de mel**
+
+**Commit anterior:** T-11.3, segunda parte — o usuário aprovou biblioteca de
 animação e pediu foco no **Lenis**. A rolagem suave entrou, auto-hospedada em
 `/js/vendor/lenis.min.js`, conduzindo o parallax das três camadas e a revelação
 por `IntersectionObserver`. Sem JavaScript a página continua inteira, com as
 camadas movidas por `animation-timeline: scroll()`; com `prefers-reduced-motion`
 nada se move. 735 testes passando.
-**Próximo passo: T-11.4 — as seções de conteúdo da landing**
 
 **Antes, na mesma tarefa:** T-11.3 — a landing ganhou primeira dobra. A superfície é
 escura, com casca própria: o cabeçalho e o rodapé claros do app saíram, porque
@@ -365,6 +372,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
 | A Colmeia inteira em navegador real (T-10.1 a T-10.6) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, como o card da meta e a lista das outras se comportam a 320 px, se a trilha serpenteante da home não empurra texto para fora da tela no celular, o botão de receber recompensa da tarefa lado a lado com o texto a 320 px, e o "Continuar" grudado no rodapé sem tapar o fim da rolagem. Entra no passe da DT-22 |
 | As fontes de verdade na tela (T-11.1) | Os quatro `.woff2` são servidos pelo Express, entram no CSS compilado e o preload está na marcação de toda página, com teste do catálogo do mascote e a suíte inteira passando. O que **não** foi visto por olho humano é o desenho com a fonte carregada: o Lilita One nos títulos, o Nunito no corpo, o piscar da troca do `system-ui` pela fonte final e o peso do texto a 320 px. Também não foi medido o LCP em rede lenta (DT-74). Vale o passe da DT-22 |
+| As seis seções da landing em navegador real (T-11.4) | A marcação está coberta por teste pelo HTTP: a ordem das seções, os três números com fonte, as chamadas para o registro e o mini quiz com uma alternativa certa. O que **não** foi visto por olho humano é a página rolando inteira: a revelação de seção em seção, os números contando, o mini quiz respondendo ao clique, o hexágono dos dias da semana a 320 px e o contraste do texto cera sobre as caixas de `bg-white/5`. Vale o passe da DT-22 |
 | O herói da landing em navegador real (T-11.3) | **Nada do movimento com JavaScript foi executado em navegador**: o Lenis, o parallax pelo evento de rolagem e a revelação existem só como código e marcação até alguém abrir a página. A marcação está coberta por teste pelo HTTP: um `h1` só, os dois caminhos, as dimensões da imagem, as três camadas com `aria-hidden`, o aviso do mel fictício e a página sem `script` e sem `style`. O que **não** foi visto por olho humano é justamente o que a tarefa entrega: a Beenie chegando voando, a flutuação, as três camadas se movendo em velocidades diferentes ao rolar, o contraste do texto cera sobre breu e o herói a 320 px. Vale o passe da DT-22 |
 | O botão novo em navegador real (T-11.2) | As três variantes e a altura mínima estão cobertas por teste pelo HTTP nas telas públicas, e a suíte inteira passa com as 22 telas migradas. O que **não** foi visto por olho humano é o movimento: o levantar de 2 px no hover, o afundar no clique, o anel de foco duplo passando pelo teclado, e o botão de card a 320 px agora que ficou mais alto. Vale o passe da DT-22 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
@@ -386,7 +394,7 @@ salto de layout, e continuar inteira utilizável com animação desligada.
 | T-11.1 Tokens no Tailwind (cores, raio, sombra, tipografia) + inventário dos assets do mascote | **feita** — fontes auto-hospedadas sob os nomes `Beever Display` e `Beever Texto`, com `src/styles/fontes.css` como ponto único de troca; sombra virou token nos quatro degraus do `DESIGN.md`; a arte da Beenie ganhou catálogo, partial e teste |
 | T-11.2 Biblioteca de componentes EJS: botão, card em favo, badge de mel, barra de progresso, chama de sequência | **feita** — `ui/botao.ejs` com três variantes, dois tamanhos e dois formatos substituiu 24 cópias à mão em 22 arquivos, e a chama de sequência virou `ui/chama-sequencia.ejs`. Card em favo, badge e barra já existiam desde a E10 e passaram por conferência. O botão de card subiu de 28 px para 44 px de altura, que é o piso da RNF-22 |
 | T-11.3 Herói com mascote animado e favos em parallax | **feita** — a landing passou a ter casca própria escura (`partials/landing/`), o herói traz os dois caminhos e o aviso da RNF-35, e o movimento tem dois caminhos: com JavaScript o Lenis conduz rolagem suave, parallax e revelação; sem ele, as camadas andam por `animation-timeline: scroll()`. O catálogo do mascote ganhou dimensões, para não haver salto de layout |
-| T-11.4 Seções de conteúdo (problema, como funciona, trilha, jogos, loja/patrimônio, sequência) | pendente |
+| T-11.4 Seções de conteúdo (problema, como funciona, trilha, jogos, loja/patrimônio, sequência) | **feita** — seis partials em `partials/landing/`, cada um com âncora própria, entrando na revelação que já existia. Os três números do problema têm fonte escrita na página, o conteúdo da trilha e dos jogos é estático (a landing não consulta banco) e o mini quiz responde sem servidor |
 | T-11.5 Animação de scroll: revelação por `IntersectionObserver`, parallax em `requestAnimationFrame`, smooth scroll | pendente |
 | T-11.6 Seção "para pais e escolas" + FAQ + CTA final + footer | pendente |
 | T-11.7 Performance e acessibilidade: `prefers-reduced-motion`, contraste, foco, LCP | pendente |
@@ -1146,6 +1154,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view, e `perfil.ejs` calcula o percentual da meta do mesmo jeito: é aritmética numa camada que deveria só exibir, e as outras telas de meta já leem o resumo pronto do service | auditoria da E09, ampliada pela da E10 | Subir a conta para o `inventoryService` e usar `goalsService.resumirMeta` no perfil |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
+| DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
 | DT-77 | `test/integration/seguranca.test.js` falhou duas vezes com 403 numa rodada da suíte completa, e passou sozinho e na rodada seguinte. Os limitadores são desligados em teste, então a suspeita é corrida entre arquivos no banco de teste, na sessão que guarda o token de CSRF | T-11.3 | Reproduzir rodando a suíte algumas vezes seguidas e, se confirmar, isolar a sessão por arquivo. Achado fora do escopo da tarefa, não corrigido |
 | ~~DT-76~~ | ~~O parallax do herói depende de `animation-timeline: scroll()`, que o Safari ainda não tem~~ | T-11.3 | **Resolvida na mesma tarefa**: com o Lenis aprovado, o caminho principal virou JavaScript e funciona em qualquer navegador; a linha do tempo de rolagem passou a ser o plano B de quem está sem script |
 | DT-75 | `modal` e `toast` continuam sem existir, e o design system os lista na seção 3. Nenhuma tela precisa deles hoje, mas a confirmação de compra e o recebimento de recompensa são candidatos naturais | T-11.2 | Criar quando a primeira tela precisar, não antes |
@@ -3017,3 +3026,29 @@ Duas armadilhas ficaram de lição. Revelação e parallax escrevem no mesmo
 parar no hexágono de trás, e não no bloco que é revelado. E animação de CSS ganha
 de estilo escrito por JavaScript, então a Beenie, que flutua por `animate-float`,
 não pode receber parallax: quem recebe é a forma atrás dela.
+
+### Sessão de 2026-08-26, T-11.4 e as seis seções da landing
+
+A decisão que mais pesou nesta tarefa foi sobre os três números da seção do
+problema. Página de TCC com estatística inventada é o pior erro possível, então
+cada número foi buscado, conferido e teve a fonte escrita embaixo dele na
+própria página: 81,7 milhões de brasileiros negativados e 42% deles já nessa
+situação dez anos atrás, os dois do Mapa da Inadimplência da Serasa de fevereiro
+de 2026; e 54,9% dos jovens de 15 anos alcançando o nível básico de educação
+financeira, com o Brasil em 416 pontos contra 498 da média da OCDE, do Pisa 2022.
+O teste garante que os três números continuem tendo fonte: se alguém acrescentar
+um quarto sem citar, a suíte reprova.
+
+O conteúdo da trilha e dos jogos é texto estático espelhando o seed, e não
+consulta ao banco. A landing é pública e é a página que mais precisa ser rápida;
+trocar consulta por texto é o que mantém a visita sem custo de banco. Em
+compensação, se o conteúdo semeado mudar, os partials `trilha.ejs` e `jogos.ejs`
+são o lugar de atualizar — está escrito no comentário deles.
+
+O mini quiz entrou como a seção 5 pede: uma pergunta, respondida na página, sem
+servidor, sem conta e sem pagar recompensa nenhuma. Ele é conteúdo, não enfeite,
+então roda mesmo para quem pede menos movimento — ao contrário da revelação e dos
+contadores, que ficam desligados nesse caso.
+
+Fica registrado como DT-78 que o texto das seis seções é rascunho de dev: o
+argumento está de pé, mas a voz de produto é decisão do usuário.

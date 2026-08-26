@@ -86,6 +86,42 @@ describe('landing — herói', opcoes, () => {
     assert.doesNotMatch(html, /style="/);
   });
 
+  it('traz as seções de conteúdo na ordem da RF-LAN-03', () => {
+    const ORDEM = ['por-que', 'como-funciona', 'trilha', 'jogos', 'economia', 'sequencia'];
+    const posicoes = ORDEM.map((ancora) => html.indexOf(`id="${ancora}"`));
+
+    posicoes.forEach((posicao, indice) => {
+      assert.ok(posicao > -1, `a seção ${ORDEM[indice]} está na página`);
+      if (indice > 0) {
+        assert.ok(posicao > posicoes[indice - 1], `a seção ${ORDEM[indice]} vem depois da anterior`);
+      }
+    });
+  });
+
+  it('todo número da seção do problema vem com fonte escrita', () => {
+    const secao = html.slice(html.indexOf('id="por-que"'), html.indexOf('id="como-funciona"'));
+    const numeros = secao.match(/data-contador="/g) ?? [];
+
+    assert.equal(numeros.length, 3, 'os três números da seção');
+    // Número sem fonte numa página de TCC é o pior tipo de erro possível.
+    assert.equal((secao.match(/Fonte:/g) ?? []).length, 3);
+  });
+
+  it('o caminho para o registro se repete ao longo da página (RF-LAN-02)', () => {
+    const chamadas = html.match(/href="\/cadastro"/g) ?? [];
+
+    assert.ok(chamadas.length >= 3, `esperava pelo menos 3 chamadas para o registro, achei ${chamadas.length}`);
+  });
+
+  it('o mini quiz responde na própria página, sem servidor e sem conta', () => {
+    const secao = html.slice(html.indexOf('id="jogos"'), html.indexOf('id="economia"'));
+
+    assert.equal((secao.match(/class="mini-quiz-opcao/g) ?? []).length, 3);
+    assert.equal((secao.match(/data-certa="true"/g) ?? []).length, 1, 'uma alternativa certa só');
+    // Nada de formulário: a pergunta é demonstração, não partida.
+    assert.doesNotMatch(secao, /<form/);
+  });
+
   it('as camadas dizem a própria velocidade de parallax', () => {
     for (const velocidade of ['0.08', '0.18', '0.32']) {
       assert.match(html, new RegExp(`data-parallax="${velocidade}"`));

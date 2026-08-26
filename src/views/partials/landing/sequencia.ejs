@@ -1,0 +1,60 @@
+<%#
+  Seção 7: a sequência justa, que é o argumento contra a culpa. Só os dias
+  escolhidos contam, e existe escudo para o dia que não deu.
+
+  A semana desenhada aqui é ilustração, não dado de jogador nenhum: a landing é
+  pública e não lê banco.
+-%>
+<section id="sequencia" class="border-t border-white/10 bg-breu py-16 sm:py-24">
+  <div class="mx-auto max-w-5xl px-6">
+    <h2 class="revela font-display text-3xl text-cera sm:text-4xl">
+      Só cobramos nos dias que você escolheu
+    </h2>
+
+    <p class="revela revela-atrasada mt-5 max-w-2xl text-lg text-cera/80">
+      Sequência que quebra por causa de um sábado sem tempo não ensina nada — só faz a
+      criança desistir. Aqui, dia de folga é folga mesmo.
+    </p>
+
+    <div class="revela mt-12 rounded-favo border border-white/10 bg-white/5 p-6 sm:p-8">
+      <ul class="flex flex-wrap justify-center gap-3 sm:justify-start">
+        <%
+          const SEMANA = [
+            { dia: 'Dom', estado: 'folga' },
+            { dia: 'Seg', estado: 'cumprido' },
+            { dia: 'Ter', estado: 'cumprido' },
+            { dia: 'Qua', estado: 'folga' },
+            { dia: 'Qui', estado: 'cumprido' },
+            { dia: 'Sex', estado: 'escudo' },
+            { dia: 'Sáb', estado: 'folga' },
+          ];
+
+          const APARENCIAS = {
+            cumprido: { fundo: 'bg-mel text-tinta', icone: '✓', palavra: 'cumprido' },
+            escudo: { fundo: 'bg-ambar text-tinta', icone: '🛡', palavra: 'salvo pelo escudo' },
+            folga: { fundo: 'bg-white/10 text-cera/60', icone: '–', palavra: 'dia de folga' },
+          };
+        %>
+        <% SEMANA.forEach((dia) => { %>
+          <% const aparencia = APARENCIAS[dia.estado]; %>
+          <li class="text-center">
+            <span
+              class="favo-hexagono flex h-14 w-12 items-center justify-center text-lg <%= aparencia.fundo %>"
+              aria-hidden="true"
+              ><%= aparencia.icone %></span
+            >
+            <span class="mt-2 block text-xs text-cera/70">
+              <%= dia.dia %>
+              <span class="sr-only">, <%= aparencia.palavra %></span>
+            </span>
+          </li>
+        <% }); %>
+      </ul>
+
+      <p class="mt-6 text-cera/70">
+        Nesta semana a pessoa escolheu segunda, terça, quinta e sexta. A sexta não deu, e
+        o Escudo de Sequência segurou o combinado.
+      </p>
+    </div>
+  </div>
+</section>

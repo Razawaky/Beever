@@ -12,6 +12,7 @@ const querMenosMovimento = window.matchMedia('(prefers-reduced-motion: reduce)')
 
 const camadas = Array.from(document.querySelectorAll('[data-parallax]'));
 const aparecem = Array.from(document.querySelectorAll('.revela'));
+const contadores = Array.from(document.querySelectorAll('[data-contador]'));
 
 /**
  * Revelação por `IntersectionObserver`: um observer para todos os alvos, e cada
@@ -45,6 +46,77 @@ function moverCamadas(posicao) {
     const velocidade = Number(camada.dataset.parallax) || 0;
     camada.style.transform = `translate3d(0, ${(posicao * velocidade).toFixed(2)}px, 0)`;
   }
+}
+
+/**
+ * Faz o número subir de zero até o valor final quando ele entra na tela.
+ *
+ * O número já vem escrito do servidor: isto só refaz a contagem por cima. Se o
+ * script não rodar, a página continua dizendo a mesma coisa.
+ */
+function contar(elemento) {
+  const alvo = Number(elemento.dataset.contador);
+  const sufixo = elemento.dataset.contadorSufixo || '';
+  const casas = String(alvo).includes('.') ? 1 : 0;
+  const inicio = performance.now();
+  const duracao = 1400;
+
+  function quadro(agora) {
+    const andamento = Math.min((agora - inicio) / duracao, 1);
+    // Desacelera no fim: número que chega frenando parece contagem, e não salto.
+    const suavizado = 1 - (1 - andamento) ** 3;
+    const valor = alvo * suavizado;
+
+    elemento.textContent =
+      valor.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }) + sufixo;
+
+    if (andamento < 1) requestAnimationFrame(quadro);
+  }
+
+  requestAnimationFrame(quadro);
+}
+
+function ligarContadores() {
+  const observador = new IntersectionObserver(
+    (entradas) => {
+      for (const entrada of entradas) {
+        if (!entrada.isIntersecting) continue;
+        contar(entrada.target);
+        observador.unobserve(entrada.target);
+      }
+    },
+    { threshold: 0.6 },
+  );
+
+  contadores.forEach((numero) => observador.observe(numero));
+}
+
+/**
+ * O mini quiz da seção dos jogos: uma pergunta, resposta na hora, nada enviado a
+ * servidor nenhum. Errar não fecha a pergunta — a resposta explica e as opções
+ * continuam disponíveis, que é a regra de erro do design system.
+ */
+function ligarMiniQuiz() {
+  const resposta = document.getElementById('mini-quiz-resposta');
+  const opcoes = Array.from(document.querySelectorAll('.mini-quiz-opcao'));
+  if (!resposta || opcoes.length === 0) return;
+
+  const EXPLICACOES = {
+    certa: 'Isso mesmo. O mel gasto no patinete sai da conta da casa — e é essa escolha que o jogo ensina a enxergar.',
+    errada: 'Ainda não. Comprar agora tira mel da meta maior: a casa continua custando 300, e você volta a zero.',
+  };
+
+  opcoes.forEach((opcao) => {
+    opcao.addEventListener('click', () => {
+      const acertou = opcao.dataset.certa === 'true';
+
+      opcoes.forEach((outra) => outra.classList.remove('border-mel', 'border-erro'));
+      opcao.classList.add(acertou ? 'border-mel' : 'border-erro');
+
+      resposta.textContent = acertou ? EXPLICACOES.certa : EXPLICACOES.errada;
+      resposta.classList.remove('hidden');
+    });
+  });
 }
 
 function ligarMovimento() {
@@ -82,10 +154,15 @@ function ligarMovimento() {
   });
 }
 
+// O mini quiz é conteúdo interativo, não enfeite: ele vale mesmo para quem pediu
+// menos movimento.
+ligarMiniQuiz();
+
 if (!querMenosMovimento) {
   // A classe avisa o CSS que o movimento agora é feito aqui: as camadas param
   // de usar a linha do tempo de rolagem, para não andarem duas vezes.
   document.documentElement.classList.add('landing-com-movimento');
   ligarRevelacao();
+  ligarContadores();
   ligarMovimento();
 }
