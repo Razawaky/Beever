@@ -216,6 +216,14 @@ entregue segue o documento — mel sólido, canto de favo, sem contorno, levanta
 **Trabalho da página:** levar ao registro. Todo elemento serve a isso ou sai.
 **Superfície:** escura (`#111111`) com favos e mel como luz. Contraste máximo com o app (claro) — entrar no app deve parecer "acender a luz".
 
+**Situação depois da T-11.3.** O herói existe, em `partials/landing/`, e a
+landing deixou de usar o cabeçalho e o rodapé do app — ela tem casca própria,
+escura, com o logo branco. O parallax é CSS puro: três camadas de favos em SVG
+embutido, movidas por `animation-timeline: scroll()` dentro de `@supports`, sem
+uma linha de JavaScript na página. Onde o navegador não suporta a linha do tempo
+de rolagem, as camadas ficam paradas. As nove seções restantes são T-11.4 e
+T-11.6, e a coluna de mel da 6.1 é T-11.5.
+
 ### 6.1 Elemento-assinatura
 
 **A coluna de favo que enche de mel conforme a rolagem.** Uma faixa vertical de hexágonos na borda da tela que vai sendo preenchida por mel líquido à medida que a pessoa desce — é o indicador de progresso da página, é a metáfora do produto (progresso acumulado) e é a única peça verdadeiramente memorável. Gaste sua ousadia aqui e mantenha o resto disciplinado.

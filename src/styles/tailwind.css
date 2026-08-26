@@ -9,6 +9,9 @@
    tipografia: os `@font-face` e os tokens `--font-*` ficam juntos lá. */
 @import './fontes.css';
 
+/* Só a landing usa: fundo escuro, favos em parallax e a entrada da Beenie. */
+@import './landing.css';
+
 /* Tailwind v4 é configurado por CSS. Declaramos aqui onde procurar classes,
    já que os templates são EJS renderizados no servidor. */
 @source '../views/**/*.ejs';

@@ -49,11 +49,13 @@ describe('componentes da interface', opcoes, () => {
     assert.match(html, /href="\/cadastro"[^>]*class="[^"]*min-h-12[^"]*"/);
   });
 
-  it('o botão secundário é branco com linha, e não uma segunda ação em mel', async () => {
+  it('a segunda ação da landing é contorno claro, e não um segundo botão em mel', async () => {
     const html = await pagina('/');
+    const segundaAcao = /<a[^>]*href="\/login"[^>]*class="([^"]+)"/.exec(html);
 
-    assert.match(html, /href="\/login"[^>]*class="[^"]*border-linha[^"]*"/);
-    assert.doesNotMatch(html, /href="\/login"[^>]*class="[^"]*bg-mel[^"]*"/);
+    assert.ok(segundaAcao, 'a landing oferece o caminho de quem já tem conta');
+    assert.match(segundaAcao[1], /border-white\/30/);
+    assert.doesNotMatch(segundaAcao[1], /bg-mel/);
   });
 
   it('todo botão tem foco visível, com anel âmbar e anel de tinta por dentro', async () => {

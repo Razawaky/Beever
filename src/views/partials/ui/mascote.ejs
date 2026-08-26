@@ -1,7 +1,11 @@
 <%#
   A Beenie na tela. Recebe `pose` (nome do catálogo em `src/config/mascote.js`)
-  e, opcional, `id`, `classe` com tamanho e animação, e `decorativa` para quando
-  o texto ao lado já diz tudo — aí o alt fica vazio e o leitor de tela pula.
+  e, opcional, `id`, `classe` com tamanho e animação, `decorativa` para quando
+  o texto ao lado já diz tudo — aí o alt fica vazio e o leitor de tela pula — e
+  `prioritaria` para a imagem da primeira dobra.
+
+  As dimensões saem do catálogo e vão para a marcação: sem elas o navegador não
+  reserva o espaço e a página salta quando a imagem chega.
 
   Nenhuma view escreve o caminho da imagem: o desenho é provisório e o catálogo
   é o único ponto de troca.
@@ -10,5 +14,10 @@
   <% if (locals.id) { %>id="<%= id %>"<% } %>
   src="<%= mascote(pose).arquivo %>"
   alt="<%= locals.decorativa ? '' : mascote(pose).alt %>"
+  width="<%= mascote(pose).largura %>"
+  height="<%= mascote(pose).altura %>"
+  <%# Fora da primeira dobra a imagem espera a rolagem; no herói ela é o LCP. -%>
+  loading="<%= locals.prioritaria ? 'eager' : 'lazy' %>"
+  <% if (locals.prioritaria) { %>fetchpriority="high"<% } %>
   class="<%= locals.classe || '' %>"
 />

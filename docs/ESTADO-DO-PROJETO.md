@@ -4,12 +4,20 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-11.2 — o botão virou componente. As mesmas classes estavam
+**Último commit:** T-11.3 — a landing ganhou primeira dobra. A superfície é
+escura, com casca própria: o cabeçalho e o rodapé claros do app saíram, porque
+entrar no app deve parecer acender a luz. O herói traz título, subtítulo, os dois
+caminhos (criar conta e entrar), o aviso de que o mel é de brincadeira e a Beenie
+sobre um hexágono de mel, chegando voando e flutuando. O parallax é de três
+camadas de favos em SVG, movido por `animation-timeline: scroll()` — nenhuma
+linha de JavaScript na página. 733 testes passando.
+**Próximo passo: T-11.4 — as seções de conteúdo da landing**
+
+**Commit anterior:** T-11.2 — o botão virou componente. As mesmas classes estavam
 copiadas em 24 lugares, e a cópia usada dentro de card tinha 28 px de altura,
 contra o piso de 44 px da RNF-22. Agora existe `ui/botao.ejs` com três variantes,
 dois tamanhos e dois formatos, e a chama de sequência saiu de dentro do cabeçalho
 para `ui/chama-sequencia.ejs`. 727 testes passando.
-**Próximo passo: T-11.3 — herói da landing com mascote e favos em parallax**
 
 **Commit anterior:** T-11.1 — a E11 abriu fechando os tokens da identidade. As
 fontes deixaram de cair no `system-ui`: Lilita One e Nunito estão
@@ -350,6 +358,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
 | A Colmeia inteira em navegador real (T-10.1 a T-10.6) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, como o card da meta e a lista das outras se comportam a 320 px, se a trilha serpenteante da home não empurra texto para fora da tela no celular, o botão de receber recompensa da tarefa lado a lado com o texto a 320 px, e o "Continuar" grudado no rodapé sem tapar o fim da rolagem. Entra no passe da DT-22 |
 | As fontes de verdade na tela (T-11.1) | Os quatro `.woff2` são servidos pelo Express, entram no CSS compilado e o preload está na marcação de toda página, com teste do catálogo do mascote e a suíte inteira passando. O que **não** foi visto por olho humano é o desenho com a fonte carregada: o Lilita One nos títulos, o Nunito no corpo, o piscar da troca do `system-ui` pela fonte final e o peso do texto a 320 px. Também não foi medido o LCP em rede lenta (DT-74). Vale o passe da DT-22 |
+| O herói da landing em navegador real (T-11.3) | A marcação está coberta por teste pelo HTTP: um `h1` só, os dois caminhos, as dimensões da imagem, as três camadas com `aria-hidden`, o aviso do mel fictício e a página sem `script` e sem `style`. O que **não** foi visto por olho humano é justamente o que a tarefa entrega: a Beenie chegando voando, a flutuação, as três camadas se movendo em velocidades diferentes ao rolar, o contraste do texto cera sobre breu e o herói a 320 px. Vale o passe da DT-22 |
 | O botão novo em navegador real (T-11.2) | As três variantes e a altura mínima estão cobertas por teste pelo HTTP nas telas públicas, e a suíte inteira passa com as 22 telas migradas. O que **não** foi visto por olho humano é o movimento: o levantar de 2 px no hover, o afundar no clique, o anel de foco duplo passando pelo teclado, e o botão de card a 320 px agora que ficou mais alto. Vale o passe da DT-22 |
 | O duplo clique na loja, em navegador real | A idempotência da compra é provada por teste de service, com a mesma chave enviada duas vezes. O campo escondido do formulário e o comportamento do botão sob clique duplo de verdade não foram vistos em navegador |
 | Valores de recompensa vistos na tela | O `rewardConfigsRepository` devolve XP, pólen e mel com teste contra banco real, mas nada credita ainda: a primeira tela a mostrar esses números é a de resultado, na E07 |
@@ -369,7 +378,7 @@ salto de layout, e continuar inteira utilizável com animação desligada.
 |---|---|
 | T-11.1 Tokens no Tailwind (cores, raio, sombra, tipografia) + inventário dos assets do mascote | **feita** — fontes auto-hospedadas sob os nomes `Beever Display` e `Beever Texto`, com `src/styles/fontes.css` como ponto único de troca; sombra virou token nos quatro degraus do `DESIGN.md`; a arte da Beenie ganhou catálogo, partial e teste |
 | T-11.2 Biblioteca de componentes EJS: botão, card em favo, badge de mel, barra de progresso, chama de sequência | **feita** — `ui/botao.ejs` com três variantes, dois tamanhos e dois formatos substituiu 24 cópias à mão em 22 arquivos, e a chama de sequência virou `ui/chama-sequencia.ejs`. Card em favo, badge e barra já existiam desde a E10 e passaram por conferência. O botão de card subiu de 28 px para 44 px de altura, que é o piso da RNF-22 |
-| T-11.3 Herói com mascote animado e favos em parallax | pendente |
+| T-11.3 Herói com mascote animado e favos em parallax | **feita** — a landing passou a ter casca própria escura (`partials/landing/`), o herói traz os dois caminhos e o aviso da RNF-35, e o parallax é CSS puro com `animation-timeline: scroll()`, com as camadas paradas onde não houver suporte. O catálogo do mascote ganhou dimensões, para não haver salto de layout |
 | T-11.4 Seções de conteúdo (problema, como funciona, trilha, jogos, loja/patrimônio, sequência) | pendente |
 | T-11.5 Animação de scroll: revelação por `IntersectionObserver`, parallax em `requestAnimationFrame`, smooth scroll | pendente |
 | T-11.6 Seção "para pais e escolas" + FAQ + CTA final + footer | pendente |
@@ -1130,6 +1139,8 @@ Identificadores rastreiam os documentos da E00.
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view, e `perfil.ejs` calcula o percentual da meta do mesmo jeito: é aritmética numa camada que deveria só exibir, e as outras telas de meta já leem o resumo pronto do service | auditoria da E09, ampliada pela da E10 | Subir a conta para o `inventoryService` e usar `goalsService.resumirMeta` no perfil |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
+| DT-77 | `test/integration/seguranca.test.js` falhou duas vezes com 403 numa rodada da suíte completa, e passou sozinho e na rodada seguinte. Os limitadores são desligados em teste, então a suspeita é corrida entre arquivos no banco de teste, na sessão que guarda o token de CSRF | T-11.3 | Reproduzir rodando a suíte algumas vezes seguidas e, se confirmar, isolar a sessão por arquivo. Achado fora do escopo da tarefa, não corrigido |
+| DT-76 | O parallax do herói depende de `animation-timeline: scroll()`, que o Safari ainda não tem. Lá as camadas ficam paradas — o herói fica inteiro, mas sem o movimento que é o argumento da seção | T-11.3 | Decidir na T-11.5, quando o sistema de scroll existir: o caminho em `requestAnimationFrame` pode alimentar as mesmas classes |
 | DT-75 | `modal` e `toast` continuam sem existir, e o design system os lista na seção 3. Nenhuma tela precisa deles hoje, mas a confirmação de compra e o recebimento de recompensa são candidatos naturais | T-11.2 | Criar quando a primeira tela precisar, não antes |
 | DT-74 | As fontes auto-hospedadas nunca foram medidas em rede lenta. São 86 KB em quatro `.woff2`, com preload dos dois arquivos latin, mas o LCP de 2,5 s em 4G que a RNF-03 exige não foi verificado, e nem o salto de layout na troca do `system-ui` pela fonte final | T-11.1 | Medir na T-11.7, junto do passe de performance da landing |
 | DT-73 | O componente `mascote` da seção 3 do design system promete cinco poses (neutro, comemorando, pensando, triste, apontando) e existem três artes, todas PNG acima de 80 KB. Faltam poses, e as que existem pesam demais para a landing | T-11.1 | Converter para `webp` ou redesenhar em SVG na T-11.7, e decidir com o usuário quais poses novas valem desenho |
@@ -2948,3 +2959,27 @@ Uma armadilha de refatoração ficou de lição. A primeira tentativa trocou bot
 por posição no arquivo, e nas telas do orçamento e do cofre isso pegou o botão
 de mais e menos do seletor em vez do botão de terminar. Troca em massa se faz
 casando o `id`, nunca a ordem.
+
+### Sessão de 2026-08-26, T-11.3 e a primeira dobra da landing
+
+A tarefa começou por uma decisão de casca. A landing é superfície escura por
+desenho — o `docs/04` §6 diz que entrar no app, que é claro, deve parecer acender
+a luz —, e a `home.ejs` de antes vivia dentro do cabeçalho e do rodapé claros do
+app. Os dois saíram: a landing tem `partials/landing/cabecalho.ejs`, com o logo
+branco e uma ação só, e o rodapé próprio fica para a T-11.6.
+
+O parallax é CSS puro, como o usuário pediu. Três camadas de favos, cada uma um
+SVG embutido em `background-image` com escala e opacidade próprias, movidas por
+`animation-timeline: scroll()` dentro de `@supports`. O navegador roda isso fora
+da thread principal e a página não carrega uma linha de JavaScript. Onde não há
+suporte — Safari, hoje — as camadas ficam paradas e o herói continua inteiro, que
+é a mesma regra que vale para quem pede menos movimento.
+
+O terreno para a arte nova ficou pronto. O catálogo do mascote passou a guardar
+largura e altura de cada pose, o partial as escreve na marcação, e a imagem do
+herói carrega com prioridade. Quando as ilustrações próprias chegarem em SVG ou
+WebP, muda-se o caminho e as dimensões no catálogo, e nenhuma view é tocada.
+
+Um achado fora do escopo ficou registrado como DT-77: numa das rodadas da suíte
+completa, o `seguranca.test.js` falhou duas vezes com 403, e passou sozinho e na
+rodada seguinte. Não foi corrigido nesta tarefa.

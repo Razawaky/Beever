@@ -1,11 +1,12 @@
 <%#
-  O botão do produto, em três variantes (seção 3 do design system). Vira `<a>`
+  O botão do produto, em quatro variantes (seção 3 do design system). Vira `<a>`
   quando recebe `href` e `<button>` quando recebe `tipo` — metade das telas
   navega e a outra metade envia formulário, e as duas precisam da mesma cara.
 
-  Recebe `texto` e, opcional: `variante` (primario, secundario, fantasma),
-  `tamanho` (grande ou medio), `formato` (favo ou pilula), `classe` para o lugar
-  na tela, `id`, `desabilitado` e `rotuloAcessivel`.
+  Recebe `texto` e, opcional: `variante` (primario, secundario, fantasma e
+  contorno, este último para fundo escuro), `tamanho` (grande ou medio),
+  `formato` (favo ou pilula), `classe` para o lugar na tela, `id`,
+  `desabilitado` e `rotuloAcessivel`.
 
   Sem contorno preto: profundidade é sombra difusa, e o caráter vem da cor e do
   movimento (DESIGN.md). O foco é anel âmbar de 3 px com anel de tinta por
@@ -16,6 +17,9 @@
     primario: 'bg-mel text-tinta hover:bg-nectar active:bg-ambar',
     secundario: 'border border-linha bg-white text-tinta hover:bg-cera',
     fantasma: 'text-tinta underline decoration-tinta/30 decoration-2 underline-offset-4 hover:decoration-tinta',
+    // Para a landing, que é escura: o botão secundário branco brigaria com o
+    // fundo, então a segunda ação vira contorno claro.
+    contorno: 'border border-white/30 text-cera hover:border-mel hover:text-mel',
   };
 
   // A altura mínima é regra, não estilo: 48 px no botão principal e 44 px no

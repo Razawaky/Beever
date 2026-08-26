@@ -6,9 +6,10 @@ export function mostrar(req, res) {
     return res.redirect(req.session.onboardingConcluido ? '/painel' : '/onboarding');
   }
 
+  // A landing tem cabeçalho e rodapé próprios, escuros: os do app são claros e
+  // brigariam com a superfície da página.
   renderizarPagina(res, 'home', {
     titulo: 'Beever — educação financeira para crianças e adolescentes',
-    comCabecalho: true,
-    comRodape: true,
+    classeBody: 'min-h-screen bg-breu text-cera antialiased',
   });
 }

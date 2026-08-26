@@ -1,16 +1,13 @@
-  <main class="mx-auto flex max-w-5xl flex-col items-center px-6 py-20 text-center">
-    <img src="/img/beever_logo_black.png" alt="Beever" class="h-16 w-auto" />
+<%#
+  A landing (RF-LAN-01 a RF-LAN-05). Ela não usa o cabeçalho nem o rodapé do
+  app: a superfície aqui é escura, e entrar no app, que é claro, deve parecer
+  acender a luz.
 
-    <h1 class="mt-8 max-w-2xl font-display text-4xl text-tinta sm:text-5xl">
-      Educação financeira que parece brincadeira
-    </h1>
-    <p class="mt-4 max-w-xl text-lg text-tinta-suave">
-      Beever ensina crianças e adolescentes a cuidar do próprio dinheiro através de
-      jogos, missões e recompensas — no ritmo de cada um.
-    </p>
+  Por enquanto só o herói está de pé. As outras nove seções da ordem do docs/04
+  §6.2 entram nas tarefas T-11.4 e T-11.6.
+-%>
+<%- include('../partials/landing/cabecalho') %>
 
-    <div class="mt-10 flex w-full max-w-sm flex-col gap-3 sm:flex-row">
-      <%- include('../partials/ui/botao', { texto: 'Criar conta', href: '/cadastro', classe: 'flex-1' }) %>
-      <%- include('../partials/ui/botao', { texto: 'Já tenho conta', href: '/login', variante: 'secundario', classe: 'flex-1' }) %>
-    </div>
-  </main>
+<main class="bg-breu">
+  <%- include('../partials/landing/heroi') %>
+</main>
