@@ -12,7 +12,7 @@
       quem tem 15 aprende juro, renda e patrimônio.
     </p>
 
-    <div class="mt-12 grid gap-6 md:grid-cols-3">
+    <div class="cascata mt-12 grid gap-6 md:grid-cols-3">
       <%
         const FAIXAS = [
           {
@@ -44,7 +44,7 @@
           <ul class="mt-5 space-y-3">
             <% faixa.favos.forEach((favo) => { %>
               <li class="flex items-center gap-3">
-                <span class="favo-hexagono h-8 w-8 shrink-0 bg-mel" aria-hidden="true"></span>
+                <span class="favo-acende favo-hexagono h-8 w-8 shrink-0 bg-mel" aria-hidden="true"></span>
                 <span class="text-sm font-semibold text-cera"><%= favo %></span>
               </li>
             <% }); %>

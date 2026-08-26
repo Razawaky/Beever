@@ -231,6 +231,13 @@ propósito. Com `prefers-reduced-motion`, nenhum dos dois roda.
 
 ### 6.1 Elemento-assinatura
 
+**Feita na T-11.5**, em `partials/landing/coluna-de-mel.ejs`: trilho de hexágonos
+em SVG repetido, preenchimento sólido em degradê de mel para néctar e uma máscara
+com as mesmas formas recortando o mel. O que se move é `transform: scaleY`,
+alimentado pela variável `--mel` que o `landing.js` escreve a cada quadro. Some
+abaixo de 640 px e sem script; o progresso continua dito por um `progressbar`
+escondido, para leitor de tela.
+
 **A coluna de favo que enche de mel conforme a rolagem.** Uma faixa vertical de hexágonos na borda da tela que vai sendo preenchida por mel líquido à medida que a pessoa desce — é o indicador de progresso da página, é a metáfora do produto (progresso acumulado) e é a única peça verdadeiramente memorável. Gaste sua ousadia aqui e mantenha o resto disciplinado.
 
 ### 6.2 Seções, na ordem

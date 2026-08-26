@@ -4,13 +4,21 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-11.4 — a landing ganhou as seis seções de conteúdo, na
+**Último commit:** T-11.5 — a landing ganhou o elemento-assinatura: a coluna de
+favos na borda que enche de mel conforme a rolagem, com o mesmo progresso dito em
+texto por um `progressbar` escondido. Junto entraram o acender dos favos da
+trilha um a um, a cascata dos grupos de card e um parallax leve na seção da
+economia. O JavaScript da página, com o Lenis, está em **26.762 bytes** contra o
+teto de 30.720 da §6.4, e agora existe teste que reprova quem estourar. 743
+testes passando.
+**Próximo passo: T-11.6 — para pais e escolas, perguntas, CTA final e rodapé**
+
+**Commit anterior:** T-11.4 — a landing ganhou as seis seções de conteúdo, na
 ordem da RF-LAN-03: o problema com três números **de fonte citada** (Serasa e
 Pisa 2022), os três passos, a trilha por faixa etária, os seis jogos com um mini
 quiz jogável na própria página, a economia que faz item perder e ganhar valor, e
 a sequência que só cobra nos dias escolhidos. Os números sobem contando ao entrar
 na tela. 739 testes passando.
-**Próximo passo: T-11.5 — sistema de animação de scroll e a coluna de mel**
 
 **Commit anterior:** T-11.3, segunda parte — o usuário aprovou biblioteca de
 animação e pediu foco no **Lenis**. A rolagem suave entrou, auto-hospedada em
@@ -372,6 +380,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
 | A Colmeia inteira em navegador real (T-10.1 a T-10.6) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, como o card da meta e a lista das outras se comportam a 320 px, se a trilha serpenteante da home não empurra texto para fora da tela no celular, o botão de receber recompensa da tarefa lado a lado com o texto a 320 px, e o "Continuar" grudado no rodapé sem tapar o fim da rolagem. Entra no passe da DT-22 |
 | As fontes de verdade na tela (T-11.1) | Os quatro `.woff2` são servidos pelo Express, entram no CSS compilado e o preload está na marcação de toda página, com teste do catálogo do mascote e a suíte inteira passando. O que **não** foi visto por olho humano é o desenho com a fonte carregada: o Lilita One nos títulos, o Nunito no corpo, o piscar da troca do `system-ui` pela fonte final e o peso do texto a 320 px. Também não foi medido o LCP em rede lenta (DT-74). Vale o passe da DT-22 |
+| A coluna de mel e o movimento por seção (T-11.5) | A marcação está coberta por teste pelo HTTP: a coluna é `aria-hidden`, o progresso também sai em `progressbar` com `aria-valuenow`, os seis favos nascem prontos e o JavaScript cabe no orçamento. O que **não** foi visto por olho humano é o efeito: o mel subindo dentro dos hexágonos, a máscara SVG recortando o preenchimento, os favos acendendo um a um, a cascata dos cards e se a coluna fixa não encosta no conteúdo entre 640 e 900 px. Vale o passe da DT-22 |
 | As seis seções da landing em navegador real (T-11.4) | A marcação está coberta por teste pelo HTTP: a ordem das seções, os três números com fonte, as chamadas para o registro e o mini quiz com uma alternativa certa. O que **não** foi visto por olho humano é a página rolando inteira: a revelação de seção em seção, os números contando, o mini quiz respondendo ao clique, o hexágono dos dias da semana a 320 px e o contraste do texto cera sobre as caixas de `bg-white/5`. Vale o passe da DT-22 |
 | O herói da landing em navegador real (T-11.3) | **Nada do movimento com JavaScript foi executado em navegador**: o Lenis, o parallax pelo evento de rolagem e a revelação existem só como código e marcação até alguém abrir a página. A marcação está coberta por teste pelo HTTP: um `h1` só, os dois caminhos, as dimensões da imagem, as três camadas com `aria-hidden`, o aviso do mel fictício e a página sem `script` e sem `style`. O que **não** foi visto por olho humano é justamente o que a tarefa entrega: a Beenie chegando voando, a flutuação, as três camadas se movendo em velocidades diferentes ao rolar, o contraste do texto cera sobre breu e o herói a 320 px. Vale o passe da DT-22 |
 | O botão novo em navegador real (T-11.2) | As três variantes e a altura mínima estão cobertas por teste pelo HTTP nas telas públicas, e a suíte inteira passa com as 22 telas migradas. O que **não** foi visto por olho humano é o movimento: o levantar de 2 px no hover, o afundar no clique, o anel de foco duplo passando pelo teclado, e o botão de card a 320 px agora que ficou mais alto. Vale o passe da DT-22 |
@@ -395,7 +404,7 @@ salto de layout, e continuar inteira utilizável com animação desligada.
 | T-11.2 Biblioteca de componentes EJS: botão, card em favo, badge de mel, barra de progresso, chama de sequência | **feita** — `ui/botao.ejs` com três variantes, dois tamanhos e dois formatos substituiu 24 cópias à mão em 22 arquivos, e a chama de sequência virou `ui/chama-sequencia.ejs`. Card em favo, badge e barra já existiam desde a E10 e passaram por conferência. O botão de card subiu de 28 px para 44 px de altura, que é o piso da RNF-22 |
 | T-11.3 Herói com mascote animado e favos em parallax | **feita** — a landing passou a ter casca própria escura (`partials/landing/`), o herói traz os dois caminhos e o aviso da RNF-35, e o movimento tem dois caminhos: com JavaScript o Lenis conduz rolagem suave, parallax e revelação; sem ele, as camadas andam por `animation-timeline: scroll()`. O catálogo do mascote ganhou dimensões, para não haver salto de layout |
 | T-11.4 Seções de conteúdo (problema, como funciona, trilha, jogos, loja/patrimônio, sequência) | **feita** — seis partials em `partials/landing/`, cada um com âncora própria, entrando na revelação que já existia. Os três números do problema têm fonte escrita na página, o conteúdo da trilha e dos jogos é estático (a landing não consulta banco) e o mini quiz responde sem servidor |
-| T-11.5 Animação de scroll: revelação por `IntersectionObserver`, parallax em `requestAnimationFrame`, smooth scroll | pendente |
+| T-11.5 Animação de scroll: revelação por `IntersectionObserver`, parallax, smooth scroll | **feita** — a revelação, o parallax e a rolagem suave nasceram na T-11.3 com o Lenis; esta tarefa fechou o sistema com o elemento-assinatura da §6.1 (a coluna de mel), o acender dos favos da trilha, a cascata dos grupos e o parallax de textura na economia. O orçamento de JavaScript da §6.4 virou teste |
 | T-11.6 Seção "para pais e escolas" + FAQ + CTA final + footer | pendente |
 | T-11.7 Performance e acessibilidade: `prefers-reduced-motion`, contraste, foco, LCP | pendente |
 
@@ -3052,3 +3061,26 @@ contadores, que ficam desligados nesse caso.
 
 Fica registrado como DT-78 que o texto das seis seções é rascunho de dev: o
 argumento está de pé, mas a voz de produto é decisão do usuário.
+
+### Sessão de 2026-08-26, T-11.5 e a coluna de mel
+
+Metade desta tarefa já estava paga: revelação, parallax e rolagem suave entraram
+na T-11.3, quando o Lenis foi aprovado. O que faltava era a peça que o `docs/04`
+§6.1 chama de elemento-assinatura, e é a única onde o documento manda gastar
+ousadia — a coluna de favos que enche de mel conforme a pessoa desce.
+
+O desenho é uma coluna só, com três camadas de responsabilidade. O trilho desenha
+os hexágonos vazios com um SVG repetido; o preenchimento é uma faixa sólida em
+degradê de mel para néctar; e uma máscara com as mesmas formas recorta o
+preenchimento, para o mel só aparecer dentro dos favos. O que se move é
+`transform: scaleY`, alimentado por uma variável CSS que o `landing.js` escreve a
+cada quadro — nenhuma altura é recalculada, que é a regra da §6.3.
+
+O progresso é dito duas vezes, e isso é decisão de acessibilidade, não redundância:
+a coluna serve quem vê, e um `progressbar` escondido com `aria-valuenow` serve
+quem ouve. A coluna some abaixo de 640 px e some sem script, porque barra de
+progresso parada em zero mente sobre o estado da página.
+
+O orçamento de JavaScript da §6.4 virou teste. Hoje são 26.762 bytes com o Lenis
+incluído, contra o teto de 30.720, e a suíte reprova quem passar disso. É a régua
+que impede a landing de virar aplicação.

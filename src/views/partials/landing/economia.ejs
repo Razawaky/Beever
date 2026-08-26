@@ -3,8 +3,12 @@
   criança compra passa a se comportar como no mundo real: um bem perde valor,
   outro ganha, outro dá renda e cobra manutenção.
 -%>
-<section id="economia" class="border-t border-white/10 bg-breu py-16 sm:py-24">
-  <div class="mx-auto max-w-5xl px-6">
+<section id="economia" class="relative isolate overflow-hidden border-t border-white/10 bg-breu py-16 sm:py-24">
+  <%# Parallax leve, só de textura: a seção mais longa da página ganha profundidade
+      sem tirar atenção do texto. -%>
+  <div class="camada-de-favos camada-fundo favos-de-fundo" data-parallax="0.05" aria-hidden="true"></div>
+
+  <div class="relative mx-auto max-w-5xl px-6">
     <h2 class="revela font-display text-3xl text-cera sm:text-4xl">
       Aqui, comprar não é o fim do jogo
     </h2>
@@ -14,7 +18,7 @@
       aprendida gastando dinheiro de brincadeira.
     </p>
 
-    <div class="mt-12 grid gap-6 md:grid-cols-3">
+    <div class="cascata mt-12 grid gap-6 md:grid-cols-3">
       <%
         const COMPORTAMENTOS = [
           {

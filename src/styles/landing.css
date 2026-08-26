@@ -117,6 +117,76 @@
   transform: translate3d(0, 0, 0);
 }
 
+/* A coluna de mel: o trilho desenha os hexágonos vazios, e o preenchimento é uma
+   faixa sólida que cresce de baixo para cima, recortada pela máscara das mesmas
+   formas. A altura vem de `--mel`, que o `landing.js` escreve a cada quadro. */
+.coluna-de-mel-trilho {
+  position: relative;
+  width: 28px;
+  height: 60vh;
+  overflow: hidden;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='none' stroke='%23FFC200' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='none' stroke='%23FFC200' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: repeat-y;
+  background-size: 28px 48px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='%23000'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='%23000'/%3E%3C/svg%3E");
+  mask-repeat: repeat-y;
+  mask-size: 28px 48px;
+}
+
+.coluna-de-mel-preenchimento {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--color-mel), var(--color-nectar));
+  transform-origin: bottom center;
+  transform: scaleY(var(--mel, 0));
+  will-change: transform;
+}
+
+/* A coluna só existe quando há movimento: sem script ela nunca encheria, e barra
+   parada em zero mente sobre o estado da página. Abaixo de 640 px ela também
+   não entra, porque roubaria largura de leitura. */
+.coluna-de-mel {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .landing-com-movimento .coluna-de-mel {
+    display: block;
+  }
+}
+
+/* Cascata: os filhos entram um depois do outro, sem que ninguém escreva atraso
+   na marcação. Seis é o maior grupo que a landing tem hoje. */
+.landing-com-movimento .cascata > *:nth-child(1) {
+  transition-delay: 0ms;
+}
+.landing-com-movimento .cascata > *:nth-child(2) {
+  transition-delay: 90ms;
+}
+.landing-com-movimento .cascata > *:nth-child(3) {
+  transition-delay: 180ms;
+}
+.landing-com-movimento .cascata > *:nth-child(4) {
+  transition-delay: 270ms;
+}
+.landing-com-movimento .cascata > *:nth-child(5) {
+  transition-delay: 360ms;
+}
+.landing-com-movimento .cascata > *:nth-child(6) {
+  transition-delay: 450ms;
+}
+
+/* O favo da trilha acende quando a seção entra: começa apagado, em cinza, e
+   recebe o mel. A cor é do próprio elemento, então `opacity` dá conta. */
+.landing-com-movimento .favo-acende {
+  opacity: 0.25;
+  transition: opacity 500ms ease-out;
+}
+
+.landing-com-movimento .favo-acende.aceso {
+  opacity: 1;
+}
+
 /* A Beenie entra voando uma vez e depois só flutua (a flutuação em loop é a
    `.animate-float` do trilha.css, que já é a idle oficial). */
 @keyframes beenie-chega {

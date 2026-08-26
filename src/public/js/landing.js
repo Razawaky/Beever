@@ -13,6 +13,9 @@ const querMenosMovimento = window.matchMedia('(prefers-reduced-motion: reduce)')
 const camadas = Array.from(document.querySelectorAll('[data-parallax]'));
 const aparecem = Array.from(document.querySelectorAll('.revela'));
 const contadores = Array.from(document.querySelectorAll('[data-contador]'));
+const favosQueAcendem = Array.from(document.querySelectorAll('.favo-acende'));
+const colunaDeMel = document.querySelector('.coluna-de-mel-preenchimento');
+const barraDeProgresso = document.getElementById('progresso-da-landing');
 
 /**
  * Revelação por `IntersectionObserver`: um observer para todos os alvos, e cada
@@ -46,6 +49,46 @@ function moverCamadas(posicao) {
     const velocidade = Number(camada.dataset.parallax) || 0;
     camada.style.transform = `translate3d(0, ${(posicao * velocidade).toFixed(2)}px, 0)`;
   }
+}
+
+/**
+ * A coluna de mel e a barra escondida dizem a mesma coisa: quanto da página já
+ * passou. Uma é para quem vê, a outra para quem ouve.
+ *
+ * O preenchimento cresce por `--mel`, que o CSS usa num `scaleY` — nenhuma
+ * altura é recalculada, então o quadro não cai.
+ */
+function marcarProgresso(posicao) {
+  const rolagemTotal = document.documentElement.scrollHeight - window.innerHeight;
+  const andamento = rolagemTotal > 0 ? Math.min(posicao / rolagemTotal, 1) : 0;
+
+  if (colunaDeMel) colunaDeMel.style.setProperty('--mel', andamento.toFixed(3));
+  if (barraDeProgresso) barraDeProgresso.setAttribute('aria-valuenow', Math.round(andamento * 100));
+}
+
+/**
+ * Os favos da trilha acendem um a um quando a seção entra, e não todos juntos:
+ * é a trilha se construindo, que é exatamente o que o produto faz.
+ */
+function ligarFavosDaTrilha() {
+  const observador = new IntersectionObserver(
+    (entradas) => {
+      for (const entrada of entradas) {
+        if (!entrada.isIntersecting) continue;
+
+        const favos = Array.from(entrada.target.querySelectorAll('.favo-acende'));
+        favos.forEach((favo, posicao) => {
+          setTimeout(() => favo.classList.add('aceso'), posicao * 160);
+        });
+
+        observador.unobserve(entrada.target);
+      }
+    },
+    { threshold: 0.35 },
+  );
+
+  const secoes = new Set(favosQueAcendem.map((favo) => favo.closest('section')).filter(Boolean));
+  secoes.forEach((secao) => observador.observe(secao));
 }
 
 /**
@@ -133,7 +176,14 @@ function ligarMovimento() {
     autoRaf: true,
   });
 
-  lenis.on('scroll', ({ scroll }) => moverCamadas(scroll));
+  lenis.on('scroll', ({ scroll }) => {
+    moverCamadas(scroll);
+    marcarProgresso(scroll);
+  });
+
+  // A primeira marcação não espera a rolagem: quem chega no meio da página, por
+  // uma âncora, já vê a coluna no ponto certo.
+  marcarProgresso(window.scrollY);
 
   // Âncora com rolagem suave, e sem perder o teclado: o destino recebe foco
   // depois da viagem, senão quem navega por Tab volta para o começo da página.
@@ -164,5 +214,6 @@ if (!querMenosMovimento) {
   document.documentElement.classList.add('landing-com-movimento');
   ligarRevelacao();
   ligarContadores();
+  ligarFavosDaTrilha();
   ligarMovimento();
 }
