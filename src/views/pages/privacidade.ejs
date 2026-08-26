@@ -1,0 +1,150 @@
+<%#
+  Política de privacidade. Página pública, em superfície clara: quem lê é
+  responsável ou escola, e o texto precisa parecer documento, não vitrine.
+
+  Cada afirmação aqui corresponde ao que o sistema faz hoje — a lista de dados
+  vem das tabelas `users`, `profiles` e `guardian_consents`. Se o que é coletado
+  mudar, esta página muda na mesma tarefa.
+-%>
+<main class="mx-auto max-w-3xl px-6 py-16">
+  <p class="text-sm font-semibold uppercase tracking-widest text-tinta-suave">Beever</p>
+  <h1 class="mt-3 font-display text-3xl sm:text-4xl">Política de privacidade</h1>
+  <p class="mt-3 text-sm text-tinta-suave">Última atualização: 26 de agosto de 2026.</p>
+
+  <div class="mt-10 space-y-10">
+    <section>
+      <h2 class="font-display text-2xl">Quem somos</h2>
+      <p class="mt-3 text-tinta-suave">
+        O Beever é uma plataforma de educação financeira para crianças e adolescentes de
+        6 a 15 anos, desenvolvida como projeto de conclusão de curso. Esta política
+        explica quais dados são coletados, por quê, por quanto tempo ficam guardados e
+        como pedir para apagá-los.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Quais dados coletamos</h2>
+      <p class="mt-3 text-tinta-suave">
+        A coleta é mínima, como pede o Art. 14 da Lei Geral de Proteção de Dados
+        (Lei 13.709/2018) para dados de crianças e adolescentes.
+      </p>
+
+      <dl class="mt-5 space-y-4">
+        <%
+          const DADOS = [
+            {
+              dado: 'Apelido',
+              porque: 'É o nome que aparece na tela. Não pedimos nome completo.',
+            },
+            {
+              dado: 'Data de nascimento',
+              porque: 'Define a faixa etária, que decide o conteúdo e quais regras da economia ficam ligadas.',
+            },
+            {
+              dado: 'E-mail e senha',
+              porque: 'Servem para entrar na conta. A senha é guardada como hash com bcrypt, nunca em texto legível.',
+            },
+            {
+              dado: 'E-mail do responsável',
+              porque: 'Registra quem autorizou o cadastro do menor, com data e hora.',
+            },
+            {
+              dado: 'Preferências de uso',
+              porque: 'Dias da semana escolhidos, tempo por sessão, som e movimento reduzido. São o que monta as metas.',
+            },
+            {
+              dado: 'Progresso no jogo',
+              porque: 'Atividades concluídas, XP, mel, compras e sequência. É o próprio jogo funcionando.',
+            },
+          ];
+        %>
+        <% DADOS.forEach((item) => { %>
+          <div class="rounded-favo border border-linha bg-white p-5">
+            <dt class="font-semibold"><%= item.dado %></dt>
+            <dd class="mt-1 text-tinta-suave"><%= item.porque %></dd>
+          </div>
+        <% }); %>
+      </dl>
+
+      <p class="mt-5 text-tinta-suave">
+        <strong>Não coletamos</strong> nome completo, telefone, endereço, foto,
+        localização, documento nem qualquer dado sensível. Não usamos cookie de
+        publicidade nem ferramenta de rastreamento de terceiro.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Consentimento do responsável</h2>
+      <p class="mt-3 text-tinta-suave">
+        O cadastro de menor de idade só é concluído com o e-mail do responsável e a
+        confirmação de que ele autoriza o uso. Esse consentimento fica registrado com
+        data e hora, e o responsável pode retirá-lo a qualquer momento pedindo a
+        exclusão da conta.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Como usamos os dados</h2>
+      <p class="mt-3 text-tinta-suave">
+        Só para fazer o produto funcionar: entrar na conta, mostrar o conteúdo da faixa
+        etária certa, montar metas com os dias escolhidos e guardar o progresso. Não
+        vendemos, não alugamos e não compartilhamos dado nenhum com terceiro para fins
+        comerciais.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Segurança</h2>
+      <p class="mt-3 text-tinta-suave">
+        A senha é guardada como hash com bcrypt. O acesso usa sessão com cookie
+        `httpOnly`, e o tráfego é servido por conexão criptografada. Consultas ao banco
+        usam sempre parâmetros preparados, e toda mudança de saldo, compra ou ação
+        administrativa fica registrada para conferência posterior.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Por quanto tempo guardamos</h2>
+      <p class="mt-3 text-tinta-suave">
+        Os dados ficam enquanto a conta existir. Pedida a exclusão, a conta e o
+        progresso são apagados; os registros de auditoria de valores podem ser mantidos
+        sem identificação pessoal, porque servem para conferir a integridade do sistema.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Seus direitos</h2>
+      <p class="mt-3 text-tinta-suave">
+        O Art. 18 da LGPD garante ao titular — e, no caso de menor, ao responsável — o
+        direito de confirmar o tratamento, acessar os dados, corrigir dado incompleto ou
+        errado, pedir anonimização ou exclusão, e retirar o consentimento. Para exercer
+        qualquer um deles, escreva para o e-mail abaixo.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Dinheiro e publicidade</h2>
+      <p class="mt-3 text-tinta-suave">
+        O mel é moeda fictícia e existe só dentro do jogo. Não há compra, assinatura,
+        item pago, caixa de recompensa paga nem qualquer transação com dinheiro real.
+        Não exibimos publicidade.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-display text-2xl">Contato</h2>
+      <p class="mt-3 text-tinta-suave">
+        Dúvidas sobre esta política ou pedidos relacionados aos dados:
+        <a
+          href="mailto:<%= emailDeContato %>"
+          class="font-semibold text-tinta underline decoration-ambar decoration-2 underline-offset-4 hover:decoration-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+          ><%= emailDeContato %></a
+        >.
+      </p>
+    </section>
+  </div>
+
+  <div class="mt-12 border-t border-linha pt-6">
+    <%- include('../partials/ui/botao', { texto: 'Voltar ao início', href: '/', variante: 'secundario' }) %>
+  </div>
+</main>

@@ -11,6 +11,7 @@ import * as shopService from '../services/shopService.js';
 import * as streakService from '../services/streakService.js';
 import * as tasksService from '../services/tasksService.js';
 import * as vaultService from '../services/vaultService.js';
+import { env } from '../config/env.js';
 import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
 import { querJson } from '../utils/resposta.js';
@@ -31,6 +32,14 @@ const FUNDO_CERA = 'min-h-screen bg-cera text-tinta antialiased';
 function redirecionarLogado(req, res) {
   res.redirect(req.session.onboardingConcluido ? '/painel' : '/onboarding');
 }
+
+/** Política de privacidade: pública, e o e-mail de contato vem do ambiente. */
+export const privacidade = (req, res) =>
+  renderizarPagina(res, 'privacidade', {
+    titulo: 'Política de privacidade — Beever',
+    classeBody: FUNDO_CERA,
+    emailDeContato: env.emailDeContato,
+  });
 
 export const login = (req, res) => {
   if (req.session?.usuarioId) return redirecionarLogado(req, res);

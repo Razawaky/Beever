@@ -36,6 +36,7 @@ router.get('/health', healthController.mostrar);
  * pede JSON, o `somentePagina` passa a vez para o router de domínio. Assim o
  * mesmo caminho serve navegador e API sem que um esconda o outro.
  */
+router.get('/privacidade', paginaController.privacidade);
 router.get('/login', paginaController.login);
 router.get('/cadastro', paginaController.cadastro);
 router.get('/onboarding', requireOnboardingPendente, paginaController.onboarding);

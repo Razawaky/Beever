@@ -46,8 +46,19 @@ export const env = {
   log: {
     nivel: process.env.LOG_LEVEL ?? (ambiente === 'production' ? 'info' : 'debug'),
   },
+
+  // Endereço que a política de privacidade publica para pedidos de acesso e
+  // exclusão de dados (Art. 18 da LGPD). Vem do ambiente porque muda de quem
+  // hospeda, e porque publicar e-mail errado numa política é pior que não ter.
+  emailDeContato: process.env.CONTACT_EMAIL ?? 'contato@beever.local',
 };
 
 if (env.producao && env.sessao.segredo.startsWith('troque-este-segredo')) {
   throw new Error('SESSION_SECRET ainda está com o valor de exemplo. Gere um segredo real para produção.');
+}
+
+if (env.producao && env.emailDeContato.endsWith('@beever.local')) {
+  throw new Error(
+    'CONTACT_EMAIL ainda está com o valor de exemplo, e ele é publicado na política de privacidade.'
+  );
 }

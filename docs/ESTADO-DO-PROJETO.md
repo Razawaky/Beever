@@ -4,14 +4,22 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-11.5 — a landing ganhou o elemento-assinatura: a coluna de
+**Último commit:** T-11.6 — a landing fechou as dez seções da RF-LAN-03: a seção
+para responsáveis e escolas em superfície clara, as quatro perguntas em `details`
+nativo, a chamada final e o rodapé com os créditos. Junto veio uma página nova,
+**`/privacidade`**, com a política escrita a partir do que o sistema realmente
+coleta, e o e-mail de contato saiu para variável de ambiente — em produção o app
+recusa subir com o endereço de exemplo. **A E11 tem só a T-11.7 pendente.** 750
+testes passando.
+**Próximo passo: T-11.7 — performance e acessibilidade da landing**
+
+**Commit anterior:** T-11.5 — a landing ganhou o elemento-assinatura: a coluna de
 favos na borda que enche de mel conforme a rolagem, com o mesmo progresso dito em
 texto por um `progressbar` escondido. Junto entraram o acender dos favos da
 trilha um a um, a cascata dos grupos de card e um parallax leve na seção da
 economia. O JavaScript da página, com o Lenis, está em **26.762 bytes** contra o
 teto de 30.720 da §6.4, e agora existe teste que reprova quem estourar. 743
 testes passando.
-**Próximo passo: T-11.6 — para pais e escolas, perguntas, CTA final e rodapé**
 
 **Commit anterior:** T-11.4 — a landing ganhou as seis seções de conteúdo, na
 ordem da RF-LAN-03: o problema com três números **de fonte citada** (Serasa e
@@ -380,6 +388,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Os eventos do ciclo econômico (T-09.5) | Os seis ciclos de quem volta depois de seis semanas, a inadimplência, a venda forçada por 50% e o rendimento do cofre estão cobertos por teste contra banco real, e o resumo de cada ciclo é gravado em JSON. O que não existe é tela: nada disso aparece para a criança até a T-09.8 escrever o aviso na Colmeia, então o jogador hoje só vê o saldo mudar sem explicação |
 | A Colmeia inteira em navegador real (T-10.1 a T-10.6) | O caminho foi percorrido com o servidor de pé e a conta demo: `/painel` responde os nove blocos em JSON e desenha a página em 153 ms, sem `style` na marcação, e as três telas da economia continuam em 200 com os componentes novos. O que **não** foi visto por olho humano é o topo grudado rolando de verdade, a quebra dos quatro blocos do cabeçalho a 320 px e o foco de teclado passando pela sequência, como o card da meta e a lista das outras se comportam a 320 px, se a trilha serpenteante da home não empurra texto para fora da tela no celular, o botão de receber recompensa da tarefa lado a lado com o texto a 320 px, e o "Continuar" grudado no rodapé sem tapar o fim da rolagem. Entra no passe da DT-22 |
 | As fontes de verdade na tela (T-11.1) | Os quatro `.woff2` são servidos pelo Express, entram no CSS compilado e o preload está na marcação de toda página, com teste do catálogo do mascote e a suíte inteira passando. O que **não** foi visto por olho humano é o desenho com a fonte carregada: o Lilita One nos títulos, o Nunito no corpo, o piscar da troca do `system-ui` pela fonte final e o peso do texto a 320 px. Também não foi medido o LCP em rede lenta (DT-74). Vale o passe da DT-22 |
+| A landing fechada e a política em navegador real (T-11.6) | A marcação está coberta por teste pelo HTTP: as nove âncoras na ordem, o FAQ em `details`, o rodapé com créditos e aviso do mel, e a política listando os dados que o cadastro pede. O que **não** foi visto por olho humano é a virada de superfície escura para clara na seção de responsáveis, o acordeão abrindo, o menu de âncoras a partir de 1024 px e a política num celular de 320 px. Vale o passe da DT-22 |
 | A coluna de mel e o movimento por seção (T-11.5) | A marcação está coberta por teste pelo HTTP: a coluna é `aria-hidden`, o progresso também sai em `progressbar` com `aria-valuenow`, os seis favos nascem prontos e o JavaScript cabe no orçamento. O que **não** foi visto por olho humano é o efeito: o mel subindo dentro dos hexágonos, a máscara SVG recortando o preenchimento, os favos acendendo um a um, a cascata dos cards e se a coluna fixa não encosta no conteúdo entre 640 e 900 px. Vale o passe da DT-22 |
 | As seis seções da landing em navegador real (T-11.4) | A marcação está coberta por teste pelo HTTP: a ordem das seções, os três números com fonte, as chamadas para o registro e o mini quiz com uma alternativa certa. O que **não** foi visto por olho humano é a página rolando inteira: a revelação de seção em seção, os números contando, o mini quiz respondendo ao clique, o hexágono dos dias da semana a 320 px e o contraste do texto cera sobre as caixas de `bg-white/5`. Vale o passe da DT-22 |
 | O herói da landing em navegador real (T-11.3) | **Nada do movimento com JavaScript foi executado em navegador**: o Lenis, o parallax pelo evento de rolagem e a revelação existem só como código e marcação até alguém abrir a página. A marcação está coberta por teste pelo HTTP: um `h1` só, os dois caminhos, as dimensões da imagem, as três camadas com `aria-hidden`, o aviso do mel fictício e a página sem `script` e sem `style`. O que **não** foi visto por olho humano é justamente o que a tarefa entrega: a Beenie chegando voando, a flutuação, as três camadas se movendo em velocidades diferentes ao rolar, o contraste do texto cera sobre breu e o herói a 320 px. Vale o passe da DT-22 |
@@ -405,7 +414,7 @@ salto de layout, e continuar inteira utilizável com animação desligada.
 | T-11.3 Herói com mascote animado e favos em parallax | **feita** — a landing passou a ter casca própria escura (`partials/landing/`), o herói traz os dois caminhos e o aviso da RNF-35, e o movimento tem dois caminhos: com JavaScript o Lenis conduz rolagem suave, parallax e revelação; sem ele, as camadas andam por `animation-timeline: scroll()`. O catálogo do mascote ganhou dimensões, para não haver salto de layout |
 | T-11.4 Seções de conteúdo (problema, como funciona, trilha, jogos, loja/patrimônio, sequência) | **feita** — seis partials em `partials/landing/`, cada um com âncora própria, entrando na revelação que já existia. Os três números do problema têm fonte escrita na página, o conteúdo da trilha e dos jogos é estático (a landing não consulta banco) e o mini quiz responde sem servidor |
 | T-11.5 Animação de scroll: revelação por `IntersectionObserver`, parallax, smooth scroll | **feita** — a revelação, o parallax e a rolagem suave nasceram na T-11.3 com o Lenis; esta tarefa fechou o sistema com o elemento-assinatura da §6.1 (a coluna de mel), o acender dos favos da trilha, a cascata dos grupos e o parallax de textura na economia. O orçamento de JavaScript da §6.4 virou teste |
-| T-11.6 Seção "para pais e escolas" + FAQ + CTA final + footer | pendente |
+| T-11.6 Seção "para pais e escolas" + FAQ + CTA final + footer | **feita** — quatro partials novos fecham a ordem da RF-LAN-03, o FAQ é `details` nativo (zero byte de JavaScript) e o rodapé leva créditos, âncoras e o aviso da RNF-35. A seção de responsáveis só afirma o que o código sustenta e aponta para `/privacidade`, página nova com a política de dados |
 | T-11.7 Performance e acessibilidade: `prefers-reduced-motion`, contraste, foco, LCP | pendente |
 
 ---
@@ -1163,6 +1172,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view, e `perfil.ejs` calcula o percentual da meta do mesmo jeito: é aritmética numa camada que deveria só exibir, e as outras telas de meta já leem o resumo pronto do service | auditoria da E09, ampliada pela da E10 | Subir a conta para o `inventoryService` e usar `goalsService.resumirMeta` no perfil |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
+| DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
 | DT-77 | `test/integration/seguranca.test.js` falhou duas vezes com 403 numa rodada da suíte completa, e passou sozinho e na rodada seguinte. Os limitadores são desligados em teste, então a suspeita é corrida entre arquivos no banco de teste, na sessão que guarda o token de CSRF | T-11.3 | Reproduzir rodando a suíte algumas vezes seguidas e, se confirmar, isolar a sessão por arquivo. Achado fora do escopo da tarefa, não corrigido |
 | ~~DT-76~~ | ~~O parallax do herói depende de `animation-timeline: scroll()`, que o Safari ainda não tem~~ | T-11.3 | **Resolvida na mesma tarefa**: com o Lenis aprovado, o caminho principal virou JavaScript e funciona em qualquer navegador; a linha do tempo de rolagem passou a ser o plano B de quem está sem script |
@@ -3084,3 +3094,31 @@ progresso parada em zero mente sobre o estado da página.
 O orçamento de JavaScript da §6.4 virou teste. Hoje são 26.762 bytes com o Lenis
 incluído, contra o teto de 30.720, e a suíte reprova quem passar disso. É a régua
 que impede a landing de virar aplicação.
+
+### Sessão de 2026-08-26, T-11.6 e o fim da landing
+
+O usuário pediu as duas opções da decisão sobre a seção de responsáveis: as
+afirmações verificáveis **e** o texto jurídico. As duas foram entregues, e em
+lugares diferentes de propósito. Na landing, a seção diz só o que o código
+sustenta — quais dados são pedidos, o consentimento registrado com data, a senha
+em hash, nenhum anúncio e nenhum dinheiro real. O documento inteiro virou página
+própria em `/privacidade`.
+
+A política foi escrita a partir do schema, e não de modelo pronto: a lista de
+dados é a das tabelas `users`, `profiles` e `guardian_consents`, o que **não** é
+coletado está escrito com todas as letras, e o Art. 18 aparece com o caminho para
+exercer cada direito. O e-mail de contato saiu do template e virou
+`CONTACT_EMAIL`: em produção o `env.js` recusa subir com o endereço de exemplo,
+porque publicar e-mail que ninguém lê numa política é pior que não ter política.
+Fica registrado como DT-79 que o texto nunca passou por revisão jurídica e que a
+exclusão de conta que ele promete ainda não tem tela.
+
+O FAQ é `details`/`summary` nativo. Teclado, leitor de tela e funcionamento sem
+JavaScript vêm do navegador de graça, e o orçamento de 30 KB continuou intacto:
+26.762 bytes, os mesmos da tarefa anterior.
+
+Dois testes antigos precisaram mudar, e os dois pelo motivo certo. O do layout
+base afirmava que a landing não tinha rodapé — agora ela tem o seu. E o de erro em
+produção passou a declarar `CONTACT_EMAIL`, pela mesma razão que já declarava
+`SESSION_SECRET`: ele sobe o ambiente como produção, e produção recusa valor de
+exemplo.

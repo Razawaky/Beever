@@ -87,7 +87,17 @@ describe('landing — herói', opcoes, () => {
   });
 
   it('traz as seções de conteúdo na ordem da RF-LAN-03', () => {
-    const ORDEM = ['por-que', 'como-funciona', 'trilha', 'jogos', 'economia', 'sequencia'];
+    const ORDEM = [
+      'por-que',
+      'como-funciona',
+      'trilha',
+      'jogos',
+      'economia',
+      'sequencia',
+      'pais-e-escolas',
+      'perguntas',
+      'comecar',
+    ];
     const posicoes = ORDEM.map((ancora) => html.indexOf(`id="${ancora}"`));
 
     posicoes.forEach((posicao, indice) => {
@@ -120,6 +130,28 @@ describe('landing — herói', opcoes, () => {
     assert.equal((secao.match(/data-certa="true"/g) ?? []).length, 1, 'uma alternativa certa só');
     // Nada de formulário: a pergunta é demonstração, não partida.
     assert.doesNotMatch(secao, /<form/);
+  });
+
+  it('as perguntas abrem sem JavaScript', () => {
+    const secao = html.slice(html.indexOf('id="perguntas"'), html.indexOf('id="comecar"'));
+
+    // `details` nativo: teclado e leitor de tela vêm do navegador, e o acordeão
+    // não gasta nada do orçamento de 30 KB.
+    assert.equal((secao.match(/<details/g) ?? []).length, 4);
+    assert.equal((secao.match(/<summary/g) ?? []).length, 4);
+  });
+
+  it('a seção de responsáveis leva à política de privacidade, e o rodapé também', () => {
+    assert.match(html, /id="pais-e-escolas"/);
+    assert.ok((html.match(/href="\/privacidade"/g) ?? []).length >= 2);
+  });
+
+  it('o rodapé traz os créditos e repete o aviso do mel fictício', () => {
+    const rodape = html.slice(html.lastIndexOf('<footer'));
+
+    assert.match(rodape, /projeto de conclusão de curso/i);
+    assert.match(rodape, /moeda fictícia/i);
+    assert.match(rodape, /href="#perguntas"/);
   });
 
   it('as camadas dizem a própria velocidade de parallax', () => {

@@ -2,6 +2,9 @@
 // de qualquer import do projeto — `env.js` lê `process.env` no carregamento.
 process.env.NODE_ENV = 'production';
 process.env.SESSION_SECRET ??= 'segredo-de-teste-que-nao-e-o-de-exemplo';
+// Mesma razão: em produção o `env.js` recusa o e-mail de exemplo, porque ele é
+// publicado na política de privacidade.
+process.env.CONTACT_EMAIL ??= 'privacidade@teste.beever';
 
 import assert from 'node:assert/strict';
 import path from 'node:path';

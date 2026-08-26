@@ -89,12 +89,13 @@ describe('aplicação', () => {
     }
 
     // A landing deixou de usar o cabeçalho e o rodapé do app na T-11.3: a
-    // superfície dela é escura, e a casca clara do app brigava com o herói. O
-    // rodapé próprio da landing é a T-11.6.
+    // superfície dela é escura, e a casca clara do app brigava com o herói. Na
+    // T-11.6 ela ganhou rodapé próprio, com os créditos e o aviso do mel.
     it('a landing tem casca própria, e a tela de entrar não tem casca nenhuma', async () => {
       const home = await request(app).get('/').set('Accept', 'text/html').expect(200);
       assert.match(home.text, /beever_logo_white\.png/, 'o cabeçalho da landing usa o logo claro');
-      assert.ok(!home.text.includes('projeto de conclusão de curso'), 'sem o rodapé do app');
+      assert.match(home.text, /projeto de conclusão de curso/, 'o rodapé da landing traz os créditos');
+      assert.ok(!home.text.includes('bg-cera">\n    <div class="mx-auto flex max-w-5xl'), 'sem o cabeçalho do app');
 
       const login = await request(app).get('/login').set('Accept', 'text/html').expect(200);
       assert.ok(!login.text.includes('projeto de conclusão de curso'), 'tela de entrada é limpa, sem rodapé');
