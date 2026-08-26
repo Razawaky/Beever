@@ -2,7 +2,16 @@
   <div class="overflow-hidden rounded-favo bg-white shadow-xl">
     <div class="flex items-center gap-4 bg-mel px-8 py-8">
       <% if (perfil.avatar_imagem) { %>
-        <img src="<%= perfil.avatar_imagem %>" alt="" class="h-16 w-16 object-contain" />
+        <%# As medidas são as do espaço reservado, e não as do arquivo: o avatar
+            vem do banco e cada um tem um tamanho. O que importa aqui é o
+            navegador não deixar a página pular enquanto a imagem chega. -%>
+        <img
+          src="<%= perfil.avatar_imagem %>"
+          alt=""
+          width="64"
+          height="64"
+          class="h-16 w-16 object-contain"
+        />
       <% } else { %>
         <div class="flex h-16 w-16 items-center justify-center rounded-pilula bg-white/40 text-2xl font-bold">
           <%= perfil.apelido.charAt(0).toUpperCase() %>

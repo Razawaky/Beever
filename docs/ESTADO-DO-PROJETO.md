@@ -4,13 +4,20 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-11.8 — o painel de acessibilidade entrou em **toda tela**, a
+**Último commit:** auditoria da E11, com as nove lacunas tratadas. O laudo está em
+`docs/11-AUDITORIA-DA-ETAPA.md`: **pode avançar**, com uma ressalva que não é de
+código — o aceite da etapa é um número de performance, e ele exige navegador. Das
+nove lacunas, **oito foram corrigidas na mesma sessão**, incluindo a bloqueante:
+religar o movimento pelo painel escondia as seções que ainda não tinham aparecido,
+e elas não voltavam sem recarregar. 765 testes passando.
+**Próximo passo: medir a landing em navegador (DT-74) e abrir a E12 — área administrativa**
+
+**Commit anterior:** T-11.8 — o painel de acessibilidade entrou em **toda tela**, a
 pedido do usuário: quatro ajustes independentes (reduzir movimento, aumentar
 contraste, texto maior, menos distração), mais "Ativar tudo" e "Modo normal". O
 padrão é o modo normal, e ele é intocado — sem escolha ligada, nenhuma classe
 entra no `<html>` e a página é exatamente a desenhada. A escolha fica guardada no
 navegador. 762 testes passando.
-**Próximo passo: auditar a E11 e abrir a E12 — área administrativa**
 
 **Commit anterior:** T-11.7 — a E11 fechou. A arte virou WebP (a Beenie do herói
 caiu de 119 KB para 33 KB), o contraste da paleta passou a ser **calculado por
@@ -1143,7 +1150,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
-| E11 Landing | em andamento | T-11.1 feita: fontes auto-hospedadas com nome próprio de família, tokens de sombra e o catálogo do mascote. Faltam T-11.2 a T-11.7, que são os componentes, as seções, a animação de scroll e o passe de performance e acessibilidade |
+| E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
@@ -1187,6 +1194,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-66 | `age_bands.is_economy_enabled` é semeada e nunca lida por ninguém — interruptor morto, pior que interruptor ausente | auditoria da E09 | Ou passa a valer no `regrasEconomicasDoUsuario`, ou sai do schema |
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view, e `perfil.ejs` calcula o percentual da meta do mesmo jeito: é aritmética numa camada que deveria só exibir, e as outras telas de meta já leem o resumo pronto do service | auditoria da E09, ampliada pela da E10 | Subir a conta para o `inventoryService` e usar `goalsService.resumirMeta` no perfil |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
+| DT-81 | `aceiteDaEconomia.test.js` mede a visita mais pesada contra o teto de 2 s da RNF-01 e falhou duas vezes na suíte completa (2033 ms e 2209 ms), passando sozinho e nas rodadas seguintes. O teto é do requisito, mas a medição corre junto com outros arquivos de teste disputando a máquina | auditoria da E11 | Medir com a suíte serializada, ou dar folga ao teto reconhecendo que a medição é comparativa, não absoluta |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3197,3 +3205,37 @@ enfeite de landing. O total hoje é 31.767 bytes, dos quais 18.722 são o Lenis.
 Dois testes antigos mudaram: o que exigia que a tela de login não carregasse
 script nenhum agora aceita exatamente um, o do painel; e o que conferia o botão
 antigo do rodapé foi reescrito para o painel.
+
+### Sessão de 2026-08-26, auditoria da E11 e as oito lacunas fechadas
+
+O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`, com veredito "pode avançar". A
+auditoria achou nove lacunas, e oito foram corrigidas na mesma sessão.
+
+A bloqueante nasceu da própria tarefa que fechou a etapa. Se a página abrisse com
+movimento reduzido, os observadores de revelação nunca eram criados; religar o
+movimento pelo painel devolvia o estado escondido das seções sem ninguém para
+revelá-las, e o conteúdo sumia até recarregar. A correção inverteu a regra: os
+observadores existem sempre, e só a rolagem suave e o parallax dependem da
+escolha. O contador ganhou verificação própria, porque número que sobe é
+movimento feito em JavaScript e o CSS não o desliga.
+
+Duas regressões em telas já auditadas foram fechadas junto. O botão do painel
+ficava por cima do "Continuar" da Colmeia no celular, e agora sobe para
+`bottom-24` abaixo de `sm`. E o painel aparecia na tela de jogo, contra a regra de
+não ter nada clicável fora do jogo: `renderizarPagina` ganhou a opção
+`comAcessibilidade`, ligada por padrão, e a tela de célula a desliga.
+
+O resto foram acabamentos com risco real: três imagens sem dimensão declarada
+(logo do cabeçalho, logo do login e avatar do perfil), o título do painel que
+poluía o índice de títulos de toda página, a máscara da coluna de mel sem prefixo
+para Safari antigo, o rótulo duplicado no botão do painel, e o acordeão que
+prometia abertura animada e abria seco.
+
+Fica aberta a lacuna que não dá para fechar aqui: o aceite da E11 é um número de
+performance, e medir LCP, CLS e taxa de quadros exige navegador. O roteiro está
+escrito, a dívida é a DT-74, e **a etapa não pode ser declarada aprovada em
+performance até alguém rodar**.
+
+Um achado colateral virou DT-81: o teste de aceite da E09 mede a visita mais
+pesada contra o teto de 2 s e falha de vez em quando na suíte completa, passando
+sozinho — a medição disputa a máquina com os outros arquivos de teste.

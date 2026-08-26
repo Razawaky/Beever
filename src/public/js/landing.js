@@ -98,6 +98,10 @@ function ligarFavosDaTrilha() {
  * script não rodar, a página continua dizendo a mesma coisa.
  */
 function contar(elemento) {
+  // Número que sobe é movimento, e este é feito em JavaScript: o CSS não o
+  // desliga. Sem movimento, o valor que já veio do servidor fica como está.
+  if (!document.documentElement.classList.contains('landing-com-movimento')) return;
+
   const alvo = Number(elemento.dataset.contador);
   const sufixo = elemento.dataset.contadorSufixo || '';
   const casas = String(alvo).includes('.') ? 1 : 0;
@@ -162,7 +166,7 @@ function ligarMiniQuiz() {
   });
 }
 
-// Guardada porque o controle de movimento do rodapé precisa pausá-la.
+// Guardada porque o painel de acessibilidade precisa pausá-la e retomá-la.
 let rolagemSuave = null;
 
 function ligarMovimento() {
@@ -210,17 +214,31 @@ function ligarMovimento() {
 }
 
 /**
- * O painel de acessibilidade também desliga movimento, e ele vale em toda tela.
- * O CSS dá conta de animação e transição; a rolagem suave é JavaScript, então
- * ela precisa ser pausada aqui.
+ * Liga o movimento, ou o desliga, a qualquer momento.
+ *
+ * A revelação, os contadores e os favos são ligados uma vez só, sempre — mesmo
+ * com o movimento desligado. É o que impede o pior defeito possível aqui: se os
+ * observadores só existissem quando a página abre com movimento, religar pelo
+ * painel esconderia todas as seções que ainda não tinham aparecido, e elas
+ * nunca voltariam sem recarregar. O estado escondido é de CSS; o observador
+ * precisa existir de qualquer forma.
  */
+function aplicarMovimento(reduzido) {
+  document.documentElement.classList.toggle('landing-com-movimento', !reduzido);
+
+  if (reduzido) {
+    rolagemSuave?.stop();
+    return;
+  }
+
+  // A rolagem suave é cara e só nasce quando é usada pela primeira vez.
+  if (rolagemSuave) rolagemSuave.start();
+  else ligarMovimento();
+}
+
 function ouvirOPainelDeAcessibilidade() {
   document.addEventListener('beever:movimento', (evento) => {
-    const reduzido = evento.detail.reduzido;
-    document.documentElement.classList.toggle('landing-com-movimento', !reduzido && !querMenosMovimento);
-
-    if (reduzido) rolagemSuave?.stop();
-    else if (!querMenosMovimento) rolagemSuave?.start();
+    aplicarMovimento(evento.detail.reduzido || querMenosMovimento);
   });
 }
 
@@ -229,16 +247,14 @@ function ouvirOPainelDeAcessibilidade() {
 ligarMiniQuiz();
 ouvirOPainelDeAcessibilidade();
 
+// Os observadores existem sempre. Sem movimento eles não têm o que animar,
+// porque o estado escondido da revelação vive dentro de `landing-com-movimento`.
+ligarRevelacao();
+ligarContadores();
+ligarFavosDaTrilha();
+
 // O painel de acessibilidade roda antes desta página, então a escolha guardada
 // já está no `<html>` quando chegamos aqui.
 const painelPediuMenosMovimento = document.documentElement.classList.contains('a11y-movimento-reduzido');
 
-if (!querMenosMovimento && !painelPediuMenosMovimento) {
-  // A classe avisa o CSS que o movimento agora é feito aqui: as camadas param
-  // de usar a linha do tempo de rolagem, para não andarem duas vezes.
-  document.documentElement.classList.add('landing-com-movimento');
-  ligarRevelacao();
-  ligarContadores();
-  ligarFavosDaTrilha();
-  ligarMovimento();
-}
+aplicarMovimento(querMenosMovimento || painelPediuMenosMovimento);

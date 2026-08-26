@@ -9,7 +9,11 @@
   Nasce escondido e só aparece quando o script roda, porque é ele que guarda a
   escolha no navegador.
 -%>
-<div id="acessibilidade" class="fixed bottom-4 right-4 z-40 print:hidden">
+<%#
+  No celular o painel sobe: o botão "Continuar" da Colmeia é `fixed` no rodapé, e
+  o painel por cima da ação principal da tela mais visitada era regressão.
+-%>
+<div id="acessibilidade" class="fixed bottom-24 right-4 z-40 sm:bottom-4 print:hidden">
   <button
     type="button"
     id="acessibilidade-abrir"
@@ -18,8 +22,10 @@
     aria-controls="acessibilidade-painel"
   >
     <span class="text-xl" aria-hidden="true">♿</span>
+    <%# Um rótulo por vez: acima de `sm` vale o texto visível; abaixo, o
+        escondido. Os dois juntos fariam o leitor de tela ler duas vezes. -%>
     <span class="ml-2 hidden text-sm font-semibold sm:inline">Acessibilidade</span>
-    <span class="sr-only">Abrir opções de acessibilidade</span>
+    <span class="sr-only sm:hidden">Abrir opções de acessibilidade</span>
   </button>
 
   <div
@@ -29,7 +35,9 @@
     aria-modal="false"
     aria-labelledby="acessibilidade-titulo"
   >
-    <h2 id="acessibilidade-titulo" class="font-display text-lg">Acessibilidade</h2>
+    <%# Parágrafo, e não título: o painel está em toda tela, e um `h2` aqui
+        entraria no índice de títulos de todas elas sem pertencer ao conteúdo. -%>
+    <p id="acessibilidade-titulo" class="font-display text-lg">Acessibilidade</p>
     <p class="mt-1 text-sm text-tinta-suave">
       Sem nada ligado, a página fica do jeito normal. Escolha o que ajudar você.
     </p>

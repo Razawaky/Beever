@@ -100,13 +100,30 @@ describe('acessibilidade da landing', opcoes, () => {
     assert.match(tema, /prefers-reduced-motion[\s\S]*animate-float[\s\S]*animation: none/);
   });
 
-  it('o script da landing não liga nada quando o sistema pede menos movimento', () => {
+  it('o script da landing respeita quem pede menos movimento, pelo sistema ou pelo painel', () => {
     const script = readFileSync(path.join(raiz, 'src/public/js/landing.js'), 'utf8');
 
     assert.match(script, /prefers-reduced-motion: reduce/);
-    // O mini quiz é conteúdo e continua ligado; o resto do movimento não — e a
-    // escolha do painel entra na mesma porta que a preferência do sistema.
-    assert.match(script, /if \(!querMenosMovimento && !painelPediuMenosMovimento\) \{/);
+    // As duas fontes entram pela mesma porta, e ela liga e desliga a qualquer
+    // momento — não só na carga da página.
+    assert.match(script, /aplicarMovimento\(querMenosMovimento \|\| painelPediuMenosMovimento\)/);
+    // Contador é movimento feito em JavaScript: o CSS não o desliga sozinho.
+    assert.match(script, /classList\.contains\('landing-com-movimento'\)/);
+  });
+
+  it('religar o movimento não pode esconder seção nenhuma (lacuna L-1 do laudo)', () => {
+    const script = readFileSync(path.join(raiz, 'src/public/js/landing.js'), 'utf8');
+    const inicio = script.indexOf('ligarMiniQuiz();');
+    const partida = script.slice(inicio);
+
+    // Os observadores são ligados fora de qualquer condição. Quando dependiam de
+    // a página abrir com movimento, religar pelo painel escondia as seções ainda
+    // não reveladas e elas não voltavam sem recarregar.
+    for (const funcao of ['ligarRevelacao()', 'ligarContadores()', 'ligarFavosDaTrilha()']) {
+      const linha = partida.split('\n').find((l) => l.trim() === `${funcao};`);
+      assert.ok(linha, `${funcao} é chamado na partida`);
+      assert.ok(!linha.startsWith('  '), `${funcao} não pode estar dentro de condição`);
+    }
   });
 
   it('o painel de acessibilidade existe em toda tela, e o padrão é o modo normal', () => {
@@ -143,6 +160,25 @@ describe('acessibilidade da landing', opcoes, () => {
       readFileSync(path.join(raiz, 'src/public/js/landing.js'), 'utf8'),
       /rolagemSuave\?\.stop\(\)/,
     );
+  });
+
+  it('o painel não aparece na tela de jogo, que não tem nada clicável fora do jogo', async () => {
+    // Regra da seção 5 do design system, e lacuna L-3 do laudo da E11.
+    const layout = readFileSync(path.join(raiz, 'src/views/layout.ejs'), 'utf8');
+    assert.match(layout, /if \(comAcessibilidade\)/);
+
+    const controller = readFileSync(path.join(raiz, 'src/controllers/paginaController.js'), 'utf8');
+    const trechoDaCelula = controller.slice(controller.indexOf("renderizarPagina(res, 'celula'"));
+    assert.match(trechoDaCelula.slice(0, 400), /comAcessibilidade: false/);
+  });
+
+  it('o painel não fica por cima do "Continuar" no celular (lacuna L-2 do laudo)', () => {
+    const painel = /<div[^>]*id="acessibilidade"[^>]*>/.exec(landing);
+
+    assert.ok(painel, 'o painel está na página');
+    // O "Continuar" da Colmeia é `fixed bottom-4` abaixo de `sm`; o painel sobe.
+    assert.match(painel[0], /bottom-24/);
+    assert.match(painel[0], /sm:bottom-4/);
   });
 
   it('a página tem uma ordem de títulos que dá para navegar por voz', () => {

@@ -16,6 +16,9 @@ export function renderizarPagina(res, pagina, dados = {}) {
     classeBody = 'min-h-screen bg-white text-tinta antialiased',
     comCabecalho = false,
     comRodape = false,
+    // A tela de jogo é a única que pede o contrário: nada clicável fora do jogo
+    // (seção 5 do design system). Todas as outras trazem o painel.
+    comAcessibilidade = true,
     dadosBody = {},
     scripts = [],
     ...conteudo
@@ -29,6 +32,7 @@ export function renderizarPagina(res, pagina, dados = {}) {
     classeBody,
     comCabecalho,
     comRodape,
+    comAcessibilidade,
     dadosBody,
     scripts,
     ...conteudo,

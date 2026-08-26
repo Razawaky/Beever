@@ -290,6 +290,8 @@ export const celula = assincrono(async (req, res) => {
   renderizarPagina(res, 'celula', {
     titulo: `${celula.title} — Beever`,
     classeBody: FUNDO_CERA,
+    // Sem menu, sem saldo, sem nada clicável fora do jogo (design system §5).
+    comAcessibilidade: false,
     celula,
     idFavo: Number(req.params.idFavo),
     areaDoJogo: tela.areaDoJogo,
