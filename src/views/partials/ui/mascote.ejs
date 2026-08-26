@@ -1,0 +1,14 @@
+<%#
+  A Beenie na tela. Recebe `pose` (nome do catálogo em `src/config/mascote.js`)
+  e, opcional, `id`, `classe` com tamanho e animação, e `decorativa` para quando
+  o texto ao lado já diz tudo — aí o alt fica vazio e o leitor de tela pula.
+
+  Nenhuma view escreve o caminho da imagem: o desenho é provisório e o catálogo
+  é o único ponto de troca.
+-%>
+<img
+  <% if (locals.id) { %>id="<%= id %>"<% } %>
+  src="<%= mascote(pose).arquivo %>"
+  alt="<%= locals.decorativa ? '' : mascote(pose).alt %>"
+  class="<%= locals.classe || '' %>"
+/>

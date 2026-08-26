@@ -124,7 +124,12 @@ describe('tela de resultado', opcoes, () => {
       assert.match(pagina.text, new RegExp(`id="${id}"`), `falta ${id} na tela`);
     }
     // A tela nasce escondida: quem a mostra é o `resultado.js`, no fim da partida.
-    assert.match(pagina.text, /id="jogo-resultado" class="hidden/);
+    // A seção tem os atributos em várias linhas, então a busca é pelo bloco todo.
+    assert.match(pagina.text, /id="jogo-resultado"[\s\S]{0,200}class="hidden/);
+    // As duas poses do mascote descem do catálogo do servidor, e o
+    // `resultado.js` escolhe entre elas sem saber nome de arquivo.
+    assert.match(pagina.text, /data-mascote-vitoria="\/img\/[^"]+"/);
+    assert.match(pagina.text, /data-mascote-tentativa="\/img\/[^"]+"/);
     // Amarelo não é cor de texto sobre fundo claro (RNF-21): as estrelas são
     // desenho, e o container delas não pinta letra nenhuma de mel.
     assert.doesNotMatch(pagina.text, /id="jogo-estrelas"[^>]*text-mel/);

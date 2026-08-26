@@ -63,7 +63,7 @@ Duas famílias, papéis distintos:
 | **Corpo / UI** | **Nunito** — terminais arredondados, altíssima legibilidade infantil, acentuação PT-BR completa |
 
 Regras:
-- A escolha está fechada e registrada no `DESIGN.md`; não é mais recomendação. Os tokens `--font-display` e `--font-sans` já existem no `@theme`. **Pendente:** auto-hospedar os `.woff2` com `font-display: swap` e só os pesos usados — até lá os dois papéis caem no `system-ui`.
+- A escolha está fechada e registrada no `DESIGN.md`. As fontes são **auto-hospedadas** desde a T-11.1, em `src/public/fonts/`, com `font-display: swap` e subsets latin e latin-ext. O Nunito é variável de 400 a 700, então um arquivo por subset cobre corpo, botão e número. O código nunca escreve o nome Lilita One nem Nunito: as famílias se chamam `Beever Display` e `Beever Texto`, e `src/styles/fontes.css` é o único ponto de troca — quando o Beever tiver fonte própria, muda-se só o `src:` dos `@font-face`.
 - Display **só** em título de seção e número de destaque. Texto corrido em display cansa criança.
 - Escala (mobile → desktop): 32→48 (h1) · 24→32 (h2) · 20→24 (h3) · 16→17 (corpo) · 14 (apoio). Nunca abaixo de 14 px.
 - Altura de linha 1,5 no corpo; 1,1 no display.
@@ -94,19 +94,50 @@ O projeto usa **Tailwind v4**, configurado por CSS. Os tokens já estão impleme
   --color-erro: #d93a3a;
   --color-erro-texto: #c42b2b;
 
-  --font-sans: Nunito, system-ui, sans-serif;
-  --font-display: 'Lilita One', system-ui, sans-serif;
-
   --radius-favo: 20px;
   --radius-pilula: 999px;
+
+  --shadow-repouso: ...;
+  --shadow-elevado: ...;
+  --shadow-painel: ...;
+  --shadow-flutuante: ...;
 }
 ```
 
+Os tokens `--font-sans` e `--font-display` não estão mais neste bloco: desde a
+T-11.1 eles moram em `src/styles/fontes.css`, junto dos `@font-face`, para que
+trocar a tipografia seja mexer num arquivo só.
+
 Utilitários resultantes: `bg-mel`, `hover:bg-nectar`, `active:bg-ambar`, `bg-cera`, `bg-breu`, `text-tinta`, `text-tinta-suave`, `border-linha`, `text-acerto`/`text-atencao`/`text-erro`, `rounded-favo`, `rounded-pilula`, `font-display`, `outline-ambar`.
 
-Não existem tokens de sombra: a escala de profundidade usa as sombras padrão do Tailwind (`shadow-md`, `shadow-lg`, `shadow-xl`), mapeadas em `DESIGN.md` como repouso / elevado / painel.
+Os quatro degraus de profundidade do `DESIGN.md` viraram token na T-11.1: `shadow-repouso`, `shadow-elevado`, `shadow-painel` e `shadow-flutuante`, com os mesmos valores que o documento já normatizava. Escrever `shadow-md` numa view continua funcionando, mas perde o nome do degrau, e é o nome que sobrevive à leitura de outra pessoa.
 
 **Nenhuma cor literal em template EJS nem em `style` inline** — só token. A rampa antiga `mel-50..900` / `colmeia-900` foi removida do `@theme` e migrada em todas as views; se ela reaparecer em algum lugar, é código velho voltando.
+
+### 2.6 Inventário dos assets do mascote
+
+A arte da Beenie é provisória e será substituída por desenho próprio, então
+nenhuma tela escreve caminho de imagem: o catálogo em `src/config/mascote.js`
+guarda arquivo e texto alternativo de cada pose, o partial
+`partials/ui/mascote.ejs` é quem desenha, e trocar o desenho é mexer só no
+catálogo. A animação fica presa à classe do tema (`animate-float`), nunca ao
+arquivo, para que uma sequência de quadros entre sem reescrever tela.
+
+| Arquivo | Peso | Pose no catálogo | Onde aparece |
+|---|---|---|---|
+| `beenie_howdy.png` | 117 KB | `acolhendo` | estado vazio, fim da trilha, resultado de partida com 3 estrelas |
+| `beenie_vem.png` | 89 KB | `chamando` | trilha ainda vazia, resultado de partida abaixo de 3 estrelas |
+| `beenie_login_render.png` | 128 KB | `entrando` | painel lateral do login |
+| `babybee.png`, `beenie_1real.png`, `beenie_login.png`, `1real.gif` | 40 KB a 545 KB | nenhuma | sobraram do projeto antigo e não são usados por nenhuma tela |
+
+O logo (`beever_logo_black.png`, `_white`, `_yellow`), o ícone
+(`beever-icon.png`) e a moeda (`mel-moeda-virtual.png`) são marca, não mascote,
+e ficam fora do catálogo.
+
+Duas pendências ficam registradas para a E11. As poses que o componente `mascote`
+promete na seção 3 — pensando, triste, apontando — não têm arte, e as três que
+existem são PNG de mais de 80 KB cada, peso que a T-11.7 vai ter que resolver
+contra o teto de LCP da RNF-03, convertendo para `webp` ou redesenhando em SVG.
 
 ---
 

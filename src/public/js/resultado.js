@@ -12,14 +12,20 @@ const botaoContinuar = document.getElementById('jogo-continuar');
 const linkDoFavo = document.getElementById('jogo-voltar-ao-favo');
 
 /**
- * O mascote de cada desfecho — e o único lugar do projeto onde ele é escolhido.
- *
- * A arte é provisória: quando o desenho próprio chegar, é aqui que ele entra, e
- * em nenhum outro arquivo. A animação vive na classe do tema, não na imagem.
+ * Os dois desfechos. A arte vem do catálogo do servidor, que desce nos atributos
+ * da seção, e este arquivo só escolhe qual dos dois usar.
  */
 const MASCOTES = {
-  comemorando: { imagem: '/img/beenie_howdy.png', alt: 'Beenie comemorando', titulo: 'Muito bem!' },
-  animando: { imagem: '/img/beenie_vem.png', alt: 'Beenie chamando para tentar de novo', titulo: 'Boa tentativa!' },
+  comemorando: {
+    imagem: secao.dataset.mascoteVitoria,
+    alt: secao.dataset.mascoteVitoriaAlt,
+    titulo: 'Muito bem!',
+  },
+  animando: {
+    imagem: secao.dataset.mascoteTentativa,
+    alt: secao.dataset.mascoteTentativaAlt,
+    titulo: 'Boa tentativa!',
+  },
 };
 
 const ESPACO_SVG = 'http://www.w3.org/2000/svg';

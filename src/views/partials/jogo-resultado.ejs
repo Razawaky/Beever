@@ -4,16 +4,19 @@
   Todos os números já chegam prontos do `POST /partidas/:token/resultado`: esta
   tela só apresenta. Quem preenche é o `resultado.js`.
 
-  A arte do mascote é provisória, e o `resultado.js` tem o único lugar onde ela
-  é escolhida — trocar o desenho é mexer lá, e em nenhum outro lugar.
+  As duas poses do desfecho vêm do catálogo do mascote e descem como atributo:
+  o `resultado.js` escolhe entre elas sem saber nome de arquivo.
 -%>
-<section id="jogo-resultado" class="hidden text-center" aria-live="polite">
-  <img
-    id="jogo-mascote"
-    src="/img/beenie_howdy.png"
-    alt=""
-    class="mx-auto h-32 w-32 object-contain animate-float"
-  />
+<section
+  id="jogo-resultado"
+  class="hidden text-center"
+  aria-live="polite"
+  data-mascote-vitoria="<%= mascote('acolhendo').arquivo %>"
+  data-mascote-vitoria-alt="<%= mascote('acolhendo').alt %>"
+  data-mascote-tentativa="<%= mascote('chamando').arquivo %>"
+  data-mascote-tentativa-alt="<%= mascote('chamando').alt %>"
+>
+  <%- include('./ui/mascote', { id: 'jogo-mascote', pose: 'acolhendo', decorativa: true, classe: 'mx-auto h-32 w-32 object-contain animate-float' }) %>
 
   <h2 id="jogo-resultado-titulo" class="mt-2 font-display text-2xl text-tinta"></h2>
 

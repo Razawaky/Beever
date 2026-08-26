@@ -5,6 +5,10 @@
 @import './tema.css';
 @import './trilha.css';
 
+/* As fontes moram em arquivo próprio porque são o ponto único de troca da
+   tipografia: os `@font-face` e os tokens `--font-*` ficam juntos lá. */
+@import './fontes.css';
+
 /* Tailwind v4 é configurado por CSS. Declaramos aqui onde procurar classes,
    já que os templates são EJS renderizados no servidor. */
 @source '../views/**/*.ejs';
@@ -39,13 +43,15 @@
   --color-erro: #d93a3a;
   --color-erro-texto: #c42b2b;
 
-  /* Lilita One anuncia (títulos e números de destaque), Nunito explica (todo o
-     resto). As fontes ainda não são servidas pelo projeto: até que sejam
-     auto-hospedadas, os dois papéis caem no system-ui. */
-  --font-sans: Nunito, system-ui, sans-serif;
-  --font-display: 'Lilita One', system-ui, sans-serif;
-
   /* Favo é o canto padrão de botão e card; pílula é barra, badge e avatar. */
   --radius-favo: 20px;
   --radius-pilula: 999px;
+
+  /* Os quatro degraus de profundidade do DESIGN.md, com nome em vez de
+     shadow-md/lg/xl espalhado pelas views. Sombra confirma a elevação, nunca
+     substitui divisória. */
+  --shadow-repouso: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-elevado: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-painel: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-flutuante: 0 4px 6px rgb(0 0 0 / 0.1);
 }

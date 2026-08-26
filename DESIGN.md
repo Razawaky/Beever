@@ -202,8 +202,15 @@ Each semantic also has a darkened **text variant** — acerto-texto (`#268044`),
 
 ## Typography
 
-**Display Font:** Lilita One (fallback `system-ui, sans-serif`)
-**Body Font:** Nunito (fallback `system-ui, sans-serif`)
+**Display Font:** `Beever Display`, served today by Lilita One (fallback `system-ui, sans-serif`)
+**Body Font:** `Beever Texto`, served today by Nunito (fallback `system-ui, sans-serif`)
+
+The two family names are aliases on purpose. The project intends to draw its own
+typeface later, so the code never names Lilita One or Nunito directly: the
+`@font-face` rules in `src/styles/fontes.css` are the single swap point, and
+every screen uses `font-display` / `font-sans`. Swapping the typeface means
+changing that one file. The `.woff2` files are self-hosted in
+`src/public/fonts/` — no external CDN, which the CSP would block anyway.
 
 **Character:** Lilita One is a cartoon poster face — heavy, confident, one weight only — and it carries the mascot's line into the type. Nunito does everything else: rounded terminals, exceptionally legible at small sizes for young readers, and complete Portuguese accent coverage. The two are never confused about their jobs.
 

@@ -3,8 +3,18 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-25 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-10.7 — o aceite da E10 está provado: a Colmeia de um
+**Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** T-11.1 — a E11 abriu fechando os tokens da identidade. As
+fontes deixaram de cair no `system-ui`: Lilita One e Nunito estão
+auto-hospedados em `src/public/fonts/`, com subsets latin e latin-ext e
+`font-display: swap`. Os dois papéis se chamam `Beever Display` e `Beever
+Texto`, porque o projeto vai ter fonte própria mais adiante e `fontes.css` é o
+único lugar da troca. Os quatro degraus de sombra do `DESIGN.md` viraram token,
+e a arte da Beenie ganhou catálogo em `src/config/mascote.js`, com partial
+próprio e teste. 723 testes passando.
+**Próximo passo: T-11.2 — biblioteca de componentes EJS**
+
+**Commit anterior:** T-10.7 — o aceite da E10 está provado: a Colmeia de um
 jogador com 60 células, 50 concluídas e 12 itens responde inteira e correta em
 **87 a 102 ms**, contra o teto de 2 s da RNF-01, e o número de consultas não
 muda quando o jogador acumula mais item. **E10 concluída.** Árvore limpa, 718
@@ -15,7 +25,6 @@ sessão — a Colmeia voltou a ter `h1`, a chegada do jogador passou a ter uma d
 só (`prepararVisita`, agora também em `/metas` e `/perfil`) e o vocabulário de
 estado do favo voltou para o `contentService`, com `aberto` e `aberta` prontos.
 720 testes passando.
-**Próximo passo: E11 — Landing page**
 
 **Commit anterior:** T-10.6 — a Colmeia ganhou ação principal: o botão
 "Continuar" leva direto à próxima célula jogável, fixo no rodapé do celular, e a
@@ -344,7 +353,23 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E10 — Colmeia (Home).** É a tela mais visitada do jogo, e era um painel que
+**E11 — Landing page.** A porta de entrada do Beever, e a única tela que fala com
+quem ainda não tem conta. O aceite é a landing rodar a 60 fps no celular, sem
+salto de layout, e continuar inteira utilizável com animação desligada.
+
+| Tarefa | Situação |
+|---|---|
+| T-11.1 Tokens no Tailwind (cores, raio, sombra, tipografia) + inventário dos assets do mascote | **feita** — fontes auto-hospedadas sob os nomes `Beever Display` e `Beever Texto`, com `src/styles/fontes.css` como ponto único de troca; sombra virou token nos quatro degraus do `DESIGN.md`; a arte da Beenie ganhou catálogo, partial e teste |
+| T-11.2 Biblioteca de componentes EJS: botão 3D, card em favo, badge de mel, barra de progresso, chama de sequência | pendente |
+| T-11.3 Herói com mascote animado e favos em parallax | pendente |
+| T-11.4 Seções de conteúdo (problema, como funciona, trilha, jogos, loja/patrimônio, sequência) | pendente |
+| T-11.5 Animação de scroll: revelação por `IntersectionObserver`, parallax em `requestAnimationFrame`, smooth scroll | pendente |
+| T-11.6 Seção "para pais e escolas" + FAQ + CTA final + footer | pendente |
+| T-11.7 Performance e acessibilidade: `prefers-reduced-motion`, contraste, foco, LCP | pendente |
+
+---
+
+**E10 — Colmeia (Home)** (concluída e auditada, guardada aqui como histórico). É a tela mais visitada do jogo, e era um painel que
 cresceu por acúmulo. O aceite era a Colmeia carregar em até 2 s com um jogador
 avançado, com pelo menos 50 células e 10 itens — **provado em
 `test/integration/aceiteDaColmeia.test.js`: 87 a 102 ms, com os nove blocos
@@ -1053,7 +1078,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E08 Metas e Sequência | **concluída e auditada** | T-08.1 feita: a meta vencida pode ser retomada, e meta fora de `ativa` parou de pagar. T-08.2 feita: a sequência avalia sozinha os dias fechados, no fuso do jogador, e a DT-23 foi paga. T-08.3 feita: o escudo é consumido automaticamente e o inventário ganhou o estado `consumido`. T-08.4 feita: os marcos pagam mel e conquista uma vez só. T-08.5 feita: a tarefa avança pelo evento e o teto de 3 ativas passou a valer. T-08.6 feita: a sequência aparece na tela, com calendário da semana no painel e nas metas. T-08.7 feita: três semanas de relógio simulado provam a regra em todos os cenários. **Auditada em `docs/08-AUDITORIA-DA-ETAPA.md`: pode avançar, zero bloqueantes, com as três lacunas de maior risco corrigidas na mesma sessão** |
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
-| E11 Landing | parcial | Tokens existem; faltam as seções, animações e as fontes auto-hospedadas |
+| E11 Landing | em andamento | T-11.1 feita: fontes auto-hospedadas com nome próprio de família, tokens de sombra e o catálogo do mascote. Faltam T-11.2 a T-11.7, que são os componentes, as seções, a animação de scroll e o passe de performance e acessibilidade |
 | E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
@@ -2844,3 +2869,42 @@ assim `'disponivel'` aparecia escrito à mão em duas views, num controller e nu
 service. A trilha e a lista de células passaram a devolver `aberto` e `aberta`
 prontos. Vale como regra: quando a view precisa comparar estado com texto, o
 service não terminou de responder a pergunta.
+
+### Sessão de 2026-08-26, T-11.1 e a abertura da E11
+
+A tarefa parecia feita antes de começar: os tokens de cor, raio e tipografia já
+estavam no `@theme` desde a E00. O que faltava era o que a tarefa realmente
+nomeia, e as três pontas foram fechadas nesta sessão.
+
+As fontes eram só nome. `--font-sans` dizia Nunito e `--font-display` dizia
+Lilita One, mas nenhum arquivo era servido, então as duas caíam no `system-ui` e
+a identidade tipográfica não existia na tela. Agora os `.woff2` estão
+auto-hospedados em `src/public/fonts/`, commitados, nos subsets latin e
+latin-ext, com `font-display: swap` e preload só dos dois arquivos latin. O
+Nunito é variável de 400 a 700, então um arquivo por subset cobre corpo, botão e
+número — os três pesos que o plano previa viraram um só.
+
+O nome das famílias é decisão de projeto, não detalhe. O usuário pretende ter
+fonte própria mais adiante, então o código não escreve Lilita One nem Nunito em
+lugar nenhum: as famílias se chamam `Beever Display` e `Beever Texto`, e
+`src/styles/fontes.css` guarda os `@font-face` junto dos tokens `--font-*`. A
+troca da tipografia inteira é mexer nesse arquivo, sem tocar em view.
+
+A sombra ganhou nome. O `DESIGN.md` já normatizava quatro degraus — repouso,
+elevado, painel e flutuante — mas o código escrevia `shadow-md` e `shadow-lg`, e
+o degrau se perdia na leitura. Os quatro viraram token no `@theme`, com os
+mesmos valores.
+
+O mascote ganhou catálogo. A arte da Beenie é provisória e estava espalhada em
+cinco views mais o `resultado.js`. Agora `src/config/mascote.js` guarda arquivo e
+alt de cada pose, o partial `ui/mascote.ejs` desenha, e a tela de resultado
+recebe as duas poses do desfecho como atributo, para escolher entre elas sem
+saber nome de arquivo. O inventário está na seção 2.6 do
+`docs/04-DESIGN-SYSTEM-E-LANDING.md`, e registra duas pendências para a etapa:
+três poses que o design system promete não têm arte, e os PNG atuais passam de
+80 KB cada, peso que a T-11.7 vai ter que resolver contra a RNF-03.
+
+Uma armadilha de teste ficou de lição. O `telaDeResultado.test.js` casava
+`id="jogo-resultado" class="hidden` numa linha só, e quebrou quando a seção
+ganhou atributos em várias linhas. Asserção sobre marcação não deve depender de
+onde o EJS quebra a linha.

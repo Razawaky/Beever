@@ -7,6 +7,7 @@ import pinoHttp from 'pino-http';
 
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
+import { mascote } from './config/mascote.js';
 import { sessaoMiddleware } from './config/session.js';
 import { csrf } from './middlewares/csrf.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -36,6 +37,8 @@ export function criarApp() {
           scriptSrc: ["'self'"],
           styleSrc: ["'self'"],
           imgSrc: ["'self'", 'data:'],
+          // As fontes são auto-hospedadas em /fonts: nenhum CDN externo.
+          fontSrc: ["'self'"],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
         },
@@ -58,6 +61,10 @@ export function criarApp() {
 
   app.set('view engine', 'ejs');
   app.set('views', path.join(diretorioAtual, 'views'));
+
+  // O catálogo do mascote fica disponível em toda view: nenhuma tela escreve o
+  // caminho da imagem, todas pedem a pose pelo nome.
+  app.locals.mascote = mascote;
   app.use(express.static(path.join(diretorioAtual, 'public'), { maxAge: env.producao ? '7d' : 0 }));
 
   app.use(express.urlencoded({ extended: false, limit: '100kb' }));

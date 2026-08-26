@@ -3,11 +3,10 @@
   frase e, quando houver, uma ação. Recebe `mensagem` e, opcional, `acao` com
   `href` e `texto`.
 
-  A arte do Beenie é provisória: enquanto ela não é definitiva, o caminho da
-  imagem dos estados vazios mora só aqui.
+  A imagem vem do catálogo do mascote, que é o único ponto de troca da arte.
 -%>
 <div class="rounded-favo bg-white p-6 text-center">
-  <img src="/img/beenie_howdy.png" alt="" class="mx-auto h-24 w-auto" />
+  <%- include('./mascote', { pose: 'acolhendo', decorativa: true, classe: 'mx-auto h-24 w-auto' }) %>
   <p class="mt-3 text-sm text-tinta-suave"><%= mensagem %></p>
 
   <% if (locals.acao) { %>
