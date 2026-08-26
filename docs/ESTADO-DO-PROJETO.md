@@ -178,6 +178,37 @@ Se a sessão anterior acabou no meio, comece por aqui:
 Nada de importante desta sessão vive só na conversa: o que foi decidido está
 neste documento e nos commits; o que foi construído está no repositório.
 
+### Onde a sessão de 2026-08-26 parou
+
+A E11 está **concluída e auditada** — sete tarefas do roadmap, mais a T-11.8, que
+foi o painel de acessibilidade pedido fora do roadmap. O laudo é o
+`docs/11-AUDITORIA-DA-ETAPA.md`, com oito das nove lacunas fechadas na mesma
+sessão. Árvore limpa, 765 testes passando, último commit `603c032`.
+
+Três coisas esperam alguém, e nenhuma delas é código pendente:
+
+**Medir a landing em navegador.** É a única lacuna do laudo que ficou aberta, e
+ela é o próprio aceite da etapa: 60 fps no celular e sem salto de layout. O
+roteiro passo a passo está em `docs/MEDICAO-DE-PERFORMANCE.md` — sobe com
+`npm run dev`, mede com o Lighthouse em 4G simulado, anota os números aqui e fecha
+a DT-74. Enquanto isso não acontece, a E11 não deve ser declarada aprovada em
+performance.
+
+**Um passe de olho humano.** Nada da E11 foi aberto em navegador: a rolagem com o
+Lenis, a coluna de mel enchendo, os favos acendendo, o acordeão, o painel de
+acessibilidade com as quatro chaves e o comportamento a 320 px. É a DT-22, e a
+lista do que conferir está na seção 3.
+
+**Duas decisões de produto que são suas.** O texto das seis seções da landing é
+rascunho de dev e espera revisão (DT-78). A política de privacidade em
+`/privacidade` nunca passou por revisão jurídica, e a exclusão de conta que ela
+promete ainda não tem tela (DT-79). Antes de publicar, `CONTACT_EMAIL` precisa
+virar um endereço que alguém lê.
+
+Quando voltar, o caminho natural é `/proxima-tarefa`: ela vai abrir a **E12 —
+área administrativa**, cujo escopo já foi combinado com você em 2026-08-25 e está
+registrado na seção 4.
+
 ---
 
 ## Resumo em 2 minutos
