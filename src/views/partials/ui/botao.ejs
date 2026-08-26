@@ -1,0 +1,66 @@
+<%#
+  O botão do produto, em três variantes (seção 3 do design system). Vira `<a>`
+  quando recebe `href` e `<button>` quando recebe `tipo` — metade das telas
+  navega e a outra metade envia formulário, e as duas precisam da mesma cara.
+
+  Recebe `texto` e, opcional: `variante` (primario, secundario, fantasma),
+  `tamanho` (grande ou medio), `formato` (favo ou pilula), `classe` para o lugar
+  na tela, `id`, `desabilitado` e `rotuloAcessivel`.
+
+  Sem contorno preto: profundidade é sombra difusa, e o caráter vem da cor e do
+  movimento (DESIGN.md). O foco é anel âmbar de 3 px com anel de tinta por
+  dentro, porque âmbar sozinho sobre cera é claro demais para se enxergar.
+-%>
+<%
+  const VARIANTES = {
+    primario: 'bg-mel text-tinta hover:bg-nectar active:bg-ambar',
+    secundario: 'border border-linha bg-white text-tinta hover:bg-cera',
+    fantasma: 'text-tinta underline decoration-tinta/30 decoration-2 underline-offset-4 hover:decoration-tinta',
+  };
+
+  // A altura mínima é regra, não estilo: 48 px no botão principal e 44 px no
+  // botão que vive dentro de card, que é o piso de alvo de toque da RNF-22.
+  const TAMANHOS = {
+    grande: 'min-h-12 px-6 py-3 text-base',
+    medio: 'min-h-11 px-4 py-2 text-sm',
+  };
+
+  const variante = VARIANTES[locals.variante || 'primario'];
+  const tamanho = TAMANHOS[locals.tamanho || 'grande'];
+  const formato = locals.formato === 'pilula' ? 'rounded-pilula' : 'rounded-favo';
+
+  const foco =
+    'focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta';
+  const movimento = 'transition hover:-translate-y-0.5 active:translate-y-0';
+  const desligado = 'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0';
+
+  const classes = [
+    'inline-flex items-center justify-center text-center font-semibold',
+    formato,
+    tamanho,
+    variante,
+    movimento,
+    foco,
+    desligado,
+    locals.classe || '',
+  ].join(' ');
+%>
+<% if (locals.href) { %>
+  <a
+    <% if (locals.id) { %>id="<%= id %>"<% } %>
+    href="<%= href %>"
+    class="<%= classes %>"
+    <% if (locals.rotuloAcessivel) { %>aria-label="<%= rotuloAcessivel %>"<% } %>
+    ><%= texto %></a
+  >
+<% } else { %>
+  <button
+    <% if (locals.id) { %>id="<%= id %>"<% } %>
+    type="<%= locals.tipo || 'button' %>"
+    class="<%= classes %>"
+    <% if (locals.desabilitado) { %>disabled<% } %>
+    <% if (locals.rotuloAcessivel) { %>aria-label="<%= rotuloAcessivel %>"<% } %>
+  >
+    <%= texto %>
+  </button>
+<% } %>

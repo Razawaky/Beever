@@ -80,13 +80,11 @@
         <% if (previa.troca) { %>
           <input type="hidden" name="idUnidadeTrocada" value="<%= previa.troca.idUnidade %>" />
         <% } %>
-        <button
-          type="submit"
-          <%= previa.podeComprar ? '' : 'disabled' %>
-          class="rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <%= previa.podeComprar ? 'Comprar agora' : 'Ainda não dá' %>
-        </button>
+        <%- include('../partials/ui/botao', {
+          texto: previa.podeComprar ? 'Comprar agora' : 'Ainda não dá',
+          tipo: 'submit',
+          desabilitado: !previa.podeComprar,
+        }) %>
       </form>
     </div>
   </article>

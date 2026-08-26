@@ -52,12 +52,12 @@
     Esta célula já estava concluída: repetir rende XP reduzido e não paga mel nem pólen.
   </p>
 
-  <a
-    id="jogo-continuar"
-    href="/trilha/<%= idFavo %>"
-    class="mt-6 inline-block w-full rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
-    >Voltar ao favo</a
-  >
+  <%- include('./ui/botao', {
+    texto: 'Voltar ao favo',
+    href: `/trilha/${idFavo}`,
+    id: 'jogo-continuar',
+    classe: 'mt-6 w-full',
+  }) %>
 
   <a
     id="jogo-voltar-ao-favo"

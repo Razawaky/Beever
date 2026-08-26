@@ -36,12 +36,7 @@
           required
           class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
         />
-        <button
-          type="submit"
-          class="rounded-favo bg-mel px-4 py-2 font-semibold text-tinta transition hover:bg-nectar active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
-        >
-          Guardar
-        </button>
+        <%- include('../partials/ui/botao', { texto: 'Guardar', tipo: 'submit', tamanho: 'medio' }) %>
       </form>
 
       <form method="POST" action="/cofre/saques" class="grid gap-2">
@@ -105,12 +100,7 @@
           class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
         />
       </div>
-      <button
-        type="submit"
-        class="rounded-favo bg-mel px-4 py-2 font-semibold text-tinta transition hover:bg-nectar active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
-      >
-        Salvar meta
-      </button>
+      <%- include('../partials/ui/botao', { texto: 'Salvar meta', tipo: 'submit', tamanho: 'medio' }) %>
     </form>
   </section>
 

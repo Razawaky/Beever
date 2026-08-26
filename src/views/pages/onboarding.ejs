@@ -33,13 +33,7 @@
       >
         Voltar
       </button>
-      <button
-        type="submit"
-        id="btn-avancar"
-        class="flex-1 rounded-favo bg-mel px-6 py-3 font-bold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-      >
-        Continuar
-      </button>
+      <%- include('../partials/ui/botao', { texto: 'Continuar', tipo: 'submit', id: 'btn-avancar', classe: 'flex-1' }) %>
     </div>
   </form>
 </main>

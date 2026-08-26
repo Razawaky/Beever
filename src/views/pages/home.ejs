@@ -10,17 +10,7 @@
     </p>
 
     <div class="mt-10 flex w-full max-w-sm flex-col gap-3 sm:flex-row">
-      <a
-        href="/cadastro"
-        class="flex-1 rounded-favo bg-mel px-6 py-3 text-center font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-      >
-        Criar conta
-      </a>
-      <a
-        href="/login"
-        class="flex-1 rounded-favo border border-linha bg-white px-6 py-3 text-center font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-cera focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-      >
-        Já tenho conta
-      </a>
+      <%- include('../partials/ui/botao', { texto: 'Criar conta', href: '/cadastro', classe: 'flex-1' }) %>
+      <%- include('../partials/ui/botao', { texto: 'Já tenho conta', href: '/login', variante: 'secundario', classe: 'flex-1' }) %>
     </div>
   </main>

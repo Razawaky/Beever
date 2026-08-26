@@ -10,11 +10,6 @@
   <p class="mt-3 text-sm text-tinta-suave"><%= mensagem %></p>
 
   <% if (locals.acao) { %>
-    <a
-      href="<%= acao.href %>"
-      class="mt-4 inline-block rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
-    >
-      <%= acao.texto %>
-    </a>
+    <%- include('./botao', { texto: acao.texto, href: acao.href, tamanho: 'medio', classe: 'mt-4' }) %>
   <% } %>
 </div>

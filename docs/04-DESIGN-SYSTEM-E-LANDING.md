@@ -145,9 +145,21 @@ contra o teto de LCP da RNF-03, convertendo para `webp` ou redesenhando em SVG.
 
 Construa a biblioteca **antes** das telas. Cada um em `src/views/partials/ui/`:
 
+**Situação depois da T-11.2.** Existem e estão em uso: `botao`, `favo-card`,
+`badge-recurso` (que serve mel e patrimônio, em vez de dois componentes),
+`barra-progresso`, `chama-sequencia`, `mascote`, `item-card`, `estado-vazio`,
+`card-meta`, `card-tarefa`, `calendario-semana`, `cabecalho-colmeia`,
+`aviso-do-ciclo`, `botao-continuar` e `patrimonio-topo`. Faltam `modal` e
+`toast`, que ficaram de fora porque nenhuma tela os usa hoje.
+
+O roadmap chama o componente de "botão 3D". O termo está velho: a revisão de
+2026-08-17 do `DESIGN.md` recusou contorno preto e sombra sólida, e o botão
+entregue segue o documento — mel sólido, canto de favo, sem contorno, levanta
+2 px no hover e volta ao chão em âmbar no clique.
+
 | Componente | Comportamento |
 |---|---|
-| `botao` | Variantes primário/secundário/fantasma. Primário: fill mel, texto preto, canto favo, **sem contorno**. Hover sobe para néctar e levanta 2 px; ao pressionar volta ao chão e escurece para âmbar; foco mostra anel âmbar de 3 px. Altura mínima 48 px. |
+| `botao` ✅ | Variantes primário/secundário/fantasma. Primário: fill mel, texto preto, canto favo, **sem contorno**. Hover sobe para néctar e levanta 2 px; ao pressionar volta ao chão e escurece para âmbar; foco mostra anel âmbar de 3 px. Altura mínima 48 px. |
 | `favo-card` | Card hexagonal com estados bloqueado (cinza + cadeado), disponível (mel + pulso suave), atual (néctar + anel), concluído (âmbar + estrela) |
 | `badge-mel` | Ícone de gota de mel + valor tabular. Animação de contagem ao mudar |
 | `badge-patrimonio` | Mesmo padrão, ícone de colmeia |

@@ -40,12 +40,7 @@
             />
           </div>
 
-          <button
-            type="submit"
-            class="w-full rounded-favo bg-mel px-4 py-3 font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-tinta"
-          >
-            Entrar
-          </button>
+          <%- include('../partials/ui/botao', { texto: 'Entrar', tipo: 'submit', classe: 'w-full' }) %>
         </form>
 
         <p class="mt-6 text-center text-sm text-tinta-suave">

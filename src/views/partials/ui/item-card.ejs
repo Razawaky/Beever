@@ -61,12 +61,12 @@
     <% } else { %>
       <%# O botão leva para a confirmação, nunca direto para a compra: a criança
           vê o impacto antes de gastar (RF-LOJ-05). %>
-      <a
-        href="/loja/itens/<%= item.id %>/confirmar"
-        class="rounded-favo bg-mel px-4 py-2 text-sm font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
-      >
-        Quero este
-      </a>
+      <%- include('./botao', {
+        texto: 'Quero este',
+        href: `/loja/itens/${item.id}/confirmar`,
+        tamanho: 'medio',
+        rotuloAcessivel: `Quero ${item.nome}`,
+      }) %>
     <% } %>
   </div>
 </article>

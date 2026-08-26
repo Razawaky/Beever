@@ -48,18 +48,7 @@
       }) %>
     </div>
 
-    <%# A sequência leva ao calendário completo em /metas, e usa o mesmo partial
-        da semana: dois desenhos do mesmo dado divergem no primeiro ajuste. %>
-    <a
-      href="/metas"
-      class="rounded-favo px-2 py-1 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
-    >
-      <p class="text-sm font-semibold tabular-nums text-tinta">
-        🔥 <%= sequencia.diasAtuais %> <%= sequencia.diasAtuais === 1 ? 'dia seguido' : 'dias seguidos' %>
-      </p>
-      <div class="mt-2">
-        <%- include('calendario-semana', { semana: sequencia, compacto: true }) %>
-      </div>
-    </a>
+    <%# A sequência leva ao calendário completo em /metas. %>
+    <%- include('chama-sequencia', { sequencia, href: '/metas' }) %>
   </div>
 </header>

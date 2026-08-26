@@ -18,9 +18,4 @@
     ? 'fixed inset-x-4 bottom-4 z-20 shadow-xl sm:static sm:inset-auto sm:shadow-md'
     : 'block';
 %>
-<a
-  href="<%= destino %>"
-  class="<%= posicao %> rounded-pilula bg-mel px-6 py-4 text-center font-semibold text-tinta transition hover:-translate-y-0.5 hover:bg-nectar active:translate-y-0 active:bg-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
->
-  <%= texto %>
-</a>
+<%- include('./botao', { texto, href: destino, formato: 'pilula', classe: `${posicao} py-4` }) %>

@@ -6,11 +6,4 @@
 
 <ul id="quiz-alternativas" class="mt-5 space-y-3"></ul>
 
-<button
-  id="quiz-confirmar"
-  type="button"
-  disabled
-  class="mt-6 w-full rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
->
-  Confirmar
-</button>
+<%- include('../ui/botao', { texto: 'Confirmar', id: 'quiz-confirmar', classe: 'mt-6 w-full', desabilitado: true }) %>

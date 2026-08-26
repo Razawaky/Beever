@@ -24,11 +24,7 @@
       <p class="mt-2 text-sm text-tinta-suave">
         Assim que houver conteúdo para a sua idade, ele aparece aqui — e a Beenie te avisa.
       </p>
-      <a
-        href="/painel"
-        class="mt-6 inline-block rounded-pilula bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
-        >Voltar à Colmeia</a
-      >
+      <%- include('../partials/ui/botao', { texto: 'Voltar à Colmeia', href: '/painel', classe: 'mt-6' }) %>
     </section>
   <% } else { %>
     <div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_20rem] md:items-start">

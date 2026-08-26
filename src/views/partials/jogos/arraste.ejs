@@ -29,11 +29,4 @@
 
 <div id="arraste-caixas" class="mt-6 grid gap-4 sm:grid-cols-2"></div>
 
-<button
-  id="arraste-terminar"
-  type="button"
-  disabled
-  class="mt-6 w-full rounded-favo bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
->
-  Terminar
-</button>
+<%- include('../ui/botao', { texto: 'Terminar', id: 'arraste-terminar', classe: 'mt-6 w-full', desabilitado: true }) %>

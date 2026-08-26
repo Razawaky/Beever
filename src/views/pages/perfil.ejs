@@ -54,13 +54,12 @@
           ></p>
 
           <div class="mt-6 flex items-center gap-4">
-            <button
-              type="submit"
-              id="btn-salvar-dias"
-              class="rounded-pilula bg-mel px-6 py-3 font-semibold text-tinta transition hover:bg-ambar focus:outline-[3px] focus:outline-tinta focus:outline-offset-2"
-            >
-              Salvar meus dias
-            </button>
+            <%- include('../partials/ui/botao', {
+              texto: 'Salvar meus dias',
+              tipo: 'submit',
+              id: 'btn-salvar-dias',
+              formato: 'pilula',
+            }) %>
             <a href="/painel" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4">
               Voltar ao painel
             </a>
