@@ -71,12 +71,18 @@ describe('movimento da landing', opcoes, () => {
   });
 
   it('o JavaScript da landing cabe no orçamento da seção 6.4', () => {
-    const script = readFileSync(path.join(raiz, 'src/public/js/landing.js'), 'utf8');
-    const lenis = readFileSync(path.join(raiz, 'src/public/js/vendor/lenis.min.js'), 'utf8');
-    const total = script.length + lenis.length;
+    const arquivos = [
+      'src/public/js/landing.js',
+      'src/public/js/acessibilidade.js',
+      'src/public/js/vendor/lenis.min.js',
+    ];
+    const total = arquivos.reduce((soma, caminho) => soma + readFileSync(path.join(raiz, caminho), 'utf8').length, 0);
 
-    // 30 KB não comprimidos, contando a biblioteca. Se estourar, é sinal de que
-    // algo está sendo feito em JavaScript que devia ser CSS.
-    assert.ok(total <= 30 * 1024, `o JavaScript da landing tem ${total} bytes, acima do teto de 30720`);
+    // O teto era 30 KB e subiu para 34 KB quando o painel de acessibilidade
+    // passou a carregar em toda tela — ele é pedido do usuário e é interface, não
+    // enfeite de landing. O Lenis sozinho são 18,7 KB desse total. A régua
+    // continua servindo para o mesmo: se estourar, alguém está fazendo em
+    // JavaScript o que o CSS faz.
+    assert.ok(total <= 34 * 1024, `o JavaScript da landing tem ${total} bytes, acima do teto de 34816`);
   });
 });

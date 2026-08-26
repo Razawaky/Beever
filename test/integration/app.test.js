@@ -107,8 +107,11 @@ describe('aplicação', () => {
       // importam a parte comum, e módulo já é adiado por natureza.
       assert.match(cadastro.text, /<script src="\/js\/cadastro\.js" type="module"><\/script>/);
 
+      // Desde o painel de acessibilidade, toda tela carrega um script — o do
+      // painel, e só ele. Página sem interatividade própria não carrega mais nada.
       const login = await request(app).get('/login').set('Accept', 'text/html').expect(200);
-      assert.ok(!login.text.includes('<script'), 'página sem interatividade não carrega script nenhum');
+      const scripts = login.text.match(/<script src="([^"]+)"/g) ?? [];
+      assert.deepEqual(scripts, ['<script src="/js/acessibilidade.js"']);
     });
   });
 

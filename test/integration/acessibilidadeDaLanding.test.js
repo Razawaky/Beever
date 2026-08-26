@@ -104,27 +104,45 @@ describe('acessibilidade da landing', opcoes, () => {
     const script = readFileSync(path.join(raiz, 'src/public/js/landing.js'), 'utf8');
 
     assert.match(script, /prefers-reduced-motion: reduce/);
-    // O mini quiz é conteúdo e continua ligado; o resto do movimento não.
-    assert.match(script, /if \(!querMenosMovimento\) \{/);
+    // O mini quiz é conteúdo e continua ligado; o resto do movimento não — e a
+    // escolha do painel entra na mesma porta que a preferência do sistema.
+    assert.match(script, /if \(!querMenosMovimento && !painelPediuMenosMovimento\) \{/);
   });
 
-  it('a página oferece desligar o movimento sem depender do sistema', () => {
-    // Criança costuma usar o aparelho de outra pessoa, e a preferência do
-    // sistema pode não estar ligada. O controle nasce escondido porque, sem
-    // script, não existe movimento para desligar.
-    const controle = /<div[^>]*id="controle-de-movimento"[^>]*>/.exec(landing);
-    assert.ok(controle, 'o controle está na página');
-    assert.match(controle[0], /hidden/);
+  it('o painel de acessibilidade existe em toda tela, e o padrão é o modo normal', () => {
+    for (const [pagina, html] of [
+      ['landing', landing],
+      ['privacidade', privacidade],
+    ]) {
+      const caixa = /<div[^>]*id="acessibilidade"[^>]*>/.exec(html);
+      assert.ok(caixa, `o painel está em ${pagina}`);
 
-    const botao = /<button[^>]*id="botao-reduzir-movimento"[^>]*>/.exec(landing);
-    assert.ok(botao, 'o botão está na página');
-    assert.match(botao[0], /aria-pressed="false"/);
-    assert.match(botao[0], /min-h-11/);
+      // Nenhuma chave nasce ligada: sem escolha, a página é a desenhada.
+      const chaves = html.match(/class="acessibilidade-chave[^"]*"[^>]*aria-pressed="([^"]+)"/g) ?? [];
+      assert.equal(chaves.length, 4, `os quatro ajustes em ${pagina}`);
+      for (const chave of chaves) {
+        assert.match(chave, /aria-pressed="false"/, `ajuste ligado por padrão em ${pagina}`);
+      }
 
-    const script = readFileSync(path.join(raiz, 'src/public/js/landing.js'), 'utf8');
-    // Desligar o movimento pausa também a rolagem suave, que é movimento.
-    assert.match(script, /rolagemSuave\?\.stop\(\)/);
+      assert.ok(html.includes('Modo normal'), `o caminho de volta ao normal existe em ${pagina}`);
+      assert.ok(html.includes('Ativar tudo'), `o atalho para ligar tudo existe em ${pagina}`);
+    }
+  });
+
+  it('o painel só aparece com script, e a escolha fica guardada no navegador', () => {
+    // Sem script não haveria onde guardar a preferência: o CSS só mostra o
+    // painel depois que o `acessibilidade.js` marca o documento.
+    assert.doesNotMatch(landing, /class="[^"]*a11y-pronto/);
+
+    const script = readFileSync(path.join(raiz, 'src/public/js/acessibilidade.js'), 'utf8');
+    assert.match(script, /a11y-pronto/);
     assert.match(script, /localStorage/);
+    // Movimento reduzido também precisa pausar a rolagem suave, que é JavaScript.
+    assert.match(script, /beever:movimento/);
+    assert.match(
+      readFileSync(path.join(raiz, 'src/public/js/landing.js'), 'utf8'),
+      /rolagemSuave\?\.stop\(\)/,
+    );
   });
 
   it('a página tem uma ordem de títulos que dá para navegar por voz', () => {

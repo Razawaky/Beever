@@ -12,6 +12,9 @@
 /* Só a landing usa: fundo escuro, favos em parallax e a entrada da Beenie. */
 @import './landing.css';
 
+/* Vale em toda tela: os ajustes que a pessoa liga no painel de acessibilidade. */
+@import './acessibilidade.css';
+
 /* Tailwind v4 é configurado por CSS. Declaramos aqui onde procurar classes,
    já que os templates são EJS renderizados no servidor. */
 @source '../views/**/*.ejs';

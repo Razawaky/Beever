@@ -22,6 +22,11 @@
     <%- include(pagina) %>
 
     <% if (comRodape) { %><%- include('partials/footer') %><% } %>
+
+    <%# O painel de acessibilidade vale em toda tela, e por isso mora aqui e não
+        em cada página. O modo normal é o padrão: sem escolha ligada, nada muda. -%>
+    <%- include('partials/ui/acessibilidade') %>
+    <script src="/js/acessibilidade.js" type="module"></script>
     <% scripts.forEach((arquivo) => { %>
     <%# `type="module"` porque as telas de jogo importam a parte comum (`partida.js`). -%>
     <script src="<%= arquivo %>" type="module"></script>

@@ -4,13 +4,20 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-11.7 — a E11 fechou. A arte virou WebP (a Beenie do herói
+**Último commit:** T-11.8 — o painel de acessibilidade entrou em **toda tela**, a
+pedido do usuário: quatro ajustes independentes (reduzir movimento, aumentar
+contraste, texto maior, menos distração), mais "Ativar tudo" e "Modo normal". O
+padrão é o modo normal, e ele é intocado — sem escolha ligada, nenhuma classe
+entra no `<html>` e a página é exatamente a desenhada. A escolha fica guardada no
+navegador. 762 testes passando.
+**Próximo passo: auditar a E11 e abrir a E12 — área administrativa**
+
+**Commit anterior:** T-11.7 — a E11 fechou. A arte virou WebP (a Beenie do herói
 caiu de 119 KB para 33 KB), o contraste da paleta passou a ser **calculado por
 teste, inclusive sob daltonismo** — e foi ele que achou que atenção e erro viravam
 a mesma cor sob protanopia, o que obrigou a recalcular as três variantes de texto
 —, e a landing ganhou o controle "Reduzir movimento desta página", que não depende
-da preferência do sistema. **761 testes passando.**
-**Próximo passo: auditar a E11 e abrir a E12 — área administrativa**
+da preferência do sistema. 761 testes passando.
 
 **Commit anterior:** T-11.6 — a landing fechou as dez seções da RF-LAN-03: a seção
 para responsáveis e escolas em superfície clara, as quatro perguntas em `details`
@@ -422,6 +429,7 @@ salto de layout, e continuar inteira utilizável com animação desligada.
 | T-11.4 Seções de conteúdo (problema, como funciona, trilha, jogos, loja/patrimônio, sequência) | **feita** — seis partials em `partials/landing/`, cada um com âncora própria, entrando na revelação que já existia. Os três números do problema têm fonte escrita na página, o conteúdo da trilha e dos jogos é estático (a landing não consulta banco) e o mini quiz responde sem servidor |
 | T-11.5 Animação de scroll: revelação por `IntersectionObserver`, parallax, smooth scroll | **feita** — a revelação, o parallax e a rolagem suave nasceram na T-11.3 com o Lenis; esta tarefa fechou o sistema com o elemento-assinatura da §6.1 (a coluna de mel), o acender dos favos da trilha, a cascata dos grupos e o parallax de textura na economia. O orçamento de JavaScript da §6.4 virou teste |
 | T-11.6 Seção "para pais e escolas" + FAQ + CTA final + footer | **feita** — quatro partials novos fecham a ordem da RF-LAN-03, o FAQ é `details` nativo (zero byte de JavaScript) e o rodapé leva créditos, âncoras e o aviso da RNF-35. A seção de responsáveis só afirma o que o código sustenta e aponta para `/privacidade`, página nova com a política de dados |
+| T-11.8 Painel de acessibilidade em toda tela (pedido do usuário, fora do roadmap original) | **feita** — `partials/ui/acessibilidade.ejs` mais `acessibilidade.js` e `acessibilidade.css`, incluídos pelo layout. Quatro ajustes opt-in, "Ativar tudo", "Modo normal", escolha guardada no navegador, e o movimento reduzido pausando também a rolagem suave do Lenis |
 | T-11.7 Performance e acessibilidade: `prefers-reduced-motion`, contraste, foco, LCP | **feita** — arte em WebP (-72% no herói), contraste calculado por teste inclusive sob deuteranopia, protanopia e tritanopia, varredura de foco e alvo de toque nas duas páginas públicas, e o controle de movimento no rodapé. O LCP em 4G continua sem medir: o roteiro está em `docs/MEDICAO-DE-PERFORMANCE.md` (DT-74) |
 
 ---
@@ -3161,3 +3169,31 @@ catálogo do mascote é o único lugar que sabe qual arquivo vai para a tela.
 O que não foi feito, e está escrito: LCP, CLS e taxa de quadros seguem sem
 medição, porque não há navegador nesta máquina. O roteiro para medir está em
 `docs/MEDICAO-DE-PERFORMANCE.md`, com o que abrir, o que anotar e onde registrar.
+
+### Sessão de 2026-08-26, T-11.8 e o painel de acessibilidade
+
+O usuário pediu um botão que ligue as adaptações de acessibilidade, deixando o
+modo normal intocado — sem afetar imagem, cor, animação, navegação nem
+enquadramento — e outro caminho que ligue tudo. O controle "Reduzir movimento"
+que existia no rodapé da landing foi substituído por este painel, que faz o mesmo
+e mais, e vale em toda tela porque mora no `layout.ejs`.
+
+São quatro ajustes independentes. Reduzir movimento zera animação, transição e a
+rolagem suave do Lenis. Aumentar contraste escurece o texto de apoio no app,
+devolve o branco cheio ao texto rebaixado por opacidade na landing e engrossa o
+anel de foco. Texto maior mexe só na raiz, porque a escala inteira é em `rem`.
+Menos distração esconde fundo animado, a coluna de mel e ilustração decorativa —
+imagem com `alt` vazio, que é justamente a que não informa nada.
+
+A regra que sustenta tudo é a mesma: **nada é aplicado por padrão**. Sem escolha
+ligada, nenhuma classe entra no `<html>`, e o teste conferem que as quatro chaves
+nascem em `aria-pressed="false"` nas duas páginas públicas. O painel também nasce
+escondido, porque sem JavaScript não haveria onde guardar a preferência.
+
+O orçamento de JavaScript da §6.4 subiu de 30 KB para 34 KB, com a razão escrita
+no teste e no `docs/04`: o painel é interface pedida, carrega em toda tela e não é
+enfeite de landing. O total hoje é 31.767 bytes, dos quais 18.722 são o Lenis.
+
+Dois testes antigos mudaram: o que exigia que a tela de login não carregasse
+script nenhum agora aceita exatamente um, o do painel; e o que conferia o botão
+antigo do rodapé foi reescrito para o painel.

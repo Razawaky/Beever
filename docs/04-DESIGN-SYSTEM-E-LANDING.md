@@ -284,7 +284,12 @@ Regras rígidas:
 ### 6.4 Orçamento de performance
 - LCP ≤ 2,5 s em 4G simulado · CLS ≈ 0 · 60 fps na rolagem.
 - Nenhuma imagem acima de 200 KB · fontes com `font-display: swap` e apenas os pesos usados.
-- JS total da landing abaixo de 30 KB não comprimido. Se passar, algo está sendo feito em JS que devia ser CSS.
+- JS total da landing abaixo de **34 KB** não comprimido, conferido em
+  `test/integration/movimentoDaLanding.test.js`. O teto era 30 KB e subiu quando o
+  painel de acessibilidade passou a carregar em toda tela: ele é interface pedida
+  pelo usuário, não enfeite de landing. Desse total, 18,7 KB são o Lenis. A régua
+  continua valendo para o mesmo: se estourar, alguém está fazendo em JavaScript o
+  que o CSS faz.
 
 ---
 
@@ -311,10 +316,19 @@ Beenie, e ele é desligável. Recompensa aparece na hora e sempre do mesmo jeito
 
 **Autismo.** A régua é previsibilidade: navegação estável, linguagem literal sem
 ironia, nenhuma mudança brusca de layout, nada de piscar, e movimento sempre
-desligável. Por isso a landing tem o controle "Reduzir movimento desta página" no
-rodapé, que não depende da preferência do sistema estar ligada — criança costuma
-usar o aparelho de outra pessoa — e que guarda a escolha no navegador. Dentro do
-app, o mesmo papel é do `profiles.has_reduced_motion`.
+desligável.
+
+**O painel de acessibilidade.** Em vez de depender da configuração do aparelho —
+que criança quase nunca controla —, toda tela tem o painel de
+`partials/ui/acessibilidade.ejs`, no canto inferior. Ele oferece quatro ajustes
+independentes (reduzir movimento, aumentar contraste, texto maior, menos
+distração), mais "Ativar tudo" e "Modo normal".
+
+**O modo normal é o padrão, e é intocado.** Enquanto nada está ligado, nenhuma
+classe entra no `<html>`: cor, imagem, animação, navegação e tamanho de texto
+são exatamente os desenhados. Cada ajuste é opt-in, fica guardado no navegador e
+volta na próxima visita. Dentro do app, `profiles.has_reduced_motion` continua
+sendo a preferência da conta.
 
 
 
