@@ -9,6 +9,8 @@
   <h1 class="text-3xl font-bold">Painel</h1>
   <p class="mt-2 text-tinta-suave">Área restrita. Toda ação feita aqui vai para a trilha de auditoria.</p>
 
+  <%- include('../../partials/admin/metricas', { metricas }) %>
+
   <div class="mt-8 grid gap-4 sm:grid-cols-2">
     <section class="rounded-favo border border-linha bg-white p-6">
       <h2 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Contas</h2>
@@ -55,10 +57,5 @@
     }) %>
   </section>
 
-  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
-    <h2 class="text-lg font-semibold">Ainda em construção</h2>
-    <p class="mt-2 text-sm text-tinta-suave">
-      As métricas agregadas do painel são a última tarefa da etapa.
-    </p>
-  </section>
+
 </main>

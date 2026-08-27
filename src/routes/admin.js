@@ -36,7 +36,13 @@ router.use((req, res, proximo) =>
   req.method === 'POST' ? limiteAdministrativo(req, res, proximo) : proximo(),
 );
 
-router.get('/', adminController.painel);
+// O período do painel é opcional: sem ele, o service usa os 30 dias padrão.
+router.get(
+  '/',
+  query('dias').optional({ values: 'falsy' }).isInt({ min: 1, max: 365 }),
+  validate,
+  adminController.painel,
+);
 router.get('/usuarios', adminController.usuarios);
 router.post(
   '/usuarios/:id/admin',

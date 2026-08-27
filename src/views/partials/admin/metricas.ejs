@@ -1,0 +1,126 @@
+<%#
+  As quatro métricas da RF-ADM-04, sobre o período escolhido.
+
+  Nenhum número identifica criança: item mais comprado é agregado por item, e a
+  retenção é percentual. O gráfico é SVG desenhado no servidor — altura de
+  `<rect>` é geometria, não estilo, então ela passa pela CSP que proíbe `style`
+  na marcação.
+-%>
+<section class="mt-8">
+  <div class="flex flex-wrap items-center gap-4">
+    <h2 class="text-lg font-semibold">Métricas</h2>
+
+    <nav class="flex flex-wrap items-center gap-2" aria-label="Período das métricas">
+      <% metricas.periodos.forEach((dias) => { %>
+        <a
+          href="/admin?dias=<%= dias %>"
+          class="inline-flex min-h-11 items-center rounded-pilula border px-4 text-sm<%= metricas.dias === dias ? ' border-mel bg-cera font-semibold' : ' border-linha' %>"
+          <%= metricas.dias === dias ? 'aria-current="page"' : '' %>
+        ><%= dias %> dias</a>
+      <% }) %>
+    </nav>
+  </div>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-favo border border-linha bg-white p-6">
+      <h3 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Jogadores ativos</h3>
+      <p class="mt-2 text-4xl font-bold tabular-nums"><%= metricas.jogadoresAtivos %></p>
+      <p class="mt-1 text-xs text-tinta-suave">Concluíram ao menos uma atividade no período.</p>
+    </div>
+
+    <div class="rounded-favo border border-linha bg-white p-6">
+      <h3 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Células concluídas</h3>
+      <p class="mt-2 text-4xl font-bold tabular-nums"><%= metricas.conclusoes %></p>
+      <p class="mt-1 text-xs text-tinta-suave">
+        Em <%= metricas.celulasTocadas %> célula(s) diferente(s).
+      </p>
+    </div>
+
+    <div class="rounded-favo border border-linha bg-white p-6">
+      <h3 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Dias marcados cumpridos</h3>
+      <p class="mt-2 text-4xl font-bold tabular-nums">
+        <%= metricas.retencao.percentual === null ? '—' : `${metricas.retencao.percentual}%` %>
+      </p>
+      <p class="mt-1 text-xs text-tinta-suave">
+        <% if (metricas.retencao.avaliados === 0) { %>
+          Nenhum dia marcado foi avaliado ainda.
+        <% } else { %>
+          <%= metricas.retencao.cumpridos %> de <%= metricas.retencao.avaliados %> dias marcados.
+          <%= metricas.retencao.protegidos %> salvo(s) pelo escudo.
+        <% } %>
+      </p>
+    </div>
+
+    <div class="rounded-favo border border-linha bg-white p-6">
+      <h3 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Item mais comprado</h3>
+      <% if (metricas.itensMaisComprados.length === 0) { %>
+        <p class="mt-2 text-sm text-tinta-suave">Nenhuma compra no período.</p>
+      <% } else { %>
+        <p class="mt-2 text-xl font-bold"><%= metricas.itensMaisComprados[0].name %></p>
+        <p class="mt-1 text-xs text-tinta-suave">
+          <%= metricas.itensMaisComprados[0].unidades %> unidade(s),
+          <%= metricas.itensMaisComprados[0].mel %> de mel.
+        </p>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (metricas.itensMaisComprados.length > 1) { %>
+    <div class="mt-4 overflow-x-auto rounded-favo border border-linha bg-white">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Itens mais comprados no período</caption>
+        <thead class="border-b border-linha text-tinta-suave">
+          <tr>
+            <th scope="col" class="px-4 py-3 font-semibold">Item</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Unidades</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Mel</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% metricas.itensMaisComprados.forEach((item) => { %>
+            <tr class="border-b border-linha last:border-0">
+              <td class="px-4 py-3 font-medium"><%= item.name %></td>
+              <td class="px-4 py-3 tabular-nums"><%= item.unidades %></td>
+              <td class="px-4 py-3 tabular-nums"><%= item.mel %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <div class="mt-4 rounded-favo border border-linha bg-white p-6">
+    <h3 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Conclusões por dia</h3>
+
+    <% if (metricas.grafico.length === 0) { %>
+      <p class="mt-2 text-sm text-tinta-suave">Nenhuma atividade concluída no período.</p>
+    <% } else { %>
+      <svg
+        class="mt-4 h-40 w-full"
+        viewBox="0 0 <%= metricas.grafico.length * 4 %> <%= metricas.alturaDoGrafico %>"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label="Conclusões por dia no período de <%= metricas.dias %> dias"
+      >
+        <% metricas.grafico.forEach((barra, indice) => { %>
+          <rect
+            x="<%= indice * 4 %>"
+            y="<%= barra.topo %>"
+            width="3"
+            height="<%= barra.altura %>"
+            class="fill-mel"
+          ><title><%= barra.dia %>: <%= barra.total %> conclusão(ões)</title></rect>
+        <% }) %>
+      </svg>
+
+      <%# O gráfico é decoração de leitura rápida: os mesmos números vão escritos
+          para quem usa leitor de tela, que é a regra de nunca informar só por
+          forma ou cor. -%>
+      <ul class="sr-only">
+        <% metricas.grafico.forEach((barra) => { %>
+          <li><%= barra.dia %>: <%= barra.total %> conclusão(ões)</li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</section>

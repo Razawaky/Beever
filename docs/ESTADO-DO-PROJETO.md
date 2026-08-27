@@ -4,11 +4,17 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** auditoria da E12, com as dez lacunas corrigidas na mesma sessão. As
+**Último commit:** T-12.7 — o painel administrativo ganhou as quatro métricas da RF-ADM-04
+sobre cinco períodos, com gráfico em SVG desenhado no servidor e nenhum número que
+identifique criança. A migration 021 deu índice de data às três tabelas que mais crescem,
+que até aqui só sabiam responder por jogador. **A E12 fecha inteira**: sete tarefas e o
+laudo. 891 testes passando.
+**Próximo passo: abrir a E13 (conquistas e liga, P1 e cortável) ou pular para a E14**
+
+**Commit anterior:** auditoria da E12, com as dez lacunas corrigidas na mesma sessão. As
 duas que impediam declarar a etapa concluída eram o expurgo de conta, que deixava e-mail
 e apelido para sempre numa tabela append-only (RN-053), e a linha de evolução do item,
 que o painel não conseguia cadastrar (RF-ADM-03 e RF-LOJ-07). 871 testes passando.
-**Próximo passo: T-12.7 (dashboard, P1) ou abrir a E13**
 
 **Commit anterior:** T-12.6 — a trilha de auditoria ganhou como ser lida. Sete filtros
 combináveis, paginação com total, exportação em CSV e nenhuma rota de escrita, porque a
@@ -474,6 +480,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Item | Por que está aqui |
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
+| O painel de métricas (T-12.7) | O caminho está coberto por teste pelo HTTP: os quatro números conferidos um a um sobre cenário plantado dos dois lados da fronteira do período, e o tempo da página medido contra o teto de 2 s. O que **não** foi visto por olho humano é o desenho — o gráfico SVG com 180 barras num celular, os cinco botões de período quebrando linha a 320 px, e os quatro cartões de número em uma coluna. Vale o passe da DT-22 |
 | A tela de auditoria (T-12.6) | O caminho está coberto por teste pelo HTTP: os sete filtros, o combinado de dois, a paginação sem repetir linha, o CSV com cabeçalho e a ausência de qualquer formulário de escrita. O que **não** foi visto por olho humano é a tela em si — o formulário de oito campos em três colunas a 320 px, o `details` com o JSON do antes/depois dentro de uma célula de tabela, e o download do CSV acontecendo de verdade no navegador. Vale o passe da DT-22 |
 | A tela do acervo da célula (T-12.5) | O caminho está coberto por teste pelo HTTP: publicar substituindo, publicar acrescentando, o sorteio entre três atividades, a retomada com a mesma, e tirar do acervo. O que **não** foi visto por olho humano é a escolha entre substituir e acrescentar aparecendo nos dois formulários da mesma página, e a lista do acervo com os botões de tirar a 320 px. Vale o passe da DT-22 |
 | As duas telas de jogo novas e os oito formulários de atividade (T-12.4) | O caminho está coberto por teste pelo HTTP: os oito tipos são cadastrados pelo formulário e a partida abre para a conta demo em cada um, sem gabarito junto. O que **não** foi visto por olho humano é justamente o que estes dois jogos entregam — a lista suspensa aberta no celular, a frase com quatro lacunas a 320 px, o painel do quadrinho trocando com a imagem em cima, e o foco de teclado passeando pelos oito formulários do painel, que são a maior superfície de tela da etapa. Vale o passe da DT-22 |
@@ -506,8 +513,8 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E12 — Área administrativa** (auditada; as seis tarefas obrigatórias entregues e as dez
-lacunas do laudo fechadas — falta a T-12.7, que é P1). É a etapa que tira o programador do meio: o
+**E12 — Área administrativa** (concluída e auditada; as sete tarefas entregues e as dez
+lacunas do laudo fechadas). É a etapa que tira o programador do meio: o
 administrador passa a cadastrar item, conteúdo e atividade sem rodar `db:seed`. O
 aceite é usuário comum receber 403 em toda rota admin, toda ação administrativa
 aparecer na auditoria, e item e atividade cadastrados pelo painel aparecerem para
@@ -522,7 +529,7 @@ modelagem adiadas estão em `docs/02-ROADMAP-ETAPAS.md`.
 | T-12.4 Cadastro de atividades novas nos tipos de jogo que já existem, com mídia | **feita** — formulário próprio para os oito tipos, com o JSON virando modo avançado num `details`; a imagem da atividade viaja dentro do corpo JSON e é mostrada pela casca comum, sem tocar em oito arquivos de JavaScript. A pedido do usuário a tarefa cresceu e trouxe dois formatos novos por inteiro, **Listas Suspensas** e **Quadrinho Interativo**, cada um com validador, tela, JavaScript e exemplo no seed. Vídeo ficou de fora por decisão |
 | T-12.5 Distribuição adaptativa: a atividade cadastrada entra no sorteio da faixa | **feita** — sem tabela nova: publicar passou a ter duas opções, substituir ou acrescentar ao acervo, e as versões ativas de `contents` viraram o conjunto sorteável. A faixa vem de graça, porque a célula já tem `age_band_id`. O sorteio é do servidor, não repete a atividade da partida anterior, e a migration 018 grava na partida qual saiu — o que também consertou a correção, que antes relia o conteúdo atual da célula |
 | T-12.6 Consulta de auditoria com filtros | **feita** — sete filtros combináveis (tipo e id de quem agiu, ação, entidade e id, id da requisição, período), paginação com total, e exportação em CSV do mesmo recorte, com proteção contra fórmula de planilha. A migration 019 indexou `(action, created_at)` e `(created_at)`. Nenhuma rota de escrita: que a tela não oferece caminho para alterar a trilha virou teste |
-| T-12.7 Dashboard e métricas agregadas (P1) | pendente — o painel de hoje mostra só contagem de contas e a lista de administradores |
+| T-12.7 Dashboard e métricas agregadas (P1) | **feita** — jogadores ativos, células concluídas, itens mais comprados e retenção dos dias marcados, sobre 7, 14, 30, 90 ou 180 dias, com 30 de padrão. Gráfico de conclusões por dia em SVG desenhado no servidor, sem dependência nova, com os mesmos números escritos para leitor de tela. A migration 021 deu índice de data a `game_sessions`, `purchases` e `streak_events` |
 
 ---
 
@@ -1254,7 +1261,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
-| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. Falta a T-12.7, que é P1, e as quatro decisões de modelagem continuam abertas |
+| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
@@ -1315,6 +1322,8 @@ Identificadores rastreiam os documentos da E00.
 | DT-96 | Espalhar o resultado de um service dentro do `renderizarPagina` pode sobrescrever `pagina`, que é como o layout sabe qual view renderizar. Aconteceu na T-12.6 e derrubou a tela com erro do EJS, difícil de ler | T-12.6 | Renomear a chave do layout para algo improvável, como `caminhoDaPagina`, ou fazer o helper recusar `pagina` vindo nos dados |
 | DT-97 | A promoção e o rebaixamento de administrador não conferem se sobrou algum admin: rebaixar o penúltimo é permitido, e quem sobrar pode se recusar a rebaixar a si mesmo — mas a conta única pode ser desativada por outro caminho | auditoria da E12 | Contar administradores ativos antes de rebaixar, ou aceitar que o seed sempre recria um |
 | DT-98 | A pasta de uploads não tem limpeza: arte de item ou de atividade substituída fica no disco (DT-86 e DT-90), e agora com limitador de 120 escritas por janela o crescimento é lento, mas contínuo | auditoria da E12 | Resolver as três juntas, com uma varredura que compare a pasta com o que o banco referencia |
+| DT-99 | As métricas são calculadas a cada abertura do painel. Com a base do TCC e os índices da migration 021 isso responde rápido, e não escala para uma base grande: cinco consultas agregadas sobre as tabelas que mais crescem, sem cache nenhum | T-12.7 | Foto diária numa tabela de métricas, como `patrimony_snapshots` já faz, quando o número de linhas justificar o job |
+| DT-100 | O gráfico de conclusões por dia só desenha os dias que tiveram conclusão: um período com buracos aparece comprimido, sem os vazios entre as barras, o que engana quem lê a forma em vez do número | T-12.7 | Preencher os dias sem conclusão com zero antes de montar as barras, gerando a série completa do período |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3610,3 +3619,39 @@ continua sem limpeza.
 
 871 testes passando, onze deles novos, num arquivo só — as correções vieram do laudo, e
 espalhá-las pelos arquivos das tarefas esconderia isso.
+
+### Sessão de 2026-08-27, T-12.7 e a E12 fechada
+
+A última tarefa da etapa era P1 e cortável, e o que a tornou trabalhosa não foi a
+tela: foi onde os números moram. As quatro métricas da RF-ADM-04 batem justamente
+nas tabelas que mais crescem — uma linha por partida, uma por compra, uma por dia
+de cada jogador — e **todos os índices delas começam por `user_id`**, porque
+nasceram para responder "o que este jogador fez". O painel pergunta o contrário, e
+nenhuma das quatro tinha por onde começar a não ser varrendo. A migration 021
+acrescentou índice de data às três, com a coluna de agrupamento junto.
+
+Os números são calculados na hora, e não lidos de uma foto diária: com a base do
+TCC, cinco consultas agregadas com índice respondem rápido, e foto diária pediria
+um job novo, uma tabela nova e um bug novo — o dia em que o job não roda. Vira a
+DT-99 no dia em que a base crescer.
+
+Duas decisões de conteúdo valem lembrar, porque mudam o que o número significa. O
+dia protegido pelo escudo conta como **não cumprido**: o escudo salva a sequência
+da criança, e não muda o fato de que aquele dia não teve célula — misturar os dois
+inflaria a retenção. E o dia neutro fica fora da conta, porque é dia que ela não
+marcou na agenda, e contá-lo diluiria a métrica com dias em que ninguém prometeu
+aparecer. Sem dia avaliado, o percentual vem nulo e a tela mostra um traço: "ainda
+não houve dia marcado" não é "ninguém cumpriu".
+
+O gráfico é SVG desenhado no servidor, sem dependência nova. Altura de `<rect>` é
+atributo de geometria, não estilo, então ela passa pela CSP que barra `style` na
+marcação — a mesma saída que o Cofre do Tempo usa desde a E07, e a razão de a barra
+de progresso precisar de classe. Os mesmos números vão escritos num `sr-only`.
+
+Nenhum número identifica criança, e isso virou asserção: a listagem de itens não
+carrega `user_id` nem e-mail. O painel entrou com medição de tempo contra o teto de
+2 s da RNF-01, no formato do aceite da Colmeia, e as cinco consultas rodam em
+paralelo — em série somariam.
+
+Com ela a **E12 fecha inteira**: sete tarefas, o laudo da etapa e as dez lacunas
+dele. 891 testes passando, vinte deles novos.

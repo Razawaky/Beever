@@ -1,3 +1,4 @@
+import * as adminMetricsService from '../services/adminMetricsService.js';
 import * as adminService from '../services/adminService.js';
 import * as auditService from '../services/auditService.js';
 import * as usersService from '../services/usersService.js';
@@ -38,14 +39,19 @@ export const login = assincrono(async (req, res) => {
 });
 
 export const painel = assincrono(async (req, res) => {
-  const resumo = await adminService.resumoDoPainel();
-  if (querJson(req)) return res.json(resumo);
+  const [resumo, metricas] = await Promise.all([
+    adminService.resumoDoPainel(),
+    adminMetricsService.metricasDoPeriodo(req.query.dias),
+  ]);
+
+  if (querJson(req)) return res.json({ ...resumo, metricas });
 
   renderizarPagina(res, 'admin/painel', {
     titulo: 'Administração — Beever',
     classeBody: FUNDO_ADMIN,
     emailDoAdmin: req.session.email,
     resumo,
+    metricas,
   });
 });
 
