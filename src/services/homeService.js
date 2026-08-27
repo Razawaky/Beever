@@ -4,6 +4,7 @@ import * as economicCycleService from './economicCycleService.js';
 import { criteriosDosEventos } from './eventosDeConquista.js';
 import * as goalPlannerService from './goalPlannerService.js';
 import * as goalsService from './goalsService.js';
+import * as leagueService from './leagueService.js';
 import * as patrimonyService from './patrimonyService.js';
 import * as profilesService from './profilesService.js';
 import * as streakService from './streakService.js';
@@ -25,6 +26,10 @@ import * as tasksService from './tasksService.js';
 export async function prepararVisita(idUsuario) {
   const ciclosDaVisita = await economicCycleService.processarPendentes(idUsuario);
   await streakService.avaliar(idUsuario);
+  // A liga fecha antes de o jogador entrar na semana nova: invertido, ele entraria
+  // no grupo da semana que ainda vai ser fechada e apareceria duas vezes.
+  await leagueService.fecharSemanasVencidas();
+  await leagueService.garantirParticipacao(idUsuario);
   await tasksService.garantirTarefasDoDia(idUsuario);
   await tasksService.sincronizarProgresso(idUsuario);
   // Sincronizar expira o que venceu (RN-017); invertido, a meta vencida ainda
@@ -55,16 +60,18 @@ export function marcarFocoDaTrilha(trilha) {
 export async function obterColmeia(idUsuario) {
   await prepararVisita(idUsuario);
 
-  const [perfil, patrimonio, semana, metas, tarefas, trilha, eventosDoCiclo, avisoDoCiclo] = await Promise.all([
-    profilesService.obterDoUsuario(idUsuario),
-    patrimonyService.obterDoUsuario(idUsuario),
-    streakService.resumoDaSemana(idUsuario),
-    goalsService.listarAtivas(idUsuario),
-    tasksService.listarAtivas(idUsuario),
-    contentService.listarTrilha(idUsuario),
-    economicCycleService.listarEventosRecentes(idUsuario),
-    economicCycleService.avisoDoDia(idUsuario),
-  ]);
+  const [perfil, patrimonio, semana, metas, tarefas, trilha, eventosDoCiclo, avisoDoCiclo, liga] =
+    await Promise.all([
+      profilesService.obterDoUsuario(idUsuario),
+      patrimonyService.obterDoUsuario(idUsuario),
+      streakService.resumoDaSemana(idUsuario),
+      goalsService.listarAtivas(idUsuario),
+      tasksService.listarAtivas(idUsuario),
+      contentService.listarTrilha(idUsuario),
+      economicCycleService.listarEventosRecentes(idUsuario),
+      economicCycleService.avisoDoDia(idUsuario),
+      leagueService.ligaDoJogador(idUsuario),
+    ]);
 
   // Patrimônio e cofre são avaliados aqui, e não no evento que os move: somar
   // carteira, cofre e bens é a conta mais cara do sistema, e a visita já a fez
@@ -111,5 +118,7 @@ export async function obterColmeia(idUsuario) {
     },
     // O que a visita destravou de patrimônio e de cofre. A tela é da T-13.4.
     conquistas,
+    // A posição na liga da semana (RF-HOM-11). `null` para quem ainda não jogou.
+    liga,
   };
 }

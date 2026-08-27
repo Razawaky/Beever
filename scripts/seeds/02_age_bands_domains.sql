@@ -73,6 +73,7 @@ INSERT INTO reward_reasons (slug, name) VALUES
   ('custo-fixo',            'Custo fixo de item'),
   ('venda-item',            'Venda de item'),
   ('venda-por-inadimplencia', 'Venda forçada por inadimplência'),
+  ('premio-de-liga',        'Prêmio do pódio da liga semanal'),
   ('ajuste-administrativo', 'Ajuste administrativo')
 AS novo
 ON DUPLICATE KEY UPDATE name = novo.name;

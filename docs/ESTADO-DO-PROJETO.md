@@ -4,11 +4,16 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-13.2 — as quatro famílias novas passaram a desbloquear sozinhas.
+**Último commit:** T-13.3 — a liga semanal por pólen saiu do schema e virou comportamento.
+Grupos de trinta, ranque somado do livro, fechamento preguiçoso na visita e pódio pago sem
+ninguém ser rebaixado. A migration 023 desfez a unicidade que só permitia uma liga por
+semana em todo o sistema. 944 testes passando.
+**Próximo passo: T-13.4 — as telas de conquistas e de liga, que fecham a E13**
+
+**Commit anterior:** T-13.2 — as quatro famílias novas passaram a desbloquear sozinhas.
 Célula e favo no fim da partida, com a conquista voltando na resposta; patrimônio e cofre
 na visita à Colmeia, aproveitando a conta cara que a home já fazia. O teste de N+1 da
 Colmeia pegou um erro meu antes de ele virar commit. 923 testes passando.
-**Próximo passo: T-13.3 — liga semanal por pólen**
 
 **Commit anterior:** T-13.1 — a conquista passou a declarar no banco o que destrava ela, e o
 catálogo saiu de cinco marcos de sequência para vinte e uma conquistas em cinco famílias.
@@ -491,6 +496,7 @@ argumento a favor da rede que a T-02.1 montou.
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | A conquista aparecendo para a criança (T-13.2) | O desbloqueio está coberto por teste pelos dois caminhos, e a conquista volta na resposta da partida e na da Colmeia. O que **não** existe ainda é tela: nem a lista de conquistas nem o aviso na Colmeia foram desenhados, então hoje a criança recebe o mel e não vê o motivo. É a T-13.4 |
+| A liga aparecendo para a criança (T-13.3) | O ranque, o empate, a virada da semana e o pagamento do pódio estão cobertos por teste, e a posição já volta na resposta da Colmeia (RF-HOM-11). O que **não** existe é tela: a criança entra no grupo, sobe no ranque e não vê nada disso. É a T-13.4, junto da lista de conquistas |
 | O painel de métricas (T-12.7) | O caminho está coberto por teste pelo HTTP: os quatro números conferidos um a um sobre cenário plantado dos dois lados da fronteira do período, e o tempo da página medido contra o teto de 2 s. O que **não** foi visto por olho humano é o desenho — o gráfico SVG com 180 barras num celular, os cinco botões de período quebrando linha a 320 px, e os quatro cartões de número em uma coluna. Vale o passe da DT-22 |
 | A tela de auditoria (T-12.6) | O caminho está coberto por teste pelo HTTP: os sete filtros, o combinado de dois, a paginação sem repetir linha, o CSV com cabeçalho e a ausência de qualquer formulário de escrita. O que **não** foi visto por olho humano é a tela em si — o formulário de oito campos em três colunas a 320 px, o `details` com o JSON do antes/depois dentro de uma célula de tabela, e o download do CSV acontecendo de verdade no navegador. Vale o passe da DT-22 |
 | A tela do acervo da célula (T-12.5) | O caminho está coberto por teste pelo HTTP: publicar substituindo, publicar acrescentando, o sorteio entre três atividades, a retomada com a mesma, e tirar do acervo. O que **não** foi visto por olho humano é a escolha entre substituir e acrescentar aparecendo nos dois formulários da mesma página, e a lista do acervo com os botões de tirar a 320 px. Vale o passe da DT-22 |
@@ -532,7 +538,7 @@ o jogador fez, e a liga fechar a semana sem rebaixamento punitivo.
 |---|---|
 | T-13.1 Catálogo e regras de conquistas | **feita** — migration 022 deu critério e alvo à conquista, e a regra saiu do código para o banco, onde o resto das regras de recompensa já mora. O catálogo foi de cinco marcos de sequência para vinte e uma conquistas em cinco famílias (sequência, favos, células, patrimônio e cofre), quatro degraus cada. `criteriosDeConquista.js` responde o que um número destrava, e o `streakService` deixou de montar slug à mão |
 | T-13.2 Desbloqueio automático por evento | **feita** — célula e favo avaliados no fim da partida, com o dado já em mãos e a conquista voltando na resposta para a tela comemorar; patrimônio e cofre na visita à Colmeia, aproveitando a soma que o `homeService` já fazia. `eventosDeConquista.js` traduz evento em critério, e `avaliarEventos` nunca lança — perder conquista é menos grave do que desfazer o mel já pago. Paga a DT-101 |
-| T-13.3 Liga semanal por pólen | pendente — `leagues` e `league_members` existem desde a E01 e nunca receberam linha |
+| T-13.3 Liga semanal por pólen | **feita** — migration 023 trocou a unicidade de `leagues` para o par semana e grupo, indexou o `point_ledger` por data e criou `league_prizes`. O pólen é somado do livro no período, com `points` como cache; grupos de até 30, entrada na visita, fechamento preguiçoso com `final_rank IS NULL` como trava, e pódio pago sem ninguém descer |
 | T-13.4 Views | pendente |
 
 ---
@@ -1286,7 +1292,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
 | E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
-| E13 Conquistas e liga | **em andamento** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. Faltam T-13.3 e T-13.4. Continua P1 e cortável; feita antes da E14 por decisão do usuário |
+| E13 Conquistas e liga | **em andamento** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. Falta a T-13.4, que são as telas. Continua P1 e cortável; feita antes da E14 por decisão do usuário |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
 
@@ -1353,6 +1359,9 @@ Identificadores rastreiam os documentos da E00.
 | DT-103 | `achievements.icon_path` continua nulo em todas as vinte e uma: a arte é do usuário, e a tela da T-13.4 vai precisar de um lugar único de troca, como o catálogo do mascote já tem | T-13.1 | Definir junto da T-13.4, seguindo o padrão de `config/mascote.js` |
 | DT-104 | Desbloquear paga mel, o mel entra no patrimônio, e o patrimônio pode destravar o degrau seguinte — só na visita **seguinte**. A escada é finita, então converge em poucas visitas, mas a criança pode receber a conquista de patrimônio um acesso depois de merecê-la | T-13.2 | Reavaliar o critério de patrimônio logo depois de pagar conquista, ou aceitar o atraso de uma visita como custo de a avaliação ser preguiçosa |
 | DT-105 | A contagem de conquistas na visita à Colmeia mede o patrimônio **do momento**, e não o maior já alcançado. Quem chega a 5000 e gasta tudo antes de abrir a Colmeia não recebe o degrau. A família de sequência não tem esse problema, porque usa o melhor já atingido | T-13.2 | Guardar o maior patrimônio já alcançado, como `streaks.best_days` faz, se isso incomodar na prática |
+| DT-106 | O jogador entra no grupo da liga na visita à Colmeia, e não ao ganhar o primeiro pólen. Quem joga uma célula pelo endereço direto, sem passar pela home, só entra na visita seguinte — e o pólen dele conta retroativo quando entrar, porque a soma é do livro | T-13.3 | Chamar `garantirParticipacao` também no fechamento da partida, se na prática alguém jogar sem passar pela Colmeia |
+| DT-107 | O grupo é preenchido por ordem de chegada, sem equilibrar nível ou faixa etária: uma criança de seis anos pode cair no mesmo grupo de uma de quinze, e disputar pólen com quem joga células que pagam mais | T-13.3 | Agrupar por faixa etária quando houver gente suficiente para encher mais de um grupo por faixa |
+| DT-108 | `league_members.points` é cache e não entra no `db:reconcile`, ao contrário de `wallets` e `hive_progress`. Divergência entre ele e o `point_ledger` passaria sem alarme | T-13.3 | Acrescentar a conferência ao `scripts/reconcile.js`, que já sabe comparar cache com livro |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3757,3 +3766,39 @@ patrimônio avaliado é o do momento e não o maior já alcançado — quem cheg
 mil e gasta tudo antes de abrir a Colmeia não recebe o degrau.
 
 923 testes passando, catorze deles novos. A DT-101 está paga.
+
+### Sessão de 2026-08-27, T-13.3 e a liga que estava só no schema
+
+`leagues` e `league_members` nasceram na E01 e nunca receberam uma linha. Escrever
+a primeira revelou três coisas que o schema tinha decidido sem querer.
+
+A `uq_leagues_starts_on` permitia **uma liga por semana em todo o sistema**, e a
+RF-GAM-02 pede grupos: a unicidade virou o par semana e nome, e cada grupo é uma
+linha. O índice do `point_ledger` começa por `user_id`, porque foi feito para "o
+extrato deste jogador", e a liga pergunta o contrário — sem o índice de data ela
+varre a tabela que mais cresce. E o prêmio do pódio é valor de recompensa, então
+virou `league_prizes` em vez de três números no meio do service (RN-006).
+
+O pólen sai do livro, somado no período, e `league_members.points` é cache
+regravado na leitura — o mesmo desenho de `wallets` e `hive_progress`. A semana da
+liga é a do calendário UTC, e não o dia do jogador: sequência e ciclo usam o fuso
+de cada um porque falam de hábito individual, mas ranking compara pessoas, e cada
+uma com uma janela diferente daria horas a mais a quem estivesse num fuso adiantado.
+
+Duas decisões desenham o "sem rebaixamento punitivo" da RF-GAM-02 como
+comportamento, e não como texto. Quem não ganhou pólen na semana não entra na liga,
+porque aparecer em último sem ter jogado é a humilhação que o requisito manda
+evitar. E o empate divide a posição, com a seguinte pulando — mas **os dois
+empatados recebem o prêmio inteiro**: dividir o mel faria uma criança ser punida
+porque a outra jogou bem.
+
+O teste achou um defeito antes de ele virar commit. Coluna `DATE` volta do `mysql2`
+como objeto `Date`, e eu estava interpolando isso num texto de SQL: o fechamento
+teria montado uma consulta com "Sat Aug 22 2026" dentro. Virou `paraDataISO`, com o
+comentário explicando por que o `toISOString` serve para a semana da liga e não
+serviria para o dia do jogador.
+
+Um teste existente mudou por consequência direta: o `seed.test.js` contava oito
+arquivos de seed, e agora são nove.
+
+944 testes passando, vinte e um deles novos.
