@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import mysql from 'mysql2/promise';
 
 import { env } from '../src/config/env.js';
+import { comportamentosDosNumeros } from '../src/services/comportamentosDoItem.js';
 import { separarComandos } from './migrate.js';
 
 /**
@@ -73,6 +74,35 @@ async function aplicar(conexao, diretorio, arquivo) {
   }
 }
 
+/**
+ * Regrava `item_behaviors_map` a partir dos números de cada item.
+ *
+ * A derivação morava dentro de `03_items_catalog.sql`. Ela saiu de lá na T-12.3,
+ * quando o painel passou a criar item: com duas cópias da regra, a do SQL e a do
+ * service, elas divergiriam na primeira mudança. Aqui o seed consome a mesma
+ * função que o painel usa.
+ */
+async function derivarComportamentos(conexao) {
+  const [itens] = await conexao.query(
+    'SELECT id, valuation_rate, upkeep_cost, income_per_cycle FROM items WHERE deleted_at IS NULL',
+  );
+
+  for (const item of itens) {
+    const slugs = comportamentosDosNumeros({
+      taxaDeValorizacao: Number(item.valuation_rate),
+      custoFixo: Number(item.upkeep_cost),
+      rendaPorCiclo: Number(item.income_per_cycle),
+    });
+
+    await conexao.query('DELETE FROM item_behaviors_map WHERE item_id = ?', [item.id]);
+    await conexao.query(
+      `INSERT INTO item_behaviors_map (item_id, behavior_id)
+       SELECT ?, b.id FROM item_behaviors b WHERE b.slug IN (${slugs.map(() => '?').join(', ')})`,
+      [item.id, ...slugs],
+    );
+  }
+}
+
 async function contar(conexao) {
   const resumo = {};
   for (const [tabela, rotulo] of CONTAGENS) {
@@ -108,6 +138,8 @@ export async function semear({ diretorio = diretorioSeeds, conexao } = {}) {
     for (const arquivo of arquivos) {
       await aplicar(conn, diretorio, arquivo);
     }
+
+    await derivarComportamentos(conn);
 
     return { arquivos, resumo: await contar(conn) };
   } finally {

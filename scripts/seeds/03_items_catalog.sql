@@ -79,18 +79,13 @@ ON DUPLICATE KEY UPDATE
   valuation_floor_pct = dados.piso, valuation_cap_pct = dados.teto,
   upkeep_cost = dados.custo, income_per_cycle = dados.renda, is_consumable = dados.consumivel;
 
--- RN-035: um item combina comportamentos. Carro é deprecia E custo_fixo, e a
--- criança precisa ver os dois efeitos acontecendo no mesmo item.
-INSERT IGNORE INTO item_behaviors_map (item_id, behavior_id)
-SELECT i.id, b.id
-  FROM items i
-  JOIN item_behaviors b ON (
-       (b.slug = 'valoriza'   AND i.valuation_rate > 0)
-    OR (b.slug = 'deprecia'   AND i.valuation_rate < 0)
-    OR (b.slug = 'custo_fixo' AND i.upkeep_cost > 0)
-    OR (b.slug = 'gera_renda' AND i.income_per_cycle > 0)
-    OR (b.slug = 'neutro'     AND i.valuation_rate = 0 AND i.upkeep_cost = 0 AND i.income_per_cycle = 0)
-  );
+-- RN-035: um item combina comportamentos, e o mapa não é escrito aqui.
+--
+-- A derivação era um INSERT ... SELECT neste arquivo, lendo taxa, custo e renda.
+-- Ela saiu na T-12.3: quem grava `item_behaviors_map` agora é o
+-- `adminItemsService`, porque o painel administrativo passou a criar item, e um
+-- CRUD que gravasse só os números deixaria o mapa desatualizado no dia seguinte.
+-- O `scripts/seed.js` chama a mesma regra depois de aplicar este arquivo.
 
 -- Upgrades: comprar a casa maior tendo a menor sai com desconto (RF-LOJ).
 UPDATE items filho

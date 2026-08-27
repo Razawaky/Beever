@@ -3,6 +3,7 @@ import { body, param } from 'express-validator';
 
 import * as adminContentController from '../controllers/adminContentController.js';
 import * as adminController from '../controllers/adminController.js';
+import * as adminItemsController from '../controllers/adminItemsController.js';
 import { limiteAutenticacao } from '../middlewares/rateLimiters.js';
 import { requireAdmin } from '../middlewares/requireAdmin.js';
 import { validate } from '../middlewares/validate.js';
@@ -97,6 +98,39 @@ router.post(
   body('idFavo').isInt({ min: 1 }),
   validate,
   adminContentController.moverCelula,
+);
+
+/**
+ * Catálogo da loja (RF-ADM-03). O comportamento econômico não é campo: ele sai
+ * dos números no service, para o painel não conseguir dizer "valoriza" num item
+ * com taxa negativa. O arquivo da ilustração é lido em `app.js`, antes do CSRF.
+ */
+const regrasDeItem = [
+  body('nome').trim().notEmpty().withMessage('Informe o nome do item').isLength({ max: 120 }),
+  body('slug').optional({ values: 'falsy' }).trim().matches(/^[a-z0-9-]+$/).withMessage('Endereço inválido').isLength({ max: 60 }),
+  body('descricaoInfantil').trim().notEmpty().withMessage('Explique o item para a criança').isLength({ max: 500 }),
+  body('idCategoria').isInt({ min: 1 }).withMessage('Escolha a categoria'),
+  body('preco').isInt({ min: 0 }).withMessage('O preço não pode ser negativo'),
+  body('taxaDeValorizacao').isFloat({ min: -1, max: 1 }).withMessage('A taxa vai de -1 a 1'),
+  body('pisoPercentual').isInt({ min: 0, max: 100 }).withMessage('O valor mínimo vai de 0 a 100'),
+  body('tetoPercentual').isInt({ min: 0, max: 1000 }).withMessage('O valor máximo vai de 0 a 1000'),
+  body('custoFixo').isInt({ min: 0 }).withMessage('O custo por ciclo não pode ser negativo'),
+  body('rendaPorCiclo').isInt({ min: 0 }).withMessage('A renda por ciclo não pode ser negativa'),
+  body('idItemDeOrigem').optional({ values: 'falsy' }).isInt({ min: 1 }),
+];
+
+router.get('/itens', adminItemsController.listar);
+router.get('/itens/novo', adminItemsController.formulario);
+router.post('/itens', regrasDeItem, validate, adminItemsController.criar);
+router.get('/itens/:id', idNaUrl, validate, adminItemsController.detalhar);
+router.get('/itens/:id/editar', idNaUrl, validate, adminItemsController.formulario);
+router.post('/itens/:id', idNaUrl, regrasDeItem, validate, adminItemsController.atualizar);
+router.post(
+  '/itens/:id/ativo',
+  idNaUrl,
+  body('ativo').isIn(['true', 'false']),
+  validate,
+  adminItemsController.alternar,
 );
 
 router.get('/celulas/:idCelula/conteudo', idDaCelulaNaUrl, validate, adminContentController.formularioDeConteudo);

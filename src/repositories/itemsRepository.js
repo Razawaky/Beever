@@ -1,4 +1,4 @@
-import { consultar } from '../config/database.js';
+import { consultar, consultarEm } from '../config/database.js';
 
 /**
  * Catálogo da loja: `items`, sua categoria e seus requisitos de compra.
@@ -12,7 +12,7 @@ import { consultar } from '../config/database.js';
  * histórico do jogador não pode ficar órfão.
  */
 
-const CAMPOS = `i.id, i.slug, i.name, i.description_kid, i.price, i.category_id,
+const CAMPOS = `i.id, i.slug, i.name, i.description_kid, i.image_path, i.price, i.category_id,
                 c.slug AS category_slug, c.name AS category_name,
                 i.counts_in_patrimony, i.valuation_rate, i.valuation_floor_pct, i.valuation_cap_pct,
                 i.upkeep_cost, i.income_per_cycle, i.upgrade_of_item_id, i.is_consumable`;
@@ -120,4 +120,165 @@ export async function listarUpgradesDe(idItem) {
       ORDER BY i.price`,
     [idItem],
   );
+}
+
+/**
+ * O catálogo inteiro para o painel administrativo: com o desativado junto e
+ * dizendo quantas unidades já foram vendidas. As demais consultas escondem o
+ * inativo de propósito, porque quem as chama é a loja do jogador.
+ */
+export async function listarParaAdmin() {
+  return consultar(
+    `SELECT ${CAMPOS}, i.is_active,
+            (SELECT COUNT(*) FROM purchases p WHERE p.item_id = i.id) AS compras
+       FROM items i
+       JOIN item_categories c ON c.id = i.category_id
+      WHERE i.deleted_at IS NULL
+      ORDER BY c.name, i.price, i.name`,
+  );
+}
+
+/** Busca sem esconder o inativo: o painel precisa abrir o que desativou. */
+export async function buscarParaAdmin(id) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS}, i.is_active
+       FROM items i
+       JOIN item_categories c ON c.id = i.category_id
+      WHERE i.id = ? AND i.deleted_at IS NULL`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
+/** As categorias e os comportamentos do catálogo, para os campos de escolha. */
+export async function listarCategorias() {
+  return consultar('SELECT id, slug, name FROM item_categories ORDER BY name');
+}
+
+export async function listarComportamentosDoCatalogo() {
+  return consultar('SELECT id, slug, name FROM item_behaviors ORDER BY id');
+}
+
+export async function listarTiposDeRequisito() {
+  return consultar('SELECT id, slug, name FROM item_requirement_types ORDER BY id');
+}
+
+export async function slugJaUsado(slug, idParaIgnorar = null) {
+  const linhas = await consultar(
+    'SELECT 1 FROM items WHERE slug = ? AND deleted_at IS NULL AND id <> COALESCE(?, 0) LIMIT 1',
+    [slug, idParaIgnorar],
+  );
+  return linhas.length > 0;
+}
+
+export async function criar(dados, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `INSERT INTO items (slug, name, description_kid, image_path, category_id, price,
+                        counts_in_patrimony, valuation_rate, valuation_floor_pct, valuation_cap_pct,
+                        upkeep_cost, income_per_cycle, upgrade_of_item_id, is_consumable)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      dados.slug,
+      dados.nome,
+      dados.descricaoInfantil,
+      dados.caminhoDaImagem,
+      dados.idCategoria,
+      dados.preco,
+      dados.contaNoPatrimonio ? 1 : 0,
+      dados.taxaDeValorizacao,
+      dados.pisoPercentual,
+      dados.tetoPercentual,
+      dados.custoFixo,
+      dados.rendaPorCiclo,
+      dados.idItemDeOrigem,
+      dados.ehConsumivel ? 1 : 0,
+    ],
+  );
+  return resultado.insertId;
+}
+
+/** COALESCE mantém o valor atual quando o campo não é enviado — vale para a imagem. */
+export async function atualizar(id, dados, conexao = null) {
+  await consultarEm(
+    conexao,
+    `UPDATE items
+        SET slug                = COALESCE(?, slug),
+            name                = COALESCE(?, name),
+            description_kid     = COALESCE(?, description_kid),
+            image_path          = COALESCE(?, image_path),
+            category_id         = COALESCE(?, category_id),
+            price               = COALESCE(?, price),
+            counts_in_patrimony = COALESCE(?, counts_in_patrimony),
+            valuation_rate      = COALESCE(?, valuation_rate),
+            valuation_floor_pct = COALESCE(?, valuation_floor_pct),
+            valuation_cap_pct   = COALESCE(?, valuation_cap_pct),
+            upkeep_cost         = COALESCE(?, upkeep_cost),
+            income_per_cycle    = COALESCE(?, income_per_cycle),
+            is_consumable       = COALESCE(?, is_consumable)
+      WHERE id = ? AND deleted_at IS NULL`,
+    [
+      dados.slug,
+      dados.nome,
+      dados.descricaoInfantil,
+      dados.caminhoDaImagem,
+      dados.idCategoria,
+      dados.preco,
+      dados.contaNoPatrimonio === null ? null : dados.contaNoPatrimonio ? 1 : 0,
+      dados.taxaDeValorizacao,
+      dados.pisoPercentual,
+      dados.tetoPercentual,
+      dados.custoFixo,
+      dados.rendaPorCiclo,
+      dados.ehConsumivel === null ? null : dados.ehConsumivel ? 1 : 0,
+      id,
+    ],
+  );
+}
+
+/** Item nunca é apagado: `purchases` e `inventory` apontam para ele. */
+export async function definirAtivo(id, ativo, conexao = null) {
+  await consultarEm(conexao, 'UPDATE items SET is_active = ? WHERE id = ? AND deleted_at IS NULL', [
+    ativo ? 1 : 0,
+    id,
+  ]);
+}
+
+/**
+ * Regrava o mapa de comportamentos do item. Apagar e inserir de novo é o que
+ * mantém o mapa igual aos números: comportamento que deixou de valer some.
+ */
+export async function substituirComportamentos(idItem, slugsDeComportamento, conexao = null) {
+  await consultarEm(conexao, 'DELETE FROM item_behaviors_map WHERE item_id = ?', [idItem]);
+  if (slugsDeComportamento.length === 0) return;
+
+  const marcadores = Array(slugsDeComportamento.length).fill('?').join(', ');
+  await consultarEm(
+    conexao,
+    `INSERT INTO item_behaviors_map (item_id, behavior_id)
+     SELECT ?, b.id FROM item_behaviors b WHERE b.slug IN (${marcadores})`,
+    [idItem, ...slugsDeComportamento],
+  );
+}
+
+/** Mesma ideia do mapa de comportamentos: a lista enviada passa a ser a verdade. */
+export async function substituirRequisitos(idItem, requisitos, conexao = null) {
+  await consultarEm(conexao, 'DELETE FROM item_requirements WHERE item_id = ?', [idItem]);
+
+  for (const requisito of requisitos) {
+    await consultarEm(
+      conexao,
+      `INSERT INTO item_requirements (item_id, requirement_type_id, required_level, required_hive_id,
+                                      required_item_id, required_patrimony)
+       SELECT ?, t.id, ?, ?, ?, ? FROM item_requirement_types t WHERE t.slug = ?`,
+      [
+        idItem,
+        requisito.nivelMinimo,
+        requisito.idFavo,
+        requisito.idItem,
+        requisito.patrimonioMinimo,
+        requisito.tipo,
+      ],
+    );
+  }
 }

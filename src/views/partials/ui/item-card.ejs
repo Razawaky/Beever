@@ -6,6 +6,12 @@
 %>
 <article class="flex flex-col justify-between rounded-favo bg-white p-6 shadow-md">
   <div>
+    <%# A arte é opcional: o catálogo do seed não tem, e a cadastrada pelo painel
+        chega sempre em WebP com dimensões escritas, para não haver salto. -%>
+    <% if (item.image_path) { %>
+      <img src="<%= item.image_path %>" alt="" width="800" height="800"
+        class="mb-4 aspect-square w-full rounded-favo object-cover" />
+    <% } %>
     <span class="text-xs font-semibold uppercase tracking-wide text-tinta-suave"><%= item.category_name %></span>
     <h3 class="mt-1 text-lg font-bold"><%= item.name %></h3>
     <p class="mt-2 text-sm text-tinta-suave"><%= item.description_kid %></p>

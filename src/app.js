@@ -9,10 +9,12 @@ import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { mascote } from './config/mascote.js';
 import { sessaoMiddleware } from './config/session.js';
+import { receberIlustracao } from './config/uploads.js';
 import { csrf } from './middlewares/csrf.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFound } from './middlewares/notFound.js';
 import { limiteGlobal } from './middlewares/rateLimiters.js';
+import { requireAdmin } from './middlewares/requireAdmin.js';
 import { requestId } from './middlewares/requestId.js';
 import rotas from './routes/index.js';
 
@@ -67,10 +69,22 @@ export function criarApp() {
   app.locals.mascote = mascote;
   app.use(express.static(path.join(diretorioAtual, 'public'), { maxAge: env.producao ? '7d' : 0 }));
 
+  // As ilustrações enviadas pelo painel. Ficam fora de `src/public` porque são
+  // conteúdo e não código — a pasta é volume em produção, e o que sai daqui é
+  // sempre WebP gravado pelo servidor, nunca o arquivo cru de quem enviou.
+  app.use('/uploads', express.static(env.uploads.diretorio, { maxAge: env.producao ? '7d' : 0 }));
+
   app.use(express.urlencoded({ extended: false, limit: '100kb' }));
   app.use(express.json({ limit: '100kb' }));
 
   app.use(sessaoMiddleware);
+
+  // O envio da ilustração é multipart, e o token de CSRF vem no corpo junto dos
+  // campos. Sem o multer antes, o corpo chega vazio ao middleware de CSRF e o
+  // formulário legítimo seria recusado. Fica depois do `requireAdmin` de
+  // propósito: só administrador logado faz o servidor ler um arquivo.
+  app.use('/admin/itens', requireAdmin, receberIlustracao);
+
   app.use(csrf);
   app.use(limiteGlobal);
 

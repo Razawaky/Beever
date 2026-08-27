@@ -51,6 +51,14 @@ export const env = {
   // exclusão de dados (Art. 18 da LGPD). Vem do ambiente porque muda de quem
   // hospeda, e porque publicar e-mail errado numa política é pior que não ter.
   emailDeContato: process.env.CONTACT_EMAIL ?? 'contato@beever.local',
+
+  // Ilustrações enviadas pelo painel administrativo. A pasta fica fora de
+  // `src/public` porque é conteúdo, não código: numa imagem de contêiner ela
+  // precisa ser volume, senão a arte some no próximo deploy.
+  uploads: {
+    diretorio: process.env.UPLOADS_DIR ?? 'uploads',
+    limiteEmBytes: inteiro(process.env.UPLOAD_MAX_MB, 8) * 1024 * 1024,
+  },
 };
 
 if (env.producao && env.sessao.segredo.startsWith('troque-este-segredo')) {

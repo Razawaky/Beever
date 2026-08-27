@@ -48,3 +48,8 @@ process.env.DB_USER = 'root';
 process.env.DB_PASSWORD = process.env.DB_ROOT_PASSWORD ?? 'root';
 process.env.SESSION_SECRET ??= 'segredo-de-teste';
 process.env.DB_HOST ??= '127.0.0.1';
+
+// As ilustrações enviadas nos testes não podem cair na pasta de uploads real:
+// o teste apaga o que cria, e apagar a arte de desenvolvimento seria um efeito
+// colateral caro por um assert.
+process.env.UPLOADS_DIR ??= 'uploads-teste';

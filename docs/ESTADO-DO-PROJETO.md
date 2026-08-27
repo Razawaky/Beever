@@ -4,12 +4,18 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-12.2 — o administrador passou a cadastrar a trilha sem programador
+**Último commit:** T-12.3 — o catálogo da loja passou a ser cadastrado pelo painel, com
+ilustração própria. O upload aceita qualquer formato de imagem e o servidor grava sempre
+WebP, e o comportamento econômico deixou de nascer no seed: virou regra derivada dos
+números, que o painel e o `db:seed` dividem. Editar preço não mexe em compra já feita.
+805 testes passando.
+**Próximo passo: T-12.4 — cadastro de atividades novas com mídia**
+
+**Commit anterior:** T-12.2 — o administrador passou a cadastrar a trilha sem programador
 no meio. Favo, célula e conteúdo têm CRUD sob `/admin/favos`, o JSON da atividade é
 conferido pelo validador do tipo de jogo antes de ser publicado, e a edição grava uma
 versão nova em vez de sobrescrever. O aceite da etapa está provado num teste só: o admin
 publica e a conta demo abre a partida, sem `db:seed`. 792 testes passando.
-**Próximo passo: T-12.3 — CRUD de itens, e as três decisões de modelagem que ele destranca**
 
 **Commit anterior:** T-12.1 — a área administrativa ganhou porta própria. O login
 administrativo mora em `/admin/login` e recusa quem não tem linha em `admins`, com
@@ -445,6 +451,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Item | Por que está aqui |
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
+| As duas telas do catálogo de itens (T-12.3) | O caminho está coberto por teste pelo HTTP, incluindo a conversão para WebP conferida nos bytes do arquivo em disco e o item aparecendo na loja da conta demo com a arte. O que **não** foi visto por olho humano é o formulário: ele é o maior do projeto — cinco números do comportamento econômico, dois campos de escolha, quatro linhas de requisito e o campo de arquivo — e nunca foi olhado a 320 px, nem com uma imagem de verdade sendo escolhida. Vale o passe da DT-22 |
 | As cinco telas de cadastro de conteúdo (T-12.2) | O caminho está coberto por teste pelo HTTP, incluindo o aceite ponta a ponta: o admin publica e a conta demo abre a partida. O que **não** foi visto por olho humano é o desenho — a lista de favos e a de células com sete colunas a 320 px, os botões de subir e descer empilhados na linha da célula, a área de texto do JSON num celular, e a mensagem do validador chegando ao formulário depois de uma recusa. Vale o passe da DT-22 |
 | As três telas da administração em navegador real (T-12.1) | O caminho está coberto por teste pelo HTTP: o login recusa quem não é admin, o anônimo é mandado ao formulário, o jogador comum leva 403 nas duas rotas, e o painel e a lista de contas respondem em JSON e em HTML. O que **não** foi visto por olho humano é o desenho: a casca administrativa com a barra de navegação e o botão de sair, a tabela de contas rolando na horizontal a 320 px, e o foco de teclado passando pelo formulário de login. Vale o passe da DT-22 |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
@@ -484,7 +491,7 @@ modelagem adiadas estão em `docs/02-ROADMAP-ETAPAS.md`.
 |---|---|
 | T-12.1 Autenticação e middleware de admin via join | **feita** — `/admin/login` é porta separada, com a mesma senha e a mesma sessão do jogador, recusando quem não tem linha em `admins` com a mensagem do login comum e registrando a tentativa na auditoria. O `requireAdmin` é montado uma vez no router de `/admin`, manda anônimo ao login quando é página e responde 401 ou 403 quando é JSON, e a listagem de contas mudou de `GET /users` para `/admin/usuarios` |
 | T-12.2 CRUD de favos, células e conteúdo | **feita** — os três repositories, que eram só de leitura desde a E05, ganharam escrita; `adminContentService` grava favo, célula e conteúdo com auditoria em cada ação, e o `conferirForma` do tipo de jogo recusa atividade torta antes de publicar. Nada apaga: favo e célula saem por `is_active`, e a edição de conteúdo grava versão nova deixando a anterior guardada. Reordenar troca a ordem com a vizinha numa transação, por causa da UNIQUE do favo |
-| T-12.3 CRUD de itens, preços e comportamento econômico, com ilustração própria | pendente — depende de decidir onde a arte mora e de tirar a derivação de `item_behaviors_map` de dentro do seed |
+| T-12.3 CRUD de itens, preços e comportamento econômico, com ilustração própria | **feita** — migration 017 deu a coluna `image_path` ao item; o upload aceita qualquer formato e grava sempre WebP, com o `sharp` servindo de validação; `item_behaviors_map` saiu do seed e virou `comportamentosDoItem.js`, regra pura que o painel e o `db:seed` dividem; requisitos de compra da RN-033 entram no mesmo formulário. Das três decisões adiadas, duas foram tomadas — a arte mora em pasta servida como estática, e variação cosmética continua item próprio |
 | T-12.4 Cadastro de atividades novas nos tipos de jogo que já existem, com mídia | pendente |
 | T-12.5 Distribuição adaptativa: a atividade cadastrada entra no sorteio da faixa | pendente |
 | T-12.6 Consulta de auditoria com filtros | pendente |
@@ -1220,7 +1227,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
-| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. Faltam T-12.3 a T-12.7, e as quatro decisões de modelagem continuam abertas |
+| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. Faltam T-12.4 a T-12.7, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
@@ -1267,6 +1274,9 @@ Identificadores rastreiam os documentos da E00.
 | DT-82 | Ser administrador é lido no login e guardado na sessão, então tirar a linha de `admins` de alguém só passa a valer na próxima entrada — quem já está logado continua com o painel aberto até a sessão morrer | T-12.1 | Aceitável enquanto admin é conta de professor criada à mão. Quando existir tela de promover e rebaixar administrador, conferir o join a cada requisição ou derrubar a sessão junto |
 | DT-83 | Conteúdo recusado pelo validador volta como página de erro, e não no formulário: quem colou quarenta linhas de JSON perde o que digitou e recomeça | T-12.2 | Devolver o formulário com o corpo enviado e a mensagem do validador ao lado, quando a T-12.4 trocar a área de texto pelo formulário por tipo de jogo |
 | DT-84 | Trocar o tipo de jogo de uma célula que já tem conteúdo publicado não revalida esse conteúdo: a célula fica com corpo de quiz e validador de outro jogo, e o erro só aparece quando alguém tenta jogar | T-12.2 | Ou revalidar o conteúdo atual contra o tipo novo na edição, ou recusar a troca enquanto houver versão publicada |
+| DT-85 | A pasta de uploads é um caminho no disco da instância. Funciona no MVP e quebra no dia em que houver duas instâncias atrás do balanceador: a arte enviada numa não existe na outra. Em contêiner ela precisa ser volume, senão some no deploy seguinte | T-12.3 | Trocar a pasta por armazenamento de objetos quando houver mais de uma instância; `items.image_path` já guarda só o caminho público, então o banco não muda |
+| DT-86 | A ilustração antiga não é apagada quando outra a substitui: o arquivo fica órfão na pasta de uploads para sempre | T-12.3 | Apagar o arquivo anterior ao gravar o novo, ou uma varredura que compare a pasta com `items.image_path`. Apagar na hora exige cuidado com a transação, porque arquivo não tem rollback |
+| DT-87 | Variação cosmética do mesmo item continua sem modelo: cor, tamanho ou skin hoje seriam item próprio, com slug e preço próprios. A linha de evolução (`upgrade_of_item_id`) resolve só o caso de melhoria | decisão adiada na abertura da E12, mantida na T-12.3 | Escrever o requisito antes de escrever a tabela: mexer nisso agora mexeria em loja, compra, inventário e patrimônio, que a E09 fechou e testou |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3374,3 +3384,37 @@ para uma página de erro e faz ele perder o JSON digitado, e a DT-84, porque tro
 o tipo de jogo de uma célula com conteúdo publicado não revalida esse conteúdo.
 
 792 testes passando, quinze deles novos.
+
+### Sessão de 2026-08-27, T-12.3 e o catálogo que o painel escreve
+
+A tarefa carregava três das quatro decisões de modelagem adiadas na abertura da
+etapa, e duas foram tomadas. A arte do item mora numa pasta servida como estática,
+com o caminho em `items.image_path` (migration 017): guardar bytes no banco faria
+o backup engordar com imagem e transformaria cada card da vitrine numa consulta.
+Variação cosmética continua sem tabela, de propósito — modelar isso agora mexeria
+em loja, compra, inventário e patrimônio, as quatro peças que a E09 fechou.
+
+O upload mudou de forma no meio do caminho, a pedido do usuário: em vez de aceitar
+só `jpg` e `webp`, ele aceita **qualquer formato de imagem** e o servidor grava
+sempre WebP, com qualidade 82 e largura máxima de 800 px — os mesmos parâmetros do
+`npm run img:webp`. Quem cadastra manda o arquivo que tem, e o acervo continua
+leve. O arquivo original nunca toca o disco: fica em memória, passa pelo `sharp` e
+só a versão convertida é escrita. O `sharp` é também a validação de verdade, porque
+o que ele não abre não é imagem, não importa o que o navegador declarou.
+
+A terceira decisão era a mais silenciosa e a mais perigosa. `item_behaviors_map`
+nascia de um `INSERT ... SELECT` dentro do seed, lendo taxa, custo e renda. Um CRUD
+que gravasse só os números deixaria o mapa desatualizado no dia seguinte, então a
+regra saiu do SQL e virou `comportamentosDoItem.js`, um módulo puro que o painel e o
+`db:seed` dividem. O administrador não escolhe comportamento: marcar permitiria
+declarar "valoriza" num item que perde valor.
+
+Uma ordem de middleware valeu comentário no `app.js`. Multipart precisa ser lido
+antes do middleware de CSRF, senão o corpo chega vazio e o formulário legítimo é
+recusado; o `multer` ficou montado em `/admin/itens` depois do `requireAdmin`, para
+só administrador logado fazer o servidor ler arquivo.
+
+Três dívidas nasceram: DT-85, a pasta de uploads é local à instância; DT-86, a arte
+substituída fica órfã no disco; DT-87, variação cosmética segue sem modelo.
+
+805 testes passando, treze deles novos.

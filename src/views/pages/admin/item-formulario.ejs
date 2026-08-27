@@ -1,0 +1,150 @@
+<%#
+  Formulário do item, para criar e para editar.
+
+  Não existe campo de comportamento econômico: ele é derivado dos números pelo
+  service, para o painel não conseguir declarar "valoriza" num item que perde
+  valor. Os requisitos de compra são quatro linhas fixas, uma por tipo — mais que
+  isso pediria JavaScript, e a T-12.3 não precisa dele.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'itens' }) %>
+
+<main class="mx-auto max-w-2xl px-6 py-10">
+  <a href="/admin/itens" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar aos itens</a>
+  <h1 class="mt-4 text-3xl font-bold"><%= item ? 'Editar item' : 'Novo item' %></h1>
+
+  <form
+    method="POST"
+    action="<%= item ? `/admin/itens/${item.id}` : '/admin/itens' %>"
+    enctype="multipart/form-data"
+    class="mt-8 space-y-4"
+  >
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div>
+      <label for="nome" class="mb-1 block text-sm font-medium">Nome</label>
+      <input id="nome" name="nome" type="text" required maxlength="120"
+        value="<%= item ? item.name : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+    </div>
+
+    <div>
+      <label for="slug" class="mb-1 block text-sm font-medium">Endereço</label>
+      <input id="slug" name="slug" type="text" maxlength="60" pattern="[a-z0-9\-]+"
+        value="<%= item ? item.slug : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      <p class="mt-1 text-xs text-tinta-suave">Deixe em branco para gerar a partir do nome.</p>
+    </div>
+
+    <div>
+      <label for="descricaoInfantil" class="mb-1 block text-sm font-medium">Explicação para a criança</label>
+      <textarea id="descricaoInfantil" name="descricaoInfantil" rows="3" required maxlength="500"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      ><%= item ? item.description_kid : '' %></textarea>
+    </div>
+
+    <div>
+      <label for="ilustracao" class="mb-1 block text-sm font-medium">Ilustração</label>
+      <input id="ilustracao" name="ilustracao" type="file" accept="image/*"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      <p class="mt-1 text-xs text-tinta-suave">
+        Qualquer formato de imagem serve: o servidor converte para WebP antes de guardar.
+        <% if (item && item.image_path) { %> Já existe uma arte; enviar outra substitui.<% } %>
+      </p>
+      <% if (item && item.image_path) { %>
+        <img src="<%= item.image_path %>" alt="Ilustração atual de <%= item.name %>" width="96" height="96"
+          class="mt-2 h-24 w-24 rounded object-cover" />
+      <% } %>
+    </div>
+
+    <div>
+      <label for="idCategoria" class="mb-1 block text-sm font-medium">Categoria</label>
+      <select id="idCategoria" name="idCategoria" required
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
+        <% categorias.forEach((categoria) => { %>
+          <option value="<%= categoria.id %>" <%= item && Number(item.category_id) === Number(categoria.id) ? 'selected' : '' %>>
+            <%= categoria.name %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      <label for="preco" class="mb-1 block text-sm font-medium">Preço, em mel</label>
+      <input id="preco" name="preco" type="number" min="0" required value="<%= item ? item.price : 0 %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      <p class="mt-1 text-xs text-tinta-suave">Mudar o preço não mexe em compra já feita.</p>
+    </div>
+
+    <fieldset class="rounded-favo border border-linha p-4">
+      <legend class="px-2 text-sm font-semibold">Comportamento econômico</legend>
+      <p class="text-xs text-tinta-suave">
+        Sai destes números, e não de uma escolha: taxa positiva valoriza, negativa deprecia,
+        custo por ciclo cobra e renda por ciclo paga.
+      </p>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="taxaDeValorizacao" class="mb-1 block text-sm font-medium">Taxa por ciclo</label>
+          <input id="taxaDeValorizacao" name="taxaDeValorizacao" type="number" step="0.001" min="-1" max="1" required
+            value="<%= item ? item.valuation_rate : 0 %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        </div>
+        <div>
+          <label for="custoFixo" class="mb-1 block text-sm font-medium">Custo por ciclo</label>
+          <input id="custoFixo" name="custoFixo" type="number" min="0" required value="<%= item ? item.upkeep_cost : 0 %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        </div>
+        <div>
+          <label for="rendaPorCiclo" class="mb-1 block text-sm font-medium">Renda por ciclo</label>
+          <input id="rendaPorCiclo" name="rendaPorCiclo" type="number" min="0" required value="<%= item ? item.income_per_cycle : 0 %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        </div>
+        <div>
+          <label for="pisoPercentual" class="mb-1 block text-sm font-medium">Valor mínimo, em %</label>
+          <input id="pisoPercentual" name="pisoPercentual" type="number" min="0" max="100" required
+            value="<%= item ? item.valuation_floor_pct : 0 %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        </div>
+        <div>
+          <label for="tetoPercentual" class="mb-1 block text-sm font-medium">Valor máximo, em %</label>
+          <input id="tetoPercentual" name="tetoPercentual" type="number" min="0" max="1000" required
+            value="<%= item ? item.valuation_cap_pct : 100 %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        </div>
+      </div>
+
+      <div class="mt-4 space-y-2 text-sm">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="contaNoPatrimonio" <%= !item || item.counts_in_patrimony ? 'checked' : '' %> />
+          Conta no patrimônio
+        </label>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="ehConsumivel" <%= item && item.is_consumable ? 'checked' : '' %> />
+          É consumível, some ao ser usado
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="rounded-favo border border-linha p-4">
+      <legend class="px-2 text-sm font-semibold">Requisitos de compra</legend>
+      <p class="text-xs text-tinta-suave">Deixe em branco o que não valer. Todos os preenchidos precisam ser cumpridos.</p>
+
+      <div class="mt-4 space-y-3">
+        <% tiposDeRequisito.forEach((tipo) => {
+             const jaExiste = requisitosDoItem.find((requisito) => requisito.requirement_type === tipo.slug);
+             const valorAtual = jaExiste
+               ? jaExiste.required_level ?? jaExiste.required_hive_id ?? jaExiste.required_item_id ?? jaExiste.required_patrimony
+               : ''; %>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="requisitoTipo" value="<%= tipo.slug %>" />
+            <label for="requisito-<%= tipo.slug %>" class="w-48 text-sm"><%= tipo.name %></label>
+            <input id="requisito-<%= tipo.slug %>" name="requisitoValor" type="number" min="0" value="<%= valorAtual %>"
+              class="flex-1 rounded-lg border border-linha px-4 py-2 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+          </div>
+        <% }) %>
+      </div>
+    </fieldset>
+
+    <%- include('../../partials/ui/botao', { texto: item ? 'Salvar item' : 'Criar item', tipo: 'submit' }) %>
+  </form>
+</main>
