@@ -199,7 +199,10 @@ describe('aceite da Colmeia', opcoes, () => {
     ]);
 
     // Aquecimento: a foto do patrimônio do dia é reescrita uma vez quando o
-    // total muda, e isso não é consulta que cresce com o dado.
+    // total muda, e isso não é consulta que cresce com o dado. São duas visitas
+    // porque a primeira destrava as conquistas de patrimônio que os itens novos
+    // alcançaram (T-13.2), e desbloquear paga mel, que move o total de novo.
+    await consultasDaColmeia(agente);
     await consultasDaColmeia(agente);
     const depois = await consultasDaColmeia(agente);
 

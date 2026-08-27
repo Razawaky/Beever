@@ -1,5 +1,7 @@
+import * as achievementsService from './achievementsService.js';
 import * as contentService from './contentService.js';
 import * as economicCycleService from './economicCycleService.js';
+import { criteriosDosEventos } from './eventosDeConquista.js';
 import * as goalPlannerService from './goalPlannerService.js';
 import * as goalsService from './goalsService.js';
 import * as patrimonyService from './patrimonyService.js';
@@ -64,6 +66,20 @@ export async function obterColmeia(idUsuario) {
     economicCycleService.avisoDoDia(idUsuario),
   ]);
 
+  // Patrimônio e cofre são avaliados aqui, e não no evento que os move: somar
+  // carteira, cofre e bens é a conta mais cara do sistema, e a visita já a fez
+  // uma vez para o cabeçalho. Célula e favo não passam por aqui — aqueles a
+  // partida avalia na hora, porque o dado já está em mãos (T-13.2).
+  const conquistas = await achievementsService.avaliarEventos(
+    idUsuario,
+    Object.fromEntries(
+      criteriosDosEventos(['patrimonio-mudou', 'cofre-mudou']).map((criterio) => [
+        criterio,
+        criterio === 'cofre-guardado' ? patrimonio.cofre : patrimonio.total,
+      ]),
+    ),
+  );
+
   // A trilha já lida é passada adiante: pedir de novo cobraria do banco as
   // mesmas consultas duas vezes na mesma tela (RNF-04).
   const proximaCelula = await contentService.proximaCelulaPendente(idUsuario, trilha);
@@ -93,5 +109,7 @@ export async function obterColmeia(idUsuario) {
       aviso: avisoDoCiclo,
       eventos: eventosDoCiclo,
     },
+    // O que a visita destravou de patrimônio e de cofre. A tela é da T-13.4.
+    conquistas,
   };
 }

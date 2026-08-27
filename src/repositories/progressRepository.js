@@ -98,6 +98,32 @@ export async function contarCelulasDoFavo(idUsuario, idFavo, codigosDeFaixa = []
  * só se apaga se o favo deixar de estar completo — o que acontece quando alguém
  * acrescenta uma célula nova a um favo que já estava fechado.
  */
+/**
+ * Quantas células o jogador concluiu, e quantos favos ele fechou.
+ *
+ * Os dois números na mesma ida ao banco porque quem pergunta é o fechamento da
+ * partida, que tem o teto de tempo mais apertado do sistema (RNF-01): duas
+ * consultas seriam duas viagens para responder a mesma pergunta.
+ *
+ * Contam o que está concluído de verdade — célula com pelo menos uma estrela
+ * (RN-026) e favo com `completed_at` gravado.
+ */
+export async function contarConquistados(idUsuario) {
+  const linhas = await consultar(
+    `SELECT
+       (SELECT COUNT(*) FROM cell_progress cp
+         WHERE cp.user_id = ? AND cp.first_completed_at IS NOT NULL AND cp.stars >= 1) AS celulas,
+       (SELECT COUNT(*) FROM hive_progress hp
+         WHERE hp.user_id = ? AND hp.completed_at IS NOT NULL) AS favos`,
+    [idUsuario, idUsuario],
+  );
+
+  return {
+    celulas: Number(linhas[0]?.celulas ?? 0),
+    favos: Number(linhas[0]?.favos ?? 0),
+  };
+}
+
 export async function recalcularFavo(conexao, idUsuario, idFavo, codigosDeFaixa = []) {
   const percentual = 'CASE WHEN d.total = 0 THEN 0 ELSE FLOOR(d.concluidas * 100 / d.total) END';
   const completo = 'd.total > 0 AND d.concluidas = d.total';

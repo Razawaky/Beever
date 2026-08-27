@@ -20,19 +20,24 @@ export async function buscarPorSlug(slug, conexao = null) {
 }
 
 /**
- * O catálogo de um critério, do degrau mais baixo para o mais alto.
+ * A escada de um critério com o que o jogador já tem marcado, do degrau mais
+ * baixo para o mais alto.
  *
- * É a lista que o service percorre para saber o que um número destrava. Vem
- * ordenada porque a tela mostra a escada, e ordenar em memória a cada chamada
- * seria refazer o que o índice já entrega pronto.
+ * O `unlocked_at` vem no mesmo `SELECT` de propósito: perguntar depois "quais
+ * destas ele já tem" fazia o número de consultas depender de o jogador ter
+ * cruzado um degrau ou não, e a Colmeia tem teste que conta consulta (RNF-04).
+ * A escada tem quatro linhas — trazê-la inteira é mais barato do que a segunda
+ * viagem ao banco.
  */
-export async function listarPorCriterio(tipo) {
+export async function listarCriterioComEstado(idUsuario, tipo) {
   return consultar(
-    `SELECT ${CAMPOS}
-       FROM achievements
-      WHERE criterion_type = ? AND is_active = 1
-      ORDER BY criterion_target, id`,
-    [tipo],
+    `SELECT ${CAMPOS.split(', ').map((campo) => `a.${campo}`).join(', ')},
+            ua.unlocked_at
+       FROM achievements a
+       LEFT JOIN user_achievements ua ON ua.achievement_id = a.id AND ua.user_id = ?
+      WHERE a.criterion_type = ? AND a.is_active = 1
+      ORDER BY a.criterion_target, a.id`,
+    [idUsuario, tipo],
   );
 }
 
@@ -47,19 +52,6 @@ export async function listarCatalogoDoUsuario(idUsuario) {
       ORDER BY a.criterion_type, a.criterion_target, a.id`,
     [idUsuario],
   );
-}
-
-/** Quais conquistas da lista o jogador já tem. Evita tentar desbloquear em vão. */
-export async function listarDesbloqueadas(idUsuario, idsDeConquista) {
-  if (idsDeConquista.length === 0) return [];
-
-  const marcadores = idsDeConquista.map(() => '?').join(', ');
-  const linhas = await consultar(
-    `SELECT achievement_id FROM user_achievements
-      WHERE user_id = ? AND achievement_id IN (${marcadores})`,
-    [idUsuario, ...idsDeConquista],
-  );
-  return linhas.map((linha) => Number(linha.achievement_id));
 }
 
 /** Devolve `true` só quando a conquista foi desbloqueada agora. Repetição não grava. */

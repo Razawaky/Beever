@@ -4,10 +4,13 @@ import { emTransacao } from '../config/database.js';
 import * as cellsRepository from '../repositories/cellsRepository.js';
 import * as contentsRepository from '../repositories/contentsRepository.js';
 import * as gameSessionsRepository from '../repositories/gameSessionsRepository.js';
+import * as progressRepository from '../repositories/progressRepository.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
+import * as achievementsService from './achievementsService.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as contentService from './contentService.js';
+import { criteriosDosEventos } from './eventosDeConquista.js';
 import { sortearAtividade } from './sorteioDeConteudo.js';
 import * as idempotencyService from './idempotencyService.js';
 import * as levelsService from './levelsService.js';
@@ -271,7 +274,34 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
     await streakService.registrarDiaCumprido(idUsuario);
   }
 
-  return comProximaCelula(idUsuario, partida.cell_id, resultado);
+  const conquistas = resultado.jaEstavaFechada ? [] : await conquistasDaPartida(idUsuario, resultado);
+
+  return comProximaCelula(idUsuario, partida.cell_id, { ...resultado, conquistas });
+}
+
+/**
+ * As conquistas que a partida acabou de destravar (RF-GAM-01).
+ *
+ * Célula e favo são avaliados aqui, e não na visita seguinte à Colmeia, porque o
+ * dado já está em mãos e porque a comemoração pertence à tela de resultado — a
+ * criança fez por merecer agora. Custa uma consulta de contagem, que é o preço
+ * de não mandá-la descobrir depois.
+ *
+ * O mel da conquista **não** entra no que a partida rendeu: ele vem em lista
+ * própria, senão a mesma célula pareceria pagar diferente das outras.
+ */
+async function conquistasDaPartida(idUsuario, resultado) {
+  const { celulas, favos } = await progressRepository.contarConquistados(idUsuario);
+
+  const criterios = criteriosDosEventos([
+    'celula-concluida',
+    ...(resultado.favoConcluido ? ['favo-concluido'] : []),
+  ]);
+
+  const valores = { 'celulas-concluidas': celulas };
+  if (criterios.includes('favos-concluidos')) valores['favos-concluidos'] = favos;
+
+  return achievementsService.avaliarEventos(idUsuario, valores);
 }
 
 /**

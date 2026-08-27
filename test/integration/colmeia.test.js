@@ -198,8 +198,12 @@ describe('a Colmeia', opcoes, () => {
       }
     });
 
-    // A visita de aquecimento absorve o que só acontece uma vez depois do dado
-    // novo, como a foto do patrimônio do dia; a medição vem do estado estável.
+    // Duas visitas de aquecimento absorvem o que só acontece uma vez depois do
+    // dado novo. A primeira grava a foto do patrimônio do dia e destrava as
+    // conquistas de patrimônio que os itens novos alcançaram (T-13.2); como
+    // desbloquear paga mel, o total muda de novo e a segunda visita fecha a
+    // conta. A medição vem do estado estável.
+    await colmeia();
     await colmeia();
     const depois = await consultasDaColmeia();
 

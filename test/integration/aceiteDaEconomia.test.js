@@ -171,6 +171,10 @@ describe('aceite da E09 — economia', opcoes, () => {
     );
 
     const csrf = await lerToken('/painel');
+    // O saldo é lido **depois** da visita à Colmeia que o token exigiu: desde a
+    // T-13.2 a visita pode destravar conquista de patrimônio e creditar o bônus
+    // dela, e comparar contra um número fixo mediria as duas coisas juntas.
+    const melAntes = await melDe();
     const chave = randomUUID();
     const pedido = () =>
       agente
@@ -184,7 +188,7 @@ describe('aceite da E09 — economia', opcoes, () => {
       assert.ok(resposta.status === 200 || resposta.status === 201, 'quem clicou duas vezes não vê erro');
     });
     assert.equal((await purchasesRepository.listarPorUsuario(idUsuario)).length, 1);
-    assert.equal(await melDe(), 5000 - Number(itens.patinete.price));
+    assert.equal(await melDe(), melAntes - Number(itens.patinete.price), 'saiu o preço de uma compra só');
   });
 
   it('guardar mel no cofre não muda o patrimônio', async () => {
