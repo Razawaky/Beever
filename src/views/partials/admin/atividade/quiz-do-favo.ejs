@@ -1,0 +1,31 @@
+<%#
+  Quiz do Favo: até seis perguntas, uma alternativa por linha. Linha em branco é
+  descartada, então cadastrar três perguntas num formulário de seis é o normal.
+-%>
+<% const perguntas = corpo?.perguntas ?? []; %>
+<p class="text-sm text-tinta-suave">Cada pergunta tem uma resposta certa. Deixe em branco o que não usar.</p>
+
+<% for (let indice = 0; indice < 6; indice += 1) {
+     const pergunta = perguntas[indice] ?? {}; %>
+  <fieldset class="mt-4 rounded-favo border border-linha p-4">
+    <legend class="px-2 text-sm font-semibold">Pergunta <%= indice + 1 %></legend>
+    <div class="space-y-3">
+      <%- include('campos', { nome: 'perguntaEnunciado', rotulo: 'Enunciado', valor: pergunta.enunciado, id: `pergunta-${indice}` }) %>
+      <%- include('campos', {
+        nome: 'perguntaAlternativas',
+        rotulo: 'Alternativas, uma por linha',
+        valor: (pergunta.alternativas || []).join('\n'),
+        linhas: 4,
+        id: `alternativas-${indice}`,
+      }) %>
+      <%- include('campos', {
+        nome: 'perguntaCorreta',
+        rotulo: 'Número da alternativa certa',
+        valor: pergunta.correta === undefined ? 1 : pergunta.correta + 1,
+        tipo: 'number',
+        minimo: 1,
+        id: `correta-${indice}`,
+      }) %>
+    </div>
+  </fieldset>
+<% } %>

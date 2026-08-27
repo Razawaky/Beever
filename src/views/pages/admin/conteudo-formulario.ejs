@@ -1,9 +1,14 @@
 <%#
-  Conteúdo da atividade em JSON. Salvar não sobrescreve: grava uma versão nova e
-  desativa a anterior, que continua na tabela explicando as partidas já jogadas.
-  O formulário campo a campo por tipo de jogo é a T-12.4.
+  Conteúdo da atividade. Desde a T-12.4 o caminho normal é o formulário do tipo
+  de jogo; a área de texto com JSON virou o modo avançado, guardada num `details`
+  para colar conteúdo pronto e para tipo que ainda não tem formulário.
+
+  Salvar não sobrescreve: grava uma versão nova e desativa a anterior, que
+  continua na tabela explicando as partidas já jogadas.
 -%>
 <%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'conteudo' }) %>
+
+<% const corpo = atual ? atual.body : null; %>
 
 <main class="mx-auto max-w-3xl px-6 py-10">
   <a href="/admin/favos/<%= celula.hive_id %>" class="text-sm text-tinta-suave hover:text-tinta">
@@ -16,27 +21,51 @@
     <%= atual ? `versão ${atual.version} no ar` : 'nenhuma versão publicada' %>
   </p>
 
-  <form method="POST" action="/admin/celulas/<%= celula.id %>/conteudo" class="mt-8 space-y-4">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <% if (temFormulario) { %>
+    <form method="POST" action="/admin/celulas/<%= celula.id %>/conteudo" enctype="multipart/form-data" class="mt-8">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="modo" value="formulario" />
 
-    <div>
-      <label for="corpo" class="mb-1 block text-sm font-medium">Conteúdo em JSON</label>
-      <textarea
-        id="corpo"
-        name="corpo"
-        rows="18"
-        required
-        spellcheck="false"
-        class="w-full rounded-lg border border-linha px-4 py-3 font-mono text-xs focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
-      ><%= atual ? JSON.stringify(atual.body, null, 2) : '' %></textarea>
-      <p class="mt-1 text-xs text-tinta-suave">
-        O validador do tipo de jogo confere o formato antes de publicar. Conteúdo torto é recusado
-        aqui, e não na tela da criança.
-      </p>
-    </div>
+      <%- include(`../../partials/admin/atividade/${celula.game_type_slug}`, { corpo }) %>
 
-    <%- include('../../partials/ui/botao', { texto: 'Publicar versão nova', tipo: 'submit' }) %>
-  </form>
+      <fieldset class="mt-4 rounded-favo border border-linha p-4">
+        <legend class="px-2 text-sm font-semibold">Imagem da atividade</legend>
+        <input id="ilustracao" name="ilustracao" type="file" accept="image/*"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        <p class="mt-1 text-xs text-tinta-suave">
+          Qualquer formato serve: o servidor converte para WebP. Ela aparece acima do jogo, em todos os tipos.
+          <% if (corpo && corpo.imagem) { %> Já existe uma; enviar outra substitui.<% } %>
+        </p>
+        <% if (corpo && corpo.imagem) { %>
+          <img src="<%= corpo.imagem %>" alt="Imagem atual da atividade" width="160" height="120"
+            class="mt-2 h-28 w-40 rounded object-cover" />
+        <% } %>
+      </fieldset>
+
+      <%- include('../../partials/ui/botao', { texto: 'Publicar versão nova', tipo: 'submit', classe: 'mt-6' }) %>
+    </form>
+  <% } %>
+
+  <details class="mt-10 rounded-favo border border-linha bg-white p-4" <%= temFormulario ? '' : 'open' %>>
+    <summary class="cursor-pointer text-sm font-semibold">Modo avançado: colar o JSON</summary>
+
+    <form method="POST" action="/admin/celulas/<%= celula.id %>/conteudo" enctype="multipart/form-data" class="mt-4 space-y-4">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="modo" value="avancado" />
+
+      <div>
+        <label for="corpo" class="mb-1 block text-sm font-medium">Conteúdo em JSON</label>
+        <textarea id="corpo" name="corpo" rows="18" spellcheck="false"
+          class="w-full rounded-lg border border-linha px-4 py-3 font-mono text-xs focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+        ><%= corpo ? JSON.stringify(corpo, null, 2) : '' %></textarea>
+        <p class="mt-1 text-xs text-tinta-suave">
+          O validador do tipo de jogo confere o formato antes de publicar, venha o conteúdo daqui ou do formulário.
+        </p>
+      </div>
+
+      <%- include('../../partials/ui/botao', { texto: 'Publicar a partir do JSON', tipo: 'submit', variante: 'secundario' }) %>
+    </form>
+  </details>
 
   <% if (versoes.length > 0) { %>
     <section class="mt-10">

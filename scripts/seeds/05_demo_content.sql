@@ -54,6 +54,11 @@ SELECT favo.id, jogo.id, faixa.id, dados.ordem, dados.titulo, dados.segundos
     UNION ALL SELECT 'construir-patrimonio', 2, 'O que é patrimônio',      'quiz-do-favo',          300
     UNION ALL SELECT 'construir-patrimonio', 3, 'Montando a reserva',      'cofre-do-tempo',        420
     UNION ALL SELECT 'construir-patrimonio', 4, 'A escolha de um ano',     'monte-o-orcamento',     420
+
+    -- Os dois formatos que a T-12.4 acrescentou. Ficam num favo sem progresso do
+    -- usuário demo, para o exemplo não mexer no percentual da trilha dele.
+    UNION ALL SELECT 'dinheiro-no-dia-a-dia', 5, 'Complete a frase do mel', 'listas-suspensas',     240
+    UNION ALL SELECT 'dinheiro-no-dia-a-dia', 6, 'A tarde de sábado',       'quadrinho-interativo', 240
   ) AS dados
   JOIN hives favo ON favo.slug = dados.favo
   JOIN game_types jogo ON jogo.slug = dados.jogo
@@ -463,3 +468,53 @@ SELECT celula.id, 1, JSON_OBJECT('tipo', 'placeholder', 'texto', 'Conteúdo em p
   FROM cells celula
   LEFT JOIN contents existente ON existente.cell_id = celula.id
  WHERE existente.id IS NULL;
+
+-- ---------------------------------------------------------------------------
+-- Conteúdo dos dois formatos novos (T-12.4)
+-- ---------------------------------------------------------------------------
+-- Os outros jogos ganharam conteúdo de exemplo na E07. Estes dois nasceram na
+-- E12, e sem exemplo a trilha teria célula sem o que jogar.
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'listas-suspensas',
+    'enunciado', 'Complete a frase sobre o mel que você ganha jogando.',
+    'lacunas', JSON_ARRAY(
+      JSON_OBJECT(
+        'texto', 'O mel serve para...',
+        'opcoes', JSON_ARRAY('comprar coisas na loja', 'subir de nível', 'nada'),
+        'correta', 0
+      ),
+      JSON_OBJECT(
+        'texto', 'O que guardo no cofre...',
+        'opcoes', JSON_ARRAY('desaparece', 'rende a cada semana', 'vira pólen'),
+        'correta', 1
+      )
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'dinheiro-no-dia-a-dia' AND celula.order_index = 5
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'quadrinho-interativo',
+    'paineis', JSON_ARRAY(
+      JSON_OBJECT('texto', 'É sábado, e você tem 20 de mel guardado.'),
+      JSON_OBJECT(
+        'texto', 'Na loja tem um doce por 5 e um patinete por 20. O que você faz?',
+        'escolhas', JSON_ARRAY('Compro o doce e guardo o resto', 'Gasto tudo no patinete', 'Não compro nada hoje'),
+        'correta', 0
+      ),
+      JSON_OBJECT(
+        'texto', 'Na semana seguinte aparece um livro por 15. Você ainda tem mel?',
+        'escolhas', JSON_ARRAY('Sim, porque sobrou da vez passada', 'Não, gastei tudo'),
+        'correta', 0
+      )
+    )
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'dinheiro-no-dia-a-dia' AND celula.order_index = 6
+ON DUPLICATE KEY UPDATE body = VALUES(body);

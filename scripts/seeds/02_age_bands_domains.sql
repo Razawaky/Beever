@@ -42,7 +42,9 @@ INSERT INTO game_types (slug, name, description) VALUES
   ('monte-o-orcamento',     'Monte o Orçamento',      'Distribui uma quantia entre necessidades e desejos'),
   ('cofre-do-tempo',        'Cofre do Tempo',         'Simula juros compostos ao longo de ciclos'),
   ('mercado-esperto',       'Mercado Esperto',        'Compara preços e decide a melhor compra'),
-  ('ordene-a-prioridade',   'Ordene a Prioridade',    'Coloca gastos em ordem de importância')
+  ('ordene-a-prioridade',   'Ordene a Prioridade',    'Coloca gastos em ordem de importância'),
+  ('listas-suspensas',      'Listas Suspensas',       'Completa a frase escolhendo em cada lacuna'),
+  ('quadrinho-interativo',  'Quadrinho Interativo',   'História em painéis, com escolhas no meio do caminho')
 AS novo
 ON DUPLICATE KEY UPDATE name = novo.name, description = novo.description;
 

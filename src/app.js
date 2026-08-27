@@ -83,7 +83,7 @@ export function criarApp() {
   // campos. Sem o multer antes, o corpo chega vazio ao middleware de CSRF e o
   // formulário legítimo seria recusado. Fica depois do `requireAdmin` de
   // propósito: só administrador logado faz o servidor ler um arquivo.
-  app.use('/admin/itens', requireAdmin, receberIlustracao);
+  app.use(['/admin/itens', '/admin/celulas'], requireAdmin, receberIlustracao);
 
   app.use(csrf);
   app.use(limiteGlobal);

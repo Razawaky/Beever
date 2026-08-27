@@ -53,6 +53,12 @@
       <div id="jogo-barra" class="h-full rounded-pilula bg-mel barra-0"></div>
     </div>
 
+    <%# A mídia da atividade é da casca, e não do jogo: cadastrada uma vez pelo
+        painel, ela aparece do mesmo jeito nos oito tipos. O quadrinho tem arte
+        por painel e não usa esta. -%>
+    <img id="jogo-midia" src="" alt="" width="800" height="450"
+      class="mt-6 hidden aspect-video w-full rounded-favo object-cover" />
+
     <%- include(`../partials/jogos/${areaDoJogo}`) %>
   </section>
 

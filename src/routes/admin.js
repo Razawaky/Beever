@@ -137,7 +137,7 @@ router.get('/celulas/:idCelula/conteudo', idDaCelulaNaUrl, validate, adminConten
 router.post(
   '/celulas/:idCelula/conteudo',
   idDaCelulaNaUrl,
-  body('corpo').notEmpty().withMessage('Cole o conteúdo da atividade'),
+  body('corpo').if(body('modo').equals('avancado')).notEmpty().withMessage('Cole o conteúdo da atividade'),
   validate,
   adminContentController.salvarConteudo,
 );

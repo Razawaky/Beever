@@ -17,6 +17,8 @@ const painelDePasso = document.getElementById('jogo-passo');
 const barra = document.getElementById('jogo-barra');
 const barraCaixa = document.getElementById('jogo-barra-caixa');
 
+const midia = document.getElementById('jogo-midia');
+
 const csrfToken = document.body.dataset.csrfToken;
 const idCelula = Number(document.body.dataset.celulaId);
 
@@ -60,6 +62,16 @@ export async function abrirPartida() {
 
   tokenDaPartida = partida.token;
   if (partida.ehRepeticao) avisoDeRepeticao.classList.remove('hidden');
+
+  // A imagem da atividade, quando o painel cadastrou uma. Fica aqui porque é
+  // igual nos oito jogos, e o `alt` é vazio de propósito: a arte ilustra o
+  // enunciado que já está escrito ao lado, então repeti-lo atrapalharia o leitor
+  // de tela em vez de ajudar.
+  if (partida.conteudo?.imagem) {
+    midia.src = partida.conteudo.imagem;
+    midia.classList.remove('hidden');
+  }
+
   carregando.classList.add('hidden');
   area.classList.remove('hidden');
   return partida;

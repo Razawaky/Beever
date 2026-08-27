@@ -503,6 +503,123 @@ const ordene = {
   },
 };
 
+/**
+ * Listas Suspensas (RF-JOG-09): completar a frase escolhendo em cada lacuna.
+ *
+ * Corpo esperado: `{ tipo, enunciado, lacunas: [{ texto, opcoes, correta }] }`,
+ * em que `correta` é o índice da opção certa. As respostas chegam como lista de
+ * índices, uma por lacuna, na ordem.
+ *
+ * Parece o quiz e não é: ali cada pergunta é uma tela, aqui a frase inteira fica
+ * à vista e a criança vê como uma escolha muda o sentido da outra.
+ */
+const listas = {
+  conferirForma(corpo) {
+    const lacunas = corpo?.lacunas;
+    if (!Array.isArray(lacunas) || lacunas.length === 0) {
+      throw erroValidacao('Esta célula ainda não é jogável: a frase não tem lacunas');
+    }
+
+    for (const lacuna of lacunas) {
+      if (!Array.isArray(lacuna.opcoes) || lacuna.opcoes.length < 2) {
+        throw erroValidacao('Lacuna com menos de duas opções: não há o que escolher');
+      }
+      const foraDaLista = lacuna.correta < 0 || lacuna.correta >= lacuna.opcoes.length;
+      if (!Number.isInteger(lacuna.correta) || foraDaLista) {
+        throw erroValidacao('Lacuna com resposta certa fora das opções');
+      }
+    }
+  },
+
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      enunciado: corpo.enunciado,
+      lacunas: corpo.lacunas.map((lacuna) => ({ texto: lacuna.texto, opcoes: lacuna.opcoes })),
+    };
+  },
+
+  /** Lacuna deixada em branco conta como erro, igual à pergunta não respondida. */
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma por lacuna');
+    }
+
+    let erros = 0;
+    corpo.lacunas.forEach((lacuna, indice) => {
+      if (Number(respostas[indice]) !== Number(lacuna.correta)) erros += 1;
+    });
+
+    return { erros, total: corpo.lacunas.length };
+  },
+};
+
+/**
+ * Quadrinho Interativo (RF-JOG-10): uma história em painéis, e em alguns deles a
+ * criança decide o que acontece a seguir.
+ *
+ * Corpo esperado: `{ tipo, paineis: [{ texto, imagem, escolhas, correta }] }`.
+ * Painel sem `escolhas` é narrativa, e só avança; painel com escolhas conta na
+ * nota. As respostas chegam como lista de índices, uma por painel de escolha, na
+ * ordem em que aparecem.
+ *
+ * Precisa de pelo menos uma escolha: sem nenhuma seria leitura, não atividade, e
+ * a partida fecharia com nota cheia sem a criança decidir nada.
+ */
+const quadrinho = {
+  conferirForma(corpo) {
+    const paineis = corpo?.paineis;
+    if (!Array.isArray(paineis) || paineis.length === 0) {
+      throw erroValidacao('Esta célula ainda não é jogável: a história não tem painéis');
+    }
+
+    let comEscolha = 0;
+    for (const painel of paineis) {
+      if (!painel.texto) throw erroValidacao('Painel sem texto');
+      if (painel.escolhas === undefined) continue;
+
+      if (!Array.isArray(painel.escolhas) || painel.escolhas.length < 2) {
+        throw erroValidacao('Painel de escolha com menos de duas opções');
+      }
+      const foraDaLista = painel.correta < 0 || painel.correta >= painel.escolhas.length;
+      if (!Number.isInteger(painel.correta) || foraDaLista) {
+        throw erroValidacao('Painel com escolha certa fora das opções');
+      }
+      comEscolha += 1;
+    }
+
+    if (comEscolha === 0) {
+      throw erroValidacao('A história precisa de pelo menos um painel com escolha');
+    }
+  },
+
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      paineis: corpo.paineis.map((painel) => ({
+        texto: painel.texto,
+        imagem: painel.imagem ?? null,
+        escolhas: painel.escolhas ?? null,
+      })),
+    };
+  },
+
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As respostas precisam vir em lista, uma por escolha');
+    }
+
+    const comEscolha = corpo.paineis.filter((painel) => Array.isArray(painel.escolhas));
+
+    let erros = 0;
+    comEscolha.forEach((painel, indice) => {
+      if (Number(respostas[indice]) !== Number(painel.correta)) erros += 1;
+    });
+
+    return { erros, total: comEscolha.length };
+  },
+};
+
 const VALIDADORES = {
   'quiz-do-favo': quiz,
   'arraste-e-classifique': arraste,
@@ -510,6 +627,8 @@ const VALIDADORES = {
   'cofre-do-tempo': cofre,
   'mercado-esperto': mercado,
   'ordene-a-prioridade': ordene,
+  'listas-suspensas': listas,
+  'quadrinho-interativo': quadrinho,
 };
 
 function escolher(slugDoTipoDeJogo) {
@@ -569,5 +688,9 @@ export function validarRespostas(slugDoTipoDeJogo, corpo, respostas) {
 export function conteudoParaJogar(slugDoTipoDeJogo, corpo) {
   const validador = escolher(slugDoTipoDeJogo);
   validador.conferirForma(corpo);
-  return validador.paraJogar(corpo);
+  const conteudo = validador.paraJogar(corpo);
+
+  // A mídia da atividade é da casca da tela, não do jogo: ela atravessa aqui,
+  // num lugar só, em vez de cada `paraJogar` ter que lembrar de repassá-la.
+  return corpo.imagem ? { ...conteudo, imagem: corpo.imagem } : conteudo;
 }

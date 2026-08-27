@@ -268,6 +268,8 @@ const TELAS_DE_JOGO = {
   'cofre-do-tempo': { areaDoJogo: 'cofre', script: '/js/cofre.js' },
   'mercado-esperto': { areaDoJogo: 'mercado', script: '/js/mercado.js' },
   'ordene-a-prioridade': { areaDoJogo: 'ordene', script: '/js/ordene.js' },
+  'listas-suspensas': { areaDoJogo: 'listas', script: '/js/listas.js' },
+  'quadrinho-interativo': { areaDoJogo: 'quadrinho', script: '/js/quadrinho.js' },
 };
 
 /**

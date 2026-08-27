@@ -1,9 +1,11 @@
 import { emTransacao } from '../config/database.js';
+import { guardarIlustracao } from '../config/uploads.js';
 import * as cellsRepository from '../repositories/cellsRepository.js';
 import * as contentsRepository from '../repositories/contentsRepository.js';
 import * as hivesRepository from '../repositories/hivesRepository.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import { erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
+import { slugDeTexto } from '../utils/slug.js';
 import * as auditService from './auditService.js';
 import { conferirForma } from './validadoresDeJogo.js';
 
@@ -27,13 +29,7 @@ const DURACAO_PADRAO_EM_SEGUNDOS = 300;
  * espaço. O administrador pode escrever o slug à mão; isto é só o padrão.
  */
 export function slugDoTitulo(titulo) {
-  return String(titulo ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60);
+  return slugDeTexto(titulo);
 }
 
 /** Lê o JSON do formulário e recusa o que nem sintaxe tem. */
@@ -200,8 +196,15 @@ export async function detalharConteudo(idCelula) {
  * dizer que ele é jogável. Sem esse portão, o painel cadastraria pergunta sem
  * alternativa e o erro só apareceria na cara da criança.
  */
-export async function salvarConteudo(idCelula, corpo, ator) {
+export async function salvarConteudo(idCelula, corpo, ilustracao, ator) {
   const celula = await exigirCelula(idCelula);
+
+  // A imagem viaja dentro do corpo, que já é JSON: mídia nova substitui a
+  // anterior, e sem arquivo novo a versão herda a arte que já estava no ar.
+  const atual = await contentsRepository.buscarAtualDaCelula(celula.id);
+  const imagem = ilustracao ? await guardarIlustracao(ilustracao) : (atual?.body?.imagem ?? null);
+  if (imagem) corpo.imagem = imagem;
+
   conferirForma(celula.game_type_slug, corpo);
 
   const versao = (await contentsRepository.ultimaVersaoDaCelula(celula.id)) + 1;

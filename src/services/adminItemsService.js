@@ -2,6 +2,7 @@ import { emTransacao } from '../config/database.js';
 import { guardarIlustracao } from '../config/uploads.js';
 import * as itemsRepository from '../repositories/itemsRepository.js';
 import { erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
+import { slugDeTexto } from '../utils/slug.js';
 import * as auditService from './auditService.js';
 import { comportamentosDosNumeros } from './comportamentosDoItem.js';
 
@@ -16,13 +17,7 @@ import { comportamentosDosNumeros } from './comportamentosDoItem.js';
 
 /** Transforma o nome em slug. O administrador pode escrever o dele; isto é o padrão. */
 export function slugDoNome(nome) {
-  return String(nome ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60);
+  return slugDeTexto(nome);
 }
 
 /**

@@ -476,6 +476,8 @@ describe('validadoresDeJogo', () => {
       'cofre-do-tempo',
       'mercado-esperto',
       'ordene-a-prioridade',
+      'listas-suspensas',
+      'quadrinho-interativo',
     ]);
   });
 });

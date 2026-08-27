@@ -1,4 +1,5 @@
 import * as adminContentService from '../services/adminContentService.js';
+import * as atividadesDoPainel from '../services/atividadesDoPainel.js';
 import * as auditService from '../services/auditService.js';
 import { assincrono } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
@@ -118,15 +119,38 @@ export const formularioDeConteudo = assincrono(async (req, res) => {
     celula,
     atual,
     versoes,
+    // Tipo sem formulário próprio cai direto no modo avançado, em vez de mostrar
+    // uma tela vazia esperando campos que não existem.
+    temFormulario: atividadesDoPainel.tiposComFormulario().includes(celula.game_type_slug),
   });
 });
 
+/**
+ * Dois caminhos para a mesma gravação: os campos do formulário, que é o normal,
+ * e o JSON colado, que serve para conteúdo já pronto e para tipo de jogo que
+ * ainda não ganhou formulário.
+ */
 export const salvarConteudo = assincrono(async (req, res) => {
-  const corpo = adminContentService.lerCorpoJson(req.body.corpo);
-  const versao = await adminContentService.salvarConteudo(Number(req.params.idCelula), corpo, ator(req));
+  const { celula } = await adminContentService.detalharConteudo(Number(req.params.idCelula));
+
+  // O formulário sempre declara o modo. Quem manda `corpo` sem declarar nada é
+  // cliente JSON, e o JSON colado é o caminho avançado — foi o único que existiu
+  // até a T-12.4, e continua valendo.
+  const modoAvancado = req.body.modo === 'avancado' || (!req.body.modo && typeof req.body.corpo === 'string');
+
+  const corpo = modoAvancado
+    ? adminContentService.lerCorpoJson(req.body.corpo)
+    : atividadesDoPainel.montarCorpo(celula.game_type_slug, req.body);
+
+  const versao = await adminContentService.salvarConteudo(
+    celula.id,
+    corpo,
+    req.file?.buffer ?? null,
+    ator(req),
+  );
 
   if (querJson(req)) return res.status(201).json({ versao });
-  res.redirect(`/admin/celulas/${req.params.idCelula}/conteudo`);
+  res.redirect(`/admin/celulas/${celula.id}/conteudo`);
 });
 
 /** Os campos do formulário do favo, já com os números convertidos. */
