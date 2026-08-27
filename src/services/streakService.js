@@ -33,9 +33,6 @@ const MAXIMO_DE_DIAS_AVALIADOS = 60;
 const ESCUDO = 'escudo-de-sequencia';
 const MAXIMO_DE_ESCUDOS = 2;
 
-/** Marcos que rendem mel e conquista (RN-023). O valor de cada um vem do banco. */
-const MARCOS = [7, 14, 30, 60, 100];
-
 function paraMySQL(data) {
   return data.toISOString().slice(0, 19).replace('T', ' ');
 }
@@ -145,14 +142,20 @@ async function diasComCelulaConcluida(idUsuario, primeiroDia, hoje, fuso) {
 }
 
 /**
- * Paga o marco quando a sequência bate o número exato. A conquista é única por
- * jogador, então chegar de novo aos 7 dias não paga segunda vez.
+ * Paga os marcos que a sequência alcançou (RN-023).
+ *
+ * O número que vale é o **melhor** já atingido, e não o de hoje: a conquista é
+ * por ter chegado lá, e quem chegou a trinta dias não perde o marco quando a
+ * sequência quebra depois. Quais números são marco é o catálogo quem diz, desde
+ * a T-13.1 — antes a lista morava aqui e o slug era montado à mão.
  */
-async function conferirMarco(idUsuario, diasAtuais) {
-  if (!MARCOS.includes(diasAtuais)) return null;
+async function conferirMarcos(idUsuario, melhorDias) {
+  const novas = await achievementsService.avaliarCriterio(idUsuario, 'sequencia-dias', melhorDias);
 
-  const { desbloqueou, melCreditado } = await achievementsService.desbloquear(idUsuario, `sequencia-${diasAtuais}`);
-  return desbloqueou ? { dias: diasAtuais, melCreditado } : null;
+  return novas.map(({ conquista, melCreditado }) => ({
+    dias: Number(conquista.criterion_target),
+    melCreditado,
+  }));
 }
 
 /**
@@ -181,7 +184,6 @@ export async function avaliar(idUsuario, agora = new Date()) {
     let ultimoDiaContado = sequencia.last_counted_date;
     let quebrou = false;
     const protegidos = [];
-    const marcos = [];
 
     if (dias.length > 0) {
       const [agenda, cumpridos, jaAvaliados] = await Promise.all([
@@ -210,7 +212,6 @@ export async function avaliar(idUsuario, agora = new Date()) {
           diasAtuais += 1;
           ultimoDiaContado = dia;
           melhorDias = Math.max(melhorDias, diasAtuais);
-          if (MARCOS.includes(diasAtuais)) marcos.push(diasAtuais);
         }
 
         if (tipo === 'perdido' && diasAtuais > 0) {
@@ -226,18 +227,14 @@ export async function avaliar(idUsuario, agora = new Date()) {
       conexao,
     );
 
-    return { sequencia, diasAtuais, melhorDias, ultimoDiaContado, quebrou, protegidos, marcos };
+    return { sequencia, diasAtuais, melhorDias, ultimoDiaContado, quebrou, protegidos };
   });
 
   const { diasAtuais, melhorDias, ultimoDiaContado, protegidos, sequencia } = varredura;
 
   // Marco e auditoria ficam fora da trava: pagar conquista abre transação
   // própria, e a UNIQUE do banco já impede pagar o mesmo marco duas vezes.
-  const marcos = [];
-  for (const diaDeMarco of varredura.marcos) {
-    const marco = await conferirMarco(idUsuario, diaDeMarco);
-    if (marco) marcos.push(marco);
-  }
+  const marcos = await conferirMarcos(idUsuario, melhorDias);
 
   if (varredura.quebrou) {
     await auditService.registrar(auditService.sistema(), 'sequencia.quebrada', {
@@ -339,8 +336,7 @@ export async function registrarDiaCumprido(idUsuario, agora = new Date()) {
     avaliadoEm: paraMySQL(agora),
   });
 
-  const marco = await conferirMarco(idUsuario, diasAtuais);
-  const marcos = marco ? [...resumo.marcos, marco] : resumo.marcos;
+  const marcos = [...resumo.marcos, ...(await conferirMarcos(idUsuario, melhorDias))];
 
   return { ...resumo, diasAtuais, melhorDias, ultimoDiaContado: resumo.hoje, marcos };
 }

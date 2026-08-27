@@ -132,7 +132,12 @@ describe('marco de sequência', opcoes, () => {
     assert.deepEqual(await lerConquistas(), ['sequencia-7']);
   });
 
-  it('o valor pago é o que está no banco, não um número no código', async () => {
+  /**
+   * Desde a T-13.1 o marco não é comparação de igualdade: quem alcança trinta
+   * dias sem ter passado pelos catorze recebe os dois. Antes, quem pulasse um
+   * marco numa virada de fuso o perdia para sempre.
+   */
+  it('o valor pago é o que está no banco, e o degrau pulado também é pago', async () => {
     const [[conquista]] = await banco.conexao.query(
       "SELECT reward_coins FROM achievements WHERE slug = 'sequencia-30'",
     );
@@ -142,11 +147,15 @@ describe('marco de sequência', opcoes, () => {
 
     const resumo = await streakService.registrarDiaCumprido(idUsuario, AGORA);
 
-    assert.deepEqual(resumo.marcos, [{ dias: 30, melCreditado: 777 }]);
-    assert.equal(await lerMel(), melAntes + 777);
+    assert.deepEqual(resumo.marcos, [
+      { dias: 14, melCreditado: 200 },
+      { dias: 30, melCreditado: 777 },
+    ]);
+    assert.equal(await lerMel(), melAntes + 200 + 777);
 
-    await banco.conexao.query("UPDATE achievements SET reward_coins = ? WHERE slug = 'sequencia-30'", [
+    await banco.conexao.query("UPDATE achievements SET reward_coins = ? WHERE slug = ?", [
       conquista.reward_coins,
+      'sequencia-30',
     ]);
   });
 
@@ -175,7 +184,8 @@ describe('marco de sequência', opcoes, () => {
   });
 
   it('o bônus deixa lançamento no livro, com o motivo do marco', async () => {
-    await sequenciaEm(13);
+    // Sessenta é o primeiro degrau ainda não desbloqueado nesta suíte.
+    await sequenciaEm(59);
 
     await streakService.registrarDiaCumprido(idUsuario, AGORA);
 
@@ -189,7 +199,7 @@ describe('marco de sequência', opcoes, () => {
       [idUsuario],
     );
 
-    assert.equal(Number(lancamento.amount), 200);
+    assert.equal(Number(lancamento.amount), 800);
     assert.equal(lancamento.motivo, 'marco-de-sequencia');
     assert.equal(lancamento.reference_type, 'achievement');
   });
