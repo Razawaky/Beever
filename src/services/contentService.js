@@ -310,8 +310,10 @@ export async function abrirCelula(idUsuario, idCelula) {
   if (!escolhida) throw erroNaoEncontrado('Célula não encontrada');
   if (escolhida.estado === ESTADOS.travadoPorCelulaAnterior) throw erroAcessoNegado(escolhida.motivo);
 
-  const conteudo = await contentsRepository.buscarAtualDaCelula(idCelula);
-  if (!conteudo) throw erroNaoEncontrado('Esta célula ainda não tem conteúdo');
+  // Devolve o acervo inteiro, e não a versão mais nova: desde a T-12.5 a célula
+  // pode ter várias atividades ativas, e quem sorteia é o serviço da partida.
+  const acervo = await contentsRepository.listarAcervoDaCelula(idCelula);
+  if (acervo.length === 0) throw erroNaoEncontrado('Esta célula ainda não tem conteúdo');
 
-  return { celula: escolhida, conteudo };
+  return { celula: escolhida, acervo };
 }

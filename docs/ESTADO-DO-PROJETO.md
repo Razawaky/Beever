@@ -4,12 +4,18 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-12.4 — a atividade deixou de ser JSON colado e virou formulário, nos
+**Último commit:** T-12.5 — a célula ganhou acervo e a partida passou a sortear qual
+atividade joga, sem repetir a da vez anterior. A migration 018 grava na partida qual
+atividade saiu, e isso conserta um defeito silencioso que existia desde a E06: a correção
+relia o conteúdo atual da célula, então publicar no meio do jogo trocava o gabarito
+debaixo das respostas da criança. 840 testes passando.
+**Próximo passo: T-12.6 — consulta de auditoria com filtros**
+
+**Commit anterior:** T-12.4 — a atividade deixou de ser JSON colado e virou formulário, nos
 oito tipos de jogo. Dois formatos nasceram nesta tarefa, a pedido do usuário: Listas
 Suspensas e Quadrinho Interativo, cada um com validador, tela e conteúdo de exemplo. A
 imagem da atividade viaja dentro do corpo JSON e aparece na casca comum, valendo para os
 oito de uma vez. 827 testes passando.
-**Próximo passo: T-12.5 — a atividade cadastrada entra no sorteio da faixa**
 
 **Commit anterior:** T-12.3 — o catálogo da loja passou a ser cadastrado pelo painel, com
 ilustração própria. O upload aceita qualquer formato de imagem e o servidor grava sempre
@@ -457,6 +463,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Item | Por que está aqui |
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
+| A tela do acervo da célula (T-12.5) | O caminho está coberto por teste pelo HTTP: publicar substituindo, publicar acrescentando, o sorteio entre três atividades, a retomada com a mesma, e tirar do acervo. O que **não** foi visto por olho humano é a escolha entre substituir e acrescentar aparecendo nos dois formulários da mesma página, e a lista do acervo com os botões de tirar a 320 px. Vale o passe da DT-22 |
 | As duas telas de jogo novas e os oito formulários de atividade (T-12.4) | O caminho está coberto por teste pelo HTTP: os oito tipos são cadastrados pelo formulário e a partida abre para a conta demo em cada um, sem gabarito junto. O que **não** foi visto por olho humano é justamente o que estes dois jogos entregam — a lista suspensa aberta no celular, a frase com quatro lacunas a 320 px, o painel do quadrinho trocando com a imagem em cima, e o foco de teclado passeando pelos oito formulários do painel, que são a maior superfície de tela da etapa. Vale o passe da DT-22 |
 | As duas telas do catálogo de itens (T-12.3) | O caminho está coberto por teste pelo HTTP, incluindo a conversão para WebP conferida nos bytes do arquivo em disco e o item aparecendo na loja da conta demo com a arte. O que **não** foi visto por olho humano é o formulário: ele é o maior do projeto — cinco números do comportamento econômico, dois campos de escolha, quatro linhas de requisito e o campo de arquivo — e nunca foi olhado a 320 px, nem com uma imagem de verdade sendo escolhida. Vale o passe da DT-22 |
 | As cinco telas de cadastro de conteúdo (T-12.2) | O caminho está coberto por teste pelo HTTP, incluindo o aceite ponta a ponta: o admin publica e a conta demo abre a partida. O que **não** foi visto por olho humano é o desenho — a lista de favos e a de células com sete colunas a 320 px, os botões de subir e descer empilhados na linha da célula, a área de texto do JSON num celular, e a mensagem do validador chegando ao formulário depois de uma recusa. Vale o passe da DT-22 |
@@ -500,7 +507,7 @@ modelagem adiadas estão em `docs/02-ROADMAP-ETAPAS.md`.
 | T-12.2 CRUD de favos, células e conteúdo | **feita** — os três repositories, que eram só de leitura desde a E05, ganharam escrita; `adminContentService` grava favo, célula e conteúdo com auditoria em cada ação, e o `conferirForma` do tipo de jogo recusa atividade torta antes de publicar. Nada apaga: favo e célula saem por `is_active`, e a edição de conteúdo grava versão nova deixando a anterior guardada. Reordenar troca a ordem com a vizinha numa transação, por causa da UNIQUE do favo |
 | T-12.3 CRUD de itens, preços e comportamento econômico, com ilustração própria | **feita** — migration 017 deu a coluna `image_path` ao item; o upload aceita qualquer formato e grava sempre WebP, com o `sharp` servindo de validação; `item_behaviors_map` saiu do seed e virou `comportamentosDoItem.js`, regra pura que o painel e o `db:seed` dividem; requisitos de compra da RN-033 entram no mesmo formulário. Das três decisões adiadas, duas foram tomadas — a arte mora em pasta servida como estática, e variação cosmética continua item próprio |
 | T-12.4 Cadastro de atividades novas nos tipos de jogo que já existem, com mídia | **feita** — formulário próprio para os oito tipos, com o JSON virando modo avançado num `details`; a imagem da atividade viaja dentro do corpo JSON e é mostrada pela casca comum, sem tocar em oito arquivos de JavaScript. A pedido do usuário a tarefa cresceu e trouxe dois formatos novos por inteiro, **Listas Suspensas** e **Quadrinho Interativo**, cada um com validador, tela, JavaScript e exemplo no seed. Vídeo ficou de fora por decisão |
-| T-12.5 Distribuição adaptativa: a atividade cadastrada entra no sorteio da faixa | pendente |
+| T-12.5 Distribuição adaptativa: a atividade cadastrada entra no sorteio da faixa | **feita** — sem tabela nova: publicar passou a ter duas opções, substituir ou acrescentar ao acervo, e as versões ativas de `contents` viraram o conjunto sorteável. A faixa vem de graça, porque a célula já tem `age_band_id`. O sorteio é do servidor, não repete a atividade da partida anterior, e a migration 018 grava na partida qual saiu — o que também consertou a correção, que antes relia o conteúdo atual da célula |
 | T-12.6 Consulta de auditoria com filtros | pendente |
 | T-12.7 Dashboard e métricas agregadas (P1) | pendente — o painel de hoje mostra só contagem de contas e a lista de administradores |
 
@@ -1234,7 +1241,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
-| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. Faltam T-12.5 a T-12.7, e as quatro decisões de modelagem continuam abertas |
+| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. Faltam T-12.6 e T-12.7, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
@@ -1287,6 +1294,9 @@ Identificadores rastreiam os documentos da E00.
 | DT-88 | O vídeo do "quadrinho interativo" ficou de fora: o escopo acordado em 2026-08-25 fala em vídeo ou imagem, e a T-12.4 entregou só imagem, por decisão do usuário. Um mp4 de trinta segundos é outra ordem de grandeza para a pasta de uploads da DT-85 | T-12.4 | Decidir armazenamento e entrega de vídeo antes de aceitar o primeiro arquivo; talvez fora da aplicação, com o painel guardando só o endereço |
 | DT-89 | Os formulários de atividade têm um número fixo de linhas — seis perguntas, oito cartas, quatro rodadas — porque são HTML puro. Quem precisar de mais precisa cair no modo avançado e escrever JSON | T-12.4 | Acrescentar linha por JavaScript progressivo, sem que o formulário deixe de funcionar sem ele |
 | DT-90 | A imagem substituída de uma atividade continua no disco, e agora há duas fontes do mesmo problema: item (DT-86) e atividade. No caso da atividade é pior, porque a versão antiga do conteúdo ainda aponta para ela e apagar quebraria o histórico | T-12.4 | Resolver junto da DT-86, tratando a versão antiga do conteúdo como dona da arte que referencia |
+| DT-91 | O sorteio da atividade não está escrito em `01-REQUISITOS-E-REGRAS.md`: ele veio da conversa de escopo de 2026-08-25 e virou código na T-12.5. Os requisitos escritos (RN-025 a RN-027) descrevem só a trilha determinística, que continua valendo — o que sorteia é qual atividade da célula aparece | T-12.5 | Escrever o requisito antes da defesa do TCC, para o documento e o código contarem a mesma história |
+| DT-92 | Repetir a célula pode cair na mesma atividade quando o acervo tem três ou mais: a regra só garante não repetir a **imediatamente anterior**. Com acervo de três, a terceira partida pode voltar à primeira | T-12.5 | Guardar as duas últimas em vez de uma, se o acervo do conteúdo real crescer o bastante para alguém notar |
+| DT-93 | As partidas gravadas antes da migration 018 têm `content_id` nulo, e para elas a correção continua usando o conteúdo atual da célula. São partidas antigas, já fechadas, então o efeito é nenhum hoje | T-12.5 | Nada a fazer enquanto não houver partida antiga aberta; se houver, ela fecha pelo caminho antigo |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3468,3 +3478,39 @@ número fixo de linhas por serem HTML puro; DT-90, a imagem substituída fica no
 disco, e aqui apagar quebraria a versão antiga do conteúdo.
 
 827 testes passando, vinte e dois deles novos.
+
+### Sessão de 2026-08-27, T-12.5 e o acervo da célula
+
+Esta era a quarta e última decisão de modelagem adiada na abertura da etapa, e ela
+começou com um conflito que precisava ser dito: **o sorteio não está escrito em
+requisito nenhum**. Ele vem da conversa de escopo de 2026-08-25, enquanto RN-025 a
+RN-027 descrevem uma trilha determinística. A tarefa foi feita sem inventar
+requisito: a ordem das células continua fixa, e o que sorteia é qual atividade
+daquela célula aparece. A lacuna virou DT-91.
+
+O acervo não custou tabela. `contents` já tinha várias linhas por célula, com
+`version` e `is_active`; o que faltava era o administrador poder escolher entre
+substituir e acrescentar. Publicar substituindo aposenta as anteriores, como a
+T-12.2 fazia; publicar acrescentando mantém todas ativas, e o conjunto delas é o
+que a partida sorteia. A faixa veio de graça, porque a célula já tem `age_band_id`.
+
+O achado que mudou o tamanho da tarefa foi outro. `game_sessions` guardava a
+célula e não guardava o conteúdo, então a correção relia "a versão atual da
+célula" na hora de fechar. Publicar uma versão nova enquanto uma criança jogava
+fazia as respostas dela serem corrigidas contra outra pergunta, e nada acusava. A
+migration 018 acrescentou `content_id`, a partida grava qual atividade sorteou e o
+fechamento valida contra ela — o sorteio não teria como existir sem isso, e o
+defeito antigo morreu junto. Virou teste: publicar no meio da partida com o
+gabarito trocado, e ela fecha com três estrelas.
+
+Duas decisões menores que valem lembrar. Retomar devolve a mesma atividade, porque
+sortear de novo trocaria as perguntas debaixo das respostas já dadas. E tirar a
+última atividade do acervo é recusado com a frase certa: desative a célula em vez
+de esvaziá-la.
+
+Dois testes existentes mudaram por causa da tarefa: `abrirCelula` passou a devolver
+o acervo em vez da versão mais nova, e o `iniciar` do repository ganhou
+`idConteudo` com padrão nulo — sem ele os testes de repository quebravam passando
+`undefined` ao driver.
+
+840 testes passando, treze deles novos.

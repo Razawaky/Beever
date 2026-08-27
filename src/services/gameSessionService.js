@@ -8,6 +8,7 @@ import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/err
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 import * as contentService from './contentService.js';
+import { sortearAtividade } from './sorteioDeConteudo.js';
 import * as idempotencyService from './idempotencyService.js';
 import * as levelsService from './levelsService.js';
 import * as pointsService from './pointsService.js';
@@ -43,23 +44,29 @@ import * as validadoresDeJogo from './validadoresDeJogo.js';
  * órfãs e faria a criança recomeçar do zero.
  */
 export async function abrir(idUsuario, idCelula) {
-  const { celula, conteudo } = await contentService.abrirCelula(idUsuario, idCelula);
+  const { celula, acervo } = await contentService.abrirCelula(idUsuario, idCelula);
 
-  // Falha antes de gravar partida: conteúdo sem gabarito não é jogável, e uma
-  // partida aberta que ninguém consegue fechar só sujaria a tabela.
-  const paraJogar = validadoresDeJogo.conteudoParaJogar(celula.game_type_slug, conteudo.body);
-
+  // Quem retoma continua com a mesma atividade que estava jogando: sortear de
+  // novo trocaria as perguntas debaixo das respostas já dadas.
   const emAndamento = await gameSessionsRepository.buscarAbertaDaCelula(idUsuario, idCelula);
   if (emAndamento) {
+    const conteudo = await conteudoDaPartida(emAndamento);
     return {
       token: emAndamento.token,
       celula,
-      conteudo: paraJogar,
+      conteudo: validadoresDeJogo.conteudoParaJogar(celula.game_type_slug, conteudo.body),
       ehRepeticao: Boolean(emAndamento.is_replay),
       estado: emAndamento.saved_state ?? null,
       retomada: true,
     };
   }
+
+  const ultimoJogado = await gameSessionsRepository.ultimoConteudoJogado(idUsuario, idCelula);
+  const sorteada = sortearAtividade(acervo, ultimoJogado);
+
+  // Falha antes de gravar partida: conteúdo sem gabarito não é jogável, e uma
+  // partida aberta que ninguém consegue fechar só sujaria a tabela.
+  const paraJogar = validadoresDeJogo.conteudoParaJogar(celula.game_type_slug, sorteada.body);
 
   const jaConcluiu = await gameSessionsRepository.contarConcluidasNaCelula(idUsuario, idCelula);
   const token = randomUUID();
@@ -68,12 +75,29 @@ export async function abrir(idUsuario, idCelula) {
     gameSessionsRepository.iniciar(conexao, {
       idUsuario,
       idCelula,
+      idConteudo: sorteada.id,
       token,
       ehRepeticao: jaConcluiu > 0,
     }),
   );
 
   return { token, celula, conteudo: paraJogar, ehRepeticao: jaConcluiu > 0, estado: null, retomada: false };
+}
+
+/**
+ * A atividade que aquela partida está jogando.
+ *
+ * Partida gravada antes da migration 018 não tem `content_id`: para ela, o
+ * conteúdo atual da célula é o melhor palpite disponível, e é o comportamento
+ * que existia antes.
+ */
+async function conteudoDaPartida(partida) {
+  const conteudo = partida.content_id
+    ? await contentsRepository.buscarPorId(partida.content_id)
+    : await contentsRepository.buscarAtualDaCelula(partida.cell_id);
+
+  if (!conteudo) throw erroNaoEncontrado('Esta célula ainda não tem conteúdo');
+  return conteudo;
 }
 
 /**
@@ -196,8 +220,9 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
   const celula = await cellsRepository.buscarPorId(partida.cell_id);
   if (!celula) throw erroNaoEncontrado('Célula não encontrada');
 
-  const conteudo = await contentsRepository.buscarAtualDaCelula(partida.cell_id);
-  if (!conteudo) throw erroNaoEncontrado('Esta célula ainda não tem conteúdo');
+  // A correção usa a atividade que a criança jogou, e não a atual da célula:
+  // publicar outra versão no meio da partida não pode trocar o gabarito dela.
+  const conteudo = await conteudoDaPartida(partida);
 
   const { erros, total } = validadoresDeJogo.validarRespostas(celula.game_type_slug, conteudo.body, respostas);
   const pontuacao = total === 0 ? 0 : Math.round(((total - erros) / total) * 100);

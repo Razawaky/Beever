@@ -188,7 +188,8 @@ export async function detalharConteudo(idCelula) {
     contentsRepository.buscarAtualDaCelula(celula.id),
     contentsRepository.listarVersoesDaCelula(celula.id),
   ]);
-  return { celula, atual, versoes };
+  // `versoes` já é o acervo ativo: é o mesmo conjunto que a partida sorteia.
+  return { celula, atual, versoes, acervo: versoes };
 }
 
 /**
@@ -196,7 +197,12 @@ export async function detalharConteudo(idCelula) {
  * dizer que ele é jogável. Sem esse portão, o painel cadastraria pergunta sem
  * alternativa e o erro só apareceria na cara da criança.
  */
-export async function salvarConteudo(idCelula, corpo, ilustracao, ator) {
+/**
+ * Publica a atividade. `acrescentar` mantém as anteriores ativas, e o conjunto
+ * delas vira o acervo que a partida sorteia (T-12.5); `substituir` aposenta as
+ * outras, que é como a T-12.2 nasceu e continua sendo o padrão.
+ */
+export async function salvarConteudo(idCelula, corpo, ilustracao, ator, modo = 'substituir') {
   const celula = await exigirCelula(idCelula);
 
   // A imagem viaja dentro do corpo, que já é JSON: mídia nova substitui a
@@ -211,13 +217,36 @@ export async function salvarConteudo(idCelula, corpo, ilustracao, ator) {
 
   await emTransacao(async (conexao) => {
     await contentsRepository.criarVersao(celula.id, versao, corpo, conexao);
-    await contentsRepository.desativarVersoesAnteriores(celula.id, versao, conexao);
+    if (modo !== 'acrescentar') {
+      await contentsRepository.desativarVersoesAnteriores(celula.id, versao, conexao);
+    }
   });
 
   await auditService.registrar(ator, 'conteudo.publicado', {
     entidade: 'content',
     id: celula.id,
-    depois: { celula: celula.id, versao, tipo: celula.game_type_slug },
+    depois: { celula: celula.id, versao, tipo: celula.game_type_slug, modo },
   });
   return versao;
+}
+
+/**
+ * Tira uma atividade do acervo. Não apaga: a partida já jogada aponta para ela,
+ * e o histórico precisa continuar explicável.
+ */
+export async function removerDoAcervo(idCelula, versao, ator) {
+  const celula = await exigirCelula(idCelula);
+  const acervo = await contentsRepository.listarAcervoDaCelula(celula.id);
+
+  if (acervo.length <= 1) {
+    throw erroValidacao('Esta é a única atividade da célula: desative a célula em vez de esvaziá-la');
+  }
+  const removidas = await contentsRepository.desativarVersao(celula.id, versao);
+  if (removidas === 0) throw erroNaoEncontrado('Versão não encontrada no acervo');
+
+  await auditService.registrar(ator, 'conteudo.removido-do-acervo', {
+    entidade: 'content',
+    id: celula.id,
+    antes: { celula: celula.id, versao },
+  });
 }

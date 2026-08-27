@@ -109,13 +109,16 @@ describe('trilha — contentService', opcoes, () => {
     await assert.rejects(() => contentService.listarCelulasDoFavo(idUsuario, segundoFavo.id), /80%/);
   });
 
-  it('abrir a primeira célula devolve o conteúdo da versão atual', async () => {
-    const { celula, conteudo } = await contentService.abrirCelula(idUsuario, celulas[0].id);
+  // Desde a T-12.5 a célula devolve o acervo inteiro, e não a versão mais nova:
+  // quem sorteia entre as atividades ativas é o serviço da partida.
+  it('abrir a primeira célula devolve o acervo da célula', async () => {
+    const { celula, acervo } = await contentService.abrirCelula(idUsuario, celulas[0].id);
 
     assert.equal(Number(celula.id), Number(celulas[0].id));
     assert.equal(celula.estado, ESTADOS.disponivel);
-    assert.equal(Number(conteudo.version), 1);
-    assert.ok(conteudo.body, 'o corpo da atividade vem junto');
+    assert.equal(acervo.length, 1, 'a célula do seed tem uma atividade só');
+    assert.equal(Number(acervo[0].version), 1);
+    assert.ok(acervo[0].body, 'o corpo da atividade vem junto');
   });
 
   /** O critério de aceite da etapa: não dá para pular a fila pela URL. */

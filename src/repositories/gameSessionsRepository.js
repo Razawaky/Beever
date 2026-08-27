@@ -19,18 +19,23 @@ import { limiteSeguro } from '../utils/limite.js';
  * aquela partida pagou, e o crédito em si é do motor de recompensas.
  */
 
-const CAMPOS = `gs.id, gs.user_id, gs.cell_id, gs.token, gs.started_at, gs.finished_at,
+const CAMPOS = `gs.id, gs.user_id, gs.cell_id, gs.content_id, gs.token, gs.started_at, gs.finished_at,
                 gs.duration_seconds, gs.errors, gs.stars, gs.xp_awarded, gs.points_awarded,
                 gs.coins_awarded, gs.is_replay, gs.saved_state, st.slug AS status`;
 
 const JOINS = 'JOIN game_session_statuses st ON st.id = gs.status_id';
 
-export async function iniciar(conexao, { idUsuario, idCelula, token, ehRepeticao = false }) {
+/**
+ * `idConteudo` é qual atividade do acervo saiu no sorteio. Guardar isto é o que
+ * permite corrigir a partida contra o que a criança realmente jogou, mesmo que
+ * o administrador publique outra versão no meio do caminho.
+ */
+export async function iniciar(conexao, { idUsuario, idCelula, idConteudo = null, token, ehRepeticao = false }) {
   const resultado = await consultarEm(
     conexao,
-    `INSERT INTO game_sessions (user_id, cell_id, status_id, token, is_replay)
-     VALUES (?, ?, (SELECT id FROM game_session_statuses WHERE slug = 'aberta'), ?, ?)`,
-    [idUsuario, idCelula, token, ehRepeticao ? 1 : 0],
+    `INSERT INTO game_sessions (user_id, cell_id, content_id, status_id, token, is_replay)
+     VALUES (?, ?, ?, (SELECT id FROM game_session_statuses WHERE slug = 'aberta'), ?, ?)`,
+    [idUsuario, idCelula, idConteudo, token, ehRepeticao ? 1 : 0],
   );
   return resultado.insertId;
 }
@@ -147,6 +152,22 @@ export async function buscarAbertaDaCelula(idUsuario, idCelula) {
     [idUsuario, idCelula],
   );
   return linhas[0] ?? null;
+}
+
+/**
+ * Qual atividade o jogador viu por último nesta célula, para o sorteio da
+ * próxima partida não repetir a mesma. `null` quando ele nunca jogou.
+ */
+export async function ultimoConteudoJogado(idUsuario, idCelula) {
+  const linhas = await consultar(
+    `SELECT gs.content_id
+       FROM game_sessions gs
+      WHERE gs.user_id = ? AND gs.cell_id = ? AND gs.content_id IS NOT NULL
+      ORDER BY gs.started_at DESC, gs.id DESC
+      LIMIT 1`,
+    [idUsuario, idCelula],
+  );
+  return linhas[0]?.content_id ?? null;
 }
 
 /** Grava o progresso parcial da partida. Partida fechada não aceita mais escrita. */

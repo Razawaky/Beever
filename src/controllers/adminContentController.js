@@ -111,14 +111,17 @@ export const moverCelula = assincrono(async (req, res) => {
 });
 
 export const formularioDeConteudo = assincrono(async (req, res) => {
-  const { celula, atual, versoes } = await adminContentService.detalharConteudo(Number(req.params.idCelula));
-  if (querJson(req)) return res.json({ celula, atual, versoes });
+  const { celula, atual, versoes, acervo } = await adminContentService.detalharConteudo(
+    Number(req.params.idCelula),
+  );
+  if (querJson(req)) return res.json({ celula, atual, versoes, acervo });
 
   pagina(req, res, 'conteudo-formulario', {
     titulo: `Conteúdo de ${celula.title} — administração`,
     celula,
     atual,
     versoes,
+    acervo,
     // Tipo sem formulário próprio cai direto no modo avançado, em vez de mostrar
     // uma tela vazia esperando campos que não existem.
     temFormulario: atividadesDoPainel.tiposComFormulario().includes(celula.game_type_slug),
@@ -147,10 +150,18 @@ export const salvarConteudo = assincrono(async (req, res) => {
     corpo,
     req.file?.buffer ?? null,
     ator(req),
+    req.body.publicacao === 'acrescentar' ? 'acrescentar' : 'substituir',
   );
 
   if (querJson(req)) return res.status(201).json({ versao });
   res.redirect(`/admin/celulas/${celula.id}/conteudo`);
+});
+
+export const removerDoAcervo = assincrono(async (req, res) => {
+  await adminContentService.removerDoAcervo(Number(req.params.idCelula), Number(req.body.versao), ator(req));
+
+  if (querJson(req)) return res.json({ removida: true });
+  res.redirect(`/admin/celulas/${req.params.idCelula}/conteudo`);
 });
 
 /** Os campos do formulário do favo, já com os números convertidos. */

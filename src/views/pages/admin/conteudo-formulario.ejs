@@ -42,7 +42,8 @@
         <% } %>
       </fieldset>
 
-      <%- include('../../partials/ui/botao', { texto: 'Publicar versão nova', tipo: 'submit', classe: 'mt-6' }) %>
+      <%- include('../../partials/admin/publicacao', { acervo }) %>
+      <%- include('../../partials/ui/botao', { texto: 'Publicar', tipo: 'submit', classe: 'mt-6' }) %>
     </form>
   <% } %>
 
@@ -63,18 +64,43 @@
         </p>
       </div>
 
+      <%- include('../../partials/admin/publicacao', { acervo }) %>
       <%- include('../../partials/ui/botao', { texto: 'Publicar a partir do JSON', tipo: 'submit', variante: 'secundario' }) %>
     </form>
   </details>
 
-  <% if (versoes.length > 0) { %>
+  <% if (acervo.length > 0) { %>
     <section class="mt-10">
-      <h2 class="text-lg font-semibold">Versões</h2>
-      <ul class="mt-3 space-y-1 text-sm text-tinta-suave">
-        <% versoes.forEach((versao) => { %>
-          <li>
-            Versão <%= versao.version %> — publicada em
-            <%= new Date(versao.created_at).toLocaleDateString('pt-BR') %>
+      <h2 class="text-lg font-semibold">Acervo da célula</h2>
+      <p class="mt-1 text-sm text-tinta-suave">
+        <% if (acervo.length === 1) { %>
+          Uma atividade: toda partida joga esta.
+        <% } else { %>
+          <%= acervo.length %> atividades. A partida sorteia uma delas, sem repetir a da vez anterior.
+        <% } %>
+      </p>
+
+      <ul class="mt-3 space-y-2 text-sm">
+        <% acervo.forEach((versao) => { %>
+          <li class="flex flex-wrap items-center gap-3">
+            <span>
+              Versão <%= versao.version %> — publicada em
+              <%= new Date(versao.created_at).toLocaleDateString('pt-BR') %>
+            </span>
+            <% if (acervo.length > 1) { %>
+              <form method="POST" action="/admin/celulas/<%= celula.id %>/acervo/remover">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input type="hidden" name="versao" value="<%= versao.version %>" />
+                <%- include('../../partials/ui/botao', {
+                  texto: 'Tirar do acervo',
+                  tipo: 'submit',
+                  variante: 'secundario',
+                  tamanho: 'medio',
+                  formato: 'pilula',
+                  rotuloAcessivel: `Tirar a versão ${versao.version} do acervo`,
+                }) %>
+              </form>
+            <% } %>
           </li>
         <% }) %>
       </ul>

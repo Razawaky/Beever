@@ -15,6 +15,43 @@ const CAMPOS = 'ct.id, ct.cell_id, ct.version, ct.body, ct.created_at';
 
 const ATIVO = 'ct.is_active = 1 AND ct.deleted_at IS NULL';
 
+/**
+ * O acervo da célula: todas as atividades ativas dela, da mais nova para a mais
+ * velha (T-12.5).
+ *
+ * Publicar substituindo aposenta as anteriores e deixa uma só; publicar somando
+ * ao acervo mantém as outras ativas, e é este conjunto que a partida sorteia.
+ */
+export async function listarAcervoDaCelula(idCelula) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM contents ct
+      WHERE ct.cell_id = ? AND ${ATIVO}
+      ORDER BY ct.version DESC`,
+    [idCelula],
+  );
+}
+
+/** Uma atividade específica, mesmo desativada: é o que a partida jogada usou. */
+export async function buscarPorId(id) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS}
+       FROM contents ct
+      WHERE ct.id = ?`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
+/** Tira uma atividade do acervo sem apagar: a partida antiga ainda aponta para ela. */
+export async function desativarVersao(idCelula, versao) {
+  const resultado = await consultar('UPDATE contents SET is_active = 0 WHERE cell_id = ? AND version = ?', [
+    idCelula,
+    versao,
+  ]);
+  return resultado.affectedRows;
+}
+
 /** A versão mais recente do conteúdo da célula. `null` se ela ainda não tem. */
 export async function buscarAtualDaCelula(idCelula) {
   const linhas = await consultar(

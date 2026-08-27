@@ -138,8 +138,16 @@ router.post(
   '/celulas/:idCelula/conteudo',
   idDaCelulaNaUrl,
   body('corpo').if(body('modo').equals('avancado')).notEmpty().withMessage('Cole o conteúdo da atividade'),
+  body('publicacao').optional({ values: 'falsy' }).isIn(['substituir', 'acrescentar']),
   validate,
   adminContentController.salvarConteudo,
+);
+router.post(
+  '/celulas/:idCelula/acervo/remover',
+  idDaCelulaNaUrl,
+  body('versao').isInt({ min: 1 }),
+  validate,
+  adminContentController.removerDoAcervo,
 );
 
 export default router;
