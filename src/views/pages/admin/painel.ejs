@@ -28,11 +28,24 @@
   </div>
 
   <section class="mt-8 rounded-favo border border-linha bg-white p-6">
+    <h2 class="text-lg font-semibold">Conteúdo da trilha</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Favos, células e o conteúdo de cada atividade. O que for publicado aqui
+      aparece para o jogador sem rodar nenhum script.
+    </p>
+    <%- include('../../partials/ui/botao', {
+      texto: 'Abrir os favos',
+      href: '/admin/favos',
+      tamanho: 'medio',
+      classe: 'mt-4',
+    }) %>
+  </section>
+
+  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
     <h2 class="text-lg font-semibold">Ainda em construção</h2>
     <p class="mt-2 text-sm text-tinta-suave">
-      Cadastro de favos, células e conteúdo, catálogo de itens com ilustração,
-      atividades novas nos tipos de jogo que já existem e consulta à auditoria
-      chegam nas próximas tarefas desta etapa.
+      Catálogo de itens com ilustração, atividades novas com mídia e consulta à
+      auditoria chegam nas próximas tarefas desta etapa.
     </p>
   </section>
 </main>

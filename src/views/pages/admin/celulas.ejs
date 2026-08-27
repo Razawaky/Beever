@@ -1,0 +1,89 @@
+<%#
+  As células de um favo, na ordem da trilha. A coluna "jogadores" existe para o
+  administrador saber o peso do que vai mexer: reordenar ou desativar célula que
+  ninguém jogou é diferente de mexer numa que já pagou mel.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'conteudo' }) %>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <a href="/admin/favos" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar aos favos</a>
+
+  <div class="mt-4 flex flex-wrap items-center gap-4">
+    <h1 class="text-3xl font-bold"><%= favo.title %></h1>
+    <%- include('../../partials/ui/botao', {
+      texto: 'Nova célula',
+      href: `/admin/favos/${favo.id}/celulas/nova`,
+      tamanho: 'medio',
+      classe: 'ml-auto',
+    }) %>
+  </div>
+  <p class="mt-2 text-tinta-suave">
+    Faixa <%= favo.age_band_code %> · libera o favo seguinte com <%= favo.unlock_percent %>%
+  </p>
+
+  <div class="mt-8 overflow-x-auto rounded-favo border border-linha bg-white">
+    <table class="w-full text-left text-sm">
+      <caption class="sr-only">Células do favo <%= favo.title %></caption>
+      <thead class="border-b border-linha text-tinta-suave">
+        <tr>
+          <th scope="col" class="px-4 py-3 font-semibold">Ordem</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Título</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Jogo</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Conteúdo</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Jogadores</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Situação</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% celulas.forEach((celula) => { %>
+          <tr class="border-b border-linha last:border-0">
+            <td class="px-4 py-3"><%= celula.order_index %></td>
+            <td class="px-4 py-3 font-medium"><%= celula.title %></td>
+            <td class="px-4 py-3"><%= celula.game_type_name %></td>
+            <td class="px-4 py-3">
+              <%= celula.versoes_de_conteudo > 0 ? `versão ${celula.versoes_de_conteudo}` : 'sem conteúdo' %>
+            </td>
+            <td class="px-4 py-3"><%= celula.jogadores %></td>
+            <td class="px-4 py-3"><%= celula.is_active ? 'Ativa' : 'Desativada' %></td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <a href="/admin/celulas/<%= celula.id %>/conteudo" class="underline underline-offset-4">Conteúdo</a>
+                <a href="/admin/favos/<%= favo.id %>/celulas/<%= celula.id %>/editar" class="underline underline-offset-4">Editar</a>
+
+                <% ['cima', 'baixo'].forEach((direcao) => { %>
+                  <form method="POST" action="/admin/celulas/<%= celula.id %>/mover">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="direcao" value="<%= direcao %>" />
+                    <input type="hidden" name="idFavo" value="<%= favo.id %>" />
+                    <%- include('../../partials/ui/botao', {
+                      texto: direcao === 'cima' ? 'Subir' : 'Descer',
+                      tipo: 'submit',
+                      variante: 'secundario',
+                      tamanho: 'medio',
+                      formato: 'pilula',
+                      rotuloAcessivel: `Mover ${celula.title} para ${direcao}`,
+                    }) %>
+                  </form>
+                <% }) %>
+
+                <form method="POST" action="/admin/celulas/<%= celula.id %>/ativo">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <input type="hidden" name="ativa" value="<%= celula.is_active ? 'false' : 'true' %>" />
+                  <input type="hidden" name="idFavo" value="<%= favo.id %>" />
+                  <%- include('../../partials/ui/botao', {
+                    texto: celula.is_active ? 'Desativar' : 'Reativar',
+                    tipo: 'submit',
+                    variante: 'secundario',
+                    tamanho: 'medio',
+                    formato: 'pilula',
+                  }) %>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>

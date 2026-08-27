@@ -1,4 +1,4 @@
-import { consultar } from '../config/database.js';
+import { consultar, consultarEm } from '../config/database.js';
 
 /**
  * `contents` — o corpo da atividade de cada célula, em JSON.
@@ -60,4 +60,35 @@ export async function listarConteudoAtualDasCelulas(idsDeCelula = []) {
             )`,
     idsDeCelula,
   );
+}
+
+/** A maior versão já gravada da célula, ativa ou não. Zero quando não há nenhuma. */
+export async function ultimaVersaoDaCelula(idCelula) {
+  const linhas = await consultar(
+    'SELECT COALESCE(MAX(version), 0) AS ultima FROM contents WHERE cell_id = ?',
+    [idCelula],
+  );
+  return Number(linhas[0]?.ultima ?? 0);
+}
+
+export async function criarVersao(idCelula, versao, corpo, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    'INSERT INTO contents (cell_id, version, body) VALUES (?, ?, CAST(? AS JSON))',
+    [idCelula, versao, JSON.stringify(corpo)],
+  );
+  return resultado.insertId;
+}
+
+/**
+ * Desativa o que veio antes da versão nova.
+ *
+ * A versão antiga continua na tabela em vez de ser apagada: é ela que explica o
+ * que a criança respondeu numa partida de ontem.
+ */
+export async function desativarVersoesAnteriores(idCelula, versaoNova, conexao = null) {
+  await consultarEm(conexao, 'UPDATE contents SET is_active = 0 WHERE cell_id = ? AND version < ?', [
+    idCelula,
+    versaoNova,
+  ]);
 }

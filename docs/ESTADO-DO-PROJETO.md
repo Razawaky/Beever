@@ -4,13 +4,19 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-12.1 — a área administrativa ganhou porta própria. O login
+**Último commit:** T-12.2 — o administrador passou a cadastrar a trilha sem programador
+no meio. Favo, célula e conteúdo têm CRUD sob `/admin/favos`, o JSON da atividade é
+conferido pelo validador do tipo de jogo antes de ser publicado, e a edição grava uma
+versão nova em vez de sobrescrever. O aceite da etapa está provado num teste só: o admin
+publica e a conta demo abre a partida, sem `db:seed`. 792 testes passando.
+**Próximo passo: T-12.3 — CRUD de itens, e as três decisões de modelagem que ele destranca**
+
+**Commit anterior:** T-12.1 — a área administrativa ganhou porta própria. O login
 administrativo mora em `/admin/login` e recusa quem não tem linha em `admins`, com
 a mesma mensagem do login comum, e a tentativa fica na auditoria. Tudo sob `/admin`
 passa por um `requireAdmin` montado uma vez só, e a listagem de contas, que era a
 única rota admin do sistema, saiu de `GET /users` para `/admin/usuarios`. 777 testes
 passando.
-**Próximo passo: T-12.2 — CRUD de favos, células e conteúdo**
 
 **Commit anterior:** auditoria da E11, com as nove lacunas tratadas. O laudo está em
 `docs/11-AUDITORIA-DA-ETAPA.md`: **pode avançar**, com uma ressalva que não é de
@@ -439,6 +445,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Item | Por que está aqui |
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
+| As cinco telas de cadastro de conteúdo (T-12.2) | O caminho está coberto por teste pelo HTTP, incluindo o aceite ponta a ponta: o admin publica e a conta demo abre a partida. O que **não** foi visto por olho humano é o desenho — a lista de favos e a de células com sete colunas a 320 px, os botões de subir e descer empilhados na linha da célula, a área de texto do JSON num celular, e a mensagem do validador chegando ao formulário depois de uma recusa. Vale o passe da DT-22 |
 | As três telas da administração em navegador real (T-12.1) | O caminho está coberto por teste pelo HTTP: o login recusa quem não é admin, o anônimo é mandado ao formulário, o jogador comum leva 403 nas duas rotas, e o painel e a lista de contas respondem em JSON e em HTML. O que **não** foi visto por olho humano é o desenho: a casca administrativa com a barra de navegação e o botão de sair, a tabela de contas rolando na horizontal a 320 px, e o foco de teclado passando pelo formulário de login. Vale o passe da DT-22 |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
@@ -476,7 +483,7 @@ modelagem adiadas estão em `docs/02-ROADMAP-ETAPAS.md`.
 | Tarefa | Situação |
 |---|---|
 | T-12.1 Autenticação e middleware de admin via join | **feita** — `/admin/login` é porta separada, com a mesma senha e a mesma sessão do jogador, recusando quem não tem linha em `admins` com a mensagem do login comum e registrando a tentativa na auditoria. O `requireAdmin` é montado uma vez no router de `/admin`, manda anônimo ao login quando é página e responde 401 ou 403 quando é JSON, e a listagem de contas mudou de `GET /users` para `/admin/usuarios` |
-| T-12.2 CRUD de favos, células e conteúdo | pendente |
+| T-12.2 CRUD de favos, células e conteúdo | **feita** — os três repositories, que eram só de leitura desde a E05, ganharam escrita; `adminContentService` grava favo, célula e conteúdo com auditoria em cada ação, e o `conferirForma` do tipo de jogo recusa atividade torta antes de publicar. Nada apaga: favo e célula saem por `is_active`, e a edição de conteúdo grava versão nova deixando a anterior guardada. Reordenar troca a ordem com a vizinha numa transação, por causa da UNIQUE do favo |
 | T-12.3 CRUD de itens, preços e comportamento econômico, com ilustração própria | pendente — depende de decidir onde a arte mora e de tirar a derivação de `item_behaviors_map` de dentro do seed |
 | T-12.4 Cadastro de atividades novas nos tipos de jogo que já existem, com mídia | pendente |
 | T-12.5 Distribuição adaptativa: a atividade cadastrada entra no sorteio da faixa | pendente |
@@ -1213,7 +1220,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
-| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. Faltam T-12.2 a T-12.7, e as quatro decisões de modelagem continuam abertas |
+| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. Faltam T-12.3 a T-12.7, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
@@ -1258,6 +1265,8 @@ Identificadores rastreiam os documentos da E00.
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
 | DT-81 | `aceiteDaEconomia.test.js` mede a visita mais pesada contra o teto de 2 s da RNF-01 e falhou duas vezes na suíte completa (2033 ms e 2209 ms), passando sozinho e nas rodadas seguintes. O teto é do requisito, mas a medição corre junto com outros arquivos de teste disputando a máquina | auditoria da E11 | Medir com a suíte serializada, ou dar folga ao teto reconhecendo que a medição é comparativa, não absoluta |
 | DT-82 | Ser administrador é lido no login e guardado na sessão, então tirar a linha de `admins` de alguém só passa a valer na próxima entrada — quem já está logado continua com o painel aberto até a sessão morrer | T-12.1 | Aceitável enquanto admin é conta de professor criada à mão. Quando existir tela de promover e rebaixar administrador, conferir o join a cada requisição ou derrubar a sessão junto |
+| DT-83 | Conteúdo recusado pelo validador volta como página de erro, e não no formulário: quem colou quarenta linhas de JSON perde o que digitou e recomeça | T-12.2 | Devolver o formulário com o corpo enviado e a mensagem do validador ao lado, quando a T-12.4 trocar a área de texto pelo formulário por tipo de jogo |
+| DT-84 | Trocar o tipo de jogo de uma célula que já tem conteúdo publicado não revalida esse conteúdo: a célula fica com corpo de quiz e validador de outro jogo, e o erro só aparece quando alguém tenta jogar | T-12.2 | Ou revalidar o conteúdo atual contra o tipo novo na edição, ou recusar a troca enquanto houver versão publicada |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3332,3 +3341,36 @@ de verdade são a T-12.7. Uma dívida nasceu junto, a DT-82: o papel é lido no 
 e guardado na sessão, então rebaixar alguém só vale na próxima entrada.
 
 777 testes passando, oito deles novos, e o lint limpo.
+
+### Sessão de 2026-08-27, T-12.2 e a trilha sem programador no meio
+
+A E12 seguiu pelo que ela promete: o administrador cria conteúdo sem que ninguém
+rode `db:seed`. Os três repositories da trilha eram só de leitura desde a E05 —
+todo o conteúdo do jogo tinha nascido do seed — e esta tarefa foi a primeira
+escrita em `hives`, `cells` e `contents`.
+
+O portão já existia e foi só usá-lo. O `conferirForma` nasceu na T-07.1 e é ele
+que decide se a atividade é jogável: pergunta sem duas alternativas ou com a
+resposta certa fora da lista é recusada no formulário, não na tela da criança.
+Foi a razão de a T-07.1 ter deixado o validador rigoroso, e a razão está cumprida.
+
+Duas decisões seguiram o schema em vez de brigar com ele. Nada apaga: favo e
+célula saem por `is_active`, porque `cell_progress` e as partidas apontam para
+eles e as FKs são `RESTRICT` — e como as consultas da trilha já filtravam ativo, a
+célula desativada some sozinha sem que a criança perca a estrela que ganhou.
+Editar conteúdo grava uma versão nova e desativa a anterior, que fica guardada
+explicando as partidas de ontem; a `UNIQUE (cell_id, version)` já estava lá para
+isso. Reordenar célula passa por um valor livre dentro de uma transação, porque a
+`UNIQUE (hive_id, order_index)` recusa a troca direta.
+
+O teste que importa é o aceite da etapa, e ele é um só: o administrador cria a
+célula, publica o quiz, e a conta demo abre a trilha, encontra a célula nova e
+abre a partida — com as perguntas chegando sem gabarito. Junto vão as recusas, a
+prova de que desativar não apaga progresso pago, e a conferência de que toda ação
+deixa linha na auditoria com ator admin.
+
+Duas dívidas nasceram: a DT-83, porque a recusa do validador leva o administrador
+para uma página de erro e faz ele perder o JSON digitado, e a DT-84, porque trocar
+o tipo de jogo de uma célula com conteúdo publicado não revalida esse conteúdo.
+
+792 testes passando, quinze deles novos.

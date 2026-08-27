@@ -1,4 +1,4 @@
-import { consultar } from '../config/database.js';
+import { consultar, consultarEm } from '../config/database.js';
 
 /**
  * `cells` — as células, que são as atividades dentro de um favo (RN-025).
@@ -105,4 +105,110 @@ export async function contarPorFavos(idsDeFavo = [], codigosDeFaixa = []) {
   );
 
   return new Map(linhas.map((linha) => [Number(linha.hive_id), Number(linha.total)]));
+}
+
+/**
+ * As células do favo para o painel administrativo: sem filtro de faixa, com as
+ * desativadas junto e dizendo se já existe conteúdo e se alguém já jogou.
+ *
+ * Ter jogado importa porque a edição do slug e da ordem muda de risco depois
+ * que existe progresso pago em cima da célula.
+ */
+export async function listarDoFavoParaAdmin(idFavo) {
+  return consultar(
+    `SELECT ${CAMPOS}, c.is_active,
+            (SELECT COUNT(*) FROM contents ct
+              WHERE ct.cell_id = c.id AND ct.is_active = 1 AND ct.deleted_at IS NULL) AS versoes_de_conteudo,
+            (SELECT COUNT(*) FROM cell_progress cp WHERE cp.cell_id = c.id) AS jogadores
+       FROM cells c
+       ${JOINS}
+      WHERE c.hive_id = ? AND c.deleted_at IS NULL
+      ORDER BY c.order_index, c.id`,
+    [idFavo],
+  );
+}
+
+/** Busca sem esconder o inativo: o painel precisa abrir o que desativou. */
+export async function buscarParaAdmin(id) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS}, c.is_active
+       FROM cells c
+       ${JOINS}
+      WHERE c.id = ? AND c.deleted_at IS NULL`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
+/** Os tipos de jogo do catálogo, para o formulário da célula escolher um. */
+export async function listarTiposDeJogo() {
+  return consultar('SELECT id, slug, name FROM game_types WHERE is_active = 1 ORDER BY name');
+}
+
+/** A maior ordem do favo, para a célula nova entrar no fim. */
+export async function ultimaOrdemDoFavo(idFavo) {
+  const linhas = await consultar(
+    'SELECT COALESCE(MAX(order_index), 0) AS ultima FROM cells WHERE hive_id = ? AND deleted_at IS NULL',
+    [idFavo],
+  );
+  return Number(linhas[0]?.ultima ?? 0);
+}
+
+/** A célula vizinha na direção pedida, que é com quem a ordem vai ser trocada. */
+export async function buscarVizinha(idFavo, ordem, direcao) {
+  const comparacao = direcao === 'cima' ? '<' : '>';
+  const sentido = direcao === 'cima' ? 'DESC' : 'ASC';
+
+  const linhas = await consultar(
+    `SELECT c.id, c.order_index
+       FROM cells c
+      WHERE c.hive_id = ? AND c.deleted_at IS NULL AND c.order_index ${comparacao} ?
+      ORDER BY c.order_index ${sentido}
+      LIMIT 1`,
+    [idFavo, ordem],
+  );
+  return linhas[0] ?? null;
+}
+
+export async function criar(
+  { idFavo, idTipoDeJogo, idFaixa, ordem, titulo, segundosEstimados },
+  conexao = null,
+) {
+  const resultado = await consultarEm(
+    conexao,
+    `INSERT INTO cells (hive_id, game_type_id, age_band_id, order_index, title, estimated_seconds)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [idFavo, idTipoDeJogo, idFaixa, ordem, titulo, segundosEstimados],
+  );
+  return resultado.insertId;
+}
+
+/** COALESCE mantém o valor atual quando o campo não é enviado. */
+export async function atualizar(
+  id,
+  { idTipoDeJogo = null, idFaixa = null, titulo = null, segundosEstimados = null },
+  conexao = null,
+) {
+  await consultarEm(
+    conexao,
+    `UPDATE cells
+        SET game_type_id      = COALESCE(?, game_type_id),
+            age_band_id       = COALESCE(?, age_band_id),
+            title             = COALESCE(?, title),
+            estimated_seconds = COALESCE(?, estimated_seconds)
+      WHERE id = ? AND deleted_at IS NULL`,
+    [idTipoDeJogo, idFaixa, titulo, segundosEstimados, id],
+  );
+}
+
+export async function definirOrdem(id, ordem, conexao = null) {
+  await consultarEm(conexao, 'UPDATE cells SET order_index = ? WHERE id = ? AND deleted_at IS NULL', [ordem, id]);
+}
+
+/** Célula nunca é apagada: `cell_progress` e as partidas apontam para ela. */
+export async function definirAtivo(id, ativo, conexao = null) {
+  await consultarEm(conexao, 'UPDATE cells SET is_active = ? WHERE id = ? AND deleted_at IS NULL', [
+    ativo ? 1 : 0,
+    id,
+  ]);
 }

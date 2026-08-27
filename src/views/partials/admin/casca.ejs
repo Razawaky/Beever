@@ -17,6 +17,11 @@
         <%= locals.atual === 'painel' ? 'aria-current="page"' : '' %>
       >Painel</a>
       <a
+        href="/admin/favos"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'conteudo' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'conteudo' ? 'aria-current="page"' : '' %>
+      >Conteúdo</a>
+      <a
         href="/admin/usuarios"
         class="underline-offset-4 hover:underline<%= locals.atual === 'usuarios' ? ' font-semibold underline' : '' %>"
         <%= locals.atual === 'usuarios' ? 'aria-current="page"' : '' %>

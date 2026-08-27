@@ -1,0 +1,82 @@
+<%#
+  Formulário da célula, para criar e para editar. A ordem não é campo: ela nasce
+  no fim do favo e muda pelos botões de subir e descer, que respeitam a UNIQUE.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'conteudo' }) %>
+
+<main class="mx-auto max-w-2xl px-6 py-10">
+  <a href="/admin/favos/<%= favo.id %>" class="text-sm text-tinta-suave hover:text-tinta">
+    &larr; Voltar a <%= favo.title %>
+  </a>
+  <h1 class="mt-4 text-3xl font-bold"><%= celula ? 'Editar célula' : 'Nova célula' %></h1>
+
+  <form
+    method="POST"
+    action="<%= celula ? `/admin/celulas/${celula.id}` : `/admin/favos/${favo.id}/celulas` %>"
+    class="mt-8 space-y-4"
+  >
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div>
+      <label for="titulo" class="mb-1 block text-sm font-medium">Título</label>
+      <input
+        id="titulo"
+        name="titulo"
+        type="text"
+        required
+        maxlength="120"
+        value="<%= celula ? celula.title : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+    </div>
+
+    <div>
+      <label for="idTipoDeJogo" class="mb-1 block text-sm font-medium">Tipo de jogo</label>
+      <select
+        id="idTipoDeJogo"
+        name="idTipoDeJogo"
+        required
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      >
+        <% tiposDeJogo.forEach((tipo) => { %>
+          <option value="<%= tipo.id %>" <%= celula && Number(celula.game_type_id) === Number(tipo.id) ? 'selected' : '' %>>
+            <%= tipo.name %>
+          </option>
+        <% }) %>
+      </select>
+      <p class="mt-1 text-xs text-tinta-suave">É ele que decide qual validador confere o conteúdo.</p>
+    </div>
+
+    <div>
+      <label for="idFaixa" class="mb-1 block text-sm font-medium">Faixa etária</label>
+      <select
+        id="idFaixa"
+        name="idFaixa"
+        required
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      >
+        <% faixas.forEach((faixa) => { %>
+          <option value="<%= faixa.id %>" <%= celula && Number(celula.age_band_id) === Number(faixa.id) ? 'selected' : '' %>>
+            <%= faixa.code %> — <%= faixa.name %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      <label for="segundosEstimados" class="mb-1 block text-sm font-medium">Duração estimada, em segundos</label>
+      <input
+        id="segundosEstimados"
+        name="segundosEstimados"
+        type="number"
+        min="30"
+        max="3600"
+        required
+        value="<%= celula ? celula.estimated_seconds : 300 %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+    </div>
+
+    <%- include('../../partials/ui/botao', { texto: celula ? 'Salvar célula' : 'Criar célula', tipo: 'submit' }) %>
+  </form>
+</main>
