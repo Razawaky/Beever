@@ -125,6 +125,22 @@
       </div>
     </fieldset>
 
+    <div>
+      <label for="idItemDeOrigem" class="mb-1 block text-sm font-medium">Este item é melhoria de qual?</label>
+      <select id="idItemDeOrigem" name="idItemDeOrigem"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
+        <option value="">De nenhum</option>
+        <% itens.filter((outro) => !item || Number(outro.id) !== Number(item.id)).forEach((outro) => { %>
+          <option value="<%= outro.id %>" <%= item && Number(item.upgrade_of_item_id) === Number(outro.id) ? 'selected' : '' %>>
+            <%= outro.name %> — <%= outro.price %> de mel
+          </option>
+        <% }) %>
+      </select>
+      <p class="mt-1 text-xs text-tinta-suave">
+        Quem já tem o item de baixo compra este com desconto (RF-LOJ-07). Deixe "de nenhum" para item solto.
+      </p>
+    </div>
+
     <fieldset class="rounded-favo border border-linha p-4">
       <legend class="px-2 text-sm font-semibold">Requisitos de compra</legend>
       <p class="text-xs text-tinta-suave">Deixe em branco o que não valer. Todos os preenchidos precisam ser cumpridos.</p>

@@ -175,11 +175,11 @@ function dadosDoFavo(req) {
   };
 }
 
+/** A faixa não vem do formulário: o service a herda do favo (RN-029). */
 function dadosDaCelula(req) {
   return {
     titulo: req.body.titulo,
     idTipoDeJogo: Number(req.body.idTipoDeJogo),
-    idFaixa: Number(req.body.idFaixa),
     segundosEstimados: Number(req.body.segundosEstimados),
   };
 }

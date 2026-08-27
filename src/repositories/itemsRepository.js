@@ -215,6 +215,7 @@ export async function atualizar(id, dados, conexao = null) {
             valuation_cap_pct   = COALESCE(?, valuation_cap_pct),
             upkeep_cost         = COALESCE(?, upkeep_cost),
             income_per_cycle    = COALESCE(?, income_per_cycle),
+            upgrade_of_item_id  = ?,
             is_consumable       = COALESCE(?, is_consumable)
       WHERE id = ? AND deleted_at IS NULL`,
     [
@@ -230,6 +231,9 @@ export async function atualizar(id, dados, conexao = null) {
       dados.tetoPercentual,
       dados.custoFixo,
       dados.rendaPorCiclo,
+      // Sem COALESCE de propósito: desfazer a linha de evolução é enviar vazio,
+      // e com COALESCE o campo em branco seria lido como "não mexer".
+      dados.idItemDeOrigem,
       dados.ehConsumivel === null ? null : dados.ehConsumivel ? 1 : 0,
       id,
     ],

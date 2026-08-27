@@ -137,7 +137,7 @@ export async function criar({ slug, titulo, descricao, ordem, idFaixa, percentua
 /** COALESCE mantém o valor atual quando o campo não é enviado. */
 export async function atualizar(
   id,
-  { slug = null, titulo = null, descricao = null, idFaixa = null, percentualDeDesbloqueio = null },
+  { slug = null, titulo = null, descricao = null, idFaixa = null, percentualDeDesbloqueio = null, ordem = null },
   conexao = null,
 ) {
   await consultarEm(
@@ -147,9 +147,10 @@ export async function atualizar(
             title          = COALESCE(?, title),
             description    = COALESCE(?, description),
             age_band_id    = COALESCE(?, age_band_id),
-            unlock_percent = COALESCE(?, unlock_percent)
+            unlock_percent = COALESCE(?, unlock_percent),
+            order_index    = COALESCE(?, order_index)
       WHERE id = ? AND deleted_at IS NULL`,
-    [slug, titulo, descricao, idFaixa, percentualDeDesbloqueio, id],
+    [slug, titulo, descricao, idFaixa, percentualDeDesbloqueio, ordem, id],
   );
 }
 

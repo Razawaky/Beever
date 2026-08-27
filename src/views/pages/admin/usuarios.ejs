@@ -7,6 +7,10 @@
 <main class="mx-auto max-w-5xl px-6 py-10">
   <h1 class="text-3xl font-bold">Contas</h1>
   <p class="mt-2 text-tinta-suave"><%= contas.length %> conta(s) cadastrada(s).</p>
+  <p class="mt-1 text-sm text-tinta-suave">
+    Promover ou rebaixar só passa a valer na próxima entrada da pessoa: o papel é lido no login
+    e fica guardado na sessão.
+  </p>
 
   <div class="mt-8 overflow-x-auto rounded-favo border border-linha bg-white">
     <table class="w-full text-left text-sm">
@@ -17,6 +21,7 @@
           <th scope="col" class="px-4 py-3 font-semibold">E-mail</th>
           <th scope="col" class="px-4 py-3 font-semibold">Situação</th>
           <th scope="col" class="px-4 py-3 font-semibold">Último acesso</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Administrador</th>
         </tr>
       </thead>
       <tbody>
@@ -27,6 +32,21 @@
             <td class="px-4 py-3"><%= conta.is_active ? 'Ativa' : 'Inativa' %></td>
             <td class="px-4 py-3 text-tinta-suave">
               <%= conta.last_login_at ? new Date(conta.last_login_at).toLocaleDateString('pt-BR') : 'nunca entrou' %>
+            </td>
+            <td class="px-4 py-3">
+              <form method="POST" action="/admin/usuarios/<%= conta.id %>/admin" class="flex items-center gap-2">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input type="hidden" name="ehAdmin" value="<%= conta.eh_admin ? 'false' : 'true' %>" />
+                <span><%= conta.eh_admin ? 'Sim' : 'Não' %></span>
+                <%- include('../../partials/ui/botao', {
+                  texto: conta.eh_admin ? 'Rebaixar' : 'Promover',
+                  tipo: 'submit',
+                  variante: 'secundario',
+                  tamanho: 'medio',
+                  formato: 'pilula',
+                  rotuloAcessivel: `${conta.eh_admin ? 'Rebaixar' : 'Promover'} ${conta.nickname}`,
+                }) %>
+              </form>
             </td>
           </tr>
         <% }) %>

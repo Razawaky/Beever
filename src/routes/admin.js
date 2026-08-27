@@ -5,7 +5,7 @@ import * as adminContentController from '../controllers/adminContentController.j
 import * as adminAuditController from '../controllers/adminAuditController.js';
 import * as adminController from '../controllers/adminController.js';
 import * as adminItemsController from '../controllers/adminItemsController.js';
-import { limiteAutenticacao } from '../middlewares/rateLimiters.js';
+import { limiteAdministrativo, limiteAutenticacao } from '../middlewares/rateLimiters.js';
 import { requireAdmin } from '../middlewares/requireAdmin.js';
 import { validate } from '../middlewares/validate.js';
 
@@ -28,8 +28,23 @@ router.post('/login', limiteAutenticacao, regrasLogin, validate, adminController
 
 router.use(requireAdmin);
 
+// Tudo que escreve passa pelo limitador, montado uma vez como o `requireAdmin`:
+// rota nova da área nasce protegida sem ninguém lembrar de repeti-lo. Vai como
+// middleware condicional, e não como rota `*`, porque o Express 5 não aceita
+// mais curinga solto no caminho.
+router.use((req, res, proximo) =>
+  req.method === 'POST' ? limiteAdministrativo(req, res, proximo) : proximo(),
+);
+
 router.get('/', adminController.painel);
 router.get('/usuarios', adminController.usuarios);
+router.post(
+  '/usuarios/:id/admin',
+  param('id').isInt({ min: 1 }),
+  body('ehAdmin').isIn(['true', 'false']),
+  validate,
+  adminController.definirAdministrador,
+);
 
 /**
  * Cadastro de conteúdo (RF-ADM-02). O corpo da atividade não é validado aqui:
@@ -44,10 +59,10 @@ const regrasDeFavo = [
   body('percentualDeDesbloqueio').isInt({ min: 1, max: 100 }).withMessage('O percentual vai de 1 a 100'),
 ];
 
+// A faixa não entra: a célula herda a do favo (RN-029), decidido no service.
 const regrasDeCelula = [
   body('titulo').trim().notEmpty().withMessage('Informe o título da célula').isLength({ max: 120 }),
   body('idTipoDeJogo').isInt({ min: 1 }).withMessage('Escolha o tipo de jogo'),
-  body('idFaixa').isInt({ min: 1 }).withMessage('Escolha a faixa etária'),
   body('segundosEstimados').isInt({ min: 30, max: 3600 }).withMessage('A duração vai de 30 a 3600 segundos'),
 ];
 
@@ -120,10 +135,17 @@ const regrasDeItem = [
   body('idItemDeOrigem').optional({ values: 'falsy' }).isInt({ min: 1 }),
 ];
 
+/**
+ * Limitador das rotas administrativas que escrevem. O limite global de 600 por
+ * quinze minutos é rede de segurança de aplicação inteira, e não segura upload:
+ * são até 8 MB por requisição, gravados em disco.
+ */
+
 router.get('/itens', adminItemsController.listar);
 router.get('/itens/novo', adminItemsController.formulario);
 router.post('/itens', regrasDeItem, validate, adminItemsController.criar);
 router.get('/itens/:id', idNaUrl, validate, adminItemsController.detalhar);
+
 router.get('/itens/:id/editar', idNaUrl, validate, adminItemsController.formulario);
 router.post('/itens/:id', idNaUrl, regrasDeItem, validate, adminItemsController.atualizar);
 router.post(

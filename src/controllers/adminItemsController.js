@@ -38,7 +38,14 @@ export const formulario = assincrono(async (req, res) => {
   });
 });
 
+/**
+ * O item em JSON. Quem chega por navegador vai para o formulário: era a única
+ * rota da área sem representação HTML, e responder JSON cru a um clique é o tipo
+ * de ponta solta que ninguém percebe até acontecer.
+ */
 export const detalhar = assincrono(async (req, res) => {
+  if (!querJson(req)) return res.redirect(`/admin/itens/${Number(req.params.id)}/editar`);
+
   const detalhe = await adminItemsService.detalharItem(Number(req.params.id));
   res.json(detalhe);
 });

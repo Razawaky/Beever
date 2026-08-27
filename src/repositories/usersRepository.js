@@ -12,7 +12,13 @@ const CAMPOS_PUBLICOS =
   'id, email, nickname, birth_date, is_active, onboarding_completed_at, created_at, last_login_at';
 
 export async function listar() {
-  return consultar(`SELECT ${CAMPOS_PUBLICOS} FROM users ORDER BY nickname`);
+  return consultar(
+    `SELECT ${CAMPOS_PUBLICOS.split(', ').map((campo) => `u.${campo}`).join(', ')},
+            (a.id IS NOT NULL) AS eh_admin
+       FROM users u
+       LEFT JOIN admins a ON a.user_id = u.id
+      ORDER BY u.nickname`,
+  );
 }
 
 /** Só o total: o painel administrativo mostra a contagem, não a lista inteira. */
@@ -111,10 +117,11 @@ export async function inativar(id) {
  */
 export async function listarInativosParaExpurgo(dias) {
   return consultar(
-    `SELECT id, email, nickname
-       FROM users
-      WHERE is_active = 0
-        AND (last_login_at IS NULL OR last_login_at <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? DAY))`,
+    `SELECT u.id, p.id AS profile_id
+       FROM users u
+       LEFT JOIN profiles p ON p.user_id = u.id
+      WHERE u.is_active = 0
+        AND (u.last_login_at IS NULL OR u.last_login_at <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? DAY))`,
     [dias],
   );
 }

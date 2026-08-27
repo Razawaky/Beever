@@ -48,8 +48,8 @@
             <td class="px-4 py-3"><%= celula.is_active ? 'Ativa' : 'Desativada' %></td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap items-center gap-2">
-                <a href="/admin/celulas/<%= celula.id %>/conteudo" class="underline underline-offset-4">Conteúdo</a>
-                <a href="/admin/favos/<%= favo.id %>/celulas/<%= celula.id %>/editar" class="underline underline-offset-4">Editar</a>
+                <a href="/admin/celulas/<%= celula.id %>/conteudo" class="inline-flex min-h-11 items-center underline underline-offset-4">Conteúdo</a>
+                <a href="/admin/favos/<%= favo.id %>/celulas/<%= celula.id %>/editar" class="inline-flex min-h-11 items-center underline underline-offset-4">Editar</a>
 
                 <% ['cima', 'baixo'].forEach((direcao) => { %>
                   <form method="POST" action="/admin/celulas/<%= celula.id %>/mover">

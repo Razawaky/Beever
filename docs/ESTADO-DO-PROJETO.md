@@ -4,12 +4,17 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-12.6 — a trilha de auditoria ganhou como ser lida. Sete filtros
+**Último commit:** auditoria da E12, com as dez lacunas corrigidas na mesma sessão. As
+duas que impediam declarar a etapa concluída eram o expurgo de conta, que deixava e-mail
+e apelido para sempre numa tabela append-only (RN-053), e a linha de evolução do item,
+que o painel não conseguia cadastrar (RF-ADM-03 e RF-LOJ-07). 871 testes passando.
+**Próximo passo: T-12.7 (dashboard, P1) ou abrir a E13**
+
+**Commit anterior:** T-12.6 — a trilha de auditoria ganhou como ser lida. Sete filtros
 combináveis, paginação com total, exportação em CSV e nenhuma rota de escrita, porque a
 tabela é append-only por gatilho. A migration 019 indexou ação e data, que eram os dois
 filtros que varriam a tabela inteira. **Fecha as tarefas obrigatórias da E12**: sobra a
 T-12.7, que é P1. 860 testes passando.
-**Próximo passo: auditar a E12, ou fazer a T-12.7 (dashboard, P1) antes**
 
 **Commit anterior:** T-12.5 — a célula ganhou acervo e a partida passou a sortear qual
 atividade joga, sem repetir a da vez anterior. A migration 018 grava na partida qual
@@ -501,7 +506,8 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E12 — Área administrativa.** É a etapa que tira o programador do meio: o
+**E12 — Área administrativa** (auditada; as seis tarefas obrigatórias entregues e as dez
+lacunas do laudo fechadas — falta a T-12.7, que é P1). É a etapa que tira o programador do meio: o
 administrador passa a cadastrar item, conteúdo e atividade sem rodar `db:seed`. O
 aceite é usuário comum receber 403 em toda rota admin, toda ação administrativa
 aparecer na auditoria, e item e atividade cadastrados pelo painel aparecerem para
@@ -1248,7 +1254,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
-| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **As tarefas obrigatórias da etapa estão fechadas**; falta a T-12.7, que é P1, e a auditoria da etapa, e as quatro decisões de modelagem continuam abertas |
+| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. Falta a T-12.7, que é P1, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
@@ -1292,7 +1298,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view, e `perfil.ejs` calcula o percentual da meta do mesmo jeito: é aritmética numa camada que deveria só exibir, e as outras telas de meta já leem o resumo pronto do service | auditoria da E09, ampliada pela da E10 | Subir a conta para o `inventoryService` e usar `goalsService.resumirMeta` no perfil |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
 | DT-81 | `aceiteDaEconomia.test.js` mede a visita mais pesada contra o teto de 2 s da RNF-01 e falhou duas vezes na suíte completa (2033 ms e 2209 ms), passando sozinho e nas rodadas seguintes. O teto é do requisito, mas a medição corre junto com outros arquivos de teste disputando a máquina | auditoria da E11 | Medir com a suíte serializada, ou dar folga ao teto reconhecendo que a medição é comparativa, não absoluta |
-| DT-82 | Ser administrador é lido no login e guardado na sessão, então tirar a linha de `admins` de alguém só passa a valer na próxima entrada — quem já está logado continua com o painel aberto até a sessão morrer | T-12.1 | Aceitável enquanto admin é conta de professor criada à mão. Quando existir tela de promover e rebaixar administrador, conferir o join a cada requisição ou derrubar a sessão junto |
+| DT-82 | ~~Ser administrador é lido no login e guardado na sessão, então tirar a linha de `admins` de alguém só passa a valer na próxima entrada — quem já está logado continua com o painel aberto até a sessão morrer~~ — **metade resolvida na auditoria da E12**: existe tela de promover e rebaixar administrador, então rebaixar deixou de exigir SQL. O cache na sessão continua, e a tela avisa que a mudança vale na próxima entrada | T-12.1 | Aceitável enquanto admin é conta de professor criada à mão. Quando existir tela de promover e rebaixar administrador, conferir o join a cada requisição ou derrubar a sessão junto |
 | DT-83 | Conteúdo recusado pelo validador volta como página de erro, e não no formulário: quem colou quarenta linhas de JSON perde o que digitou e recomeça | T-12.2 | Devolver o formulário com o corpo enviado e a mensagem do validador ao lado, quando a T-12.4 trocar a área de texto pelo formulário por tipo de jogo |
 | DT-84 | Trocar o tipo de jogo de uma célula que já tem conteúdo publicado não revalida esse conteúdo: a célula fica com corpo de quiz e validador de outro jogo, e o erro só aparece quando alguém tenta jogar | T-12.2 | Ou revalidar o conteúdo atual contra o tipo novo na edição, ou recusar a troca enquanto houver versão publicada |
 | DT-85 | A pasta de uploads é um caminho no disco da instância. Funciona no MVP e quebra no dia em que houver duas instâncias atrás do balanceador: a arte enviada numa não existe na outra. Em contêiner ela precisa ser volume, senão some no deploy seguinte | T-12.3 | Trocar a pasta por armazenamento de objetos quando houver mais de uma instância; `items.image_path` já guarda só o caminho público, então o banco não muda |
@@ -1304,9 +1310,11 @@ Identificadores rastreiam os documentos da E00.
 | DT-91 | O sorteio da atividade não está escrito em `01-REQUISITOS-E-REGRAS.md`: ele veio da conversa de escopo de 2026-08-25 e virou código na T-12.5. Os requisitos escritos (RN-025 a RN-027) descrevem só a trilha determinística, que continua valendo — o que sorteia é qual atividade da célula aparece | T-12.5 | Escrever o requisito antes da defesa do TCC, para o documento e o código contarem a mesma história |
 | DT-92 | Repetir a célula pode cair na mesma atividade quando o acervo tem três ou mais: a regra só garante não repetir a **imediatamente anterior**. Com acervo de três, a terceira partida pode voltar à primeira | T-12.5 | Guardar as duas últimas em vez de uma, se o acervo do conteúdo real crescer o bastante para alguém notar |
 | DT-93 | As partidas gravadas antes da migration 018 têm `content_id` nulo, e para elas a correção continua usando o conteúdo atual da célula. São partidas antigas, já fechadas, então o efeito é nenhum hoje | T-12.5 | Nada a fazer enquanto não houver partida antiga aberta; se houver, ela fecha pelo caminho antigo |
-| DT-94 | A exportação em CSV para em 200 linhas, que é o teto do `limiteSeguro`. Um recorte maior sai truncado sem a tela avisar | T-12.6 | Ou paginar o CSV, ou gerar em fluxo (`stream`) sem carregar tudo em memória, quando alguém precisar de um recorte grande de verdade |
-| DT-95 | O `before_state`/`after_state` da auditoria é mostrado cru na tela, e ele pode conter dado pessoal — a edição de conta grava e-mail antigo e novo. O acesso já é restrito a administrador (RN-052), então não é vazamento, mas é mais dado à vista do que a RNF-33 gostaria | T-12.6 | Decidir com o usuário se vale mascarar campos conhecidos como pessoais na exibição, mantendo o dado gravado |
+| ~~DT-94~~ | ~~A exportação em CSV para em 200 linhas, que é o teto do `limiteSeguro`. Um recorte maior sai truncado sem a tela avisar~~ — **resolvida na auditoria da E12**: o teto subiu para 5000 e a tela avisa quando o recorte não cabe, em vez de truncar calada | T-12.6 | Ou paginar o CSV, ou gerar em fluxo (`stream`) sem carregar tudo em memória, quando alguém precisar de um recorte grande de verdade |
+| ~~DT-95~~ | ~~O `before_state`/`after_state` da auditoria é mostrado cru na tela, e ele pode conter dado pessoal — a edição de conta grava e-mail antigo e novo. O acesso já é restrito a administrador (RN-052), então não é vazamento, mas é mais dado à vista do que a RNF-33 gostaria~~ — **resolvida na auditoria da E12**: `mascararDadoPessoal` troca e-mail e apelido por marcador na exibição, e o valor continua gravado | T-12.6 | Decidir com o usuário se vale mascarar campos conhecidos como pessoais na exibição, mantendo o dado gravado |
 | DT-96 | Espalhar o resultado de um service dentro do `renderizarPagina` pode sobrescrever `pagina`, que é como o layout sabe qual view renderizar. Aconteceu na T-12.6 e derrubou a tela com erro do EJS, difícil de ler | T-12.6 | Renomear a chave do layout para algo improvável, como `caminhoDaPagina`, ou fazer o helper recusar `pagina` vindo nos dados |
+| DT-97 | A promoção e o rebaixamento de administrador não conferem se sobrou algum admin: rebaixar o penúltimo é permitido, e quem sobrar pode se recusar a rebaixar a si mesmo — mas a conta única pode ser desativada por outro caminho | auditoria da E12 | Contar administradores ativos antes de rebaixar, ou aceitar que o seed sempre recria um |
+| DT-98 | A pasta de uploads não tem limpeza: arte de item ou de atividade substituída fica no disco (DT-86 e DT-90), e agora com limitador de 120 escritas por janela o crescimento é lento, mas contínuo | auditoria da E12 | Resolver as três juntas, com uma varredura que compare a pasta com o que o banco referencia |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3559,3 +3567,46 @@ difícil de ler. A paginação passou a entrar como `paginacao`, e a armadilha f
 registrada.
 
 860 testes passando, vinte deles novos.
+
+### Sessão de 2026-08-27, auditoria da E12 e as dez lacunas fechadas
+
+O laudo da etapa apontou dez lacunas, duas delas impedindo declarar a E12
+concluída, e todas foram corrigidas na mesma sessão.
+
+A primeira era de privacidade e é a que uma banca perguntaria. O expurgo de conta
+apagava a conta e escrevia apelido e e-mail no `antes` da linha de auditoria —
+numa tabela append-only, o dado pessoal sobrevivia à exclusão para sempre, que é o
+oposto do que a RN-053 promete. Agora a linha guarda só o agregado: quantos dias de
+inatividade e se a conta tinha perfil. O rastro de que a conta existiu continua, e é
+para isso que `audit_logs` não tem chave estrangeira para `users`. O
+`limpezaService` também ganhou o teste que nunca teve.
+
+A segunda era um requisito **M** pela metade. A linha de evolução do item
+(`upgrade_of_item_id`) era lida pelo controller e usada no `INSERT`, mas não existia
+campo no formulário e o `UPDATE` nem tocava a coluna: na prática ela era sempre nula,
+e o upgrade com desconto da RF-LOJ-07 continuava dependendo do seed. Entrou como
+campo, entrou no `UPDATE` sem `COALESCE` — desfazer a ligação é enviar vazio — e
+ganhou duas recusas: item que não existe e item que é melhoria de si mesmo.
+
+Duas lacunas eram de banco, e falhavam em silêncio. Trocar a faixa de um favo pelo
+painel não recalculava a posição, e `hives` não tinha unicidade em faixa e ordem: dois
+favos podiam disputar o mesmo lugar, e o "favo anterior" da RN-027 passaria a depender
+do desempate do MySQL. A migration 020 fechou a porta e o service passou a recolocar o
+favo no fim da fila da faixa nova. E a célula aceitava faixa diferente da do favo, o
+que produzia conteúdo invisível — as consultas filtram por faixa, então o administrador
+cadastrava e nada aparecia. A faixa deixou de ser campo e passou a ser herdada do favo.
+
+O resto foi acabamento com consequência: limitador próprio para escrita
+administrativa, porque o global de 600 por quinze minutos não segura upload de 8 MB;
+alvo de toque de 44 px nos links das tabelas; e-mail e apelido mascarados na tela de
+auditoria, com o valor seguindo gravado; o CSV com teto de 5000 e aviso quando o
+recorte não cabe; tela de promover e rebaixar administrador, que era a única operação
+da área que ainda exigia SQL; e o detalhe do item, única rota sem representação HTML,
+levando o navegador ao formulário.
+
+Três dívidas foram fechadas (DT-94, DT-95 e metade da DT-82) e duas nasceram: DT-97, o
+rebaixamento não conta quantos administradores sobram; DT-98, a pasta de uploads
+continua sem limpeza.
+
+871 testes passando, onze deles novos, num arquivo só — as correções vieram do laudo, e
+espalhá-las pelos arquivos das tarefas esconderia isso.

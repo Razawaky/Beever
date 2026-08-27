@@ -23,10 +23,15 @@ export async function expurgarContasInativas(dias = DIAS_ATE_EXPURGO) {
     // A linha de auditoria sobrevive ao expurgo: `audit_logs` não tem foreign
     // key para `users` justamente para que apagar a conta não apague o rastro
     // de que ela existiu (RN-053).
+    //
+    // O que a linha guarda é só o agregado. Apelido e e-mail ficavam aqui, e
+    // como a trilha é append-only eles sobreviveriam à exclusão para sempre —
+    // o oposto do que a RN-053 promete. O id serve de referência e não é dado
+    // pessoal: a conta a que ele apontava não existe mais.
     await auditService.registrar(auditService.sistema(), 'conta.expurgada', {
       entidade: 'user',
       id: usuario.id,
-      antes: { apelido: usuario.nickname, email: usuario.email, diasInativo: dias },
+      antes: { diasInativo: dias, tinhaPerfil: Boolean(usuario.profile_id) },
     });
   }
 

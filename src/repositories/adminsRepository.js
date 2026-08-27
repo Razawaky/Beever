@@ -18,3 +18,19 @@ export async function contar() {
   const linhas = await consultar('SELECT COUNT(*) AS total FROM admins');
   return Number(linhas[0]?.total ?? 0);
 }
+
+/** Promove a conta. `INSERT IGNORE` porque promover quem já é admin não é erro. */
+export async function promover(idUsuario) {
+  const resultado = await consultar('INSERT IGNORE INTO admins (user_id) VALUES (?)', [idUsuario]);
+  return resultado.affectedRows > 0;
+}
+
+export async function rebaixar(idUsuario) {
+  const resultado = await consultar('DELETE FROM admins WHERE user_id = ?', [idUsuario]);
+  return resultado.affectedRows > 0;
+}
+
+export async function ehAdministrador(idUsuario) {
+  const linhas = await consultar('SELECT 1 FROM admins WHERE user_id = ? LIMIT 1', [idUsuario]);
+  return linhas.length > 0;
+}

@@ -1,6 +1,6 @@
 import * as adminsRepository from '../repositories/adminsRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
-import { ErroAplicacao } from '../utils/erros.js';
+import { ErroAplicacao, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 import * as authService from './authService.js';
 
@@ -29,4 +29,34 @@ export async function autenticarAdmin({ email, senha }) {
 export async function resumoDoPainel() {
   const [contas, administradores] = await Promise.all([usersRepository.contar(), adminsRepository.listar()]);
   return { contas, administradores };
+}
+
+/**
+ * Promove ou rebaixa uma conta (RN-051, RN-052).
+ *
+ * Ninguém rebaixa a si mesmo: quem faz isso perde o painel na próxima entrada e,
+ * se for o último administrador, tranca a área para todo mundo. Recusar aqui é
+ * mais barato do que reabrir por SQL depois.
+ *
+ * A mudança só vale na próxima entrada de quem foi rebaixado, porque o papel é
+ * lido no login e guardado na sessão (dívida DT-82). O aviso está na tela.
+ */
+export async function definirAdministrador(idUsuario, deveSerAdmin, ator) {
+  if (!deveSerAdmin && Number(idUsuario) === Number(ator.id)) {
+    throw erroValidacao('Você não pode tirar o seu próprio acesso de administrador');
+  }
+
+  const usuario = await usersRepository.buscarPorId(idUsuario);
+  if (!usuario) throw erroNaoEncontrado('Conta não encontrada');
+
+  const eraAdmin = await adminsRepository.ehAdministrador(idUsuario);
+  if (deveSerAdmin) await adminsRepository.promover(idUsuario);
+  else await adminsRepository.rebaixar(idUsuario);
+
+  await auditService.registrar(ator, deveSerAdmin ? 'admin.promovido' : 'admin.rebaixado', {
+    entidade: 'user',
+    id: Number(idUsuario),
+    antes: { ehAdmin: eraAdmin },
+    depois: { ehAdmin: deveSerAdmin },
+  });
 }

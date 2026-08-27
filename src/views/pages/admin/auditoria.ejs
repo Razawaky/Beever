@@ -92,9 +92,15 @@
     <div class="mt-4 flex flex-wrap items-center gap-3">
       <%- include('../../partials/ui/botao', { texto: 'Consultar', tipo: 'submit', tamanho: 'medio' }) %>
       <%- include('../../partials/ui/botao', { texto: 'Limpar', href: '/admin/auditoria', variante: 'secundario', tamanho: 'medio' }) %>
-      <a href="/admin/auditoria/csv?<%= comFiltros %>" class="text-sm underline underline-offset-4">
+      <a href="/admin/auditoria/csv?<%= comFiltros %>" class="inline-flex min-h-11 items-center text-sm underline underline-offset-4">
         Baixar este recorte em CSV
       </a>
+      <% if (paginacao.total > limiteDoCsv) { %>
+        <p class="w-full text-xs text-atencao-texto">
+          O recorte tem <%= paginacao.total %> linhas e o CSV leva <%= limiteDoCsv %>: estreite o filtro
+          para levar tudo.
+        </p>
+      <% } %>
     </div>
   </form>
 

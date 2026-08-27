@@ -46,6 +46,22 @@ export const limiteRecompensa = rateLimit({
   message: { erro: 'Calma aí! Espere um instante antes de continuar.' },
 });
 
+/**
+ * Escrita na área administrativa, com atenção ao upload.
+ *
+ * O limite global de 600 por quinze minutos é rede de segurança de aplicação
+ * inteira e não segura arquivo: cada cadastro de item ou de atividade pode
+ * carregar até 8 MB, gravados numa pasta em disco. Cento e vinte escritas por
+ * janela é folga larga para quem cadastra conteúdo de verdade, e teto curto o
+ * bastante para o disco não virar problema.
+ */
+export const limiteAdministrativo = rateLimit({
+  ...base,
+  windowMs: 15 * 60 * 1000,
+  limit: 120,
+  message: { erro: 'Muitas alterações seguidas. Aguarde alguns minutos.' },
+});
+
 /** Compras: evita duplo clique virar débito duplo e limita abuso. */
 export const limiteCompra = rateLimit({
   ...base,

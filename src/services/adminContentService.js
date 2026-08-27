@@ -97,7 +97,13 @@ export async function atualizarFavo(idFavo, dados, ator) {
   const antes = await exigirFavo(idFavo);
   if (dados.slug) await exigirSlugLivre(dados.slug, antes.id);
 
-  await hivesRepository.atualizar(antes.id, dados);
+  // Mudar de faixa muda de fila: a posição antiga pertencia à outra faixa, e
+  // levá-la junto faria dois favos disputarem o mesmo lugar — o que a migration
+  // 020 passou a recusar, e o que tornava ambíguo o "favo anterior" da RN-027.
+  const mudouDeFaixa = dados.idFaixa && Number(dados.idFaixa) !== Number(antes.age_band_id);
+  const ordem = mudouDeFaixa ? (await hivesRepository.ultimaOrdemDaFaixa(dados.idFaixa)) + 1 : null;
+
+  await hivesRepository.atualizar(antes.id, { ...dados, ordem });
   const depois = await exigirFavo(antes.id);
 
   await auditService.registrar(ator, 'favo.editado', { entidade: 'hive', id: antes.id, antes, depois });
@@ -116,6 +122,14 @@ export async function definirFavoAtivo(idFavo, ativo, ator) {
   });
 }
 
+/**
+ * A célula herda a faixa do favo (RN-029).
+ *
+ * Não é campo de formulário porque a escolha não existe de verdade: as consultas
+ * da trilha filtram por faixa, então célula de outra faixa dentro do favo
+ * simplesmente não aparece para ninguém — o administrador cadastrava e nada
+ * acontecia, sem aviso.
+ */
 export async function criarCelula(idFavo, dados, ator) {
   const favo = await exigirFavo(idFavo);
   const ordem = (await cellsRepository.ultimaOrdemDoFavo(favo.id)) + 1;
@@ -123,7 +137,7 @@ export async function criarCelula(idFavo, dados, ator) {
   const id = await cellsRepository.criar({
     idFavo: favo.id,
     idTipoDeJogo: dados.idTipoDeJogo,
-    idFaixa: dados.idFaixa,
+    idFaixa: favo.age_band_id,
     ordem,
     titulo: dados.titulo,
     segundosEstimados: dados.segundosEstimados ?? DURACAO_PADRAO_EM_SEGUNDOS,
@@ -139,7 +153,9 @@ export async function criarCelula(idFavo, dados, ator) {
 
 export async function atualizarCelula(idCelula, dados, ator) {
   const antes = await exigirCelula(idCelula);
-  await cellsRepository.atualizar(antes.id, dados);
+  const favo = await exigirFavo(antes.hive_id);
+
+  await cellsRepository.atualizar(antes.id, { ...dados, idFaixa: favo.age_band_id });
   const depois = await exigirCelula(antes.id);
 
   await auditService.registrar(ator, 'celula.editada', { entidade: 'cell', id: antes.id, antes, depois });

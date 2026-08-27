@@ -1,4 +1,5 @@
 import * as adminService from '../services/adminService.js';
+import * as auditService from '../services/auditService.js';
 import * as usersService from '../services/usersService.js';
 import { assincrono } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
@@ -58,4 +59,12 @@ export const usuarios = assincrono(async (req, res) => {
     emailDoAdmin: req.session.email,
     contas,
   });
+});
+
+export const definirAdministrador = assincrono(async (req, res) => {
+  const deveSerAdmin = req.body.ehAdmin === 'true';
+  await adminService.definirAdministrador(Number(req.params.id), deveSerAdmin, auditService.atorDaSessao(req.session));
+
+  if (querJson(req)) return res.json({ ehAdmin: deveSerAdmin });
+  res.redirect('/admin/usuarios');
 });

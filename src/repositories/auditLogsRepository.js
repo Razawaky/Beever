@@ -102,7 +102,13 @@ const CAMPOS_DA_CONSULTA = `l.id, t.slug AS ator_tipo, l.actor_id, l.action, l.e
                             l.request_id, l.created_at`;
 
 /** Uma página da trilha, na ordem em que as ações aconteceram, da mais nova. */
-export async function listarComFiltros(filtros = {}, { limite = 50, deslocamento = 0 } = {}) {
+export async function listarComFiltros(
+  filtros = {},
+  // `maximo` existe para a exportação: a tela pede 50 por página, e o CSV pede o
+  // recorte inteiro. Quem decide o teto continua sendo quem chama, e o número
+  // que entra no SQL continua saindo do `limiteSeguro`.
+  { limite = 50, deslocamento = 0, maximo = 200 } = {},
+) {
   const { sql, valores } = condicoes(filtros);
 
   return consultar(
@@ -111,7 +117,7 @@ export async function listarComFiltros(filtros = {}, { limite = 50, deslocamento
        JOIN audit_actor_types t ON t.id = l.actor_type_id
        ${sql}
       ORDER BY l.created_at DESC, l.id DESC
-      LIMIT ${limiteSeguro(limite)} OFFSET ${deslocamentoSeguro(deslocamento)}`,
+      LIMIT ${limiteSeguro(limite, { maximo })} OFFSET ${deslocamentoSeguro(deslocamento)}`,
     valores,
   );
 }

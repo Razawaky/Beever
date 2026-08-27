@@ -42,7 +42,7 @@
             <td class="px-4 py-3"><%= item.is_active ? 'Ativo' : 'Desativado' %></td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap items-center gap-2">
-                <a href="/admin/itens/<%= item.id %>/editar" class="underline underline-offset-4">Editar</a>
+                <a href="/admin/itens/<%= item.id %>/editar" class="inline-flex min-h-11 items-center underline underline-offset-4">Editar</a>
                 <form method="POST" action="/admin/itens/<%= item.id %>/ativo">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
                   <input type="hidden" name="ativo" value="<%= item.is_active ? 'false' : 'true' %>" />

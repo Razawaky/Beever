@@ -26,6 +26,7 @@ export const consultar = assincrono(async (req, res) => {
     filtros: resultado.filtros,
     tiposDeAtor: resultado.tiposDeAtor,
     paginacao: resultado.pagina,
+    limiteDoCsv: resultado.limiteDoCsv,
     // A tela devolve os filtros como vieram, para o formulário continuar
     // preenchido depois de consultar.
     enviados: req.query,

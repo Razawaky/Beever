@@ -55,6 +55,22 @@ function conferirFaixaDeValor({ pisoPercentual, tetoPercentual }) {
   }
 }
 
+/**
+ * A linha de evolução (RF-LOJ-07) precisa apontar para outro item que existe, e
+ * nunca para o próprio: item que é melhoria de si mesmo faria a loja oferecer o
+ * desconto para quem já comprou aquilo, em círculo.
+ */
+async function conferirItemDeOrigem(idItemDeOrigem, idDoItem = null) {
+  if (!idItemDeOrigem) return;
+
+  if (Number(idItemDeOrigem) === Number(idDoItem)) {
+    throw erroValidacao('Um item não pode ser melhoria dele mesmo');
+  }
+  if (!(await itemsRepository.buscarParaAdmin(idItemDeOrigem))) {
+    throw erroValidacao('O item que esta melhoria substitui não existe');
+  }
+}
+
 export async function opcoesDeCadastro() {
   const [categorias, comportamentos, tiposDeRequisito, itens] = await Promise.all([
     itemsRepository.listarCategorias(),
@@ -82,6 +98,7 @@ export async function criarItem(dados, ilustracao, ator) {
   const slug = dados.slug || slugDoNome(dados.nome);
   await exigirSlugLivre(slug);
   conferirFaixaDeValor(dados);
+  await conferirItemDeOrigem(dados.idItemDeOrigem);
 
   const caminhoDaImagem = ilustracao ? await guardarIlustracao(ilustracao) : null;
   const comportamentos = comportamentosDosNumeros(dados);
@@ -110,6 +127,7 @@ export async function atualizarItem(idItem, dados, ilustracao, ator) {
   const antes = await exigirItem(idItem);
   if (dados.slug) await exigirSlugLivre(dados.slug, antes.id);
   conferirFaixaDeValor(dados);
+  await conferirItemDeOrigem(dados.idItemDeOrigem, antes.id);
 
   const caminhoDaImagem = ilustracao ? await guardarIlustracao(ilustracao) : null;
   const comportamentos = comportamentosDosNumeros(dados);
