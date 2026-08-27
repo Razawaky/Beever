@@ -1,0 +1,38 @@
+<%#
+  Painel da administração. Hoje só a contagem de contas e a lista de quem é
+  admin: as métricas agregadas são a T-12.7, e cadastro de conteúdo, item e
+  atividade entra da T-12.2 em diante.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'painel' }) %>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <h1 class="text-3xl font-bold">Painel</h1>
+  <p class="mt-2 text-tinta-suave">Área restrita. Toda ação feita aqui vai para a trilha de auditoria.</p>
+
+  <div class="mt-8 grid gap-4 sm:grid-cols-2">
+    <section class="rounded-favo border border-linha bg-white p-6">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Contas</h2>
+      <p class="mt-2 text-4xl font-bold"><%= resumo.contas %></p>
+      <a href="/admin/usuarios" class="mt-4 inline-block text-sm underline underline-offset-4">Ver todas</a>
+    </section>
+
+    <section class="rounded-favo border border-linha bg-white p-6">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Administradores</h2>
+      <p class="mt-2 text-4xl font-bold"><%= resumo.administradores.length %></p>
+      <ul class="mt-4 space-y-1 text-sm text-tinta-suave">
+        <% resumo.administradores.forEach((admin) => { %>
+          <li><%= admin.nickname %> — <%= admin.email %></li>
+        <% }) %>
+      </ul>
+    </section>
+  </div>
+
+  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
+    <h2 class="text-lg font-semibold">Ainda em construção</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Cadastro de favos, células e conteúdo, catálogo de itens com ilustração,
+      atividades novas nos tipos de jogo que já existem e consulta à auditoria
+      chegam nas próximas tarefas desta etapa.
+    </p>
+  </section>
+</main>

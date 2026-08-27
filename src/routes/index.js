@@ -7,6 +7,7 @@ import * as paginaController from '../controllers/paginaController.js';
 import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { somentePagina } from '../middlewares/somentePagina.js';
 import { validate, validateEnderecoDePagina } from '../middlewares/validate.js';
+import adminRouter from './admin.js';
 import cofreRouter from './cofre.js';
 import lojaRouter from './loja.js';
 import metasRouter from './metas.js';
@@ -81,6 +82,7 @@ router.get(
 );
 router.get('/manutencao', paginaController.manutencao);
 
+router.use('/admin', adminRouter);
 router.use('/users', usersRouter);
 router.use('/perfil', perfilRouter);
 router.use('/sessao', sessaoRouter);

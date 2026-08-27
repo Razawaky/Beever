@@ -15,6 +15,12 @@ export async function listar() {
   return consultar(`SELECT ${CAMPOS_PUBLICOS} FROM users ORDER BY nickname`);
 }
 
+/** Só o total: o painel administrativo mostra a contagem, não a lista inteira. */
+export async function contar() {
+  const linhas = await consultar('SELECT COUNT(*) AS total FROM users');
+  return Number(linhas[0]?.total ?? 0);
+}
+
 export async function buscarPorId(id) {
   const linhas = await consultar(`SELECT ${CAMPOS_PUBLICOS} FROM users WHERE id = ?`, [id]);
   return linhas[0] ?? null;

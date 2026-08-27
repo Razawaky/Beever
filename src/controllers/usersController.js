@@ -5,10 +5,6 @@ import { iniciarSessaoLogin } from '../utils/sessaoLogin.js';
 
 /** Controllers só traduzem HTTP: nenhuma regra, nenhum SQL. */
 
-export const listar = assincrono(async (req, res) => {
-  res.json(await usersService.listar());
-});
-
 export const criar = assincrono(async (req, res) => {
   const { email, data_nasc: dataNasc, senha, apelido } = req.body;
   // Checkbox marcado chega como 'on' pelo formulário e como true pelo JSON.

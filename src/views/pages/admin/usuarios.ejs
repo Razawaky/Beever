@@ -1,0 +1,36 @@
+<%#
+  Listagem de contas — o que era `GET /users` e passou a morar sob `/admin`.
+  Só leitura: editar conta de jogador pelo painel não é escopo da T-12.1.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'usuarios' }) %>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <h1 class="text-3xl font-bold">Contas</h1>
+  <p class="mt-2 text-tinta-suave"><%= contas.length %> conta(s) cadastrada(s).</p>
+
+  <div class="mt-8 overflow-x-auto rounded-favo border border-linha bg-white">
+    <table class="w-full text-left text-sm">
+      <caption class="sr-only">Contas cadastradas no Beever</caption>
+      <thead class="border-b border-linha text-tinta-suave">
+        <tr>
+          <th scope="col" class="px-4 py-3 font-semibold">Apelido</th>
+          <th scope="col" class="px-4 py-3 font-semibold">E-mail</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Situação</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Último acesso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% contas.forEach((conta) => { %>
+          <tr class="border-b border-linha last:border-0">
+            <td class="px-4 py-3 font-medium"><%= conta.nickname %></td>
+            <td class="px-4 py-3"><%= conta.email %></td>
+            <td class="px-4 py-3"><%= conta.is_active ? 'Ativa' : 'Inativa' %></td>
+            <td class="px-4 py-3 text-tinta-suave">
+              <%= conta.last_login_at ? new Date(conta.last_login_at).toLocaleDateString('pt-BR') : 'nunca entrou' %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>

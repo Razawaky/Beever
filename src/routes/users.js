@@ -3,7 +3,6 @@ import { body, param } from 'express-validator';
 
 import * as usersController from '../controllers/usersController.js';
 import { limiteAutenticacao } from '../middlewares/rateLimiters.js';
-import { requireAdmin } from '../middlewares/requireAdmin.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { validate } from '../middlewares/validate.js';
 
@@ -49,9 +48,8 @@ const regrasAtualizacao = [
   body('senha').optional().isLength({ min: 8 }).matches(/[a-zA-Z]/).matches(/[0-9]/),
 ];
 
-// Listagem completa de contas é dado sensível: só administrador.
-router.get('/', requireAuth, requireAdmin, usersController.listar);
-
+// A listagem de contas era a única rota administrativa do sistema e mudou de
+// endereço na T-12.1: agora é `GET /admin/usuarios`, sob o prefixo da E12.
 router.post('/', limiteAutenticacao, regrasCadastro, validate, usersController.criar);
 
 router.put('/:id', requireAuth, regrasAtualizacao, validate, usersController.atualizar);

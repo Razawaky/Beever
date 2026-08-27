@@ -3,14 +3,21 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-26 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** auditoria da E11, com as nove lacunas tratadas. O laudo está em
+**Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** T-12.1 — a área administrativa ganhou porta própria. O login
+administrativo mora em `/admin/login` e recusa quem não tem linha em `admins`, com
+a mesma mensagem do login comum, e a tentativa fica na auditoria. Tudo sob `/admin`
+passa por um `requireAdmin` montado uma vez só, e a listagem de contas, que era a
+única rota admin do sistema, saiu de `GET /users` para `/admin/usuarios`. 777 testes
+passando.
+**Próximo passo: T-12.2 — CRUD de favos, células e conteúdo**
+
+**Commit anterior:** auditoria da E11, com as nove lacunas tratadas. O laudo está em
 `docs/11-AUDITORIA-DA-ETAPA.md`: **pode avançar**, com uma ressalva que não é de
 código — o aceite da etapa é um número de performance, e ele exige navegador. Das
 nove lacunas, **oito foram corrigidas na mesma sessão**, incluindo a bloqueante:
 religar o movimento pelo painel escondia as seções que ainda não tinham aparecido,
 e elas não voltavam sem recarregar. 765 testes passando.
-**Próximo passo: medir a landing em navegador (DT-74) e abrir a E12 — área administrativa**
 
 **Commit anterior:** T-11.8 — o painel de acessibilidade entrou em **toda tela**, a
 pedido do usuário: quatro ajustes independentes (reduzir movimento, aumentar
@@ -178,7 +185,7 @@ Se a sessão anterior acabou no meio, comece por aqui:
 Nada de importante desta sessão vive só na conversa: o que foi decidido está
 neste documento e nos commits; o que foi construído está no repositório.
 
-### Onde a sessão de 2026-08-26 parou
+### Onde a sessão de 2026-08-27 parou
 
 A E11 está **concluída e auditada** — sete tarefas do roadmap, mais a T-11.8, que
 foi o painel de acessibilidade pedido fora do roadmap. O laudo é o
@@ -205,9 +212,12 @@ rascunho de dev e espera revisão (DT-78). A política de privacidade em
 promete ainda não tem tela (DT-79). Antes de publicar, `CONTACT_EMAIL` precisa
 virar um endereço que alguém lê.
 
-Quando voltar, o caminho natural é `/proxima-tarefa`: ela vai abrir a **E12 —
-área administrativa**, cujo escopo já foi combinado com você em 2026-08-25 e está
-registrado na seção 4.
+A E12 abriu com a T-12.1, e a área administrativa já tem porta: `/admin/login`
+verificando o join, `requireAdmin` cobrindo todo o prefixo `/admin` e a listagem
+de contas migrada para `/admin/usuarios`. A próxima é a **T-12.2, o CRUD de favos,
+células e conteúdo** — e é nela que a primeira das quatro decisões de modelagem
+adiadas vai ter que ser tomada. As três pendências acima continuam abertas e
+nenhuma delas é código.
 
 ---
 
@@ -429,6 +439,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Item | Por que está aqui |
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
+| As três telas da administração em navegador real (T-12.1) | O caminho está coberto por teste pelo HTTP: o login recusa quem não é admin, o anônimo é mandado ao formulário, o jogador comum leva 403 nas duas rotas, e o painel e a lista de contas respondem em JSON e em HTML. O que **não** foi visto por olho humano é o desenho: a casca administrativa com a barra de navegação e o botão de sair, a tabela de contas rolando na horizontal a 320 px, e o foco de teclado passando pelo formulário de login. Vale o passe da DT-22 |
 | Reconstrução do fluxo em navegador real | Toda a verificação até hoje foi por curl. Nenhuma tela foi aberta em navegador com sessão real desde as mudanças de view no working tree |
 | Wizard de onboarding em navegador real (T-04.2 e T-04.3) | O comportamento está coberto por teste de integração — gravação por passo, retomada em sessão nova, catálogo no rascunho, barra com `.barra-N` e `aria-valuenow` na marcação —, e o rascunho servido foi conferido com o servidor de pé. O que **não** foi verificado com olho humano é o JavaScript rodando: montagem por API do DOM, as imagens dos avatares no passo do mascote, o passo de preferências avançando com tudo desmarcado, foco de teclado ao trocar de passo e a barra animando. Vale um passe junto da DT-22, na E11 |
 | As telas de jogo em navegador real | O caminho inteiro do navegador foi percorrido na T-07.3 com a aplicação de pé e o usuário demo — página, `dataset`, token de CSRF, abertura da partida e pagamento —, e foi assim que os dois bugs do `dataset` apareceram. O mesmo caminho foi refeito na T-07.4, com a divisão do orçamento aceita e paga. O caminho foi refeito de novo na T-07.5 e na T-07.6, sempre com o servidor de pé — e foi ele que achou o botão "Jogar" mentindo e a regra errada da próxima célula. O que **ainda não** foi visto por olho humano é o gesto e o desenho: arrastar a carta com o mouse e com o dedo, o realce da caixa sob o cursor, a alternativa selecionada no quiz, o foco de teclado trocando de pergunta, **o gráfico do cofre** com suas barras e a linha da meta, **as estrelas do resultado aparecendo uma a uma** — e as quatro telas de jogo a 320 px, onde o orçamento de faixa C é o mais apertado, com cinco categorias, dois botões e um número por linha. É a DT-22 e a L-10 do laudo da E06 |
@@ -455,9 +466,29 @@ argumento a favor da rede que a T-02.1 montou.
 
 ### Etapa atual
 
-**E11 — Landing page.** A porta de entrada do Beever, e a única tela que fala com
-quem ainda não tem conta. O aceite é a landing rodar a 60 fps no celular, sem
-salto de layout, e continuar inteira utilizável com animação desligada.
+**E12 — Área administrativa.** É a etapa que tira o programador do meio: o
+administrador passa a cadastrar item, conteúdo e atividade sem rodar `db:seed`. O
+aceite é usuário comum receber 403 em toda rota admin, toda ação administrativa
+aparecer na auditoria, e item e atividade cadastrados pelo painel aparecerem para
+o jogador sem seed. O escopo acordado em 2026-08-25 e as quatro decisões de
+modelagem adiadas estão em `docs/02-ROADMAP-ETAPAS.md`.
+
+| Tarefa | Situação |
+|---|---|
+| T-12.1 Autenticação e middleware de admin via join | **feita** — `/admin/login` é porta separada, com a mesma senha e a mesma sessão do jogador, recusando quem não tem linha em `admins` com a mensagem do login comum e registrando a tentativa na auditoria. O `requireAdmin` é montado uma vez no router de `/admin`, manda anônimo ao login quando é página e responde 401 ou 403 quando é JSON, e a listagem de contas mudou de `GET /users` para `/admin/usuarios` |
+| T-12.2 CRUD de favos, células e conteúdo | pendente |
+| T-12.3 CRUD de itens, preços e comportamento econômico, com ilustração própria | pendente — depende de decidir onde a arte mora e de tirar a derivação de `item_behaviors_map` de dentro do seed |
+| T-12.4 Cadastro de atividades novas nos tipos de jogo que já existem, com mídia | pendente |
+| T-12.5 Distribuição adaptativa: a atividade cadastrada entra no sorteio da faixa | pendente |
+| T-12.6 Consulta de auditoria com filtros | pendente |
+| T-12.7 Dashboard e métricas agregadas (P1) | pendente — o painel de hoje mostra só contagem de contas e a lista de administradores |
+
+---
+
+**E11 — Landing page** (concluída e auditada, guardada aqui como histórico). A
+porta de entrada do Beever, e a única tela que fala com quem ainda não tem conta.
+O aceite é a landing rodar a 60 fps no celular, sem salto de layout, e continuar
+inteira utilizável com animação desligada.
 
 | Tarefa | Situação |
 |---|---|
@@ -1182,7 +1213,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
-| E12 Admin | do zero | Uma única rota admin no sistema (`GET /users`) |
+| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. Faltam T-12.2 a T-12.7, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | do zero | P1, cortável |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
@@ -1226,6 +1257,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-67 | `inventario.ejs` calcula a variação e a renda vezes quantidade dentro da view, e `perfil.ejs` calcula o percentual da meta do mesmo jeito: é aritmética numa camada que deveria só exibir, e as outras telas de meta já leem o resumo pronto do service | auditoria da E09, ampliada pela da E10 | Subir a conta para o `inventoryService` e usar `goalsService.resumirMeta` no perfil |
 | DT-68 | A tela do cofre tem quatro formulários competindo — guardar, tirar, meta e projeção — contra a regra de uma ação principal por tela do checklist visual | auditoria da E09 | Rever a hierarquia no passe de olho humano da DT-22 |
 | DT-81 | `aceiteDaEconomia.test.js` mede a visita mais pesada contra o teto de 2 s da RNF-01 e falhou duas vezes na suíte completa (2033 ms e 2209 ms), passando sozinho e nas rodadas seguintes. O teto é do requisito, mas a medição corre junto com outros arquivos de teste disputando a máquina | auditoria da E11 | Medir com a suíte serializada, ou dar folga ao teto reconhecendo que a medição é comparativa, não absoluta |
+| DT-82 | Ser administrador é lido no login e guardado na sessão, então tirar a linha de `admins` de alguém só passa a valer na próxima entrada — quem já está logado continua com o painel aberto até a sessão morrer | T-12.1 | Aceitável enquanto admin é conta de professor criada à mão. Quando existir tela de promover e rebaixar administrador, conferir o join a cada requisição ou derrubar a sessão junto |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
@@ -3270,3 +3302,33 @@ performance até alguém rodar**.
 Um achado colateral virou DT-81: o teste de aceite da E09 mede a visita mais
 pesada contra o teto de 2 s e falha de vez em quando na suíte completa, passando
 sozinho — a medição disputa a máquina com os outros arquivos de teste.
+
+### Sessão de 2026-08-27, T-12.1 e a abertura da E12
+
+A E12 abriu pela porta, que é o que a T-12.1 é. Metade do que a tarefa pede já
+existia de sessões antigas: a tabela `admins`, o join no login e o `requireAdmin`
+lendo o resultado da sessão. Faltava o que a RF-ADM-01 pede de fato, um login
+administrativo separado, e faltava a área ter endereço próprio em vez de uma rota
+solta protegida à mão.
+
+Agora tudo mora sob `/admin`. O `requireAdmin` é montado uma vez no router, logo
+depois do login, e toda rota declarada abaixo dele nasce protegida — rota nova da
+etapa não depende de ninguém lembrar de repetir o middleware. Quem não está logado
+e pediu página vai para `/admin/login`, porque tela de erro não tem o formulário
+que a pessoa precisa; quem pediu JSON recebe 401, e quem está logado sem ser admin
+recebe 403 nos dois casos, que é o aceite da etapa escrito literalmente.
+
+A recusa do login administrativo devolve a mesma frase do login comum. Dizer "sua
+conta não é administradora" confirmaria a quem tentou que a senha estava certa, e
+o que sobra dessa tentativa é uma linha `admin.login.recusado` na auditoria. A
+senha continua sendo conferida pelo `authService` do jogador: hash, sessão e
+regeneração são um só, e o que a área administrativa acrescenta é só a exigência
+do join.
+
+A listagem de contas, que era a única rota admin do sistema, saiu de `GET /users`
+e virou `/admin/usuarios`, com tela de verdade além do JSON. O painel em `/admin`
+mostra por enquanto a contagem de contas e quem são os administradores; métricas
+de verdade são a T-12.7. Uma dívida nasceu junto, a DT-82: o papel é lido no login
+e guardado na sessão, então rebaixar alguém só vale na próxima entrada.
+
+777 testes passando, oito deles novos, e o lint limpo.
