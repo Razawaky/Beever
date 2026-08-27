@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
 
 import * as adminContentController from '../controllers/adminContentController.js';
+import * as adminAuditController from '../controllers/adminAuditController.js';
 import * as adminController from '../controllers/adminController.js';
 import * as adminItemsController from '../controllers/adminItemsController.js';
 import { limiteAutenticacao } from '../middlewares/rateLimiters.js';
@@ -149,5 +150,24 @@ router.post(
   validate,
   adminContentController.removerDoAcervo,
 );
+
+/**
+ * Auditoria (RF-ADM-05). Filtro vazio é o normal — quem abre a tela quer ver
+ * tudo —, então a validação confere formato e não obriga campo nenhum.
+ */
+const regrasDeFiltro = [
+  query('atorTipo').optional({ values: 'falsy' }).isIn(['usuario', 'admin', 'sistema']),
+  query('atorId').optional({ values: 'falsy' }).isInt({ min: 1 }),
+  query('acao').optional({ values: 'falsy' }).trim().isLength({ max: 100 }),
+  query('entidade').optional({ values: 'falsy' }).trim().isLength({ max: 60 }),
+  query('entidadeId').optional({ values: 'falsy' }).isInt({ min: 1 }),
+  query('requestId').optional({ values: 'falsy' }).trim().isLength({ max: 36 }),
+  query('de').optional({ values: 'falsy' }).isISO8601().withMessage('Data inicial inválida'),
+  query('ate').optional({ values: 'falsy' }).isISO8601().withMessage('Data final inválida'),
+  query('pagina').optional({ values: 'falsy' }).isInt({ min: 1 }),
+];
+
+router.get('/auditoria', regrasDeFiltro, validate, adminAuditController.consultar);
+router.get('/auditoria/csv', regrasDeFiltro, validate, adminAuditController.exportar);
 
 export default router;

@@ -27,6 +27,11 @@
         <%= locals.atual === 'itens' ? 'aria-current="page"' : '' %>
       >Itens</a>
       <a
+        href="/admin/auditoria"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'auditoria' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'auditoria' ? 'aria-current="page"' : '' %>
+      >Auditoria</a>
+      <a
         href="/admin/usuarios"
         class="underline-offset-4 hover:underline<%= locals.atual === 'usuarios' ? ' font-semibold underline' : '' %>"
         <%= locals.atual === 'usuarios' ? 'aria-current="page"' : '' %>

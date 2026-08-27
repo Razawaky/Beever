@@ -19,3 +19,17 @@ export function limiteSeguro(valor, { padrao = 50, maximo = 200 } = {}) {
   if (!Number.isInteger(numero) || numero <= 0) return padrao;
   return Math.min(numero, maximo);
 }
+
+/**
+ * Mesma história do `LIMIT`, para o `OFFSET` da paginação: o número que entra na
+ * consulta é produzido aqui, nunca o que veio da requisição.
+ *
+ * Sem teto: quem pede a página mil recebe uma consulta lenta, não uma consulta
+ * insegura, e limitar a profundidade da paginação seria esconder linhas da
+ * auditoria — que é o oposto do que ela existe para fazer.
+ */
+export function deslocamentoSeguro(valor) {
+  const numero = Number.parseInt(valor, 10);
+  if (!Number.isInteger(numero) || numero <= 0) return 0;
+  return numero;
+}

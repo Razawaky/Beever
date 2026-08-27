@@ -42,10 +42,23 @@
   </section>
 
   <section class="mt-8 rounded-favo border border-linha bg-white p-6">
+    <h2 class="text-lg font-semibold">Auditoria</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Quem fez o quê, quando, e o estado antes e depois. A trilha não pode ser
+      alterada nem apagada.
+    </p>
+    <%- include('../../partials/ui/botao', {
+      texto: 'Consultar a trilha',
+      href: '/admin/auditoria',
+      tamanho: 'medio',
+      classe: 'mt-4',
+    }) %>
+  </section>
+
+  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
     <h2 class="text-lg font-semibold">Ainda em construção</h2>
     <p class="mt-2 text-sm text-tinta-suave">
-      Catálogo de itens com ilustração, atividades novas com mídia e consulta à
-      auditoria chegam nas próximas tarefas desta etapa.
+      As métricas agregadas do painel são a última tarefa da etapa.
     </p>
   </section>
 </main>
