@@ -7,6 +7,7 @@ import request from 'supertest';
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
+import { opcoesDeTempo } from '../helpers/relogio.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
@@ -197,7 +198,7 @@ describe('métricas do painel administrativo', opcoes, () => {
     await metricas('0').expect(422);
   });
 
-  it('a página desenha as métricas e responde dentro do teto da RNF-01', async () => {
+  it('a página desenha as métricas e responde dentro do teto da RNF-01', opcoesDeTempo, async () => {
     const inicio = Date.now();
     const pagina = await admin.get('/admin').set('Accept', 'text/html').expect(200);
     const duracao = Date.now() - inicio;

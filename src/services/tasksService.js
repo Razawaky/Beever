@@ -68,10 +68,6 @@ export async function listarAtivas(idUsuario) {
   return tasksRepository.listarAtivasPorUsuario(idUsuario);
 }
 
-export async function listarTiposDisponiveis() {
-  return tasksRepository.listarTipos();
-}
-
 async function exigirPosse(idTarefa, idUsuario) {
   const tarefa = await tasksRepository.buscarPorId(idTarefa);
   if (!tarefa) throw erroNaoEncontrado('Tarefa não encontrada');

@@ -254,4 +254,32 @@ describe('liga semanal', opcoes, () => {
     assert.equal(Number(grupos[0].membros), 30);
     assert.equal(Number(grupos[1].membros), 1);
   });
+
+  it('sem o motivo de recompensa no seed, o pódio não paga e a virada não quebra', async () => {
+    // O pagamento do pódio é o único ponto da liga que engole o próprio erro: um
+    // prêmio que falha não pode impedir o fechamento da semana das outras trinta
+    // crianças. Sem este caso, o `catch` existia só no papel.
+    const [[motivo]] = await banco.conexao.query("SELECT * FROM reward_reasons WHERE slug = 'premio-de-liga'");
+    assert.ok(motivo, 'o seed precisa ter o motivo do prêmio de liga');
+
+    await banco.conexao.query('UPDATE leagues SET starts_on = ?, ends_on = ? WHERE starts_on = ?', [
+      '2025-01-05',
+      '2025-01-11',
+      semana.domingo,
+    ]);
+    // O slug é renomeado em vez de apagado: o livro já tem lançamentos apontando
+    // para esta linha, e a chave estrangeira impede removê-la. Para o `lancar`,
+    // que procura pelo slug, o efeito é o mesmo — o motivo sumiu.
+    await banco.conexao.query('UPDATE reward_reasons SET slug = ? WHERE id = ?', ['premio-fora-do-ar', motivo.id]);
+
+    const melAntes = await melDe(jogadores.primeira);
+    try {
+      const fechadas = await leagueService.fecharSemanasVencidas(new Date('2025-03-01T12:00:00Z'));
+
+      assert.ok(fechadas.length >= 1, 'a semana fecha mesmo sem conseguir pagar');
+      assert.equal(await melDe(jogadores.primeira), melAntes, 'nada foi creditado');
+    } finally {
+      await banco.conexao.query('UPDATE reward_reasons SET slug = ? WHERE id = ?', [motivo.slug, motivo.id]);
+    }
+  });
 });

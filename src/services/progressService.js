@@ -95,14 +95,6 @@ export async function registrarTentativa(idUsuario, idCelula, { erros = 0, pontu
   };
 }
 
-/** O percentual do favo, recontado das células. Útil quando o cache pode estar velho. */
-export async function recalcularFavo(idUsuario, idFavo, conexao = null) {
-  const codigosDeFaixa = await contentService.faixasDoJogador(idUsuario);
-
-  if (conexao) return progressRepository.recalcularFavo(conexao, idUsuario, idFavo, codigosDeFaixa);
-  return emTransacao((c) => progressRepository.recalcularFavo(c, idUsuario, idFavo, codigosDeFaixa));
-}
-
 /** Quanto do favo já foi feito, sem escrever no cache. */
 export async function resumoDoFavo(idUsuario, idFavo) {
   const codigosDeFaixa = await contentService.faixasDoJogador(idUsuario);

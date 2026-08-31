@@ -285,11 +285,6 @@ export async function processarPendentes(idUsuario, agora = new Date()) {
   return resumos;
 }
 
-/** Os últimos extratos gravados, do mais novo para o mais antigo (RF-HOM-09). */
-export async function listarUltimos(idUsuario, limite = 10) {
-  return economicCyclesRepository.listarUltimos(idUsuario, limite);
-}
-
 /** Soma os números de vários ciclos, para o aviso falar de tudo de uma vez. */
 function somarCiclos(resumos) {
   const total = {

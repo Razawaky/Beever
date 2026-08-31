@@ -241,4 +241,15 @@ describe('telas da economia', opcoes, () => {
     assert.ok(Array.isArray(vitrine.body.itens));
     assert.ok(Object.hasOwn(cofre.body, 'saldo'));
   });
+
+  it('o extrato de compras lista o que a criança comprou', async () => {
+    const extrato = await agente.get('/loja/compras').set('Accept', 'application/json').expect(200);
+    const compras = extrato.body.compras ?? extrato.body;
+
+    assert.ok(Array.isArray(compras), 'o extrato vem em lista');
+    assert.ok(
+      compras.some((compra) => Number(compra.item_id ?? compra.idItem) === Number(patinete.id)),
+      'o patinete comprado nos casos acima precisa aparecer',
+    );
+  });
 });

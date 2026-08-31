@@ -8,6 +8,7 @@ import request from 'supertest';
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
+import { medindoCobertura } from '../helpers/relogio.js';
 import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
@@ -228,10 +229,15 @@ describe('aceite da E09 — economia', opcoes, () => {
       'um ciclo por semana, sem buraco e sem repetição',
     );
     assert.match(visita.text, /Você ficou 6 semanas fora/, 'a Colmeia explica o que aconteceu');
-    assert.ok(
-      duracao < TETO_DE_RESPOSTA_MS,
-      `a visita mais pesada do app levou ${duracao}ms, acima do teto de ${TETO_DE_RESPOSTA_MS}ms (RNF-01)`,
-    );
+    // O caso inteiro continua rodando sob cobertura; só o cronômetro fica de
+    // fora, porque a instrumentação infla o tempo que a RNF-01 cobra. Os testes
+    // seguintes dependem desta visita ter acontecido.
+    if (!medindoCobertura) {
+      assert.ok(
+        duracao < TETO_DE_RESPOSTA_MS,
+        `a visita mais pesada do app levou ${duracao}ms, acima do teto de ${TETO_DE_RESPOSTA_MS}ms (RNF-01)`,
+      );
+    }
   });
 
   it('voltar de novo não aplica ciclo nenhum outra vez', async () => {

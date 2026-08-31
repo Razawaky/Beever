@@ -149,12 +149,6 @@ export async function sincronizarProgresso(idUsuario) {
   return { sincronizadas };
 }
 
-/** As metas vencidas que o jogador ainda pode retomar (RN-017, RF-MET-05). */
-export async function listarRenovaveis(idUsuario) {
-  await expirarVencidas(idUsuario);
-  return goalsRepository.listarExpiradasRenovaveis(idUsuario);
-}
-
 /**
  * Renova uma meta vencida (RN-017, RF-MET-05).
  *
@@ -223,13 +217,6 @@ export async function renovar(idMeta, idUsuario) {
   });
 
   return goalsRepository.buscarPorId(idNovaMeta);
-}
-
-/** Progresso informado de fora, para as fontes que ainda não têm consulta própria. */
-export async function atualizarProgresso(idMeta, idUsuario, valorAtual) {
-  await exigirPosse(idMeta, idUsuario);
-  await emTransacao((conexao) => goalsRepository.atualizarProgresso(conexao, idMeta, Number(valorAtual)));
-  return goalsRepository.buscarPorId(idMeta);
 }
 
 /**

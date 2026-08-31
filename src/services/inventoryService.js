@@ -11,10 +11,6 @@ import * as patrimonyService from './patrimonyService.js';
  * primeiro ciclo econômico roda.
  */
 
-export async function listarDoUsuario(idUsuario) {
-  return inventoryRepository.listarPorUsuario(idUsuario);
-}
-
 /** Agrupa por item, somando as unidades e o valor — o formato que a tela pede. */
 export async function listarAgrupadoPorItem(idUsuario) {
   const unidades = await inventoryRepository.listarPorUsuario(idUsuario);
@@ -50,10 +46,6 @@ export async function listarAgrupadoPorItem(idUsuario) {
 export async function idsPossuidos(idUsuario) {
   const unidades = await inventoryRepository.listarPorUsuario(idUsuario);
   return new Set(unidades.map((unidade) => Number(unidade.item_id)));
-}
-
-export async function valorEmPatrimonio(idUsuario) {
-  return inventoryRepository.valorTotalEmPatrimonio(idUsuario);
 }
 
 /**

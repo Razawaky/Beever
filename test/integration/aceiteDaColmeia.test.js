@@ -7,6 +7,7 @@ import request from 'supertest';
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
+import { opcoesDeTempo } from '../helpers/relogio.js';
 import { montarJogadorAvancado } from '../helpers/jogadorAvancado.js';
 import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool, pool } from '../../src/config/database.js';
@@ -168,7 +169,7 @@ describe('aceite da Colmeia', opcoes, () => {
     assert.ok(home.proximaCelula, 'e o destino do Continuar');
   });
 
-  it('a página desenhada carrega dentro do teto de 2 s da RNF-01', async (t) => {
+  it('a página desenhada carrega dentro do teto de 2 s da RNF-01', opcoesDeTempo, async (t) => {
     // Três medições, e vale a pior: uma execução isolada num banco local diz
     // pouco, e a suíte inteira disputa o mesmo MySQL.
     const tempos = [];

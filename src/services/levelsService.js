@@ -26,10 +26,6 @@ const NIVEL_DE_PARTIDA = {
   advanced: 10,
 };
 
-export function niveisDePartidaDisponiveis() {
-  return Object.keys(NIVEL_DE_PARTIDA);
-}
-
 export async function obterCurva() {
   const curva = await userLevelsRepository.buscarCurva();
   if (curva.length === 0) {
