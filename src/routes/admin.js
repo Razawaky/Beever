@@ -5,7 +5,7 @@ import * as adminContentController from '../controllers/adminContentController.j
 import * as adminAuditController from '../controllers/adminAuditController.js';
 import * as adminController from '../controllers/adminController.js';
 import * as adminItemsController from '../controllers/adminItemsController.js';
-import { limiteAdministrativo, limiteAutenticacao } from '../middlewares/rateLimiters.js';
+import { limiteAdministrativo, limiteAutenticacao, limitePorCredencial } from '../middlewares/rateLimiters.js';
 import { requireAdmin } from '../middlewares/requireAdmin.js';
 import { validate } from '../middlewares/validate.js';
 
@@ -19,12 +19,14 @@ import { validate } from '../middlewares/validate.js';
 const router = Router();
 
 const regrasLogin = [
-  body('email').trim().isEmail().withMessage('E-mail inválido').normalizeEmail(),
+  body('email').trim().toLowerCase().isEmail().withMessage('E-mail inválido'),
   body('senha').notEmpty().withMessage('Informe a senha'),
 ];
 
 router.get('/login', adminController.paginaDeLogin);
-router.post('/login', limiteAutenticacao, regrasLogin, validate, adminController.login);
+// A porta administrativa é o alvo de maior valor do sistema: leva os dois
+// limites, o do endereço e o da credencial.
+router.post('/login', limiteAutenticacao, limitePorCredencial, regrasLogin, validate, adminController.login);
 
 router.use(requireAdmin);
 

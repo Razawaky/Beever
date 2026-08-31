@@ -24,7 +24,18 @@ export async function buscarPorUsuario(idUsuario) {
   return linhas[0] ?? null;
 }
 
+/**
+ * Nome de coluna e nome de tabela não podem virar `?`, então são os dois únicos
+ * pedaços de SQL deste projeto montados por interpolação. As listas abaixo são o
+ * que impede isso de um dia receber texto de fora: quem chamar com outra coisa
+ * estoura na hora, em vez de a consulta ser montada com o que veio.
+ */
+const COLUNAS_DE_SALDO = new Set(['coins', 'points_total']);
+const LIVROS = new Set(['coin_ledger', 'point_ledger']);
+
 async function saldoAtual(conexao, idUsuario, coluna) {
+  if (!COLUNAS_DE_SALDO.has(coluna)) throw new Error(`Coluna de saldo desconhecida: "${coluna}"`);
+
   const [linhas] = await conexao.execute(`SELECT ${coluna} AS saldo FROM wallets WHERE user_id = ?`, [
     idUsuario,
   ]);
@@ -40,6 +51,8 @@ async function saldoAtual(conexao, idUsuario, coluna) {
  * `emTransacao`, o rollback leva o crédito junto e a carteira não mente.
  */
 async function lancar(conexao, tabela, { idUsuario, valor, motivo, referenciaTipo, referenciaId, saldoDepois }) {
+  if (!LIVROS.has(tabela)) throw new Error(`Livro desconhecido: "${tabela}"`);
+
   const [resultado] = await conexao.execute(
     `INSERT INTO ${tabela} (user_id, amount, reason_id, reference_type, reference_id, balance_after)
      SELECT ?, ?, r.id, ?, ?, ? FROM reward_reasons r WHERE r.slug = ?`,

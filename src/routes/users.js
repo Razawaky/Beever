@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body, param } from 'express-validator';
 
 import * as usersController from '../controllers/usersController.js';
-import { limiteAutenticacao } from '../middlewares/rateLimiters.js';
+import { limiteAutenticacao, limitePorCredencial } from '../middlewares/rateLimiters.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { validate } from '../middlewares/validate.js';
 import { exigirApelidoPublico } from '../services/apelidoPublico.js';
@@ -25,7 +25,11 @@ const regrasCadastro = [
     .notEmpty()
     .withMessage('Informe como você quer ser chamado')
     .custom(exigirApelidoPublico),
-  body('email').trim().isEmail().withMessage('E-mail inválido').normalizeEmail(),
+  // Sem `normalizeEmail`: ele apaga pontos e sufixos `+` do Gmail, então dois
+  // endereços reais e distintos colidiam no 409 de duplicado, e o e-mail
+  // guardado como prova de consentimento do responsável podia não ser o que ele
+  // digitou. Minúsculas bastam para a unicidade.
+  body('email').trim().toLowerCase().isEmail().withMessage('E-mail inválido'),
   body('data_nasc').isISO8601().withMessage('Data de nascimento inválida'),
   body('senha')
     .isLength({ min: 8 })
@@ -50,14 +54,14 @@ const regrasCadastro = [
 const regrasAtualizacao = [
   param('id').isInt({ min: 1 }),
   body('apelido').optional().trim().notEmpty().custom(exigirApelidoPublico),
-  body('email').optional().trim().isEmail().normalizeEmail(),
+  body('email').optional().trim().toLowerCase().isEmail(),
   body('data_nasc').optional().isISO8601(),
   body('senha').optional().isLength({ min: 8 }).matches(/[a-zA-Z]/).matches(/[0-9]/),
 ];
 
 // A listagem de contas era a única rota administrativa do sistema e mudou de
 // endereço na T-12.1: agora é `GET /admin/usuarios`, sob o prefixo da E12.
-router.post('/', limiteAutenticacao, regrasCadastro, validate, usersController.criar);
+router.post('/', limiteAutenticacao, limitePorCredencial, regrasCadastro, validate, usersController.criar);
 
 router.put('/:id', requireAuth, regrasAtualizacao, validate, usersController.atualizar);
 

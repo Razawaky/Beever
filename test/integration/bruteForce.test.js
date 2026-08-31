@@ -22,16 +22,12 @@ const { fecharSessionStore } = await import('../../src/config/session.js');
  * O limite existe desde a E02, e nunca havia sido exercitado — um rate limiter
  * mal configurado parece idêntico a um bem configurado até alguém tentar.
  *
- * Duas propriedades importam aqui. A primeira é óbvia: o atacante precisa ser
- * barrado. A segunda é a que a auditoria da E03 encontrou descrita errada — o
- * bloqueio é por origem e, uma vez estourado o teto, **nem quem acerta a senha
- * passa**. `skipSuccessfulRequests` só evita *contar* a tentativa bem-sucedida,
- * de modo que quem entra de primeira não gasta cota; ele não isenta ninguém
- * depois que o bloqueio começou.
- *
- * A consequência de produto está registrada como DT-24: numa sala de aula atrás
- * de um único IP, dez erros somados entre alunos diferentes trancam a turma por
- * quinze minutos.
+ * Três propriedades importam aqui. O atacante precisa ser barrado. Uma vez
+ * estourado o teto da conta atacada, **nem quem acerta a senha passa** —
+ * `skipSuccessfulRequests` evita *contar* a tentativa certa, e não isenta
+ * ninguém depois que o bloqueio começou. E, desde a T-14.1, o balde é do e-mail
+ * tentado e não da origem: a criança da carteira ao lado, no mesmo IP da escola,
+ * continua entrando. Era a DT-24.
  */
 
 const pular = await motivoParaPular();
@@ -100,21 +96,66 @@ describe('força bruta no login', opcoes, () => {
     assert.equal(status.at(-1), 429, 'e depois de barrado, continua barrado');
   });
 
-  it('a senha certa não passa enquanto o bloqueio dura', async () => {
-    // Consequência aceita e importante de registrar: o limite é por origem, não
-    // por conta. Quem está atrás do mesmo IP de um atacante espera junto.
+  it('a senha certa da conta atacada não passa enquanto o bloqueio dura', async () => {
     const resposta = await tentarLogin(CONTA.senha);
     assert.equal(resposta.status, 429);
   });
 
-  it('o bloqueio não vaza informação sobre a conta', async () => {
-    const existente = await tentarLogin('outraerrada');
-    const inexistente = await agente
+  it('o colega de sala, mesmo IP e outra conta, continua entrando (DT-24)', async () => {
+    const colega = {
+      apelido: 'colega',
+      email: 'colega@beever.dev',
+      data_nasc: '2013-09-09',
+      senha: 'beever123',
+      consentimento_responsavel: 'on',
+    };
+
+    // Conta nova pela mesma origem que acabou de ser barrada quinze vezes.
+    const cadastro = await agente
+      .post('/users')
+      .set('Accept', 'application/json')
+      .send({ ...colega, _csrf: csrf });
+
+    assert.equal(cadastro.status, 201, 'o cadastro do colega não pode ser barrado pelo ataque à outra conta');
+
+    await agente.post('/sessao/logout').set('Accept', 'application/json').send({ _csrf: await tokenDe('/painel') });
+    csrf = await tokenDe();
+
+    const entrada = await agente
       .post('/sessao/login')
       .set('Accept', 'application/json')
-      .send({ email: 'naoexiste@beever.dev', senha: 'outraerrada', _csrf: csrf });
+      .send({ email: colega.email, senha: colega.senha, _csrf: csrf });
+
+    assert.equal(entrada.status, 200, 'quem sabe a própria senha entra, mesmo com o vizinho sob ataque');
+  });
+
+  it('o bloqueio não distingue conta que existe de conta que não existe', async () => {
+    // As duas recebem o mesmo tratamento: seis erros seguidos, e a resposta
+    // precisa ser idêntica. Comparar uma conta atacada com uma intocada provaria
+    // só que o limite funciona.
+    await agente.post('/sessao/logout').set('Accept', 'application/json').send({ _csrf: await tokenDe('/painel') });
+    csrf = await tokenDe();
+
+    const martelar = async (email) => {
+      let ultima;
+      for (let tentativa = 0; tentativa < 6; tentativa += 1) {
+        ultima = await agente
+          .post('/sessao/login')
+          .set('Accept', 'application/json')
+          .send({ email, senha: `errada${tentativa}`, _csrf: csrf });
+      }
+      return ultima;
+    };
+
+    const existente = await martelar(CONTA.email);
+    const inexistente = await martelar('naoexiste@beever.dev');
 
     assert.equal(existente.status, inexistente.status);
-    assert.deepEqual(existente.body, inexistente.body);
+    // O `requestId` muda a cada requisição de propósito: é rastro de log, não
+    // resposta, e comparar ele seria comparar o relógio.
+    assert.deepEqual(
+      { ...existente.body, requestId: undefined },
+      { ...inexistente.body, requestId: undefined },
+    );
   });
 });

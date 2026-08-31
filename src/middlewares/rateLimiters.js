@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 import { env } from '../config/env.js';
 
@@ -15,6 +15,19 @@ const base = {
   skip: () => env.teste,
 };
 
+/**
+ * Em qual balde a tentativa cai: o e-mail enviado, ou o endereço quando não veio
+ * e-mail nenhum.
+ *
+ * Exportada para o teste poder conferir a chave sem subir servidor. O
+ * `ipKeyGenerator` é quem sabe agrupar IPv6 por bloco — sem ele, cada endereço
+ * de uma faixa /64 contaria como um cliente novo, e o limite não limitaria nada.
+ */
+export function chaveDaCredencial(req) {
+  const email = String(req.body?.email ?? '').trim().toLowerCase();
+  return email ? `email:${email}` : ipKeyGenerator(req.ip);
+}
+
 /** Rede de segurança geral, aplicada a toda a aplicação. */
 export const limiteGlobal = rateLimit({
   ...base,
@@ -23,13 +36,37 @@ export const limiteGlobal = rateLimit({
   message: { erro: 'Muitas requisições. Tente de novo em alguns minutos.' },
 });
 
-/** Login e cadastro: apertado, para conter força bruta. */
+/**
+ * Login e cadastro, contados por endereço.
+ *
+ * O teto é largo de propósito: numa sala de aula todo mundo sai do mesmo IP, e
+ * dez erros somados entre alunos diferentes trancavam a turma inteira por quinze
+ * minutos. Quem segura a força bruta contra uma conta é o limite por credencial
+ * abaixo; este aqui é só a rede de baixo contra varredura em massa.
+ */
 export const limiteAutenticacao = rateLimit({
   ...base,
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 60,
   skipSuccessfulRequests: true,
   message: { erro: 'Muitas tentativas de acesso. Aguarde alguns minutos.' },
+});
+
+/**
+ * Login e cadastro, contados pelo e-mail tentado.
+ *
+ * É este que contém a força bruta: cinco erros na mesma conta fecham a porta
+ * daquela conta, e o colega ao lado continua entrando. Acertar a senha não
+ * consome o balde (`skipSuccessfulRequests`), então quem sabe a própria senha
+ * nunca é barrado.
+ */
+export const limitePorCredencial = rateLimit({
+  ...base,
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: chaveDaCredencial,
+  message: { erro: 'Muitas tentativas nesta conta. Aguarde alguns minutos.' },
 });
 
 /**
