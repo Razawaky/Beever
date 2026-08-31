@@ -2,6 +2,7 @@ import { emTransacao } from '../config/database.js';
 import { logger } from '../config/logger.js';
 import * as leaguesRepository from '../repositories/leaguesRepository.js';
 import { dataDoDia, diaDaSemana, somarDias } from '../utils/diaDoJogador.js';
+import { apelidoParaRanque } from './apelidoPublico.js';
 import * as auditService from './auditService.js';
 import * as coinsService from './coinsService.js';
 
@@ -91,12 +92,20 @@ function nomeDoGrupo(quantidade) {
  *
  * Chamada na visita à Colmeia. Entrar é `INSERT IGNORE`, então duas visitas
  * simultâneas não põem o jogador em dois grupos.
+ *
+ * Quem ainda não ganhou pólen nesta semana **não entra**: aparecer em último
+ * sem ter jogado, na frente de outras vinte e nove crianças, é a humilhação que
+ * a RF-GAM-02 manda evitar. Ele entra na visita seguinte à primeira célula, e o
+ * pólen conta retroativo porque a soma é do livro.
  */
 export async function garantirParticipacao(idUsuario, agora = new Date()) {
   const semana = semanaDe(agora);
 
   const jaEstava = await leaguesRepository.buscarGrupoDoJogador(idUsuario, semana.domingo);
   if (jaEstava) return jaEstava;
+
+  const { de, ate } = intervaloDaSemana(semana);
+  if ((await leaguesRepository.somarPolenDaSemana(idUsuario, de, ate)) <= 0) return null;
 
   const grupos = await leaguesRepository.listarDaSemana(semana.domingo);
   const comVaga = grupoComVaga(grupos);
@@ -154,7 +163,12 @@ export async function ligaDoJogador(idUsuario, agora = new Date()) {
     },
     posicao: meu?.posicao ?? null,
     polen: meu?.polen ?? 0,
-    membros: ranqueados,
+    // O apelido sai daqui já no formato que pode ser publicado: a liga é a
+    // primeira tela em que uma criança lê o campo de outra (RF-GAM-03).
+    membros: ranqueados.map((membro) => ({
+      ...membro,
+      nickname: apelidoParaRanque(membro.nickname, membro.user_id),
+    })),
   };
 }
 

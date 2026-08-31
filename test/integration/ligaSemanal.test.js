@@ -103,6 +103,13 @@ describe('liga semanal', opcoes, () => {
     assert.equal(linhas.length, 1);
   });
 
+  it('quem não ganhou pólen nesta semana não entra no grupo', async () => {
+    const grupo = await leagueService.garantirParticipacao(jogadores.ausente);
+
+    assert.equal(grupo, null, 'aparecer em último sem ter jogado é a humilhação que a RF-GAM-02 evita');
+    assert.equal(await leagueService.ligaDoJogador(jogadores.ausente), null);
+  });
+
   it('o ranque sai do livro, e só conta o pólen da semana', async () => {
     for (const apelido of ['segunda', 'terceira', 'quarta', 'ausente']) {
       await leagueService.garantirParticipacao(jogadores[apelido]);
@@ -119,9 +126,8 @@ describe('liga semanal', opcoes, () => {
         ['segunda', 80, 2],
         ['terceira', 80, 2],
         ['quarta', 10, 4],
-        ['ausente', 0, 5],
       ],
-      'o empate divide a posição, e os 999 de 2020 ficam de fora',
+      'o empate divide a posição, os 999 de 2020 ficam de fora e a "ausente" não entrou',
     );
   });
 
@@ -160,7 +166,7 @@ describe('liga semanal', opcoes, () => {
     const fechadas = await leagueService.fecharSemanasVencidas(new Date('2026-02-01T12:00:00Z'));
 
     assert.equal(fechadas.length, 1);
-    assert.equal(fechadas[0].participantes, 5);
+    assert.equal(fechadas[0].participantes, 4, 'a "ausente" nunca entrou no grupo');
 
     const [posicoes] = await banco.conexao.query(
       `SELECT u.nickname, m.final_rank, m.points
@@ -174,7 +180,6 @@ describe('liga semanal', opcoes, () => {
         ['segunda', 2],
         ['terceira', 2],
         ['quarta', 4],
-        ['ausente', 5],
       ],
     );
 
@@ -215,18 +220,25 @@ describe('liga semanal', opcoes, () => {
   });
 
   it('a semana nova abre zerada, sem ninguém rebaixado', async () => {
+    // Entrar de novo custa pólen novo: o da semana passada foi envelhecido pelo
+    // teste do fechamento e não conta mais.
+    assert.equal(await leagueService.garantirParticipacao(jogadores.primeira), null);
+
+    await plantarPolen(jogadores.primeira, 5, semana.domingo);
     const grupo = await leagueService.garantirParticipacao(jogadores.primeira);
     const liga = await leagueService.ligaDoJogador(jogadores.primeira);
 
     assert.equal(leagueService.paraDataISO(grupo.starts_on), semana.domingo, 'a semana corrente, de novo');
-    assert.equal(liga.polen, 0, 'o pólen da semana passada não vem junto');
-    assert.equal(liga.membros.length, 1, 'quem não visitou ainda não entrou');
+    assert.equal(liga.polen, 5, 'os 120 da semana passada não vêm junto');
+    assert.equal(liga.membros.length, 1, 'quem não pontuou ainda não entrou');
   });
 
   it('o grupo cheio faz o próximo jogador abrir outro', async () => {
     const semGrupo = [];
     for (let numero = 0; numero < 30; numero += 1) {
-      semGrupo.push(await criarJogador(`lotacao${numero}`));
+      const id = await criarJogador(`lotacao${numero}`);
+      await plantarPolen(id, 1, semana.domingo);
+      semGrupo.push(id);
     }
 
     for (const id of semGrupo) await leagueService.garantirParticipacao(id);

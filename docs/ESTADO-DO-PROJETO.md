@@ -4,11 +4,16 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-31 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-13.4 — a conquista e a liga ganharam tela. O catálogo mostra a escada
+**Último commit:** auditoria da E13, com as duas lacunas bloqueantes corrigidas na mesma
+sessão. O apelido ganhou regra única e o ranque deixou de publicar o que não passa nela;
+a liga voltou a só aceitar quem ganhou pólen na semana, que era o que o projeto sempre
+afirmou fazer. O laudo está em `docs/13-AUDITORIA-DA-ETAPA.md`. 958 testes passando.
+**Próximo passo: E14 — endurecimento e entrega**
+
+**Commit anterior:** T-13.4 — a conquista e a liga ganharam tela. O catálogo mostra a escada
 inteira, com o degrau travado exibindo alvo e progresso em vez de silhueta; a liga mostra o
 ranque só por apelido e diz em palavra que ninguém desce. A comemoração aparece na Colmeia
 e no fim da partida. **A E13 fecha inteira.** 949 testes passando.
-**Próximo passo: auditoria da E13, e depois a E14 — endurecimento e entrega**
 
 **Commit anterior:** T-13.3 — a liga semanal por pólen saiu do schema e virou comportamento.
 Grupos de trinta, ranque somado do livro, fechamento preguiçoso na visita e pódio pago sem
@@ -1297,7 +1302,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
 | E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
-| E13 Conquistas e liga | **concluída, falta auditar** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). Falta o laudo da etapa |
+| E13 Conquistas e liga | **concluída e auditada** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). **Auditada em `docs/13-AUDITORIA-DA-ETAPA.md`: pode avançar**, com as duas lacunas bloqueantes corrigidas na mesma sessão — a regra do apelido publicado e a liga que aceitava quem nunca jogou |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
 
@@ -1364,6 +1369,7 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-103~~ | ~~`achievements.icon_path` continua nulo em todas as vinte e uma: a arte é do usuário, e a tela da T-13.4 vai precisar de um lugar único de troca, como o catálogo do mascote já tem~~ — **resolvida na T-13.4**: `src/config/conquistas.js` é o ponto único, um ícone por família, e nenhuma view nomeia arte. A coluna `icon_path` segue nula e sem leitor | T-13.1 | Quando a arte existir, decidir se o config aponta para os arquivos ou se a coluna vira a fonte |
 | DT-104 | Desbloquear paga mel, o mel entra no patrimônio, e o patrimônio pode destravar o degrau seguinte — só na visita **seguinte**. A escada é finita, então converge em poucas visitas, mas a criança pode receber a conquista de patrimônio um acesso depois de merecê-la. A tela `/conquistas` reduz o incômodo porque avalia antes de desenhar, mas a Colmeia continua uma visita atrás | T-13.2 | Reavaliar o critério de patrimônio logo depois de pagar conquista, ou aceitar o atraso de uma visita como custo de a avaliação ser preguiçosa |
 | DT-105 | A contagem de conquistas na visita à Colmeia mede o patrimônio **do momento**, e não o maior já alcançado. Quem chega a 5000 e gasta tudo antes de abrir a Colmeia não recebe o degrau. A família de sequência não tem esse problema, porque usa o melhor já atingido | T-13.2 | Guardar o maior patrimônio já alcançado, como `streaks.best_days` faz, se isso incomodar na prática |
+| DT-109 | A regra do apelido publicado barra nome completo de três palavras, telefone e e-mail, mas **nenhuma regra de texto barra "Maria Silva"**, que é nome e sobrenome em duas palavras. Também não existe lista de palavras ofensivas: o ranque mostra o que a criança escreveu | auditoria da E13 | Lista de bloqueio simples, ou revisão humana do apelido antes de ele aparecer para outras crianças, se a liga sair do círculo de teste |
 | DT-106 | O jogador entra no grupo da liga na visita à Colmeia, e não ao ganhar o primeiro pólen. Quem joga uma célula pelo endereço direto, sem passar pela home, só entra na visita seguinte — e o pólen dele conta retroativo quando entrar, porque a soma é do livro | T-13.3 | Chamar `garantirParticipacao` também no fechamento da partida, se na prática alguém jogar sem passar pela Colmeia |
 | DT-107 | O grupo é preenchido por ordem de chegada, sem equilibrar nível ou faixa etária: uma criança de seis anos pode cair no mesmo grupo de uma de quinze, e disputar pólen com quem joga células que pagam mais | T-13.3 | Agrupar por faixa etária quando houver gente suficiente para encher mais de um grupo por faixa |
 | DT-108 | `league_members.points` é cache e não entra no `db:reconcile`, ao contrário de `wallets` e `hive_progress`. Divergência entre ele e o `point_ledger` passaria sem alarme | T-13.3 | Acrescentar a conferência ao `scripts/reconcile.js`, que já sabe comparar cache com livro |
@@ -3834,3 +3840,28 @@ quando a ilustração existir.
 
 949 testes passando, cinco deles novos. A E13 fecha inteira e o que falta é o
 laudo da etapa.
+
+### Sessão de 2026-08-31, auditoria da E13 e as duas lacunas de criança vendo criança
+
+A auditoria achou dez lacunas, e as duas bloqueantes só existiam porque a T-13.4
+deu tela ao que antes era só banco. Ambas foram corrigidas na mesma sessão.
+
+A primeira é o apelido. Até a liga existir, nenhuma criança via o apelido de
+outra, e a validação do campo era só "não vazio, até 60 caracteres" — nada
+impedia nome completo ou telefone. Agora existe `apelidoPublico.js`, regra única
+aplicada no cadastro, no onboarding e na edição, e o ranque não confia no banco:
+apelido fora da regra sai como "Abelha" mais o id interno, o que também protege
+conta criada antes da regra. O que nenhuma regra de texto resolve ficou escrito
+como DT-109: "Maria Silva" continua passando.
+
+A segunda é a liga, e é o tipo de erro que a auditoria existe para pegar. O
+projeto afirmava, por escrito, que quem não ganhou pólen na semana não entra —
+e o código punha todo mundo no grupo em toda visita à Colmeia, sem olhar pólen.
+Sem tela ninguém via; com tela, a criança que só passeia apareceria em último na
+frente de vinte e nove. `garantirParticipacao` passou a somar o livro antes de
+entrar, e os dois estados vazios que a T-13.4 já tinha escrito deixaram de ser
+código inalcançável.
+
+958 testes passando, nove deles novos. O laudo está em
+`docs/13-AUDITORIA-DA-ETAPA.md`, e o que sobra da E13 é dívida de teste que cabe
+na T-14.2.

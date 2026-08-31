@@ -11,6 +11,7 @@ import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as coinsService from '../../src/services/coinsService.js';
+import * as pointsService from '../../src/services/pointsService.js';
 
 /**
  * As telas de conquista e de liga (RF-GAM-01 a 03, T-13.4).
@@ -29,6 +30,7 @@ describe('telas de conquista e de liga', opcoes, () => {
   let app;
   let agente;
   let idUsuario;
+  let idPerfil;
 
   async function lerToken(caminho) {
     const resposta = await agente.get(caminho).set('Accept', 'text/html');
@@ -77,15 +79,19 @@ describe('telas de conquista e de liga', opcoes, () => {
       })
       .expect(200);
 
-    const [[perfil]] = await banco.conexao.query('SELECT user_id FROM profiles WHERE id = ?', [
-      cadastro.body.idPerfil,
-    ]);
+    idPerfil = cadastro.body.idPerfil;
+    const [[perfil]] = await banco.conexao.query('SELECT user_id FROM profiles WHERE id = ?', [idPerfil]);
     idUsuario = Number(perfil.user_id);
 
     // Três mil de patrimônio destravam os dois primeiros degraus da família e
     // deixam o terceiro (cinco mil) travado, que é o que a tela precisa mostrar.
     await emTransacao((conexao) =>
       coinsService.creditar(conexao, idUsuario, 3000, { motivo: 'ajuste-administrativo' }),
+    );
+    // Pólen antes da primeira visita: sem ele o jogador não entra na liga, e as
+    // telas do ranque nem existiriam para conferir.
+    await emTransacao((conexao) =>
+      pointsService.creditar(conexao, idUsuario, 40, { motivo: 'conclusao-celula' }),
     );
   });
 
@@ -133,5 +139,28 @@ describe('telas de conquista e de liga', opcoes, () => {
     assert.match(html, /Ninguém desce de liga aqui/);
     assert.ok(!html.includes('ranqueada@beever.dev'), 'a liga não mostra e-mail');
     assert.ok(!html.includes('2014-05-01'), 'a liga não mostra data de nascimento');
+  });
+
+  it('o apelido que identifica a criança é recusado na porta de entrada', async () => {
+    const csrf = await lerToken('/perfil');
+
+    for (const apelido of ['Maria Clara Souza', 'ana 988887777', 'ana@escola.com']) {
+      await agente
+        .put(`/perfil/${idPerfil}`)
+        .set('Accept', 'application/json')
+        .send({ apelido, _csrf: csrf })
+        .expect(422);
+    }
+  });
+
+  it('apelido antigo fora da regra não é publicado no ranque', async () => {
+    // Conta criada antes da regra: o campo pode ter qualquer coisa, e a liga é a
+    // primeira tela que o mostraria para outras crianças.
+    await banco.conexao.query('UPDATE users SET nickname = ? WHERE id = ?', ['Maria Clara Souza', idUsuario]);
+
+    const html = await pagina('/liga');
+
+    assert.ok(!html.includes('Maria Clara Souza'), 'o nome completo não chega ao ranque');
+    assert.match(html, new RegExp(`Abelha ${idUsuario}`));
   });
 });

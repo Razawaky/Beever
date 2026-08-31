@@ -80,6 +80,22 @@ export async function listarMembrosComPolen(idLiga, de, ate) {
   );
 }
 
+/**
+ * O pólen que o jogador ganhou no período, direto do livro.
+ *
+ * É a pergunta que decide se ele entra na liga, e vem do `point_ledger` pelo
+ * mesmo motivo do ranque: a coluna `points` só existe depois de entrar.
+ */
+export async function somarPolenDaSemana(idUsuario, de, ate) {
+  const linhas = await consultar(
+    `SELECT COALESCE(SUM(amount), 0) AS polen
+       FROM point_ledger
+      WHERE user_id = ? AND created_at BETWEEN ? AND ?`,
+    [idUsuario, de, ate],
+  );
+  return Number(linhas[0]?.polen ?? 0);
+}
+
 /** Grava o cache de pontos de um membro. */
 export async function atualizarPontos(idLiga, idUsuario, pontos, conexao = null) {
   await consultarEm(conexao, 'UPDATE league_members SET points = ? WHERE league_id = ? AND user_id = ?', [

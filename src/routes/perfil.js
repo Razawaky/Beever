@@ -6,6 +6,7 @@ import { limiteRecompensa } from '../middlewares/rateLimiters.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { validate } from '../middlewares/validate.js';
+import { exigirApelidoPublico } from '../services/apelidoPublico.js';
 
 /**
  * Rotas de perfil. Id do usuário não vem na URL: quem está logado já
@@ -21,7 +22,7 @@ router.put(
   '/:id',
   [
     param('id').isInt({ min: 1 }),
-    body('apelido').optional().trim().notEmpty().isLength({ max: 60 }),
+    body('apelido').optional().trim().notEmpty().custom(exigirApelidoPublico),
     body('avatar').optional().trim().isLength({ max: 60 }),
     body('fuso').optional().trim().isLength({ max: 64 }),
     // RN-011 reconhece cinco durações, e o banco as repete em
@@ -94,7 +95,7 @@ router.put(
   requireOnboardingPendente,
   [
     param('id').isInt({ min: 1 }),
-    body('apelido').trim().notEmpty().withMessage('Informe como quer ser chamado').isLength({ max: 60 }),
+    body('apelido').trim().notEmpty().withMessage('Informe como quer ser chamado').custom(exigirApelidoPublico),
     // RF-ONB-06 é obrigatória, e até a T-04.3 esta linha era `optional()`:
     // dava para concluir o onboarding sem mascote nenhum. Que o slug exista no
     // catálogo é o service que confere, contra a tabela `avatars`.

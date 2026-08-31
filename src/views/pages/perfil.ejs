@@ -24,6 +24,12 @@
           sessões de <%= perfil.session_minutes %> minutos ·
           <%= perfil.faixa_etaria_nome ?? 'faixa não definida' %>
         </p>
+        <%# A criança precisa saber onde o apelido aparece antes de escolher um
+            que a identifique (RN-049). %>
+        <p class="mt-1 text-sm text-tinta-suave">
+          Seu apelido aparece na liga da semana para as outras crianças do seu grupo. Não use seu nome
+          completo nem telefone.
+        </p>
       </div>
     </div>
 

@@ -5,6 +5,7 @@ import * as usersController from '../controllers/usersController.js';
 import { limiteAutenticacao } from '../middlewares/rateLimiters.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { validate } from '../middlewares/validate.js';
+import { exigirApelidoPublico } from '../services/apelidoPublico.js';
 
 /**
  * Rotas de conta.
@@ -17,7 +18,13 @@ import { validate } from '../middlewares/validate.js';
 const router = Router();
 
 const regrasCadastro = [
-  body('apelido').trim().notEmpty().withMessage('Informe como você quer ser chamado').isLength({ max: 60 }),
+  // O apelido é publicado no ranque da liga, então a regra dele mora num
+  // lugar só e vale em toda porta de entrada (RF-GAM-03).
+  body('apelido')
+    .trim()
+    .notEmpty()
+    .withMessage('Informe como você quer ser chamado')
+    .custom(exigirApelidoPublico),
   body('email').trim().isEmail().withMessage('E-mail inválido').normalizeEmail(),
   body('data_nasc').isISO8601().withMessage('Data de nascimento inválida'),
   body('senha')
@@ -42,7 +49,7 @@ const regrasCadastro = [
 
 const regrasAtualizacao = [
   param('id').isInt({ min: 1 }),
-  body('apelido').optional().trim().notEmpty().isLength({ max: 60 }),
+  body('apelido').optional().trim().notEmpty().custom(exigirApelidoPublico),
   body('email').optional().trim().isEmail().normalizeEmail(),
   body('data_nasc').optional().isISO8601(),
   body('senha').optional().isLength({ min: 8 }).matches(/[a-zA-Z]/).matches(/[0-9]/),
