@@ -1,7 +1,26 @@
+import { createRequire } from 'node:module';
+
 import pino from 'pino';
 
 import { idDaRequisicao } from './contextoRequisicao.js';
 import { env } from './env.js';
+
+/**
+ * O `pino-pretty` é dependência de desenvolvimento e não existe na imagem de
+ * produção, que roda `npm prune --omit=dev`. Pedir por ele sem conferir derruba
+ * a aplicação no boot com um erro que nem fala em log.
+ */
+function transporteLegivel() {
+  if (env.producao) return undefined;
+
+  try {
+    createRequire(import.meta.url).resolve('pino-pretty');
+  } catch {
+    return undefined;
+  }
+
+  return { target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:HH:MM:ss' } };
+}
 
 /**
  * Logger estruturado da aplicação. O documento proíbe `console.log` em código de
@@ -25,7 +44,5 @@ export const logger = pino({
     paths: ['req.headers.cookie', 'req.body.senha', 'req.body.confirmarSenha', '*.senha'],
     remove: true,
   },
-  transport: env.producao
-    ? undefined
-    : { target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:HH:MM:ss' } },
+  transport: transporteLegivel(),
 });

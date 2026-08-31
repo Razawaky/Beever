@@ -4,13 +4,21 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-31 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-14.3 — a carga da RNF-02 foi medida, e o pool mudou por causa do
+**Último commit:** T-14.4 — a imagem foi construída pela primeira vez, e construir achou
+quatro defeitos que nenhum teste veria: o healthcheck do banco lia uma variável inexistente,
+o usuário `node` não conseguia gravar em `uploads/`, o `logger.js` pedia o `pino-pretty` que
+o `npm prune` tira, e não havia `.dockerignore`. A aplicação entrou no compose sob o perfil
+`completo`, com as migrations num serviço à parte. `DB_ROOT_PASSWORD`, `BACKUP_CONTAINER` e
+`BACKUP_RETENCAO_DIAS` entraram no `.env.example`, e um teste passa a reprovar variável sem
+documentação (fecha a DT-15). Laudo em `docs/17-CONTEINER-E-AMBIENTE.md`. 1027 testes
+passando.
+**Próximo passo: T-14.5 — GitHub Actions com lint e testes no PR, build e push no merge, `npm audit` bloqueante**
+
+**Commit anterior:** T-14.3 — a carga da RNF-02 foi medida, e o pool mudou por causa do
 número. Com dez conexões, trinta crianças abrindo a Colmeia pela primeira vez ao mesmo tempo
 davam p95 de 2375 ms, acima do teto da RNF-01; com vinte, 1924 ms. Trinta ou mais piora,
 porque a fila sai da aplicação e vai para dentro do MySQL. `DB_POOL_LIMIT` passou de 10 para
 20. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. 1008 testes passando.
-**Próximo passo: T-14.4 — Dockerfile multi-stage, docker-compose e `.env.example` revisados**
-
 **Commit anterior:** T-14.2 — a cobertura deixou de ser palpite. O projeto não media nada;
 agora `npm run test:cobertura` mede os 24 services de cálculo e reprova com código de saída
 1. Linha subiu de 97,42% para **100%**, ramo de 86,30% para 92,06%, e a medição apontou oito
@@ -1320,7 +1328,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
 | E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | **concluída e auditada** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). **Auditada em `docs/13-AUDITORIA-DA-ETAPA.md`: pode avançar**, com as duas lacunas bloqueantes corrigidas na mesma sessão — a regra do apelido publicado e a liga que aceitava quem nunca jogou |
-| E14 Endurecimento | **em andamento** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. T-14.3 feita: `npm run carga` mede a jornada real de 30 jogadores simultâneos, e o padrão do pool subiu de 10 para 20 com base na medição, não em palpite. `cargaSimultanea.test.js` entrou na suíte como regressão de concorrência, incluindo a conferência de que toda conexão volta ao pool. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. Falta T-14.4 a T-14.7 |
+| E14 Endurecimento | **em andamento** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. T-14.3 feita: `npm run carga` mede a jornada real de 30 jogadores simultâneos, e o padrão do pool subiu de 10 para 20 com base na medição, não em palpite. `cargaSimultanea.test.js` entrou na suíte como regressão de concorrência, incluindo a conferência de que toda conexão volta ao pool. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. T-14.4 feita: a imagem foi construída e subida pela primeira vez, e a conferência dentro do contêiner achou quatro defeitos que o teste estático não veria — healthcheck do banco lendo variável inexistente, `uploads/` sem dono certo depois do `USER node`, `logger.js` pedindo o `pino-pretty` que o `npm prune` tira, e nenhum `.dockerignore`. A aplicação entrou no compose sob o perfil `completo`, com as migrations num serviço separado para permitir réplica depois. O `npm ci` deixou de rodar duas vezes. `ambienteDeConteiner.test.js` passa a reprovar variável de ambiente sem linha no `.env.example` (DT-15). Laudo em `docs/17-CONTEINER-E-AMBIENTE.md`. Falta T-14.5 a T-14.7 |
 | E15 Documentação TCC | do zero | — |
 
 ---
@@ -1427,7 +1435,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-12 | Página de edição de perfil não existe; erro 422 de formulário cai na página de erro genérica em vez de voltar ao campo | herdado | E03/E04 |
 | DT-13 | Sem workflow de CI (`.github/` só tem arquivos de plugin) | D-10 | E14 |
 | DT-14 | Sem catálogo administrável de itens (criar/editar); catálogo vem do seed | herdado | E12 |
-| DT-15 | `.env.example` não documenta `DB_ROOT_PASSWORD`, usada pelo `docker-compose.yml` | T-00.5 | Uma linha; formalizado na T-14.4 |
+| ~~DT-15~~ | ~~`.env.example` não documenta `DB_ROOT_PASSWORD`, usada pelo `docker-compose.yml`~~ — **resolvida na T-14.4**: entraram `DB_ROOT_PASSWORD`, `BACKUP_CONTAINER` e `BACKUP_RETENCAO_DIAS`, e o `ambienteDeConteiner.test.js` varre `src` e `scripts` atrás de todo `process.env` para reprovar variável nova sem linha no exemplo | T-00.5 | — |
 | ~~DT-16~~ | ~~Nenhum teste automatizado cobre o banco~~ | auditoria da E01, L-01 | **Resolvido por inteiro**: 21 testes de schema na T-02.1, 93 de repository na T-02.2 e o fluxo autenticado na T-02.3 |
 | ~~DT-24~~ | ~~Rate limit de autenticação é por IP: numa sala de aula atrás de um IP só, dez erros de senha somados entre alunos diferentes trancam a turma por 15 minutos~~ — **resolvida na T-14.1**: dois baldes, sessenta por origem e cinco por e-mail tentado, e o cabeçalho do `bruteForce.test.js` foi reescrito com o comportamento real | auditoria da E03 | — |
 | DT-25 | `PUT /users/:id` deixa o dono trocar senha e e-mail sem informar a senha atual. Uma sessão esquecida no computador da escola deixa de ser "mexeram no meu jogo" e vira "perdi a conta" | auditoria da E03 | E04 — junto da tela de edição de perfil (DT-12) |
@@ -3942,3 +3950,30 @@ sai toda do mesmo IP, então o teto conta a turma como se fosse uma pessoa. É a
 família da DT-24 que a T-14.1 corrigiu para o login, e ficou como DT-112.
 
 1008 testes passando, cinco deles novos.
+
+### Sessão de 2026-08-31, T-14.4 e a imagem que nunca tinha sido construída
+
+O Dockerfile e o compose existiam desde a T-00.5 e ninguém havia rodado nenhum dos
+dois. A tarefa era revisar, e revisar de verdade significou construir: quatro dos
+cinco defeitos só apareceriam dentro do contêiner, que é onde ninguém tinha olhado.
+
+O healthcheck do MySQL pedia `MYSQL_ROOT_PASSWORD`, um nome que não existe no
+projeto, e por isso caía sempre no padrão — trocar a senha de root deixaria o banco
+eternamente `unhealthy` sem explicação. O usuário `node` não conseguia gravar em
+`/app/uploads`, porque `/app` é do root e a troca de usuário acontece no fim, então o
+envio de ilustração falharia só em produção e só na primeira tentativa. O `logger.js`
+pedia o transporte `pino-pretty`, que é dependência de desenvolvimento e some no
+`npm prune --omit=dev`, e o erro resultante nem falava em log. E não havia
+`.dockerignore`, então `.env` e `backups/` iam para o daemon a cada build.
+
+O quinto defeito era o principal e se via de fora: o compose só subia o MySQL, e a
+RNF-37 pede a aplicação também. Ela entrou sob o perfil `completo`, para não quebrar
+quem roda o Node fora do compose, com as migrations num serviço separado que sai
+antes de a aplicação começar — migrar no boot impediria mais de uma réplica.
+
+A lição que fica para a T-14.5 é que teste estático e conferência manual cobrem
+coisas diferentes. O `ambienteDeConteiner.test.js` prova as invariantes dos arquivos
+em milissegundos e sem daemon nenhum, o que serve ao CI, mas nenhum dos quatro
+defeitos de dentro do contêiner teria aparecido sem construir a imagem de fato.
+
+1027 testes passando, dezenove deles novos.
