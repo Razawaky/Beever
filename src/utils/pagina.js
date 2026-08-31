@@ -1,3 +1,4 @@
+import { iconeDaConquista } from '../config/conquistas.js';
 import { classeDaBarra } from './barraDeProgresso.js';
 
 /**
@@ -29,6 +30,9 @@ export function renderizarPagina(res, pagina, dados = {}) {
     // Disponível em toda página: barra de progresso aparece no painel e nas
     // metas, e nenhuma das duas pode escrever largura em atributo `style`.
     classeDaBarra,
+    // Também global: a conquista aparece na Colmeia e na tela dela, e o ícone
+    // tem um lugar só de troca (DT-103).
+    iconeDaConquista,
     classeBody,
     comCabecalho,
     comRodape,

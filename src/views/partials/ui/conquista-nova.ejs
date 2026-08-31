@@ -1,0 +1,28 @@
+<%#
+  O aviso do que a visita acabou de destravar. Recebe `conquistas`, na forma que
+  o `achievementsService.avaliarEventos` devolve.
+
+  Fica no topo da Colmeia porque é notícia: a criança recebeu mel e precisa ver
+  o motivo na mesma tela em que o saldo mudou.
+-%>
+<section class="rounded-favo bg-mel p-5 shadow-md">
+  <h2 class="font-display text-lg">
+    <span aria-hidden="true">🎉</span>
+    <%= conquistas.length === 1 ? 'Você desbloqueou uma conquista!' : `Você desbloqueou ${conquistas.length} conquistas!` %>
+  </h2>
+
+  <ul class="mt-3 grid gap-2">
+    <% conquistas.forEach((conquista) => { %>
+      <li class="rounded-favo bg-white/60 px-4 py-3">
+        <p class="font-semibold">
+          <span aria-hidden="true"><%= iconeDaConquista(conquista.criterio) %></span> <%= conquista.nome %>
+        </p>
+        <p class="text-sm text-tinta-suave"><%= conquista.descricao %> · 🍯 <%= conquista.melCreditado %> de bônus</p>
+      </li>
+    <% }) %>
+  </ul>
+
+  <p class="mt-3 text-right">
+    <a href="/conquistas" class="text-sm font-semibold text-tinta underline decoration-tinta/30 decoration-2 underline-offset-4 hover:decoration-tinta">Ver todas as conquistas &rarr;</a>
+  </p>
+</section>

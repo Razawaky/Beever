@@ -9,6 +9,14 @@
 }) %>
 
 <div class="mx-auto mt-8 max-w-5xl overflow-hidden rounded-favo bg-white shadow-xl">
+    <%# A conquista vem antes de tudo: o mel já foi creditado, e a criança
+        precisa ver o motivo na mesma tela em que o saldo mudou. %>
+    <% if (colmeia.conquistas.length > 0) { %>
+      <div class="px-8 pt-8">
+        <%- include('../partials/ui/conquista-nova', { conquistas: colmeia.conquistas }) %>
+      </div>
+    <% } %>
+
     <%# O que a economia fez enquanto o jogador estava fora vem antes da trilha:
         é notícia, e notícia velha não é notícia. %>
     <% if (colmeia.ciclo.aviso || colmeia.ciclo.eventos.length > 0) { %>
@@ -131,6 +139,26 @@
       </section>
     </div>
 
+    <%# A liga é comparação, e comparação fica depois do que é só do jogador.
+        Quem ainda não pontuou nesta semana não vê posição nenhuma (RF-GAM-02). %>
+    <div class="px-8 pb-8">
+      <section class="rounded-favo bg-cera p-6">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Sua liga da semana</h2>
+          <a href="/liga" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver a liga &rarr;</a>
+        </div>
+
+        <% if (!colmeia.liga || colmeia.liga.posicao === null) { %>
+          <p class="text-sm text-tinta-suave">Ganhe seu primeiro pólen da semana e você entra no ranque do seu grupo.</p>
+        <% } else { %>
+          <p class="text-sm tabular-nums">
+            Você está em <strong><%= colmeia.liga.posicao %>º lugar</strong> no <%= colmeia.liga.grupo.nome %>,
+            com 🌼 <%= colmeia.liga.polen %> de pólen. Ninguém desce de liga.
+          </p>
+        <% } %>
+      </section>
+    </div>
+
     <%# A loja e o cofre são o outro lado do jogo: sem porta no painel, só
         chega lá quem digita o endereço. %>
     <div class="grid gap-4 px-8 pb-8 sm:grid-cols-2">
@@ -145,6 +173,12 @@
         class="rounded-favo bg-cera p-5 font-semibold transition hover:bg-mel/20 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         🏦 Meu cofre
+      </a>
+      <a
+        href="/conquistas"
+        class="rounded-favo bg-cera p-5 font-semibold transition hover:bg-mel/20 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        🏆 Minhas conquistas
       </a>
     </div>
 

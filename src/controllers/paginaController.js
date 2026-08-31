@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
 import * as achievementsService from '../services/achievementsService.js';
+import * as conquistasDoJogador from '../services/conquistasDoJogador.js';
 import * as contentService from '../services/contentService.js';
 import * as goalsService from '../services/goalsService.js';
 import * as homeService from '../services/homeService.js';
 import * as inventoryService from '../services/inventoryService.js';
+import * as leagueService from '../services/leagueService.js';
 import * as profilesService from '../services/profilesService.js';
 import * as schedulesService from '../services/schedulesService.js';
 import * as shopService from '../services/shopService.js';
@@ -190,6 +192,42 @@ export const metas = assincrono(async (req, res) => {
     tarefas: tarefas.map(tasksService.resumirTarefa),
     semana,
     conquistas,
+  });
+});
+
+/** As conquistas (RF-GAM-01). A escada inteira vem pronta do service. */
+export const conquistas = assincrono(async (req, res) => {
+  await homeService.prepararVisita(req.session.usuarioId);
+
+  const catalogo = await conquistasDoJogador.catalogoPorFamilia(req.session.usuarioId);
+
+  renderizarPagina(res, 'conquistas', {
+    titulo: 'Minhas conquistas — Beever',
+    classeBody: FUNDO_CERA,
+    catalogo,
+  });
+});
+
+/**
+ * A liga da semana (RF-GAM-02). A visita é preparada primeiro porque é ela que
+ * fecha a semana vencida e põe o jogador num grupo.
+ */
+export const liga = assincrono(async (req, res) => {
+  await homeService.prepararVisita(req.session.usuarioId);
+
+  const [ligaDaSemana, premios] = await Promise.all([
+    leagueService.ligaDoJogador(req.session.usuarioId),
+    leagueService.premiosDoPodio(),
+  ]);
+
+  renderizarPagina(res, 'liga', {
+    titulo: 'Liga da semana — Beever',
+    classeBody: FUNDO_CERA,
+    liga: ligaDaSemana,
+    periodo: ligaDaSemana ? leagueService.periodoDaLiga(ligaDaSemana.grupo) : null,
+    premios,
+    // A tela precisa saber qual linha é a do próprio jogador para destacá-la.
+    idUsuario: Number(req.session.usuarioId),
   });
 });
 

@@ -110,6 +110,21 @@ export async function garantirParticipacao(idUsuario, agora = new Date()) {
 }
 
 /**
+ * O período da semana escrito como a criança lê, para a tela não formatar data.
+ * Pura: recebe as duas datas ISO que a liga já devolve.
+ */
+export function periodoDaLiga({ comecaEm, terminaEm }) {
+  const emDiaEMes = (data) => data.slice(8, 10) + '/' + data.slice(5, 7);
+  return `${emDiaEMes(comecaEm)} a ${emDiaEMes(terminaEm)}`;
+}
+
+/** O que cada posição do pódio paga, para a tela explicar antes da semana fechar. */
+export async function premiosDoPodio() {
+  const premios = await leaguesRepository.listarPremios();
+  return premios.map((premio) => ({ posicao: Number(premio.final_rank), mel: Number(premio.reward_coins) }));
+}
+
+/**
  * A liga da semana do jogador, com o pólen somado do livro e o cache regravado.
  *
  * Devolve `null` para quem ainda não entrou em grupo nenhum: aparecer em último

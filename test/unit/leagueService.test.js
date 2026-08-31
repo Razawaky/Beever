@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { grupoComVaga, intervaloDaSemana, ranquear, semanaDe } from '../../src/services/leagueService.js';
+import {
+  grupoComVaga,
+  intervaloDaSemana,
+  periodoDaLiga,
+  ranquear,
+  semanaDe,
+} from '../../src/services/leagueService.js';
 
 /**
  * As contas da liga (T-13.3), sem banco: a semana, o empate e a vaga no grupo.
@@ -94,5 +100,11 @@ describe('vaga no grupo', () => {
   it('com todos cheios, não há grupo — quem chama abre um novo', () => {
     assert.equal(grupoComVaga([{ id: 1, membros: 30 }]), null);
     assert.equal(grupoComVaga([]), null);
+  });
+});
+
+describe('período da liga em palavra', () => {
+  it('a tela recebe dia e mês prontos, e não data ISO', () => {
+    assert.equal(periodoDaLiga({ comecaEm: '2026-08-30', terminaEm: '2026-09-05' }), '30/08 a 05/09');
   });
 });

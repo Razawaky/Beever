@@ -63,6 +63,8 @@ router.get(
   paginaController.cofre,
 );
 router.get('/metas', somentePagina, requireOnboarding, paginaController.metas);
+router.get('/conquistas', requireOnboarding, paginaController.conquistas);
+router.get('/liga', requireOnboarding, paginaController.liga);
 router.get('/perfil', somentePagina, requireOnboarding, paginaController.perfil);
 router.get('/trilha', requireOnboarding, paginaController.trilha);
 router.get(

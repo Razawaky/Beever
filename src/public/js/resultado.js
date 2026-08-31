@@ -8,6 +8,9 @@ const titulo = document.getElementById('jogo-resultado-titulo');
 const painelDeEstrelas = document.getElementById('jogo-estrelas');
 const avisoDeNivel = document.getElementById('jogo-nivel');
 const avisoDeRepeticao = document.getElementById('jogo-repeticao-aviso');
+const painelDeConquistas = document.getElementById('jogo-conquistas');
+const tituloDasConquistas = document.getElementById('jogo-conquistas-titulo');
+const listaDeConquistas = document.getElementById('jogo-conquistas-lista');
 const botaoContinuar = document.getElementById('jogo-continuar');
 const linkDoFavo = document.getElementById('jogo-voltar-ao-favo');
 
@@ -75,6 +78,29 @@ function mostrarGanhos(dados) {
   if (dados.ehRepeticao) avisoDeRepeticao.classList.remove('hidden');
 }
 
+/**
+ * O que a partida destravou (RF-GAM-01). O mel da conquista fica fora do bloco
+ * de ganhos de propósito: junto, a mesma célula pareceria pagar diferente.
+ */
+function mostrarConquistas(conquistas = []) {
+  if (conquistas.length === 0) return;
+
+  tituloDasConquistas.textContent =
+    conquistas.length === 1 ? '🎉 Conquista desbloqueada!' : `🎉 ${conquistas.length} conquistas desbloqueadas!`;
+
+  listaDeConquistas.replaceChildren();
+  for (const conquista of conquistas) {
+    const item = document.createElement('li');
+    const nome = document.createElement('strong');
+
+    nome.textContent = conquista.nome;
+    item.append(nome, ` — 🍯 ${conquista.melCreditado} de bônus`);
+    listaDeConquistas.append(item);
+  }
+
+  painelDeConquistas.classList.remove('hidden');
+}
+
 /** O fim da partida empurra para o próximo jogo; sem próximo, volta ao favo. */
 function mostrarCaminho(proximaCelula) {
   if (!proximaCelula) return;
@@ -93,6 +119,7 @@ export function mostrarResultado(dados) {
 
   mostrarEstrelas(dados.estrelas);
   mostrarGanhos(dados);
+  mostrarConquistas(dados.conquistas);
   mostrarCaminho(dados.proximaCelula);
 
   secao.classList.remove('hidden');

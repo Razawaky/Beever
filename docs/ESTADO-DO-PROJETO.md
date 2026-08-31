@@ -3,12 +3,17 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-27 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-13.3 — a liga semanal por pólen saiu do schema e virou comportamento.
+**Atualizado em:** 2026-08-31 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** T-13.4 — a conquista e a liga ganharam tela. O catálogo mostra a escada
+inteira, com o degrau travado exibindo alvo e progresso em vez de silhueta; a liga mostra o
+ranque só por apelido e diz em palavra que ninguém desce. A comemoração aparece na Colmeia
+e no fim da partida. **A E13 fecha inteira.** 949 testes passando.
+**Próximo passo: auditoria da E13, e depois a E14 — endurecimento e entrega**
+
+**Commit anterior:** T-13.3 — a liga semanal por pólen saiu do schema e virou comportamento.
 Grupos de trinta, ranque somado do livro, fechamento preguiçoso na visita e pódio pago sem
 ninguém ser rebaixado. A migration 023 desfez a unicidade que só permitia uma liga por
 semana em todo o sistema. 944 testes passando.
-**Próximo passo: T-13.4 — as telas de conquistas e de liga, que fecham a E13**
 
 **Commit anterior:** T-13.2 — as quatro famílias novas passaram a desbloquear sozinhas.
 Célula e favo no fim da partida, com a conquista voltando na resposta; patrimônio e cofre
@@ -495,8 +500,8 @@ argumento a favor da rede que a T-02.1 montou.
 | Item | Por que está aqui |
 |---|---|
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
-| A conquista aparecendo para a criança (T-13.2) | O desbloqueio está coberto por teste pelos dois caminhos, e a conquista volta na resposta da partida e na da Colmeia. O que **não** existe ainda é tela: nem a lista de conquistas nem o aviso na Colmeia foram desenhados, então hoje a criança recebe o mel e não vê o motivo. É a T-13.4 |
-| A liga aparecendo para a criança (T-13.3) | O ranque, o empate, a virada da semana e o pagamento do pódio estão cobertos por teste, e a posição já volta na resposta da Colmeia (RF-HOM-11). O que **não** existe é tela: a criança entra no grupo, sobe no ranque e não vê nada disso. É a T-13.4, junto da lista de conquistas |
+| As telas de conquista e de liga em navegador real (T-13.4) | A marcação está coberta por teste pelo HTTP: o aviso do desbloqueio na Colmeia, o degrau travado mostrando alvo e progresso, a posição na liga e o ranque sem e-mail nem data de nascimento. O que **não** foi visto por olho humano é o desenho — as cinco escadas de quatro degraus em duas colunas a 320 px, a barra de progresso do degrau travado, a linha do próprio jogador destacada no ranque e o bloco de conquista na tela de resultado, que só aparece depois de uma partida de verdade. Vale o passe da DT-22 |
+| O ícone da conquista (T-13.4) | `src/config/conquistas.js` é o ponto único de troca e hoje devolve emoji, um por família. `achievements.icon_path` continua nulo no banco e nenhuma tela o lê: quando a arte existir, ou o config aponta para os arquivos ou a coluna passa a ser a fonte, e essa escolha ainda não foi feita |
 | O painel de métricas (T-12.7) | O caminho está coberto por teste pelo HTTP: os quatro números conferidos um a um sobre cenário plantado dos dois lados da fronteira do período, e o tempo da página medido contra o teto de 2 s. O que **não** foi visto por olho humano é o desenho — o gráfico SVG com 180 barras num celular, os cinco botões de período quebrando linha a 320 px, e os quatro cartões de número em uma coluna. Vale o passe da DT-22 |
 | A tela de auditoria (T-12.6) | O caminho está coberto por teste pelo HTTP: os sete filtros, o combinado de dois, a paginação sem repetir linha, o CSV com cabeçalho e a ausência de qualquer formulário de escrita. O que **não** foi visto por olho humano é a tela em si — o formulário de oito campos em três colunas a 320 px, o `details` com o JSON do antes/depois dentro de uma célula de tabela, e o download do CSV acontecendo de verdade no navegador. Vale o passe da DT-22 |
 | A tela do acervo da célula (T-12.5) | O caminho está coberto por teste pelo HTTP: publicar substituindo, publicar acrescentando, o sorteio entre três atividades, a retomada com a mesma, e tirar do acervo. O que **não** foi visto por olho humano é a escolha entre substituir e acrescentar aparecendo nos dois formulários da mesma página, e a lista do acervo com os botões de tirar a 320 px. Vale o passe da DT-22 |
@@ -539,7 +544,7 @@ o jogador fez, e a liga fechar a semana sem rebaixamento punitivo.
 | T-13.1 Catálogo e regras de conquistas | **feita** — migration 022 deu critério e alvo à conquista, e a regra saiu do código para o banco, onde o resto das regras de recompensa já mora. O catálogo foi de cinco marcos de sequência para vinte e uma conquistas em cinco famílias (sequência, favos, células, patrimônio e cofre), quatro degraus cada. `criteriosDeConquista.js` responde o que um número destrava, e o `streakService` deixou de montar slug à mão |
 | T-13.2 Desbloqueio automático por evento | **feita** — célula e favo avaliados no fim da partida, com o dado já em mãos e a conquista voltando na resposta para a tela comemorar; patrimônio e cofre na visita à Colmeia, aproveitando a soma que o `homeService` já fazia. `eventosDeConquista.js` traduz evento em critério, e `avaliarEventos` nunca lança — perder conquista é menos grave do que desfazer o mel já pago. Paga a DT-101 |
 | T-13.3 Liga semanal por pólen | **feita** — migration 023 trocou a unicidade de `leagues` para o par semana e grupo, indexou o `point_ledger` por data e criou `league_prizes`. O pólen é somado do livro no período, com `points` como cache; grupos de até 30, entrada na visita, fechamento preguiçoso com `final_rank IS NULL` como trava, e pódio pago sem ninguém descer |
-| T-13.4 Views | pendente |
+| T-13.4 Views | **feita** — `/conquistas` mostra as cinco escadas com o degrau travado exibindo alvo e progresso, e `/liga` mostra o ranque só por apelido, com a linha do próprio jogador marcada por fundo e pela palavra "você". O desbloqueio aparece no topo da Colmeia e no fim da partida. `conquistasDoJogador.js` junta os números das três fontes e avalia antes de desenhar, senão a tela mostraria "12 de 12 favos" num degrau travado. **A etapa fecha inteira** |
 
 ---
 
@@ -1292,7 +1297,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
 | E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
-| E13 Conquistas e liga | **em andamento** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. Falta a T-13.4, que são as telas. Continua P1 e cortável; feita antes da E14 por decisão do usuário |
+| E13 Conquistas e liga | **concluída, falta auditar** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). Falta o laudo da etapa |
 | E14 Endurecimento | do zero | Sem `.github/workflows/` |
 | E15 Documentação TCC | do zero | — |
 
@@ -1356,8 +1361,8 @@ Identificadores rastreiam os documentos da E00.
 | DT-100 | O gráfico de conclusões por dia só desenha os dias que tiveram conclusão: um período com buracos aparece comprimido, sem os vazios entre as barras, o que engana quem lê a forma em vez do número | T-12.7 | Preencher os dias sem conclusão com zero antes de montar as barras, gerando a série completa do período |
 | ~~DT-101~~ | ~~Dezesseis das vinte e uma conquistas têm catálogo e critério e **ninguém as avalia**: só a família de sequência está ligada a um evento. Até a T-13.2, favos, células, patrimônio e cofre existem no banco e nunca desbloqueiam~~ — **resolvida na T-13.2**: célula e favo são avaliados no fechamento da partida, patrimônio e cofre na visita à Colmeia | T-13.1 | É exatamente o que a T-13.2 entrega; a dívida existe para o caso de a etapa ser cortada no meio, porque catálogo sem avaliador é promessa na tela que nunca cumpre |
 | DT-102 | O valor de cada degrau foi calibrado contra a escala de recompensa que já existia (meta simples 100, meta alta 200, escudo 400), e não contra o quanto um jogador real leva para alcançá-lo. Doze favos pagando 1000 pode ser pouco ou muito — ninguém mediu | T-13.1 | Rever depois da primeira semana de uso real, com o painel de métricas da T-12.7 mostrando quantos chegam a cada degrau |
-| DT-103 | `achievements.icon_path` continua nulo em todas as vinte e uma: a arte é do usuário, e a tela da T-13.4 vai precisar de um lugar único de troca, como o catálogo do mascote já tem | T-13.1 | Definir junto da T-13.4, seguindo o padrão de `config/mascote.js` |
-| DT-104 | Desbloquear paga mel, o mel entra no patrimônio, e o patrimônio pode destravar o degrau seguinte — só na visita **seguinte**. A escada é finita, então converge em poucas visitas, mas a criança pode receber a conquista de patrimônio um acesso depois de merecê-la | T-13.2 | Reavaliar o critério de patrimônio logo depois de pagar conquista, ou aceitar o atraso de uma visita como custo de a avaliação ser preguiçosa |
+| ~~DT-103~~ | ~~`achievements.icon_path` continua nulo em todas as vinte e uma: a arte é do usuário, e a tela da T-13.4 vai precisar de um lugar único de troca, como o catálogo do mascote já tem~~ — **resolvida na T-13.4**: `src/config/conquistas.js` é o ponto único, um ícone por família, e nenhuma view nomeia arte. A coluna `icon_path` segue nula e sem leitor | T-13.1 | Quando a arte existir, decidir se o config aponta para os arquivos ou se a coluna vira a fonte |
+| DT-104 | Desbloquear paga mel, o mel entra no patrimônio, e o patrimônio pode destravar o degrau seguinte — só na visita **seguinte**. A escada é finita, então converge em poucas visitas, mas a criança pode receber a conquista de patrimônio um acesso depois de merecê-la. A tela `/conquistas` reduz o incômodo porque avalia antes de desenhar, mas a Colmeia continua uma visita atrás | T-13.2 | Reavaliar o critério de patrimônio logo depois de pagar conquista, ou aceitar o atraso de uma visita como custo de a avaliação ser preguiçosa |
 | DT-105 | A contagem de conquistas na visita à Colmeia mede o patrimônio **do momento**, e não o maior já alcançado. Quem chega a 5000 e gasta tudo antes de abrir a Colmeia não recebe o degrau. A família de sequência não tem esse problema, porque usa o melhor já atingido | T-13.2 | Guardar o maior patrimônio já alcançado, como `streaks.best_days` faz, se isso incomodar na prática |
 | DT-106 | O jogador entra no grupo da liga na visita à Colmeia, e não ao ganhar o primeiro pólen. Quem joga uma célula pelo endereço direto, sem passar pela home, só entra na visita seguinte — e o pólen dele conta retroativo quando entrar, porque a soma é do livro | T-13.3 | Chamar `garantirParticipacao` também no fechamento da partida, se na prática alguém jogar sem passar pela Colmeia |
 | DT-107 | O grupo é preenchido por ordem de chegada, sem equilibrar nível ou faixa etária: uma criança de seis anos pode cair no mesmo grupo de uma de quinze, e disputar pólen com quem joga células que pagam mais | T-13.3 | Agrupar por faixa etária quando houver gente suficiente para encher mais de um grupo por faixa |
@@ -3802,3 +3807,30 @@ Um teste existente mudou por consequência direta: o `seed.test.js` contava oito
 arquivos de seed, e agora são nove.
 
 944 testes passando, vinte e um deles novos.
+
+### Sessão de 2026-08-31, T-13.4 e as telas que faltavam à E13
+
+A conquista e a liga existiam inteiras no banco e nos services, e nenhuma das
+duas tinha porta. Esta tarefa foi só tela, e a decisão de fundo foi mostrar o
+degrau travado com alvo e progresso em vez de silhueta: a escada visível é o que
+dá motivo para voltar amanhã, e é assim que os aplicativos do gênero fazem.
+
+Os números da tela de conquistas vêm de três lugares diferentes — sequência,
+progresso da trilha e patrimônio —, então nasceu o `conquistasDoJogador.js` em
+vez de inchar o `achievementsService`, que só sabe de conquista. Ele avalia os
+cinco critérios antes de ler o catálogo, senão a página mostraria "12 de 12
+favos" num degrau ainda travado para quem chega sem passar pela Colmeia.
+
+A liga mostra apelido, posição e pólen, e mais nada: o `listarMembrosComPolen`
+já trazia `avatar_id`, e nem isso entrou, porque a RF-GAM-03 fala de ranking sem
+dado pessoal. A linha do próprio jogador é destacada por fundo **e** pela palavra
+"você", nunca só por cor. O teste confere que o e-mail e a data de nascimento não
+aparecem no HTML.
+
+O ícone ganhou `src/config/conquistas.js`, no mesmo desenho do catálogo do
+mascote, e a DT-103 fica paga: a arte definitiva troca num arquivo só. A coluna
+`achievements.icon_path` continua nula e sem leitor, e essa escolha fica para
+quando a ilustração existir.
+
+949 testes passando, cinco deles novos. A E13 fecha inteira e o que falta é o
+laudo da etapa.
