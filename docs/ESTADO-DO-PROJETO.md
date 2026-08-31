@@ -4,12 +4,17 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-08-31 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-14.2 — a cobertura deixou de ser palpite. O projeto não media nada;
+**Último commit:** T-14.3 — a carga da RNF-02 foi medida, e o pool mudou por causa do
+número. Com dez conexões, trinta crianças abrindo a Colmeia pela primeira vez ao mesmo tempo
+davam p95 de 2375 ms, acima do teto da RNF-01; com vinte, 1924 ms. Trinta ou mais piora,
+porque a fila sai da aplicação e vai para dentro do MySQL. `DB_POOL_LIMIT` passou de 10 para
+20. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. 1008 testes passando.
+**Próximo passo: T-14.4 — Dockerfile multi-stage, docker-compose e `.env.example` revisados**
+
+**Commit anterior:** T-14.2 — a cobertura deixou de ser palpite. O projeto não media nada;
 agora `npm run test:cobertura` mede os 24 services de cálculo e reprova com código de saída
 1. Linha subiu de 97,42% para **100%**, ramo de 86,30% para 92,06%, e a medição apontou oito
 exportações mortas, removidas. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. 1003 testes passando.
-**Próximo passo: T-14.3 — teste de carga com 30 usuários simultâneos e ajuste do pool**
-
 **Commit anterior:** T-14.1 — a varredura de segurança deixou de ser promessa e virou teste que
 enumera. As 36 rotas de escrita são conferidas uma a uma contra CSRF ausente, e a lista é
 confrontada com o que o Express montou. O limite de login passou a ter balde por credencial
@@ -1315,7 +1320,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
 | E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | **concluída e auditada** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). **Auditada em `docs/13-AUDITORIA-DA-ETAPA.md`: pode avançar**, com as duas lacunas bloqueantes corrigidas na mesma sessão — a regra do apelido publicado e a liga que aceitava quem nunca jogou |
-| E14 Endurecimento | **em andamento** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. Falta T-14.3 a T-14.7 |
+| E14 Endurecimento | **em andamento** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. T-14.3 feita: `npm run carga` mede a jornada real de 30 jogadores simultâneos, e o padrão do pool subiu de 10 para 20 com base na medição, não em palpite. `cargaSimultanea.test.js` entrou na suíte como regressão de concorrência, incluindo a conferência de que toda conexão volta ao pool. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. Falta T-14.4 a T-14.7 |
 | E15 Documentação TCC | do zero | — |
 
 ---
@@ -1381,6 +1386,8 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-103~~ | ~~`achievements.icon_path` continua nulo em todas as vinte e uma: a arte é do usuário, e a tela da T-13.4 vai precisar de um lugar único de troca, como o catálogo do mascote já tem~~ — **resolvida na T-13.4**: `src/config/conquistas.js` é o ponto único, um ícone por família, e nenhuma view nomeia arte. A coluna `icon_path` segue nula e sem leitor | T-13.1 | Quando a arte existir, decidir se o config aponta para os arquivos ou se a coluna vira a fonte |
 | DT-104 | Desbloquear paga mel, o mel entra no patrimônio, e o patrimônio pode destravar o degrau seguinte — só na visita **seguinte**. A escada é finita, então converge em poucas visitas, mas a criança pode receber a conquista de patrimônio um acesso depois de merecê-la. A tela `/conquistas` reduz o incômodo porque avalia antes de desenhar, mas a Colmeia continua uma visita atrás | T-13.2 | Reavaliar o critério de patrimônio logo depois de pagar conquista, ou aceitar o atraso de uma visita como custo de a avaliação ser preguiçosa |
 | DT-105 | A contagem de conquistas na visita à Colmeia mede o patrimônio **do momento**, e não o maior já alcançado. Quem chega a 5000 e gasta tudo antes de abrir a Colmeia não recebe o degrau. A família de sequência não tem esse problema, porque usa o melhor já atingido | T-13.2 | Guardar o maior patrimônio já alcançado, como `streaks.best_days` faz, se isso incomodar na prática |
+| DT-112 | O `limiteGlobal` conta 600 requisições por IP a cada quinze minutos, e uma sala de aula inteira sai do mesmo IP: trinta crianças abrindo cinco páginas cada consomem o teto em poucos minutos. A medição de carga bateu nele — 120 respostas 429 em 600 requisições. É a mesma família da DT-24, que a T-14.1 corrigiu só para o login | T-14.3 | Contar por sessão em vez de por endereço nas rotas de leitura, mantendo o limite por IP como rede de baixo |
+| DT-113 | A primeira visita de um jogador custa muito mais do que as seguintes — é ela que fecha ciclo, julga sequência, abre liga, cria tarefas do dia e monta o plano de metas. Com trinta simultâneos ela fica a 1924 ms de p95, dentro do teto mas sem folga nenhuma | T-14.3 | Se apertar, separar o que precisa acontecer antes de desenhar a tela do que pode acontecer depois da resposta |
 | DT-110 | A cobertura de ramo dos services de cálculo ficou em 92,06%, e não em 100% como a RNF-28 pede ao pé da letra. O que falta é de três famílias que não se fecham com teste honesto: reserva que nunca dispara (`?? 0` sobre dado que sempre vem), parâmetro com valor padrão, e `catch` de falha de infraestrutura, que exigiria mock num projeto que testa contra banco real. O piso de linha está em 100% e o de ramo é catraca em 91% | T-14.2 | Subir a catraca quando um caso de negócio novo cobrir um desses ramos naturalmente. Cobertura de mutação, que é o que de fato mede se a asserção existe, fica para depois da entrega |
 | DT-111 | **RF-INV-06 (histórico de evolução do patrimônio) é P1 e não tem tela.** A foto diária é gravada desde a E09, `patrimonyService.listarEvolucao` a lê, e nenhum controller a chama: o dado se acumula para um gráfico que não existe. Foi a medição de cobertura que apontou, porque a função nunca era executada | T-14.2 | Decidir na E14 se a tela entra ou se o requisito é rebaixado antes da defesa; o dado já está lá |
 | DT-109 | A regra do apelido publicado barra nome completo de três palavras, telefone e e-mail, mas **nenhuma regra de texto barra "Maria Silva"**, que é nome e sobrenome em duas palavras. Também não existe lista de palavras ofensivas: o ranque mostra o que a criança escreveu | auditoria da E13 | Lista de bloqueio simples, ou revisão humana do apelido antes de ele aparecer para outras crianças, se a liga sair do círculo de teste |
@@ -3912,3 +3919,26 @@ execução e os testes de tempo se pulam sozinhos; quem cobra o teto continua se
 o `npm run test:db`.
 
 1003 testes passando, vinte e seis deles novos.
+
+### Sessão de 2026-08-31, T-14.3 e o pool que estava pequeno
+
+A RNF-02 pede trinta simultâneos e o pool tinha dez conexões desde a E01, escolhidas
+sem medir nada. Medido, dez não davam conta: trinta crianças abrindo a Colmeia pela
+primeira vez ao mesmo tempo davam p95 de 2375 ms, acima do teto de 2 s da RNF-01.
+
+O que a medição ensinou, e que não era óbvio, é que mais pool não é melhor pool. De
+trinta conexões para cima o número piora, porque a fila sai da aplicação e vai para
+dentro do MySQL, onde é mais difícil de enxergar e onde cada conexão custa memória.
+Vinte foi o único tamanho abaixo de 2 s nas três execuções, e virou o padrão.
+
+Duas cargas diferentes se escondiam sob o mesmo nome. A primeira visita de um
+jogador é muito mais cara do que as seguintes — é ela que fecha ciclo, julga
+sequência, abre liga, cria tarefas e monta o plano —, e é ela que quase estourava.
+Da segunda em diante o mesmo caminho custa em torno de 1,5 s.
+
+A execução com os limitadores ligados achou outra coisa: 120 respostas 429 em 600
+requisições, do limite global de 600 por IP a cada quinze minutos. Uma sala de aula
+sai toda do mesmo IP, então o teto conta a turma como se fosse uma pessoa. É a mesma
+família da DT-24 que a T-14.1 corrigiu para o login, e ficou como DT-112.
+
+1008 testes passando, cinco deles novos.

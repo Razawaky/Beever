@@ -298,14 +298,14 @@ T-13.1 catálogo e regras de conquistas · T-13.2 desbloqueio automático por ev
 | T-14.6 | Script e rotina de backup documentados |
 | T-14.7 | Revisão de acessibilidade e responsividade em todas as telas |
 
----
+   ---
 
-## E15 — Documentação do TCC
-| Tarefa | Entrega |
-|---|---|
-| T-15.1 | `docs/RASTREABILIDADE.md`: requisito → arquivo → teste |
-| T-15.2 | Diagramas: ER, casos de uso, classes, sequência do fluxo de recompensa |
-| T-15.3 | Documento de arquitetura com justificativa das decisões (por que camadas, por que sem ORM, por que EJS) |
+   ## E15 — Documentação do TCC
+   | Tarefa | Entrega |
+   |---|---|
+   | T-15.1 | `docs/RASTREABILIDADE.md`: requisito → arquivo → teste |
+   | T-15.2 | Diagramas: ER, casos de uso, classes, sequência do fluxo de recompensa |
+   | T-15.3 | Documento de arquitetura com justificativa das decisões (por que camadas, por que sem ORM, por que EJS) |
 | T-15.4 | Manual de instalação e execução |
 | T-15.5 | Evidências de teste (prints, relatório de cobertura) |
 | T-15.6 | Seção de trabalhos futuros: SPA, mobile, painel do responsável, IA de recomendação de conteúdo |

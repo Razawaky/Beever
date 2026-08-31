@@ -35,7 +35,10 @@ export const env = {
     usuario: process.env.DB_USER,
     senha: process.env.DB_PASSWORD,
     nome: process.env.DB_NAME,
-    limitePool: inteiro(process.env.DB_POOL_LIMIT, 10),
+    // Vinte, e não dez nem trinta: medido na T-14.3 com 30 jogadores chegando
+    // ao mesmo tempo. Dez põe fila na aplicação e estoura o teto da RNF-01;
+    // trinta ou mais troca essa fila por disputa dentro do MySQL e piora.
+    limitePool: inteiro(process.env.DB_POOL_LIMIT, 20),
   },
 
   sessao: {
