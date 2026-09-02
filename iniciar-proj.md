@@ -137,8 +137,12 @@ npm run db:backup
 ```
 
 Grava um dump completo em `backups/` (pasta ignorada pelo git, porque contém
-dados reais e hashes de senha) e apaga os anteriores a 7 dias. Ao contrário do
-reset e do seed, **este roda em produção** — é lá que ele importa.
+dados reais e hashes de senha), com o nome `beever-AAAAMMDD-HHMM.sql`. Ao
+contrário do reset e do seed, **este roda em produção** — é lá que ele importa.
+
+A retenção apaga os dumps com mais de 7 dias, e apaga **só os que ela mesma
+cria**: arquivo com outro nome é marco guardado de propósito e nunca é tocado.
+Para guardar um dump antes de uma mudança grande, renomeie-o.
 
 Periodicidade recomendada: **diária, fora do horário de uso, com retenção de 7
 dias**. Em um host com cron:
@@ -147,11 +151,17 @@ dias**. Em um host com cron:
 0 3 * * *  cd /caminho/do/beever && /usr/bin/npm run db:backup >> /var/log/beever-backup.log 2>&1
 ```
 
-Ajuste a retenção com `BACKUP_RETENCAO_DIAS`. Para restaurar:
+Ajuste a retenção com `BACKUP_RETENCAO_DIAS`.
+
+### Restauração
 
 ```bash
-docker compose exec -T mysql mysql -uroot -proot < backups/<arquivo>.sql
+npm run db:restore -- --sim              # o dump mais recente
+npm run db:restore -- --sim arquivo.sql  # um dump específico
 ```
+
+Sobrescreve as tabelas do banco com o conteúdo do dump. Como apaga dados, tem as
+mesmas guardas do reset: recusa `NODE_ENV=production` e exige o `--sim`.
 
 ## Passo 6 — Compilar o CSS
 
@@ -198,6 +208,7 @@ A resposta deve trazer `"status": "ok"` e `"conectado": true`. Se vier
 | `npm run db:reset -- --sim` | Apaga todas as tabelas (só desenvolvimento) |
 | `npm run db:reconcile` | Confere se os saldos batem com os livros |
 | `npm run db:backup` | Dump em `backups/`, com retenção de 7 dias |
+| `npm run db:restore -- --sim` | Restaura o banco a partir de um dump (só desenvolvimento) |
 | `npm run test:db` | Como `npm test`, mas **exige** MySQL no ar. É o comando do CI |
 | `npm run css:build` | Compila o Tailwind uma vez |
 | `npm run css:watch` | Compila o Tailwind em modo watch |

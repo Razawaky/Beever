@@ -81,8 +81,12 @@ async function escolherComando() {
   };
 }
 
+// Só o que a rotina cria: `beever-AAAAMMDD-HHMM.sql`. Dump guardado à mão, com
+// outro nome, é marco que alguém quis manter — a retenção não encosta nele.
+const NOME_AUTOMATICO = /^beever-\d{8}-\d{4}\.sql$/;
+
 export function ehBackupAntigo(nomeArquivo, modificadoEm, agora = Date.now(), dias = DIAS_DE_RETENCAO) {
-  if (!nomeArquivo.endsWith('.sql')) return false;
+  if (!NOME_AUTOMATICO.test(nomeArquivo)) return false;
   const idadeEmDias = (agora - modificadoEm) / (1000 * 60 * 60 * 24);
   return idadeEmDias > dias;
 }

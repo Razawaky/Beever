@@ -3,15 +3,24 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-08-31 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-14.5 — o portão automático existe, e quase não teria existido: o
+**Atualizado em:** 2026-09-02 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Último commit:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
+na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
+aqui como ponto de retorno. A retenção aceitava qualquer `.sql` com mais de sete dias, então
+marco e dump automático morriam juntos; agora ela só toca no que ela mesma cria. O outro lado
+existe: `npm run db:restore -- --sim` trouxe o banco de volta com as mesmas 61 tabelas, 2
+usuários e 37 itens depois de derrubá-lo, com a suíte inteira passando em cima. De lado, a
+suíte que travava dezoito minutos em vez de reprovar (DT-118). Laudo em
+`docs/19-BACKUP-E-RESTAURACAO.md`. Oito testes novos.
+**Próximo passo: T-14.7 — revisão de acessibilidade e responsividade em todas as telas**
+
+**Commit anterior:** T-14.5 — o portão automático existe, e quase não teria existido: o
 `.gitignore` ignorava `.github/` inteiro, o único diretório que o GitHub Actions lê. Uma
 exceção para `workflows/` corrigiu isso. São cinco jobs — lint com `npm audit` bloqueante,
 suíte contra MySQL 8.4, cobertura em execução própria, build da imagem, e a medição de carga
 só em `main` sem reprovar. A publicação em registro ficou para depois do aceite (DT-116) e o
 YAML só se prova no primeiro PR real (DT-117). Laudo em `docs/18-INTEGRACAO-CONTINUA.md`.
 Dez testes novos.
-**Próximo passo: T-14.6 — script e rotina de backup documentados (RNF-19)**
 
 **Commit anterior:** T-14.4 — a imagem foi construída pela primeira vez, e construir achou
 quatro defeitos que nenhum teste veria: o healthcheck do banco lia uma variável inexistente,
@@ -441,7 +450,8 @@ npm run dev
 | `npm run db:seed` | Aplica os 6 arquivos de `scripts/seeds/`. Três execuções seguidas deixam as mesmas contagens — **idempotente confirmado**. Imprime o estado do banco e as contas de desenvolvimento |
 | `npm run db:reset` | Recusa em produção; recusa sem `-- --sim`; com a confirmação, apagou as 57 tabelas do banco de teste |
 | `npm run db:reconcile` | Sete conferências: mel, pólen, XP, cofre, nível contra a curva, próximo nível e progresso do favo. Sai com 1 em caso de divergência, para poder virar passo de CI |
-| `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias. Roda em produção, ao contrário do reset e do seed. Periodicidade documentada em `iniciar-proj.md` |
+| `npm run db:backup` | Dump completo em `backups/`, com retenção de 7 dias que só apaga o que ela mesma cria. Roda em produção, ao contrário do reset e do seed. **Executado de verdade na T-14.6**: 61 tabelas, 175 KB. Periodicidade documentada em `iniciar-proj.md` |
+| `npm run db:restore -- --sim` | Restaura o banco a partir de um dump de `backups/`. Recusa em produção e sem `--sim`. **Provado ponta a ponta na T-14.6**: banco derrubado e trazido de volta com as mesmas 61 tabelas, 2 usuários e 37 itens, e a suíte inteira passando depois |
 | `npm run css:build` | Gera `src/public/css/app.css` (26,9 KB) em cerca de 150 ms |
 | `npm run css:watch` | Mesmo build em modo observação (não executado) |
 | `npm test` | 349 passam, 0 falham. Sem MySQL, os 267 testes de banco se pulam com aviso |
@@ -1338,7 +1348,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
 | E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | **concluída e auditada** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). **Auditada em `docs/13-AUDITORIA-DA-ETAPA.md`: pode avançar**, com as duas lacunas bloqueantes corrigidas na mesma sessão — a regra do apelido publicado e a liga que aceitava quem nunca jogou |
-| E14 Endurecimento | **em andamento** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. T-14.3 feita: `npm run carga` mede a jornada real de 30 jogadores simultâneos, e o padrão do pool subiu de 10 para 20 com base na medição, não em palpite. `cargaSimultanea.test.js` entrou na suíte como regressão de concorrência, incluindo a conferência de que toda conexão volta ao pool. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. T-14.4 feita: a imagem foi construída e subida pela primeira vez, e a conferência dentro do contêiner achou quatro defeitos que o teste estático não veria — healthcheck do banco lendo variável inexistente, `uploads/` sem dono certo depois do `USER node`, `logger.js` pedindo o `pino-pretty` que o `npm prune` tira, e nenhum `.dockerignore`. A aplicação entrou no compose sob o perfil `completo`, com as migrations num serviço separado para permitir réplica depois. O `npm ci` deixou de rodar duas vezes. `ambienteDeConteiner.test.js` passa a reprovar variável de ambiente sem linha no `.env.example` (DT-15). Laudo em `docs/17-CONTEINER-E-AMBIENTE.md`. T-14.5 feita: o portão do CI existe em `.github/workflows/ci.yml`, com cinco jobs — lint com `npm audit` bloqueante, suíte contra MySQL 8.4 por `test:db`, cobertura em execução própria, build da imagem com subida do contêiner, e a medição de carga só em `main` sem reprovar. O achado da tarefa foi o `.gitignore`, que ignorava `.github/` inteiro e teria deixado o workflow invisível ao GitHub; uma exceção para `workflows/` corrigiu. A publicação em registro ficou para depois do aceite (DT-116) e o YAML só se prova no primeiro pull request real (DT-117). Laudo em `docs/18-INTEGRACAO-CONTINUA.md`. Falta T-14.6 e T-14.7 |
+| E14 Endurecimento | **em andamento** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. T-14.3 feita: `npm run carga` mede a jornada real de 30 jogadores simultâneos, e o padrão do pool subiu de 10 para 20 com base na medição, não em palpite. `cargaSimultanea.test.js` entrou na suíte como regressão de concorrência, incluindo a conferência de que toda conexão volta ao pool. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. T-14.4 feita: a imagem foi construída e subida pela primeira vez, e a conferência dentro do contêiner achou quatro defeitos que o teste estático não veria — healthcheck do banco lendo variável inexistente, `uploads/` sem dono certo depois do `USER node`, `logger.js` pedindo o `pino-pretty` que o `npm prune` tira, e nenhum `.dockerignore`. A aplicação entrou no compose sob o perfil `completo`, com as migrations num serviço separado para permitir réplica depois. O `npm ci` deixou de rodar duas vezes. `ambienteDeConteiner.test.js` passa a reprovar variável de ambiente sem linha no `.env.example` (DT-15). Laudo em `docs/17-CONTEINER-E-AMBIENTE.md`. T-14.5 feita: o portão do CI existe em `.github/workflows/ci.yml`, com cinco jobs — lint com `npm audit` bloqueante, suíte contra MySQL 8.4 por `test:db`, cobertura em execução própria, build da imagem com subida do contêiner, e a medição de carga só em `main` sem reprovar. O achado da tarefa foi o `.gitignore`, que ignorava `.github/` inteiro e teria deixado o workflow invisível ao GitHub; uma exceção para `workflows/` corrigiu. A publicação em registro ficou para depois do aceite (DT-116) e o YAML só se prova no primeiro pull request real (DT-117). Laudo em `docs/18-INTEGRACAO-CONTINUA.md`. T-14.6 feita: o `db:backup` existia desde a E01 e nunca tinha rodado; a primeira execução real funcionou e, na mesma execução, apagou o dump de antes da E01 — a retenção aceitava qualquer `.sql` com mais de sete dias, e agora só toca no que ela mesma cria. O outro lado do backup passou a existir: `scripts/restaurar.js` e `npm run db:restore -- --sim`, com as guardas do reset, provado ponta a ponta com o banco derrubado e trazido de volta idêntico. A suíte que travava dezoito minutos por diretório de schema órfão virou a DT-118. Laudo em `docs/19-BACKUP-E-RESTAURACAO.md`. Falta T-14.7 |
 | E15 Documentação TCC | do zero | — |
 
 ---
@@ -1409,6 +1419,9 @@ Identificadores rastreiam os documentos da E00.
 | DT-115 | A RNF-38 pede aplicação stateless para escalar horizontalmente, e o estado saiu mesmo do contêiner — sessão no MySQL, migrations num serviço à parte, uploads em volume. Mas duas réplicas ao mesmo tempo nunca foram exercitadas, e o balanceador que a RNF pressupõe não existe: o que está provado é a ausência de estado, não a escala | T-14.4 | Subir `docker compose up --scale app=2` atrás de um proxy e conferir que a sessão sobrevive à troca de réplica. Só vale depois da DT-114, que traz o proxy |
 | DT-116 | **A RNF-40 pede build e push da imagem no merge, e só o build existe.** O portão constrói a imagem a cada execução e prova que ela sobe, mas não publica em registro nenhum: ficou combinado publicar depois do aceite do TCC, quando existir destino definido. Até lá a segunda metade da RNF-40 está aberta | T-14.5 | Acrescentar o job de push para o GHCR com o `GITHUB_TOKEN` que a Action já traz, só no push para `main` |
 | DT-117 | O workflow é provado por teste estático, que confere script, gatilho, variável e exceção do `.gitignore` — mas nada disso executa o YAML. Sintaxe aceita pelo GitHub, disponibilidade das actions e o serviço de MySQL do runner só se provam no primeiro pull request real. É a mesma lição da T-14.4, onde quatro defeitos só apareceram ao construir a imagem de fato | T-14.5 | Abrir um pull request de verdade e conferir os cinco jobs antes de confiar no portão |
+| DT-118 | **Hook de teste que pendura em vez de reprovar.** Um diretório de schema órfão no volume do MySQL faz o `criarBancoDeTeste` receber `ER_SCHEMA_DIR_UNKNOWN`, e no `before` isso vira espera infinita: a suíte ficou dezoito minutos sem escrever uma linha, segurando o runner inteiro. Rodado sozinho, o mesmo arquivo falha em 17 ms com a mensagem na tela. Num runner de CI seria timeout sem diagnóstico nenhum | T-14.6 | Dar tempo limite ao `before` do helper de banco e deixar o erro subir, em vez de esperar |
+| DT-119 | A rotina de backup nunca rodou em host nenhum, porque host de implantação ainda não existe — o que está entregue é a linha de cron documentada e o comando que ela chama, que é o que a RNF-19 pede. Mesma família da DT-114 e da DT-115: tudo o que depende de implantação real segue por provar | T-14.6 | Agendar e conferir o primeiro backup automático quando o host existir, junto com o proxy reverso |
+| DT-120 | A restauração não apaga tabela que exista no banco e não esteja no dump, porque o `mysqldump` só emite `DROP TABLE` para o que ele mesmo exportou. Restaurar um dump antigo sobre um banco mais novo deixa sobra de tabela, e o `schema_migrations` restaurado não sabe dela | T-14.6 | Se virar caminho de rotina, derrubar o banco com `db:reset` antes de restaurar, ou emitir `DROP DATABASE` no dump |
 | DT-113 | A primeira visita de um jogador custa muito mais do que as seguintes — é ela que fecha ciclo, julga sequência, abre liga, cria tarefas do dia e monta o plano de metas. Com trinta simultâneos ela fica a 1924 ms de p95, dentro do teto mas sem folga nenhuma | T-14.3 | Se apertar, separar o que precisa acontecer antes de desenhar a tela do que pode acontecer depois da resposta |
 | DT-110 | A cobertura de ramo dos services de cálculo ficou em 92,06%, e não em 100% como a RNF-28 pede ao pé da letra. O que falta é de três famílias que não se fecham com teste honesto: reserva que nunca dispara (`?? 0` sobre dado que sempre vem), parâmetro com valor padrão, e `catch` de falha de infraestrutura, que exigiria mock num projeto que testa contra banco real. O piso de linha está em 100% e o de ramo é catraca em 91% | T-14.2 | Subir a catraca quando um caso de negócio novo cobrir um desses ramos naturalmente. Cobertura de mutação, que é o que de fato mede se a asserção existe, fica para depois da entrega |
 | DT-111 | **RF-INV-06 (histórico de evolução do patrimônio) é P1 e não tem tela.** A foto diária é gravada desde a E09, `patrimonyService.listarEvolucao` a lê, e nenhum controller a chama: o dado se acumula para um gráfico que não existe. Foi a medição de cobertura que apontou, porque a função nunca era executada | T-14.2 | Decidir na E14 se a tela entra ou se o requisito é rebaixado antes da defesa; o dado já está lá |
@@ -1473,8 +1486,9 @@ Identificadores rastreiam os documentos da E00.
   previsto, aceito e pago em parcelas anunciadas, sem surpresa — e a segunda
   parcela foi pior que a primeira (servidor sem subir, em vez de 500 numa
   rota), porque renomear arquivo quebra o carregamento inteiro do módulo.
-  **Para voltar ao app funcionando antes disso:** restaure o dump em
-  `backups/beever-antes-da-E01-*.sql` (ver seção 7).
+  **O dump de retorno não existe mais:** a retenção do `db:backup` o apagou na
+  primeira execução real, na T-14.6 (ver `docs/19-BACKUP-E-RESTAURACAO.md`). Já
+  não era caminho real na E14, com tudo migrado e a suíte verde.
 - ~~**R-02**~~ — Encerrado em 2026-08-17: o servidor MCP `code-review-graph`
   respondeu normalmente na sessão da T-02.2, e o grafo foi reconstruído do zero
   (97 arquivos, 437 nós). O que fica de lição: o grafo envelhece em silêncio —
@@ -1572,12 +1586,11 @@ Não reabrir sem motivo novo.
   desabilitar os gatilhos da migration `008` de propósito. É a RNF-17
   funcionando, mas surpreende na primeira vez: linha de auditoria criada em
   teste fica lá. Para limpar, só recriando o banco com `db:reset`.
-- **O banco de desenvolvimento foi recriado do zero na E01.** O anterior está em
-  `backups/beever-antes-da-E01-*.sql` (pasta ignorada pelo git, porque tem dados
-  reais e hashes de senha). Para restaurar e ter o app de pé de novo:
-  `docker compose exec -T mysql mysql -uroot -proot < backups/<arquivo>.sql`.
-  Depois disso, `npm run db:migrate` volta a acusar migration pendente — o banco
-  restaurado tem o histórico antigo em `schema_migrations`.
+- **O banco de desenvolvimento foi recriado do zero na E01, e o dump do anterior
+  não existe mais** — a retenção do `db:backup` o apagou na primeira execução
+  real, na T-14.6. A pasta `backups/` é ignorada pelo git, então não há cópia. A
+  retenção foi corrigida para nunca mais tocar em dump de nome próprio, e a
+  restauração agora tem script: `npm run db:restore -- --sim [arquivo.sql]`.
 
 ---
 
@@ -4026,3 +4039,51 @@ defeitos só apareceram ao construir a imagem de fato.
 Laudo em `docs/18-INTEGRACAO-CONTINUA.md`. Dez testes novos, e os 316 unitários
 passam. A suíte completa não foi reexecutada nesta sessão porque o daemon do
 Docker está parado e o MySQL não sobe.
+
+---
+
+### Sessão de 2026-09-02, T-14.6 e o backup que cobrou o preço antes de ser testado
+
+A sessão abriu com uma divergência: o estado dizia que o último commit era a
+T-14.5, e o histórico do git parava na T-14.4. O trabalho do portão do CI estava
+inteiro na árvore, sem rastreio. Foi commitado primeiro, com a suíte verde, antes
+de qualquer coisa da T-14.6 — é o tipo de coisa que, deixada para depois, vira um
+commit ilegível com duas tarefas dentro.
+
+O `scripts/backup.js` existia desde a E01. Tinha comentário explicando a
+periodicidade, teste unitário da retenção, entrada no `iniciar-proj.md` e linha na
+tabela de comandos. Nunca tinha rodado. A primeira execução real funcionou — 163
+KB, 61 tabelas — e no mesmo comando apagou o `beever-antes-da-E01-*.sql`, que era
+o dump guardado de propósito antes da migração da E01 e estava citado duas vezes
+neste documento como ponto de retorno. A pasta é ignorada pelo git, não havia
+cópia, e o arquivo não voltou.
+
+A causa cabe numa linha: o critério de retenção era "termina em `.sql` e tem mais
+de sete dias". Marco guardado à mão e dump automático são o mesmo arquivo sob esse
+critério. Na prática, tudo o que alguém guardasse de propósito morria uma semana
+depois — a rotina que existe para proteger dado apagava dado. Agora a retenção só
+encosta em nome que casa com `beever-AAAAMMDD-HHMM.sql`, que é o que ela própria
+escreve, e o caso perdido virou teste de regressão.
+
+A lição é a mesma da T-14.4 e da T-14.5, pela terceira vez seguida: script com
+teste unitário, comentário e documentação ainda é script que ninguém executou. O
+teste da retenção passava havia semanas, verde, e passava justamente porque só
+exercitava o caso que a rotina acerta.
+
+O outro lado do backup não existia. Um dump que nunca foi restaurado é um arquivo,
+não um backup, e a RNF-19 não vale nada com metade. Entrou o `scripts/restaurar.js`
+com as guardas do reset, e a prova foi feita com o banco de desenvolvimento cheio:
+dump, `db:reset` derrubando as 61 tabelas, banco em zero, restauração, e de volta
+as mesmas 61 tabelas, 2 usuários e 37 itens. O `schema_migrations` voltou com as 23
+migrations, o `db:migrate` respondeu que não havia pendência, e a suíte inteira
+passou contra o banco restaurado.
+
+De lado apareceu a DT-118. A suíte pendurou por dezoito minutos sem escrever uma
+linha, e a causa não era lentidão: sobrava no volume do MySQL um diretório de
+schema órfão de execução interrompida em sessão anterior. O `criarBancoDeTeste`
+recebe `ER_SCHEMA_DIR_UNKNOWN` e, dentro do `before`, isso vira espera infinita em
+vez de reprovação. Rodado sozinho o arquivo falhava em 17 ms com a mensagem na
+tela. Hook que pendura transforma diagnóstico de dois segundos em vinte minutos, e
+num runner de CI seria timeout sem explicação nenhuma.
+
+Laudo em `docs/19-BACKUP-E-RESTAURACAO.md`. Oito testes novos, 1037 na suíte.
