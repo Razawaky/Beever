@@ -9,11 +9,8 @@ import { env } from '../src/config/env.js';
 
 /**
  * Restaura o banco a partir de um dump de `backups/` (RNF-19).
- *
- * O backup só vale se voltar, e é este script que prova isso. Ele apaga as
- * tabelas que o dump traz, então tem as mesmas guardas do reset: recusa
- * produção e exige confirmação explícita.
- *
+ * O outro lado do `db:backup`: dump que nunca voltou é arquivo, não backup.
+ * Apaga dados, então tem as guardas do reset — recusa produção e exige `--sim`.
  * A senha vai por `MYSQL_PWD`, nunca na linha de comando.
  */
 
