@@ -30,9 +30,12 @@ Thumbs.db
 # Added by code-review-graph
 .code-review-graph/
 
-# Instruções de agentes/IA — locais, não sobem pro repo
+# Instruções de agentes/IA — locais, não sobem pro repo.
+# O `.github/` é exceção parcial: `workflows/` precisa ser versionado, senão o
+# GitHub Actions nunca lê o portão. Skills, agents e hooks continuam de fora.
 .claude/
-.github/
+.github/*
+!.github/workflows/
 .impeccable/
 CLAUDE.md
 AGENTS.md

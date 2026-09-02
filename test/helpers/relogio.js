@@ -14,3 +14,13 @@ export const medindoCobertura = process.env.MEDINDO_COBERTURA === '1';
 export const opcoesDeTempo = medindoCobertura
   ? { skip: 'o cronômetro não vale sob instrumentação de cobertura' }
   : {};
+
+/**
+ * A medição de carga sai do portão do pull request (T-14.5). Ela cronometra
+ * trinta jogadores simultâneos, e runner compartilhado de CI é lento e
+ * irregular demais para isso reprovar merge. Lá ela roda em job próprio.
+ */
+export const opcoesDeCarga =
+  process.env.PULAR_MEDICAO_DE_CARGA === '1'
+    ? { skip: 'a medição de carga roda em job próprio, fora do portão do pull request' }
+    : {};

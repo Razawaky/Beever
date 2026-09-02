@@ -5,7 +5,7 @@ import { after, before, describe, it } from 'node:test';
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
-import { opcoesDeTempo } from '../helpers/relogio.js';
+import { opcoesDeCarga, opcoesDeTempo } from '../helpers/relogio.js';
 import { env } from '../../src/config/env.js';
 import { fecharPool, pool } from '../../src/config/database.js';
 import * as profilesRepository from '../../src/repositories/profilesRepository.js';
@@ -32,7 +32,7 @@ import * as homeService from '../../src/services/homeService.js';
  */
 
 const pular = await motivoParaPular();
-const opcoes = pular ? { skip: pular } : {};
+const opcoes = pular ? { skip: pular } : opcoesDeCarga;
 
 const JOGADORES_SIMULTANEOS = 30;
 
