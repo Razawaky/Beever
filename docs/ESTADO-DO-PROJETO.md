@@ -12,6 +12,11 @@ existe: `npm run db:restore -- --sim` trouxe o banco de volta com as mesmas 61 t
 usuários e 37 itens depois de derrubá-lo, com a suíte inteira passando em cima. De lado, a
 suíte que travava dezoito minutos em vez de reprovar (DT-118). Laudo em
 `docs/19-BACKUP-E-RESTAURACAO.md`. Oito testes novos.
+**Correção depois da T-14.6:** o `npm audit` passou a reprovar — o `express-mysql-session`
+carregava uma cópia própria de `mysql2@3.10.2`, com vazamento de credencial em texto claro,
+na dependência que guarda a sessão de login. Um `overrides` de `mysql2` para `^3.23.3` fez a
+árvore deduplicar para 3.24.3; auditoria em zero e 1045 testes passando com o driver novo.
+
 **Próximo passo: T-14.7 — revisão de acessibilidade e responsividade em todas as telas**
 
 **Commit anterior:** T-14.5 — o portão automático existe, e quase não teria existido: o

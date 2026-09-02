@@ -29,6 +29,9 @@
     "img:webp": "for f in src/public/img/*.png; do magick \"$f\" -quality 82 -define webp:method=6 \"${f%.png}.webp\"; done"
   },
   "license": "MIT",
+  "overrides": {
+    "mysql2": "^3.23.3"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
