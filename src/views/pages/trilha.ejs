@@ -30,7 +30,7 @@
     <div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_20rem] md:items-start">
       <ol class="favo-trilha space-y-8">
         <% trilha.forEach((favo) => { %>
-          <li><%- include('../partials/ui/favo-card', { favo }) %></li>
+          <li><%- include('../partials/ui/favo-card', { favo, nivel: 2 }) %></li>
         <% }) %>
       </ol>
 

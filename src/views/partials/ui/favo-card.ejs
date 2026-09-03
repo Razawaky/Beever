@@ -13,6 +13,9 @@
 <% const aberto = favo.aberto; %>
 <% const concluido = favo.concluido; %>
 <% const compacto = Boolean(locals.compacto); %>
+<%# O nível do título depende de onde o card entra: na trilha ele vem logo
+    abaixo do h1, e na Colmeia já existe um h2 de seção acima dele. -%>
+<% const nivelDoTitulo = locals.nivel ?? 3; %>
 <% const tamanhoDoHexagono = compacto ? 'h-16 w-16' : 'h-24 w-24'; %>
 <%
   const preenchimento = concluido ? 'bg-ambar' : aberto ? 'bg-mel' : 'bg-linha';
@@ -55,9 +58,9 @@
   <% } %>
 
   <div class="min-w-0">
-    <h3 class="font-display <%= compacto ? 'text-lg' : 'text-xl' %> <%= aberto || concluido ? 'text-tinta' : 'text-tinta-suave' %>">
+    <h<%= nivelDoTitulo %> class="font-display <%= compacto ? 'text-lg' : 'text-xl' %> <%= aberto || concluido ? 'text-tinta' : 'text-tinta-suave' %>">
       <%= favo.title %>
-    </h3>
+    </h<%= nivelDoTitulo %>>
 
     <% if (favo.description && !compacto) { %>
       <p class="mt-0.5 text-sm text-tinta-suave"><%= favo.description %></p>

@@ -30,6 +30,9 @@
 
       <fieldset class="mt-4 rounded-favo border border-linha p-4">
         <legend class="px-2 text-sm font-semibold">Imagem da atividade</legend>
+        <%# A legenda nomeia o grupo, não o campo: sem rótulo próprio o leitor de
+            tela anuncia só "arquivo". -%>
+        <label for="ilustracao" class="mb-1 block text-sm">Arquivo da imagem</label>
         <input id="ilustracao" name="ilustracao" type="file" accept="image/*"
           class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
         <p class="mt-1 text-xs text-tinta-suave">

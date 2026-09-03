@@ -12,6 +12,14 @@
   h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
   }
+
+  /* Foco visível por padrão em tudo que recebe teclado (RNF-23). Ficava em
+     classe, elemento por elemento, e quatrocentos deles não tinham nenhuma. É
+     regra de base para que tela nova nasça certa sem ninguém lembrar. */
+  :focus-visible {
+    outline: 3px solid var(--color-ambar);
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {

@@ -10,6 +10,7 @@ import request from 'supertest';
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
 import { motivoParaPular } from '../helpers/banco.js';
+import { apagaOFoco } from '../helpers/acessibilidade.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
@@ -47,18 +48,18 @@ describe('acessibilidade da landing', opcoes, () => {
     await fecharPool();
   });
 
-  it('todo elemento clicável mostra onde o teclado está', () => {
+  it('nenhum elemento clicável apaga o foco do teclado', () => {
+    // Cada elemento trazia a própria classe de foco; desde a T-14.7 o contorno é
+    // regra de base no `tema.css`, e o que sobra conferir é quem o desliga.
     for (const [pagina, html] of [
       ['landing', landing],
       ['privacidade', privacidade],
     ]) {
       for (const elemento of clicaveis(html)) {
-        // Âncora sem `href` é alvo de rolagem, não elemento focável.
         if (elemento.startsWith('<a') && !elemento.includes('href=')) continue;
-        assert.match(
-          elemento,
-          /focus-visible:outline/,
-          `elemento sem foco visível em ${pagina}: ${elemento.slice(0, 110)}`,
+        assert.ok(
+          !apagaOFoco(elemento),
+          `foco apagado sem substituto em ${pagina}: ${elemento.slice(0, 110)}`,
         );
       }
     }

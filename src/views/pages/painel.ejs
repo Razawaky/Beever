@@ -185,7 +185,8 @@
     <div class="border-t border-linha px-8 py-6">
       <form method="POST" action="/sessao/logout">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-        <button type="submit" class="text-sm font-medium text-tinta-suave hover:text-tinta">
+        <%# `inline-flex` para a altura de 44 px valer sem esticar a linha inteira. -%>
+        <button type="submit" class="inline-flex min-h-11 items-center text-sm font-medium text-tinta-suave hover:text-tinta">
           Sair da conta
         </button>
       </form>
