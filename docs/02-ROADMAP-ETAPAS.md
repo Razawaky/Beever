@@ -312,6 +312,17 @@ T-13.1 catálogo e regras de conquistas · T-13.2 desbloqueio automático por ev
 
 ---
 
+## E16 — Ajustes antes da defesa
+Nasceu da auditoria da E14 (`docs/21-AUDITORIA-DA-ETAPA-E14.md`), das lacunas que
+não eram conserto e sim escopo novo. Decidido com o usuário em 2026-09-03.
+
+| Tarefa | Entrega |
+|---|---|
+| T-16.1 | Composição de desktop das quatro telas mais vistas — Colmeia, trilha, loja e cofre —, saindo da coluna de celular centralizada que a seção 8 do `docs/04` recusa |
+| T-16.2 | Apagamento definitivo de conta, com anonimização do agregado de auditoria (RN-053), que é o que a política de privacidade promete ao usuário |
+
+---
+
 ## Fluxo do usuário (referência para todas as etapas)
 
 ```
