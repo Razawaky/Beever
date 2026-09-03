@@ -4,7 +4,22 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-03 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-14.7 — a acessibilidade era provada em duas telas, a landing e a
+**Último commit:** auditoria da E14, com os dois bloqueantes fechados na mesma sessão. A
+etapa inteira foi conferida contra os requisitos que ela promete, medindo de novo em vez de
+reler laudo: suíte, lint, `npm audit` e uma medição de cobertura própria sobre o que o
+portão deixava de fora. O primeiro achado foi que a RNF-02 era medida com os limitadores
+desligados — a mesma medição, com eles ligados, tinha devolvido 120 respostas 429 em 600
+requisições, porque a sala de aula inteira sai de um IP só. O limite global passou a contar
+por sessão nas leituras de quem está logado, e a carga repetida agora sai 200×600, sem
+nenhum 429. O segundo foi que o `validadoresDeJogo`, que transforma resposta em número de
+erros e por isso decide a estrela, estava fora do portão de cobertura, em 93,39% de linha,
+com as 46 linhas que faltavam sendo justamente as guardas de entrada; o `usersService`
+estava em 93,80%, com troca de senha e inativação sem teste nenhum. Os dois entraram na
+lista, que virou 26 services em 100% de linha, e a catraca de ramo subiu de 91% para 93%.
+De lado, a política de privacidade deixou de afirmar duas coisas que o sistema não faz.
+Laudo em `docs/21-AUDITORIA-DA-ETAPA-E14.md`. Vinte e um testes novos, 1081 no total.
+
+**Commit anterior:** T-14.7 — a acessibilidade era provada em duas telas, a landing e a
 política, e as outras trinta nunca tinham passado por régua nenhuma. A varredura nova busca
 cada tela pelo HTTP, com sessão de jogador e de administrador, e roda a mesma bateria em
 todas. O achado foram 411 elementos focáveis sem nenhuma indicação de foco, incluindo a
@@ -13,7 +28,8 @@ a landing tinha. Virou regra de base no `tema.css`, que vale inclusive para a te
 vai ser escrita. Mais cinco correções pontuais — dois botões do cofre e o "Sair da conta"
 abaixo dos 44 px, o campo de arquivo sem rótulo próprio, o onboarding sem `h1` e o salto de
 título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze testes novos,
-1060 no total. **A E14 fecha inteira.**
+1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
+corrigidos acima.
 
 **Próximo passo: E15 — documentação do TCC, começando pela T-15.1 (rastreabilidade)**
 
@@ -603,6 +619,24 @@ argumento a favor da rede que a T-02.1 montou.
 ## 4. Pendente
 
 ### Etapa atual
+
+**E15 — Documentação do TCC.** A E14 fechou e foi auditada em
+`docs/21-AUDITORIA-DA-ETAPA-E14.md`, com os dois bloqueantes corrigidos na mesma sessão. A
+etapa começa pela T-15.1, a matriz de rastreabilidade: `docs/RASTREABILIDADE.md` cita hoje
+132 dos 184 requisitos, e os 52 que faltam são quase todos de E01 a E05. Seguem depois os
+diagramas, o documento de arquitetura, o manual de instalação, as evidências de teste e os
+trabalhos futuros. Fora da etapa e esperando decisão sua: a composição de desktop das telas
+do jogador (L4 do laudo) e o pull request que finalmente exercita o CI (L6).
+
+---
+
+**E14 — Endurecimento e entrega** (concluída e auditada). As sete tarefas estão em
+`docs/14` a `docs/20`, uma por laudo, e a auditoria da etapa em `docs/21`. O que ela deixou
+aberto está nas dívidas: TLS e host de implantação (DT-114, DT-119), duas réplicas de
+verdade (DT-115), push de imagem e primeiro pull request (DT-116, DT-117), e o que a
+varredura de acessibilidade não alcança sem navegador (DT-121).
+
+---
 
 **E13 — Conquistas e liga.** P1 e cortável, e feita antes da E14 por decisão sua em
 2026-08-27: a E14 fica para encerrar. O aceite é a conquista desbloquear sozinha pelo que
@@ -1433,7 +1467,7 @@ Identificadores rastreiam os documentos da E00.
 | ~~DT-103~~ | ~~`achievements.icon_path` continua nulo em todas as vinte e uma: a arte é do usuário, e a tela da T-13.4 vai precisar de um lugar único de troca, como o catálogo do mascote já tem~~ — **resolvida na T-13.4**: `src/config/conquistas.js` é o ponto único, um ícone por família, e nenhuma view nomeia arte. A coluna `icon_path` segue nula e sem leitor | T-13.1 | Quando a arte existir, decidir se o config aponta para os arquivos ou se a coluna vira a fonte |
 | DT-104 | Desbloquear paga mel, o mel entra no patrimônio, e o patrimônio pode destravar o degrau seguinte — só na visita **seguinte**. A escada é finita, então converge em poucas visitas, mas a criança pode receber a conquista de patrimônio um acesso depois de merecê-la. A tela `/conquistas` reduz o incômodo porque avalia antes de desenhar, mas a Colmeia continua uma visita atrás | T-13.2 | Reavaliar o critério de patrimônio logo depois de pagar conquista, ou aceitar o atraso de uma visita como custo de a avaliação ser preguiçosa |
 | DT-105 | A contagem de conquistas na visita à Colmeia mede o patrimônio **do momento**, e não o maior já alcançado. Quem chega a 5000 e gasta tudo antes de abrir a Colmeia não recebe o degrau. A família de sequência não tem esse problema, porque usa o melhor já atingido | T-13.2 | Guardar o maior patrimônio já alcançado, como `streaks.best_days` faz, se isso incomodar na prática |
-| DT-112 | O `limiteGlobal` conta 600 requisições por IP a cada quinze minutos, e uma sala de aula inteira sai do mesmo IP: trinta crianças abrindo cinco páginas cada consomem o teto em poucos minutos. A medição de carga bateu nele — 120 respostas 429 em 600 requisições. É a mesma família da DT-24, que a T-14.1 corrigiu só para o login | T-14.3 | Contar por sessão em vez de por endereço nas rotas de leitura, mantendo o limite por IP como rede de baixo |
+| ~~DT-112~~ | ~~O `limiteGlobal` conta 600 requisições por IP a cada quinze minutos, e uma sala de aula inteira sai do mesmo IP~~ — **resolvida na auditoria da E14**: a chave do limite global passou a ser a sessão nas leituras de quem está logado, e segue sendo o endereço na escrita e para quem não entrou. A carga repetida com os limitadores ligados saiu 200×600, sem nenhum 429, contra as 120 respostas 429 de antes | T-14.3 | — |
 | DT-114 | **A RNF-12 pede TLS no proxy reverso e nenhuma tarefa do roadmap entrega isso.** O cookie de sessão só ganha `Secure` com `NODE_ENV=production` mais TLS terminando antes da aplicação. A T-14.4 era a candidata natural e deliberadamente ficou no compose de desenvolvimento; a T-14.5 é CI, a T-14.6 é backup e a T-14.7 é acessibilidade. Sem isso a RNF-12 fica parcial na defesa | T-14.4 | Decidir se entra como T-14.8 (nginx ou Caddy no compose, com certificado próprio) ou se a RNF passa a ser declaradamente de implantação, fora do MVP |
 | DT-115 | A RNF-38 pede aplicação stateless para escalar horizontalmente, e o estado saiu mesmo do contêiner — sessão no MySQL, migrations num serviço à parte, uploads em volume. Mas duas réplicas ao mesmo tempo nunca foram exercitadas, e o balanceador que a RNF pressupõe não existe: o que está provado é a ausência de estado, não a escala | T-14.4 | Subir `docker compose up --scale app=2` atrás de um proxy e conferir que a sessão sobrevive à troca de réplica. Só vale depois da DT-114, que traz o proxy |
 | DT-116 | **A RNF-40 pede build e push da imagem no merge, e só o build existe.** O portão constrói a imagem a cada execução e prova que ela sobe, mas não publica em registro nenhum: ficou combinado publicar depois do aceite do TCC, quando existir destino definido. Até lá a segunda metade da RNF-40 está aberta | T-14.5 | Acrescentar o job de push para o GHCR com o `GITHUB_TOKEN` que a Action já traz, só no push para `main` |
@@ -1450,7 +1484,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-107 | O grupo é preenchido por ordem de chegada, sem equilibrar nível ou faixa etária: uma criança de seis anos pode cair no mesmo grupo de uma de quinze, e disputar pólen com quem joga células que pagam mais | T-13.3 | Agrupar por faixa etária quando houver gente suficiente para encher mais de um grupo por faixa |
 | DT-108 | `league_members.points` é cache e não entra no `db:reconcile`, ao contrário de `wallets` e `hive_progress`. Divergência entre ele e o `point_ledger` passaria sem alarme | T-13.3 | Acrescentar a conferência ao `scripts/reconcile.js`, que já sabe comparar cache com livro |
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
-| DT-79 | A política de privacidade em `/privacidade` foi escrita a partir do que o sistema coleta, mas nunca passou por revisão jurídica, e a exclusão de conta que ela promete ainda não tem tela: hoje só existe apagando no banco | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de exclusão de conta como tarefa da E14 |
+| DT-79 | A política de privacidade em `/privacidade` nunca passou por revisão jurídica, e o apagamento definitivo de conta não existe: o que existe é `DELETE /users/:id`, que chama `inativar` e só marca `is_active = 0`, deixando o dado guardado. A auditoria da E14 tirou do texto a promessa de apagamento automático e a afirmação de tráfego criptografado, então a página não afirma mais o que o sistema não faz — o buraco agora é de funcionalidade, e não de texto | T-11.6 | Revisão por alguém de direito antes da defesa, e a rotina de apagamento com anonimização da auditoria (RN-053) como tarefa própria |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
 | DT-77 | `test/integration/seguranca.test.js` falhou duas vezes com 403 numa rodada da suíte completa, e passou sozinho e na rodada seguinte. Os limitadores são desligados em teste, então a suspeita é corrida entre arquivos no banco de teste, na sessão que guarda o token de CSRF | T-11.3 | Reproduzir rodando a suíte algumas vezes seguidas e, se confirmar, isolar a sessão por arquivo. Achado fora do escopo da tarefa, não corrigido |
 | ~~DT-76~~ | ~~O parallax do herói depende de `animation-timeline: scroll()`, que o Safari ainda não tem~~ | T-11.3 | **Resolvida na mesma tarefa**: com o Lenis aprovado, o caminho principal virou JavaScript e funciona em qualquer navegador; a linha do tempo de rolagem passou a ser o plano B de quem está sem script |

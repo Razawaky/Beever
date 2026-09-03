@@ -28,11 +28,26 @@ export function chaveDaCredencial(req) {
   return email ? `email:${email}` : ipKeyGenerator(req.ip);
 }
 
+const METODOS_DE_LEITURA = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * Em qual balde a requisição cai no limite global: quem está logado e só está
+ * lendo conta por sessão, e o resto conta por endereço. Sem isto uma sala de
+ * aula inteira, que sai de um IP só, é contada como uma pessoa — a medição de
+ * carga bateu no teto com trinta crianças (DT-112).
+ */
+export function chaveDoLimiteGlobal(req) {
+  const usuario = req.session?.usuarioId;
+  if (usuario && METODOS_DE_LEITURA.has(req.method)) return `sessao:${usuario}`;
+  return ipKeyGenerator(req.ip);
+}
+
 /** Rede de segurança geral, aplicada a toda a aplicação. */
 export const limiteGlobal = rateLimit({
   ...base,
   windowMs: 15 * 60 * 1000,
   limit: 600,
+  keyGenerator: chaveDoLimiteGlobal,
   message: { erro: 'Muitas requisições. Tente de novo em alguns minutos.' },
 });
 

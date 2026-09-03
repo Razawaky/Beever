@@ -97,18 +97,22 @@
       <h2 class="font-display text-2xl">Segurança</h2>
       <p class="mt-3 text-tinta-suave">
         A senha é guardada como hash com bcrypt. O acesso usa sessão com cookie
-        `httpOnly`, e o tráfego é servido por conexão criptografada. Consultas ao banco
-        usam sempre parâmetros preparados, e toda mudança de saldo, compra ou ação
-        administrativa fica registrada para conferência posterior.
+        `httpOnly`. Consultas ao banco usam sempre parâmetros preparados, e toda mudança
+        de saldo, compra ou ação administrativa fica registrada para conferência
+        posterior. Esta é uma versão de estudo, ainda sem publicação em servidor próprio:
+        enquanto isso não acontece, o tráfego não é criptografado, e por isso ela não deve
+        receber dado que você não queira ver em texto.
       </p>
     </section>
 
     <section>
       <h2 class="font-display text-2xl">Por quanto tempo guardamos</h2>
       <p class="mt-3 text-tinta-suave">
-        Os dados ficam enquanto a conta existir. Pedida a exclusão, a conta e o
-        progresso são apagados; os registros de auditoria de valores podem ser mantidos
-        sem identificação pessoal, porque servem para conferir a integridade do sistema.
+        Os dados ficam enquanto a conta existir. Hoje o que a conta faz sozinha é
+        desativar-se: ela deixa de entrar e some do jogo, e os dados continuam guardados.
+        O apagamento definitivo é feito a pedido, pelo e-mail abaixo, e ainda não tem
+        botão próprio. Os registros de auditoria de valores podem ser mantidos sem
+        identificação pessoal, porque servem para conferir a integridade do sistema.
       </p>
     </section>
 

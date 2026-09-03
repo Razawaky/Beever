@@ -456,6 +456,7 @@ erDiagram
     achievements ||--o{ user_achievements : premia
     leagues ||--o{ league_members : classifica
     users ||--o{ league_members : disputa
+    league_prizes ||--o{ league_members : paga
 
     audit_logs {
         bigint id PK
@@ -471,6 +472,8 @@ erDiagram
     achievements {
         bigint id PK
         varchar slug UK
+        varchar criterion_type "o que destrava"
+        bigint criterion_target "quantos"
         bigint reward_coins
     }
     user_achievements {
@@ -486,7 +489,19 @@ erDiagram
         int points
         smallint final_rank
     }
+    league_prizes {
+        smallint final_rank PK
+        bigint reward_coins
+    }
 ```
+
+As migrations `022` e `023` mexeram nesta área. A `022` deu à conquista duas
+colunas de regra, `criterion_type` e `criterion_target`, para o desbloqueio
+deixar de depender do slug: a regra passou a morar no banco, com o resto das
+regras de recompensa (RN-006). A `023` trocou a unicidade de `leagues` para o par
+`(starts_on, name)`, porque a semana passou a ter vários grupos, indexou
+`point_ledger` por data e criou `league_prizes`, o catálogo do pódio — o prêmio
+por posição é configuração, não número escrito no código.
 
 `audit_logs` substitui as quatro tabelas de log ad-hoc do banco antigo
 (`log_user`, `log_perfil`, `log_acesso_user`, `log_acesso_perfil`), que

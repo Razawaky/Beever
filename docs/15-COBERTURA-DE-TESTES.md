@@ -36,7 +36,7 @@ que a suíte alcança hoje e só sobe.
 | Ramo | 86,30% | 92,06% |
 | Função | 96,36% | 99,23% |
 
-Sete services estão em 100% nos três: `achievementsService`, `coinsService`,
+Nove services estão em 100% nos três: `achievementsService`, `coinsService`,
 `comportamentosDoItem`, `criteriosDeConquista`, `eventosDeConquista`,
 `patrimonyService`, `pointsService`, `purchasesService` e `taskProgressSources`.
 
@@ -113,6 +113,19 @@ de propósito.
 A recomendação é manter a catraca em 91% e subir o número quando um caso de
 negócio novo cobrir um desses ramos naturalmente — não escrever teste para
 persegui-lo.
+
+## O que a auditoria da E14 mudou aqui
+
+A lista de 24 tinha dois buracos, e o laudo `docs/21-AUDITORIA-DA-ETAPA-E14.md`
+os achou medindo o que estava de fora. `validadoresDeJogo` ficava em 93,39% de
+linha sem ninguém saber, e é ele quem transforma a resposta da criança em número
+de erros, que vira estrela pela RN-030 e vira recompensa; as 46 linhas que
+faltavam eram as recusas de conteúdo torto e de resposta que não veio em lista.
+`usersService` ficava em 93,80%, com a troca de senha e a inativação da conta sem
+teste nenhum. Os dois entraram na lista, com
+`test/unit/guardasDosValidadores.test.js` (11 casos) e
+`test/integration/guardasDaConta.test.js` (5). São 26 services medidos, 100% de
+linha, e a catraca de ramo subiu de 91% para 93%.
 
 ## O que esta tarefa não cobre
 

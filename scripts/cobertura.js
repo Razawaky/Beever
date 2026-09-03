@@ -9,10 +9,13 @@ import { spawn } from 'node:child_process';
  * ela.
  *
  * **O que entra na lista:** service que decide um número que a criança vê ou
- * gasta — mel, pólen, XP, patrimônio, progresso, posição. Fica de fora quem só
- * orquestra tela ou cadastro (`adminContentService`, `profilesService`), quem é
- * infraestrutura (`healthService`, `limpezaService`) e os repositories, cujo
- * lugar de prova é o teste de integração contra banco real.
+ * gasta — mel, pólen, XP, patrimônio, progresso, posição. Entram também os dois
+ * que a auditoria da E14 achou de fora: `validadoresDeJogo`, que transforma a
+ * resposta em número de erros e por isso decide a estrela, e `usersService`, que
+ * guarda senha e conta. Fica de fora quem só orquestra tela ou cadastro
+ * (`adminContentService`, `profilesService`), quem é infraestrutura
+ * (`healthService`, `limpezaService`) e os repositories, cujo lugar de prova é o
+ * teste de integração contra banco real.
  *
  * Rode com `npm run test:cobertura`.
  */
@@ -40,6 +43,8 @@ const SERVICES_DE_CALCULO = [
   'streakService',
   'taskProgressSources',
   'tasksService',
+  'usersService',
+  'validadoresDeJogo',
   'vaultService',
 ];
 
@@ -58,7 +63,7 @@ const SERVICES_DE_CALCULO = [
  * vem vazia, por exemplo. Perseguir esse número produz teste sem afirmação.
  */
 const PISO_DE_LINHA = 100;
-const PISO_DE_RAMO = 91;
+const PISO_DE_RAMO = 93;
 const PISO_DE_FUNCAO = 99;
 
 const argumentos = [
