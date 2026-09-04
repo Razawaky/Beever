@@ -3,24 +3,38 @@ import { after, before, describe, it } from 'node:test';
 
 import request from 'supertest';
 
+// `ambiente.js` aponta o pool da aplicação para o banco de teste e precisa ser
+// avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
+import '../helpers/ambiente.js';
+import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 
 /**
- * Testes de integração: exigem o MySQL no ar com as migrations aplicadas.
- *   docker compose up -d mysql && npm run migrate
+ * Testes de integração da casca da aplicação.
+ *
+ * O arquivo criava o app sem criar banco nenhum, então o `/health` respondia
+ * pelo banco de desenvolvimento da máquina de quem rodava. No CI, onde esse
+ * banco não existe, ele virou 503 — a primeira execução do portão achou isto.
  */
-describe('aplicação', () => {
-  let app;
 
-  before(() => {
+const pular = await motivoParaPular();
+const opcoes = pular ? { skip: pular } : {};
+
+describe('aplicação', opcoes, () => {
+  let app;
+  let banco;
+
+  before(async () => {
+    banco = await criarBancoDeTeste();
     app = criarApp();
   });
 
   after(async () => {
     await fecharSessionStore();
     await fecharPool();
+    if (banco) await banco.encerrar();
   });
 
   it('renderiza a página inicial em HTML', async () => {

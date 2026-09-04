@@ -110,5 +110,12 @@ anunciar a E15.
 
 A suíte fechou em 1081 testes, 1081 passando, com o `npm run lint` e o `npm run test:cobertura` verdes na mesma execução.
 
-**Segue aberto:** L4 (composição de desktop), L6 (o pull request que exercita o
-CI) e L8 (LCP), os três esperando decisão sua.
+**L6 fechada em 2026-09-04.** O pull request #1 rodou o portão pela primeira
+vez e ele reprovou, o que era o ponto: `app.test.js` subia a aplicação sem criar
+banco de teste, e o `/health` respondia pelo banco de desenvolvimento da máquina
+de quem rodava — no runner, onde esse banco não existe, virou 503. A catraca de
+ramo, que eu tinha subido para 93 colada nos 93,11% desta máquina, reprovou nos
+92,82% do runner e desceu para 92. Os dois consertos foram ao ramo, e a DT-117
+está paga: o YAML agora é provado por execução, e não por teste estático.
+
+**Segue aberto:** L4 (composição de desktop) e L8 (LCP).
