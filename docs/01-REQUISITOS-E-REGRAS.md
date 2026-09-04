@@ -245,6 +245,8 @@ Todos em JS puro na página, cálculo validado no servidor.
 | RF-JOG-06 | **Ordene a Prioridade** — ranquear gastos por urgência/importância | Priorização | P1 |
 | RF-JOG-07 | Estado de jogo salvo para retomar sessão interrompida | P1 |
 | RF-JOG-08 | Contrato único de resultado de jogo (`GameSession`) usado por todos os jogos | M |
+| RF-JOG-09 | **Listas Suspensas** — completar a frase escolhendo em cada lacuna | Vocabulário financeiro | P1 |
+| RF-JOG-10 | **Quadrinho Interativo** — história em painéis com decisões no meio | Decisão em contexto | P1 |
 
 ### 4.6 Metas — RF-MET
 | ID | Requisito | Pri |

@@ -4,7 +4,9 @@ Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-03 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** auditoria da E14, com os dois bloqueantes fechados na mesma sessão. A
+**Último commit:** T-15.1 — a matriz de rastreabilidade citava 132 dos 184 requisitos, e o que faltava era quase tudo de E01 a E05: autenticação, onboarding, perfil e conteúdo nunca tinham entrado. As 52 linhas foram escritas conferindo arquivo e teste um a um, a tabela passou a ser ordenada por módulo e `test/unit/rastreabilidade.test.js` guarda as duas formas de ela virar ficção — requisito sem linha e caminho de arquivo que não existe mais. A varredura achou três coisas: os dois formatos de jogo nascidos na T-12.4, **Listas Suspensas** e **Quadrinho Interativo**, jogáveis desde então e sem requisito escrito (viraram RF-JOG-09 e RF-JOG-10); seis caminhos citados com nome errado; e sete requisitos P1 sem código nenhum, agora com a situação escrita em vez de ausência silenciosa. De lado, entraram como dívida o bug de formulário que o usuário achou (DT-122) e a tela de perfil incompleta (DT-123).
+
+**Commit anterior:** auditoria da E14, com os dois bloqueantes fechados na mesma sessão. A
 etapa inteira foi conferida contra os requisitos que ela promete, medindo de novo em vez de
 reler laudo: suíte, lint, `npm audit` e uma medição de cobertura própria sobre o que o
 portão deixava de fora. O primeiro achado foi que a RNF-02 era medida com os limitadores
@@ -31,7 +33,7 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: E15 — documentação do TCC, começando pela T-15.1 (rastreabilidade)**
+**Próximo passo: T-15.2 — diagramas do TCC (ER, casos de uso, classes e sequência do fluxo de recompensa)**
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -621,13 +623,19 @@ argumento a favor da rede que a T-02.1 montou.
 ### Etapa atual
 
 **E15 — Documentação do TCC.** A E14 fechou e foi auditada em
-`docs/21-AUDITORIA-DA-ETAPA-E14.md`, com os dois bloqueantes corrigidos na mesma sessão. A
-etapa começa pela T-15.1, a matriz de rastreabilidade: `docs/RASTREABILIDADE.md` cita hoje
-132 dos 184 requisitos, e os 52 que faltam são quase todos de E01 a E05. Seguem depois os
-diagramas, o documento de arquitetura, o manual de instalação, as evidências de teste e os
-trabalhos futuros. Fora da etapa, já decididos em 2026-09-03: a composição de desktop das quatro telas mais vistas e o
-apagamento definitivo de conta viraram a **E16**, e o pull request do ramo para a `main` está aberto
-só para o CI executar, com o merge esperando os cinco jobs verdes.
+`docs/21-AUDITORIA-DA-ETAPA-E14.md`, com os dois bloqueantes corrigidos na mesma sessão.
+
+| Tarefa | Situação |
+|---|---|
+| T-15.1 Rastreabilidade requisito → arquivo → teste | **feita** — os 184 requisitos têm linha, ordenadas por módulo, e `test/unit/rastreabilidade.test.js` reprova requisito sem linha, código inventado, arquivo citado que sumiu e linha com coluna vazia. Dos 52 preenchidos, sete são P1 sem código e agora dizem isso |
+| T-15.2 Diagramas: ER, casos de uso, classes e sequência do fluxo de recompensa | pendente |
+| T-15.3 Documento de arquitetura com a justificativa das decisões | pendente |
+| T-15.4 Manual de instalação e execução | pendente |
+| T-15.5 Evidências de teste | pendente |
+| T-15.6 Trabalhos futuros | pendente |
+
+Fora da etapa: a E16 (desktop e apagamento de conta) e o pull request #1, aberto e com o portão
+verde, esperando a decisão de merge.
 
 ---
 
@@ -1478,6 +1486,8 @@ Identificadores rastreiam os documentos da E00.
 | DT-118 | **Hook de teste que pendura em vez de reprovar.** Um diretório de schema órfão no volume do MySQL faz o `criarBancoDeTeste` receber `ER_SCHEMA_DIR_UNKNOWN`, e no `before` isso vira espera infinita: a suíte ficou dezoito minutos sem escrever uma linha, segurando o runner inteiro. Rodado sozinho, o mesmo arquivo falha em 17 ms com a mensagem na tela. Num runner de CI seria timeout sem diagnóstico nenhum | T-14.6 | Dar tempo limite ao `before` do helper de banco e deixar o erro subir, em vez de esperar |
 | DT-119 | A rotina de backup nunca rodou em host nenhum, porque host de implantação ainda não existe — o que está entregue é a linha de cron documentada e o comando que ela chama, que é o que a RNF-19 pede. Mesma família da DT-114 e da DT-115: tudo o que depende de implantação real segue por provar | T-14.6 | Agendar e conferir o primeiro backup automático quando o host existir, junto com o proxy reverso |
 | DT-120 | A restauração não apaga tabela que exista no banco e não esteja no dump, porque o `mysqldump` só emite `DROP TABLE` para o que ele mesmo exportou. Restaurar um dump antigo sobre um banco mais novo deixa sobra de tabela, e o `schema_migrations` restaurado não sabe dela | T-14.6 | Se virar caminho de rotina, derrubar o banco com `db:reset` antes de restaurar, ou emitir `DROP DATABASE` no dump |
+| DT-122 | **Formulário que erra manda a pessoa para a página de erro.** O `validate` transforma falha de campo em `erroValidacao`, e o handler global responde a requisição de página renderizando `erro.ejs`: quem se cadastra com senha fraca perde tudo o que digitou e cai numa tela de erro com código, em vez de ver o campo marcado no próprio formulário. Vale para todo formulário HTML, não só o cadastro — foi o usuário quem achou, no cadastro | T-15.1 | Fazer o caminho HTML voltar ao formulário com os valores preenchidos e a mensagem por campo, mantendo o JSON como está |
+| DT-123 | A tela de perfil mostra e edita só a semana. A rota `PUT /perfil/:id` já aceita apelido, avatar, fuso, tempo de sessão e as duas preferências, e as estatísticas da RF-PER-02 existem na Colmeia: o buraco é de tela, não de regra | T-15.1 | Levar os campos que a rota já aceita para `perfil.ejs`, junto com as estatísticas que a Colmeia calcula |
 | DT-121 | A varredura de acessibilidade lê o HTML servido, sem navegador, e três perguntas ficam fora do alcance dela: se o layout quebra de verdade a 320 px com a fonte carregada, se o texto contrasta com o fundo herdado de um elemento ancestral, e se a linguagem é adequada à faixa etária (RNF-24), que não é automatizável. A altura de toque aceita 12 px de espaço vertical como equivalente aos 44 px, o que depende da fonte carregar | T-14.7 | Abrir as telas num navegador a 320 px antes da defesa, e considerar `axe-core` com navegador headless se o projeto seguir depois do TCC |
 | DT-113 | A primeira visita de um jogador custa muito mais do que as seguintes — é ela que fecha ciclo, julga sequência, abre liga, cria tarefas do dia e monta o plano de metas. Com trinta simultâneos ela fica a 1924 ms de p95, dentro do teto mas sem folga nenhuma | T-14.3 | Se apertar, separar o que precisa acontecer antes de desenhar a tela do que pode acontecer depois da resposta |
 | DT-110 | A cobertura de ramo dos services de cálculo ficou em 92,06%, e não em 100% como a RNF-28 pede ao pé da letra. O que falta é de três famílias que não se fecham com teste honesto: reserva que nunca dispara (`?? 0` sobre dado que sempre vem), parâmetro com valor padrão, e `catch` de falha de infraestrutura, que exigiria mock num projeto que testa contra banco real. O piso de linha está em 100% e o de ramo é catraca em 91% | T-14.2 | Subir a catraca quando um caso de negócio novo cobrir um desses ramos naturalmente. Cobertura de mutação, que é o que de fato mede se a asserção existe, fica para depois da entrega |
