@@ -116,6 +116,7 @@ banco de teste, e o `/health` respondia pelo banco de desenvolvimento da máquin
 de quem rodava — no runner, onde esse banco não existe, virou 503. A catraca de
 ramo, que eu tinha subido para 93 colada nos 93,11% desta máquina, reprovou nos
 92,82% do runner e desceu para 92. Os dois consertos foram ao ramo, e a DT-117
-está paga: o YAML agora é provado por execução, e não por teste estático.
+está paga: o YAML agora é provado por execução, e não por teste estático. A
+execução seguinte, `CI #2`, saiu verde nos quatro jobs em 3m13s.
 
 **Segue aberto:** L4 (composição de desktop) e L8 (LCP).
