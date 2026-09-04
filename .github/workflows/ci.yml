@@ -1,0 +1,210 @@
+# Portão automático do projeto (T-14.5, RNF-40, RNF-14). Roda em todo pull
+# request e em todo push para `main`. A publicação da imagem em registro ficou
+# para depois do aceite do TCC, então aqui a imagem só é construída.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Um pull request que recebe um commit novo cancela a execução anterior, que já
+# não vale para nada e só ocuparia runner.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  lint:
+    name: Lint e auditoria de dependências
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      # A auditoria olha só o que vai para a imagem. Vulnerabilidade em
+      # dependência de desenvolvimento não chega ao usuário, e travaria o
+      # projeto por causa de ferramenta que nem é instalada em produção.
+      - name: npm audit
+        run: npm run audit
+
+  testes:
+    name: Suíte contra MySQL
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    # Os testes que criam banco descartável ajustam estas variáveis sozinhos,
+    # mas os 37 unitários que leem `src/config/env.js` direto dependem delas, e
+    # no runner não existe `.env` para o dotenv carregar.
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: beever_teste
+      DB_ROOT_PASSWORD: root
+      SESSION_SECRET: segredo-de-teste-do-ci
+      # A medição de carga sai daqui e roda em job próprio: ela cronometra, e
+      # runner compartilhado é lento demais para servir de portão.
+      PULAR_MEDICAO_DE_CARGA: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      # `test:db` em vez de `test`: com TESTES_DE_BANCO=1 a ausência de MySQL
+      # vira falha em vez de teste pulado em silêncio.
+      - name: npm run test:db
+        run: npm run test:db
+
+  cobertura:
+    name: Cobertura dos services de cálculo
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: beever_teste
+      DB_ROOT_PASSWORD: root
+      SESSION_SECRET: segredo-de-teste-do-ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      # Job separado do de testes por medição da T-14.2: a instrumentação de
+      # cobertura infla o tempo que a RNF-01 cobra, então as duas coisas não se
+      # medem na mesma execução.
+      - name: npm run test:cobertura
+        run: npm run test:cobertura
+
+  carga:
+    name: Medição de carga (não reprova)
+    runs-on: ubuntu-latest
+    # O número depende da máquina, e o runner do GitHub é compartilhado. Serve
+    # para acompanhar tendência, não para barrar merge, e por isso roda só em
+    # `main`. O laudo que vale é o da T-14.3, medido em máquina conhecida.
+    if: github.ref == 'refs/heads/main'
+    continue-on-error: true
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: beever_teste
+      DB_ROOT_PASSWORD: root
+      SESSION_SECRET: segredo-de-teste-do-ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: npm run test:carga
+        run: npm run test:carga
+
+  imagem:
+    name: A imagem ainda constrói
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Construir pega o que teste nenhum pega: a T-14.4 achou quatro defeitos
+      # que só apareceram dentro do contêiner. Publicar em registro é passo de
+      # depois do aceite, então aqui a imagem fica no runner e é descartada.
+      - name: docker build
+        run: docker build --tag beever:${{ github.sha }} .
+
+      - name: A imagem sobe e responde no /health
+        run: |
+          docker run --detach --name beever-ci \
+            --env NODE_ENV=development \
+            --env DB_HOST=127.0.0.1 \
+            --env DB_USER=beever \
+            --env DB_PASSWORD=beever \
+            --env DB_NAME=beever \
+            --env SESSION_SECRET=segredo-de-teste-do-ci \
+            beever:${{ github.sha }}
+          # Sem banco ao lado, o /health responde 503 de propósito. O que se
+          # prova aqui é que o processo sobe e atende, que era o defeito do
+          # `pino-pretty` na T-14.4.
+          for tentativa in $(seq 1 30); do
+            if docker exec beever-ci node -e "fetch('http://127.0.0.1:3000/health').then(() => process.exit(0)).catch(() => process.exit(1))"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'A aplicação não respondeu em 60 s.'
+          docker logs beever-ci
+          exit 1

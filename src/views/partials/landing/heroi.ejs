@@ -1,0 +1,65 @@
+<%#
+  Primeira dobra da landing (RF-LAN-01 e RF-LAN-02, seção 6.2 do docs/04):
+  título curto, uma linha de subtítulo, o CTA que a página inteira serve, e a
+  Beenie grande.
+
+  O mascote fica sobre um hexágono de mel porque o traço preto dele se perderia
+  no fundo escuro — é a regra de ofício da seção 2.3.
+
+  As três camadas de favos são o parallax. Elas são decoração pura, ficam atrás
+  do conteúdo com `aria-hidden` e não recebem toque.
+-%>
+<section class="relative isolate overflow-hidden bg-breu">
+  <%# `data-parallax` é a velocidade de cada camada, lida pelo `landing.js`: 0.08
+      anda devagar e fica ao fundo, 0.32 anda rápido e vem à frente. Sem
+      JavaScript, quem as move é a linha do tempo de rolagem do CSS. -%>
+  <div class="camada-de-favos camada-fundo favos-de-fundo" data-parallax="0.08" aria-hidden="true"></div>
+  <div class="camada-de-favos camada-meio favos-de-fundo" data-parallax="0.18" aria-hidden="true"></div>
+  <div class="camada-de-favos camada-frente favos-de-fundo" data-parallax="0.32" aria-hidden="true"></div>
+
+  <div
+    class="relative mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 sm:py-24 md:grid-cols-2 md:gap-6"
+  >
+    <div class="revela text-center md:text-left">
+      <p class="font-semibold uppercase tracking-widest text-mel">Beever</p>
+
+      <h1 class="mt-4 font-display text-4xl leading-tight text-cera sm:text-5xl lg:text-6xl">
+        Aprenda a cuidar do seu dinheiro jogando
+      </h1>
+
+      <p class="mt-5 text-lg text-cera/80">
+        Missões curtas, jogos e um patrimônio que cresce de verdade — no seu ritmo, nos
+        dias que você escolher.
+      </p>
+
+      <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row md:items-start">
+        <%- include('../ui/botao', { texto: 'Começar agora', href: '/cadastro' }) %>
+        <%- include('../ui/botao', { texto: 'Já tenho conta', href: '/login', variante: 'contorno' }) %>
+      </div>
+
+      <%# RNF-35: a criança e o responsável precisam saber disto antes de entrar. -%>
+      <p class="mt-6 text-sm text-cera/60">
+        O mel é dinheiro de brincadeira. Serve para treinar, não vale nada fora do jogo.
+      </p>
+    </div>
+
+    <div class="revela revela-atrasada relative flex justify-center">
+      <%# O hexágono é fundo do mascote, e não moldura em volta: forma sólida em
+          mel, com a Beenie por cima. O parallax é dele, e não do bloco inteiro:
+          revelação e parallax escrevem no mesmo `transform` e uma apagaria a
+          outra. -%>
+      <div
+        class="favo-hexagono absolute inset-x-8 top-8 aspect-square bg-mel/90 sm:inset-x-16"
+        data-parallax="-0.06"
+        aria-hidden="true"
+      ></div>
+
+      <%- include('../ui/mascote', {
+        pose: 'acolhendo',
+        decorativa: true,
+        prioritaria: true,
+        classe: 'beenie-chega animate-float relative h-64 w-auto sm:h-80 lg:h-96',
+      }) %>
+    </div>
+  </div>
+</section>

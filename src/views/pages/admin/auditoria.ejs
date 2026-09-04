@@ -1,0 +1,168 @@
+<%#
+  Consulta da trilha de auditoria (RF-ADM-05).
+
+  Só leitura, e nenhuma ação: a tabela é append-only por gatilho, e uma tela com
+  botão de apagar mentiria sobre o que o sistema permite. O antes/depois fica num
+  `details` por linha, porque é JSON e espalhá-lo em colunas inventaria estrutura
+  que a tabela não tem.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'auditoria' }) %>
+
+<%
+  // Os filtros seguem para o link do CSV e para a paginação, para o recorte não
+  // se perder ao trocar de página.
+  const parametros = new URLSearchParams();
+  Object.entries(enviados).forEach(([chave, valor]) => {
+    if (valor && chave !== 'pagina') parametros.set(chave, valor);
+  });
+  const comFiltros = parametros.toString();
+  const enderecoDaPagina = (numero) => `/admin/auditoria?${comFiltros}${comFiltros ? '&' : ''}pagina=${numero}`;
+%>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <h1 class="text-3xl font-bold">Auditoria</h1>
+  <p class="mt-2 text-tinta-suave">
+    Toda alteração de mel, pólen, XP, compra e ação administrativa deixa linha aqui (RN-010).
+    A trilha não pode ser alterada nem apagada, nem por esta tela.
+  </p>
+
+  <form method="GET" action="/admin/auditoria" class="mt-8 rounded-favo border border-linha bg-white p-4">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <label for="atorTipo" class="mb-1 block text-sm font-medium">Quem agiu</label>
+        <select id="atorTipo" name="atorTipo"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
+          <option value="">Qualquer um</option>
+          <% tiposDeAtor.forEach((tipo) => { %>
+            <option value="<%= tipo %>" <%= filtros.atorTipo === tipo ? 'selected' : '' %>><%= tipo %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label for="atorId" class="mb-1 block text-sm font-medium">Id de quem agiu</label>
+        <input id="atorId" name="atorId" type="number" min="1" value="<%= filtros.atorId || '' %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+
+      <div>
+        <label for="acao" class="mb-1 block text-sm font-medium">Ação</label>
+        <select id="acao" name="acao"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
+          <option value="">Qualquer uma</option>
+          <% acoes.forEach((acao) => { %>
+            <option value="<%= acao %>" <%= filtros.acao === acao ? 'selected' : '' %>><%= acao %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label for="entidade" class="mb-1 block text-sm font-medium">Entidade</label>
+        <input id="entidade" name="entidade" type="text" maxlength="60" value="<%= filtros.entidade || '' %>"
+          placeholder="user, item, cell…"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+
+      <div>
+        <label for="entidadeId" class="mb-1 block text-sm font-medium">Id da entidade</label>
+        <input id="entidadeId" name="entidadeId" type="number" min="1" value="<%= filtros.entidadeId || '' %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+
+      <div>
+        <label for="requestId" class="mb-1 block text-sm font-medium">Id da requisição</label>
+        <input id="requestId" name="requestId" type="text" maxlength="36" value="<%= filtros.requestId || '' %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        <p class="mt-1 text-xs text-tinta-suave">Liga esta linha ao log inteiro daquela requisição.</p>
+      </div>
+
+      <div>
+        <label for="de" class="mb-1 block text-sm font-medium">De</label>
+        <input id="de" name="de" type="date" value="<%= enviados.de || '' %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+
+      <div>
+        <label for="ate" class="mb-1 block text-sm font-medium">Até</label>
+        <input id="ate" name="ate" type="date" value="<%= enviados.ate || '' %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <%- include('../../partials/ui/botao', { texto: 'Consultar', tipo: 'submit', tamanho: 'medio' }) %>
+      <%- include('../../partials/ui/botao', { texto: 'Limpar', href: '/admin/auditoria', variante: 'secundario', tamanho: 'medio' }) %>
+      <a href="/admin/auditoria/csv?<%= comFiltros %>" class="inline-flex min-h-11 items-center text-sm underline underline-offset-4">
+        Baixar este recorte em CSV
+      </a>
+      <% if (paginacao.total > limiteDoCsv) { %>
+        <p class="w-full text-xs text-atencao-texto">
+          O recorte tem <%= paginacao.total %> linhas e o CSV leva <%= limiteDoCsv %>: estreite o filtro
+          para levar tudo.
+        </p>
+      <% } %>
+    </div>
+  </form>
+
+  <p class="mt-6 text-sm text-tinta-suave">
+    <%= paginacao.total %> linha(s) · página <%= paginacao.atual %> de <%= paginacao.paginas %>
+  </p>
+
+  <div class="mt-3 overflow-x-auto rounded-favo border border-linha bg-white">
+    <table class="w-full text-left text-sm">
+      <caption class="sr-only">Linhas da trilha de auditoria</caption>
+      <thead class="border-b border-linha text-tinta-suave">
+        <tr>
+          <th scope="col" class="px-4 py-3 font-semibold">Quando</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Quem</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Ação</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Entidade</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Antes e depois</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% linhas.forEach((linha) => { %>
+          <tr class="border-b border-linha last:border-0 align-top">
+            <td class="px-4 py-3 whitespace-nowrap">
+              <%= new Date(linha.created_at).toLocaleString('pt-BR') %>
+            </td>
+            <td class="px-4 py-3"><%= linha.ator_tipo %><%= linha.actor_id ? ` #${linha.actor_id}` : '' %></td>
+            <td class="px-4 py-3 font-medium"><%= linha.action %></td>
+            <td class="px-4 py-3"><%= linha.entity_type %><%= linha.entity_id ? ` #${linha.entity_id}` : '' %></td>
+            <td class="px-4 py-3">
+              <% if (linha.before_state || linha.after_state) { %>
+                <details>
+                  <summary class="cursor-pointer text-xs underline underline-offset-4">Ver estado</summary>
+                  <pre class="mt-2 max-w-md overflow-x-auto rounded bg-cera p-3 font-mono text-xs"><%= JSON.stringify({ antes: linha.before_state, depois: linha.after_state }, null, 2) %></pre>
+                </details>
+              <% } else { %>
+                <span class="text-xs text-tinta-suave">—</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (paginacao.paginas > 1) { %>
+    <nav class="mt-6 flex flex-wrap items-center gap-3" aria-label="Páginas da auditoria">
+      <% if (paginacao.atual > 1) { %>
+        <%- include('../../partials/ui/botao', {
+          texto: 'Anterior',
+          href: enderecoDaPagina(paginacao.atual - 1),
+          variante: 'secundario',
+          tamanho: 'medio',
+        }) %>
+      <% } %>
+      <% if (paginacao.atual < paginacao.paginas) { %>
+        <%- include('../../partials/ui/botao', {
+          texto: 'Próxima',
+          href: enderecoDaPagina(paginacao.atual + 1),
+          variante: 'secundario',
+          tamanho: 'medio',
+        }) %>
+      <% } %>
+    </nav>
+  <% } %>
+</main>

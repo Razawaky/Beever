@@ -1,0 +1,111 @@
+  <div class="flex min-h-screen items-center justify-center p-8">
+    <div class="w-full max-w-sm">
+      <a href="/" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar</a>
+
+      <h1 class="mt-6 text-3xl font-bold">Criar conta</h1>
+      <p class="mt-2 text-tinta-suave">Crie uma conta e comece a aprender se divertindo.</p>
+
+      <form method="POST" action="/users" class="mt-8 space-y-4" id="form-cadastro">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+        <%# Apelido, não nome: a RN-049 proíbe coletar dado pessoal de criança
+            além de apelido e avatar, e o banco não tem coluna de nome. %>
+        <div>
+          <label for="apelido" class="mb-1 block text-sm font-medium">Apelido</label>
+          <input
+            id="apelido"
+            name="apelido"
+            type="text"
+            required
+            maxlength="60"
+            autocomplete="nickname"
+            placeholder="Como você quer ser chamado"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="data_nasc" class="mb-1 block text-sm font-medium">Data de nascimento</label>
+          <input
+            id="data_nasc"
+            name="data_nasc"
+            type="date"
+            required
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="email" class="mb-1 block text-sm font-medium">E-mail</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+            placeholder="email@exemplo.com"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="senha" class="mb-1 block text-sm font-medium">Senha</label>
+          <input
+            id="senha"
+            name="senha"
+            type="password"
+            required
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Ao menos 8 caracteres, com letras e números"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="confirmarSenha" class="mb-1 block text-sm font-medium">Confirmar senha</label>
+          <input
+            id="confirmarSenha"
+            name="confirmarSenha"
+            type="password"
+            required
+            autocomplete="new-password"
+            placeholder="Repita a senha"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <%#
+          Consentimento do responsável (RNF-34, LGPD Art. 14). O e-mail acima é o
+          do responsável quando a conta é de criança, então aqui basta a
+          declaração — não se pede o mesmo endereço duas vezes.
+
+          O aviso sobre moeda fictícia mora junto porque este é o momento em que
+          um adulto está lendo a tela (RNF-35).
+        %>
+        <label class="flex cursor-pointer gap-3 rounded-favo border border-linha bg-cera p-4 text-sm">
+          <input
+            type="checkbox"
+            id="consentimento_responsavel"
+            name="consentimento_responsavel"
+            required
+            class="mt-0.5 h-5 w-5 shrink-0 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+          />
+          <span>
+            Sou o responsável por esta criança e autorizo a criação da conta.
+            <span class="mt-1 block text-tinta-suave">
+              O Beever coleta apenas apelido e avatar, nunca nome completo, endereço ou telefone.
+              O mel do jogo é fictício: não existe compra com dinheiro de verdade.
+            </span>
+          </span>
+        </label>
+
+        <%- include('../partials/ui/botao', { texto: 'Criar conta', tipo: 'submit', classe: 'w-full' }) %>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-tinta-suave">
+        Já tem uma conta?
+        <a href="/login" class="font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Entrar</a>
+      </p>
+    </div>
+  </div>

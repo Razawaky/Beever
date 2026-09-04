@@ -1,0 +1,31 @@
+<%#
+  Listas Suspensas: a frase em cima e até seis lacunas, cada uma com as opções
+  uma por linha.
+-%>
+<% const lacunas = corpo?.lacunas ?? []; %>
+<%- include('campos', { nome: 'enunciado', rotulo: 'A frase que a criança completa', valor: corpo?.enunciado, linhas: 3, id: 'enunciado' }) %>
+
+<% for (let indice = 0; indice < 6; indice += 1) {
+     const lacuna = lacunas[indice] ?? {}; %>
+  <fieldset class="mt-4 rounded-favo border border-linha p-4">
+    <legend class="px-2 text-sm font-semibold">Lacuna <%= indice + 1 %></legend>
+    <div class="space-y-3">
+      <%- include('campos', { nome: 'lacunaTexto', rotulo: 'O que a lacuna pergunta', valor: lacuna.texto, id: `lacuna-${indice}` }) %>
+      <%- include('campos', {
+        nome: 'lacunaOpcoes',
+        rotulo: 'Opções, uma por linha',
+        valor: (lacuna.opcoes || []).join('\n'),
+        linhas: 4,
+        id: `lacuna-opcoes-${indice}`,
+      }) %>
+      <%- include('campos', {
+        nome: 'lacunaCorreta',
+        rotulo: 'Número da opção certa',
+        valor: lacuna.correta === undefined ? 1 : lacuna.correta + 1,
+        tipo: 'number',
+        minimo: 1,
+        id: `lacuna-correta-${indice}`,
+      }) %>
+    </div>
+  </fieldset>
+<% } %>

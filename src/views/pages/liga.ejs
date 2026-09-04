@@ -1,0 +1,69 @@
+<%#
+  A liga da semana (RF-GAM-02 e RF-GAM-03). O ranque mostra apelido e pólen, e
+  nada mais: nível, idade ou qualquer dado pessoal não entram numa lista que
+  outra criança vê. Ninguém é rebaixado, e a tela diz isso em palavra.
+%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+    <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+    <h1 class="text-2xl font-bold">Liga da semana</h1>
+    <a href="/conquistas" class="font-semibold text-tinta hover:underline">Conquistas &rarr;</a>
+  </div>
+</header>
+
+<main class="mx-auto max-w-3xl px-6 py-10">
+  <% if (!liga) { %>
+    <%- include('../partials/ui/estado-vazio', {
+      mensagem: 'Sua liga começa assim que você ganhar seu primeiro pólen. Jogue uma célula e volte aqui.',
+      acao: { href: '/trilha', texto: 'Ir para a trilha' },
+    }) %>
+  <% } else { %>
+    <section class="rounded-favo bg-white p-6 shadow-md">
+      <h2 class="font-display text-xl"><%= liga.grupo.nome %></h2>
+      <p class="mt-1 text-sm text-tinta-suave">Semana de <%= periodo %></p>
+
+      <dl class="mt-4 grid gap-4 sm:grid-cols-2">
+        <%- include('../partials/ui/badge-recurso', {
+          icone: '🏅',
+          rotulo: 'Sua posição',
+          valor: liga.posicao ?? '—',
+          grande: true,
+        }) %>
+        <%- include('../partials/ui/badge-recurso', {
+          icone: '🌼',
+          rotulo: 'Seu pólen na semana',
+          valor: liga.polen,
+          grande: true,
+        }) %>
+      </dl>
+
+      <p class="mt-4 rounded-favo bg-cera p-4 text-sm">
+        Ninguém desce de liga aqui. Quando a semana fecha, o pólen zera para todo mundo e o pódio ganha mel:
+        <% premios.forEach((premio) => { %>
+          <span class="tabular-nums"><%= premio.posicao %>º lugar 🍯 <%= premio.mel %>.</span>
+        <% }) %>
+      </p>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="font-display text-xl">Quem está no seu grupo</h2>
+
+      <ol class="mt-4 grid gap-2">
+        <% liga.membros.forEach((membro) => { %>
+          <% const ehVoce = Number(membro.user_id) === idUsuario; %>
+          <%# A sua linha é destacada por fundo e pela palavra "você": só a cor
+              deixaria de fora quem não distingue matiz (RNF-21). %>
+          <li class="flex items-center justify-between gap-3 rounded-favo px-4 py-3 <%= ehVoce ? 'bg-mel font-semibold' : 'bg-white' %>">
+            <span class="flex min-w-0 items-center gap-3">
+              <span class="w-8 shrink-0 text-center tabular-nums"><%= membro.posicao %>º</span>
+              <span class="truncate">
+                <%= membro.nickname %><% if (ehVoce) { %> (você)<% } %>
+              </span>
+            </span>
+            <span class="shrink-0 tabular-nums">🌼 <%= membro.polen %></span>
+          </li>
+        <% }) %>
+      </ol>
+    </section>
+  <% } %>
+</main>

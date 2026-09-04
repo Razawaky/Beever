@@ -1,0 +1,65 @@
+/* Ponto único de troca da tipografia. Os arquivos e os tokens `--font-*` moram
+   juntos aqui de propósito: trocar a fonte do projeto é mexer só neste arquivo,
+   sem tocar em nenhuma view.
+
+   Quando o Beever tiver fonte própria, o caminho é substituir os `src:` dos
+   `@font-face` abaixo e manter os nomes de família `Beever Display` e
+   `Beever Texto` — as views usam `font-display` e `font-sans`, nunca o nome da
+   fonte, então nada mais precisa mudar.
+
+   Hoje `Beever Display` é servido pelo Lilita One e `Beever Texto` pelo Nunito,
+   auto-hospedados em `src/public/fonts/` (subsets latin e latin-ext da Google
+   Fonts, sem CDN externo por causa da CSP). */
+
+/* O Nunito é variável de 400 a 700: um arquivo por subset cobre corpo, botão e
+   número de destaque. */
+@font-face {
+  font-family: 'Beever Texto';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/nunito-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Beever Texto';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/nunito-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Beever Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/lilita-one-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Beever Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/lilita-one-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Os dois papéis da identidade: display anuncia, texto explica. O `system-ui`
+   atrás de cada um é o que aparece enquanto o woff2 carrega. */
+@theme {
+  --font-sans: 'Beever Texto', system-ui, sans-serif;
+  --font-display: 'Beever Display', system-ui, sans-serif;
+}

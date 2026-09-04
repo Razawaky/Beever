@@ -1,0 +1,224 @@
+/* Sobrou do client/ antigo: utilitários de forma e as animações da abelha.
+   Os tokens de cor não moram mais aqui — estão no @theme do tailwind.css, que
+   é a única fonte da identidade (ver DESIGN.md na raiz).
+
+   Removido na limpeza: o bloco HSL do shadcn (`--primary`, `--purple`,
+   `--chart-*`, `.dark`) que veio junto no resgate. Nunca foi ligado ao Tailwind
+   v4, tinha roxo fora da identidade e supunha um tema escuro que o app não tem
+   — o fundo escuro da landing é escolha de superfície, não modo. Nada no
+   projeto referenciava aquelas variáveis. */
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+  }
+
+  /* Foco visível por padrão em tudo que recebe teclado (RNF-23). Ficava em
+     classe, elemento por elemento, e quatrocentos deles não tinham nenhuma. É
+     regra de base para que tela nova nasça certa sem ninguém lembrar. */
+  :focus-visible {
+    outline: 3px solid var(--color-ambar);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .hexagon {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-30px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(1);
+  }
+}
+
+.floating-indicator {
+  animation: float-up 1.5s ease-out forwards;
+}
+
+/* `bounce-gentle` (translateY ±10px, 2s, ease-in-out) foi removida: era a mesma
+   flutuação que `.animate-float` do trilha.css, que é a idle oficial da Beenie
+   no DESIGN.md, com nome enganoso — nenhuma tela usava as duas. Uma animação,
+   um nome. */
+
+@keyframes wing-flap {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+.animate-wing-left {
+  animation: wing-flap 0.3s ease-in-out infinite;
+  transform-origin: right center;
+}
+
+.animate-wing-right {
+  animation: wing-flap 0.3s ease-in-out infinite reverse;
+  transform-origin: left center;
+}
+
+/* Desativado na migração: esta regra tem o mesmo nome do utilitário
+   `transition-all` do Tailwind e o sobrescrevia silenciosamente em toda a
+   aplicação. Preservada aqui como referência das telas antigas; se a duração de
+   0.3s for mesmo desejada, use `duration-300` do Tailwind no elemento.
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+*/
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 250px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Respeita RNF-26: quem pede menos movimento não recebe loop nem animação
+   decorativa, e o conteúdo continua completo. */
+@media (prefers-reduced-motion: reduce) {
+  .floating-indicator,
+  .animate-wing-left,
+  .animate-wing-right,
+  .toast {
+    animation: none;
+  }
+}
+
+/* Barras de progresso — largura por classe, nunca por atributo `style`.
+   
+   A CSP da aplicação declara `style-src 'self'` sem `'unsafe-inline'` (RNF-11),
+   e isso vale também para o atributo `style` de um elemento, não só para a tag
+   `<style>`. As barras de XP, de tarefa e de meta escreviam a largura ali
+   dentro, então o navegador simplesmente descartava a regra e as três
+   apareciam vazias — defeito que nenhum teste pegou porque toda verificação era
+   por `curl` e `supertest`, que não aplicam CSP.
+
+   A largura passa a ser uma classe de passo de 5%. Cinco pontos percentuais são
+   menos de dois pixels numa barra de 224 px: ninguém enxerga a diferença, e o
+   número exato continua escrito ao lado e no `aria-valuenow`, que é onde ele
+   precisa ser exato. */
+.barra-0 { width: 0%; }
+.barra-5 { width: 5%; }
+.barra-10 { width: 10%; }
+.barra-15 { width: 15%; }
+.barra-20 { width: 20%; }
+.barra-25 { width: 25%; }
+.barra-30 { width: 30%; }
+.barra-35 { width: 35%; }
+.barra-40 { width: 40%; }
+.barra-45 { width: 45%; }
+.barra-50 { width: 50%; }
+.barra-55 { width: 55%; }
+.barra-60 { width: 60%; }
+.barra-65 { width: 65%; }
+.barra-70 { width: 70%; }
+.barra-75 { width: 75%; }
+.barra-80 { width: 80%; }
+.barra-85 { width: 85%; }
+.barra-90 { width: 90%; }
+.barra-95 { width: 95%; }
+.barra-100 { width: 100%; }
+
+/* Estrelas da tela de resultado (RF-CON-05).
+
+   A estrela ganha aparece com um pulinho, uma depois da outra. O atraso vai em
+   classe, e não em `style`, porque a CSP não permite estilo inline — mesmo
+   motivo das `.barra-N`. */
+.estrela {
+  display: inline-block;
+}
+
+.estrela-ganha {
+  opacity: 0;
+  animation: estrela-surge 0.4s ease-out forwards;
+}
+
+.estrela-ganha.estrela-2 {
+  animation-delay: 0.2s;
+}
+
+.estrela-ganha.estrela-3 {
+  animation-delay: 0.4s;
+}
+
+@keyframes estrela-surge {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Sem animação, a estrela ganha ainda precisa estar acesa (RNF-26). */
+@media (prefers-reduced-motion: reduce) {
+  .estrela-ganha {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/*
+ * Os canvas da economia. A largura vem do CSS e os atributos `width`/`height`
+ * do HTML seguem como proporção do desenho — a CSP proíbe estilo inline
+ * (RNF-11), então a medida não pode ir em atributo `style`.
+ */
+.grafico-rosca {
+  width: 112px;
+  height: 112px;
+}
+
+.grafico-linha {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}

@@ -1,0 +1,44 @@
+<%#
+  As conquistas do jogador (RF-GAM-01). Cada família é uma escada de quatro
+  degraus, e o que ainda não foi conquistado aparece com o alvo à vista.
+  Tudo chega pronto do `conquistasDoJogador`: a tela não faz conta.
+%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+    <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+    <h1 class="text-2xl font-bold">Minhas conquistas</h1>
+    <a href="/liga" class="font-semibold text-tinta hover:underline">Liga &rarr;</a>
+  </div>
+</header>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <p class="rounded-favo bg-white p-5 text-sm tabular-nums shadow-md">
+    Você já conquistou <strong><%= catalogo.desbloqueadas %></strong> de <%= catalogo.total %> conquistas.
+  </p>
+
+  <% catalogo.familias.forEach((familia) => { %>
+    <section class="mt-10">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="font-display text-xl">
+          <span aria-hidden="true"><%= iconeDaConquista(familia.criterio) %></span> <%= familia.titulo %>
+        </h2>
+        <p class="text-sm tabular-nums text-tinta-suave">
+          <% if (familia.falta === null) { %>
+            Escada completa!
+          <% } else { %>
+            Faltam <%= familia.falta %> para o próximo degrau
+          <% } %>
+        </p>
+      </div>
+
+      <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+        <% familia.conquistas.forEach((conquista) => { %>
+          <%- include('../partials/ui/conquista-card', {
+            conquista,
+            icone: iconeDaConquista(familia.criterio),
+          }) %>
+        <% }) %>
+      </ul>
+    </section>
+  <% }) %>
+</main>

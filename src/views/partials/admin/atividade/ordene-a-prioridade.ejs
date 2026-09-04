@@ -1,0 +1,29 @@
+<%#
+  Ordene a Prioridade: até seis itens, cada um com a posição certa. O jogo exige
+  pelo menos três, e duas posições iguais são recusadas pelo validador.
+-%>
+<% const itens = corpo?.itens ?? []; %>
+<%- include('campos', { nome: 'enunciado', rotulo: 'Enunciado', valor: corpo?.enunciado, id: 'enunciado' }) %>
+
+<fieldset class="mt-4 rounded-favo border border-linha p-4">
+  <legend class="px-2 text-sm font-semibold">Itens</legend>
+  <div class="space-y-3">
+    <% for (let indice = 0; indice < 6; indice += 1) { %>
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="min-w-56 flex-1">
+          <%- include('campos', { nome: 'itemTexto', rotulo: `Item ${indice + 1}`, valor: itens[indice]?.texto, id: `item-${indice}` }) %>
+        </div>
+        <div class="w-40">
+          <%- include('campos', {
+            nome: 'itemOrdem',
+            rotulo: 'Posição certa',
+            valor: itens[indice]?.ordem ?? indice + 1,
+            tipo: 'number',
+            minimo: 1,
+            id: `item-ordem-${indice}`,
+          }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</fieldset>

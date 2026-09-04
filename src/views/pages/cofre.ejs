@@ -1,0 +1,178 @@
+<%#
+  O cofre (RF-COF-01 a 04): guardar, tirar, ver o extrato, declarar a meta e
+  enxergar a projeção. O formulário é POST comum, sem JavaScript — o gráfico é
+  enfeite útil, e a página funciona inteira sem ele.
+%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-4xl items-center justify-between gap-4">
+    <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+    <h1 class="text-2xl font-bold">Meu cofre</h1>
+    <%- include('../partials/ui/badge-recurso', { icone: '🍯', rotulo: 'Na carteira', valor: perfil.mel }) %>
+  </div>
+</header>
+
+<main class="mx-auto max-w-4xl px-6 py-10">
+  <section class="rounded-favo bg-white p-6 shadow-md">
+    <%- include('../partials/ui/badge-recurso', {
+      icone: '🍯',
+      rotulo: 'Guardado no cofre',
+      valor: cofre.saldo,
+      grande: true,
+    }) %>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Rende <%= cofre.taxaPercentual %>% por semana. Mel que você tira não rende na semana da retirada.
+    </p>
+
+    <div class="mt-6 grid gap-6 sm:grid-cols-2">
+      <form method="POST" action="/cofre/depositos" class="grid gap-2">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <label for="valor-deposito" class="text-sm font-semibold">Guardar mel</label>
+        <input
+          id="valor-deposito"
+          name="valor"
+          type="number"
+          min="1"
+          max="<%= perfil.mel %>"
+          required
+          class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        />
+        <%- include('../partials/ui/botao', { texto: 'Guardar', tipo: 'submit', tamanho: 'medio' }) %>
+      </form>
+
+      <form method="POST" action="/cofre/saques" class="grid gap-2">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <label for="valor-saque" class="text-sm font-semibold">Tirar mel</label>
+        <input
+          id="valor-saque"
+          name="valor"
+          type="number"
+          min="1"
+          max="<%= cofre.saldo %>"
+          required
+          class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        />
+        <button
+          type="submit"
+          class="min-h-11 rounded-favo bg-cera px-4 py-2 font-semibold text-tinta shadow-md transition hover:bg-white hover:shadow-lg focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        >
+          Tirar
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <section class="mt-8 rounded-favo bg-white p-6 shadow-md">
+    <h2 class="font-display text-xl">Minha meta</h2>
+
+    <% if (cofre.meta) { %>
+      <p class="mt-2 text-sm">
+        Você quer juntar <strong>🍯 <%= cofre.meta.valor %></strong><% if (cofre.meta.prazo) { %>
+          até <%= new Date(cofre.meta.prazo).toLocaleDateString('pt-BR') %><% } %>.
+      </p>
+      <% if (cofre.semanasParaAMeta !== null) { %>
+        <p class="mt-1 text-sm text-tinta-suave">
+          Nesse ritmo, faltam <%= cofre.semanasParaAMeta %> <%= cofre.semanasParaAMeta === 1 ? 'semana' : 'semanas' %>.
+        </p>
+      <% } %>
+    <% } else { %>
+      <p class="mt-2 text-sm text-tinta-suave">Você ainda não tem uma meta. Quem tem meta guarda mais.</p>
+    <% } %>
+
+    <form method="POST" action="/cofre/meta" class="mt-4 grid gap-3 sm:grid-cols-3 sm:items-end">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <div class="grid gap-2">
+        <label for="valor-meta" class="text-sm font-semibold">Quero juntar</label>
+        <input
+          id="valor-meta"
+          name="valor"
+          type="number"
+          min="1"
+          value="<%= cofre.meta ? cofre.meta.valor : '' %>"
+          class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        />
+      </div>
+      <div class="grid gap-2">
+        <label for="prazo-meta" class="text-sm font-semibold">Até quando</label>
+        <input
+          id="prazo-meta"
+          name="prazo"
+          type="date"
+          class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        />
+      </div>
+      <%- include('../partials/ui/botao', { texto: 'Salvar meta', tipo: 'submit', tamanho: 'medio' }) %>
+    </form>
+  </section>
+
+  <section class="mt-8 rounded-favo bg-white p-6 shadow-md">
+    <h2 class="font-display text-xl">Se você guardar todo mês</h2>
+
+    <form method="GET" action="/cofre" class="mt-4 flex flex-wrap items-end gap-3">
+      <div class="grid gap-2">
+        <label for="por-semana" class="text-sm font-semibold">Guardando por semana</label>
+        <input
+          id="por-semana"
+          name="porSemana"
+          type="number"
+          min="0"
+          value="<%= porSemana %>"
+          class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        />
+      </div>
+      <button
+        type="submit"
+        class="min-h-11 rounded-favo bg-cera px-4 py-2 font-semibold text-tinta shadow-md transition hover:bg-white hover:shadow-lg focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        Ver projeção
+      </button>
+    </form>
+
+    <%
+      const projecao = cofre.projecao;
+      const ultima = projecao[projecao.length - 1];
+    %>
+    <p class="mt-4 text-sm">
+      Guardando <strong><%= porSemana %></strong> de mel por semana, em
+      <strong><%= projecao.length %></strong> semanas você terá <strong>🍯 <%= ultima ? ultima.total : cofre.saldo %></strong>.
+    </p>
+
+    <canvas
+      class="grafico-linha mt-4"
+      width="640"
+      height="200"
+      role="img"
+      aria-label="Projeção do cofre semana a semana, de <%= cofre.saldo %> a <%= ultima ? ultima.total : cofre.saldo %> de mel"
+      data-grafico="projecao"
+      data-saldo="<%= cofre.saldo %>"
+      data-totais="<%= projecao.map((linha) => linha.total).join(',') %>"
+    ></canvas>
+
+    <ol class="mt-4 grid gap-1 text-sm tabular-nums sm:grid-cols-2">
+      <% projecao.forEach((linha) => { %>
+        <li class="flex justify-between border-b border-linha py-1">
+          <span class="text-tinta-suave">Semana <%= linha.semana %></span>
+          <span class="font-medium">🍯 <%= linha.total %></span>
+        </li>
+      <% }) %>
+    </ol>
+  </section>
+
+  <section class="mt-8 rounded-favo bg-white p-6 shadow-md">
+    <h2 class="font-display text-xl">Extrato</h2>
+
+    <% if (cofre.extrato.length === 0) { %>
+      <p class="mt-2 text-sm text-tinta-suave">Nada aconteceu por aqui ainda.</p>
+    <% } else { %>
+      <ul class="mt-4 grid gap-2 text-sm tabular-nums">
+        <% cofre.extrato.forEach((linha) => { %>
+          <li class="flex items-center justify-between gap-3 border-b border-linha py-2">
+            <span><%= linha.tipo_nome %></span>
+            <span class="text-tinta-suave"><%= new Date(linha.created_at).toLocaleDateString('pt-BR') %></span>
+            <span class="font-semibold"><%= linha.tipo === 'saque' ? '−' : '+' %><%= linha.amount %></span>
+            <span class="text-tinta-suave">saldo: <%= linha.balance_after %></span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+</main>

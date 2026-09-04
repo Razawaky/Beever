@@ -1,0 +1,46 @@
+<%#
+  Cabeçalho da landing. É outra casca que a do app de propósito: aqui a
+  superfície é escura, e o logo é a versão branca. Uma só ação, que é a mesma
+  que a página inteira serve — levar ao registro.
+-%>
+<header class="sticky top-0 z-30 border-b border-white/10 bg-breu/90 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
+    <a
+      href="/"
+      class="rounded-favo focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+    >
+      <img src="/img/beever_logo_white.webp" alt="Beever" width="1028" height="326" class="h-8 w-auto" />
+    </a>
+
+    <%# As âncoras somem no celular: lá o cabeçalho é logo e ação, e a página se
+        percorre rolando. -%>
+    <nav class="hidden items-center gap-6 lg:flex" aria-label="Seções da página">
+      <%
+        const SECOES = [
+          { texto: 'Como funciona', href: '#como-funciona' },
+          { texto: 'A trilha', href: '#trilha' },
+          { texto: 'Os jogos', href: '#jogos' },
+          { texto: 'Para responsáveis', href: '#pais-e-escolas' },
+          { texto: 'Perguntas', href: '#perguntas' },
+        ];
+      %>
+      <% SECOES.forEach((secao) => { %>
+        <a
+          href="<%= secao.href %>"
+          class="rounded-favo px-1 py-1 text-sm text-cera/70 transition hover:text-mel focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+          ><%= secao.texto %></a
+        >
+      <% }); %>
+    </nav>
+
+    <nav class="flex items-center gap-2" aria-label="Sua conta">
+      <%- include('../ui/botao', {
+        texto: 'Entrar',
+        href: '/login',
+        variante: 'contorno',
+        tamanho: 'medio',
+      }) %>
+      <%- include('../ui/botao', { texto: 'Começar agora', href: '/cadastro', tamanho: 'medio' }) %>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,106 @@
+# Ambiente de desenvolvimento local: banco sozinho por padrão, aplicação
+# inteira sob demanda.
+#
+#   docker compose up -d                    só o MySQL, como sempre foi
+#   docker compose --profile completo up     MySQL + migrations + aplicação
+#
+# O perfil existe para não quebrar quem já roda o Node fora do compose, que é
+# como o projeto foi desenvolvido até aqui.
+#
+# Isto não é receita de produção: falta proxy reverso com TLS e a imagem é
+# construída na hora, em vez de vir de um registro. Ver docs/17.
+
+# Bloco comum aos serviços que rodam a imagem da aplicação. O `migrate` e o
+# `app` só diferem no comando.
+x-aplicacao: &aplicacao
+  build:
+    context: .
+    target: runtime
+  environment:
+    # Desenvolvimento por padrão, porque é isso que este arquivo é. Em
+    # `production` o `env.js` recusa segredo e e-mail de contato de exemplo — e
+    # é justo que recuse: quem for para produção precisa preencher os dois.
+    NODE_ENV: ${NODE_ENV:-development}
+    # Dentro do compose o banco atende pelo nome do serviço. O `.env` da máquina
+    # aponta para `localhost`, que aqui seria o próprio contêiner.
+    DB_HOST: mysql
+    DB_PORT: 3306
+    DB_USER: ${DB_USER:-beever}
+    DB_PASSWORD: ${DB_PASSWORD:-beever}
+    DB_NAME: ${DB_NAME:-beever}
+    DB_POOL_LIMIT: ${DB_POOL_LIMIT:-20}
+    # Sem valor padrão de propósito: o compose recusa subir e explica, em vez de
+    # a aplicação nascer com um segredo de sessão que qualquer um adivinha.
+    SESSION_SECRET: ${SESSION_SECRET:?defina SESSION_SECRET no .env — gere com openssl rand -base64 48}
+    SESSION_MAX_AGE_MINUTES: ${SESSION_MAX_AGE_MINUTES:-20}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+    CONTACT_EMAIL: ${CONTACT_EMAIL:-contato@beever.local}
+    UPLOADS_DIR: /app/uploads
+    UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-8}
+  volumes:
+    - beever-uploads:/app/uploads
+  depends_on:
+    mysql:
+      condition: service_healthy
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: beever-mysql
+    restart: unless-stopped
+    # A migration 008 cria os gatilhos que tornam audit_logs append-only
+    # (RNF-17). Com log binário ligado, criar gatilho exige SUPER — que o
+    # usuário da aplicação não tem e não deve ter. Esta variável permite que o
+    # dono do banco crie os seus próprios gatilhos sem virar superusuário.
+    #
+    # O fuso é fixado em UTC porque a aplicação grava e lê tudo em UTC (o driver
+    # usa `timezone: 'Z'`), enquanto `NOW()` seguiria o relógio do sistema. Num
+    # host em fuso local os dois lados discordariam e a virada do dia da RN-024
+    # sairia errada, sem nenhum teste acusar.
+    command: ['--log-bin-trust-function-creators=1', '--default-time-zone=+00:00']
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-beever}
+      MYSQL_USER: ${DB_USER:-beever}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-beever}
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    volumes:
+      - beever-mysql-data:/var/lib/mysql
+    healthcheck:
+      # A senha é a mesma do `MYSQL_ROOT_PASSWORD` acima. Antes esta linha lia
+      # uma variável que não existe em lugar nenhum e caía sempre no padrão:
+      # quem trocasse a senha de root ficava com o banco eternamente unhealthy.
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-p${DB_ROOT_PASSWORD:-root}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Roda as migrations e sai. A aplicação espera este serviço terminar bem, em
+  # vez de migrar no próprio boot: com mais de uma réplica, todas tentariam
+  # aplicar o mesmo arquivo ao mesmo tempo.
+  migrate:
+    <<: *aplicacao
+    profiles: ['completo']
+    container_name: beever-migrate
+    restart: 'no'
+    command: ['node', 'scripts/migrate.js']
+
+  app:
+    <<: *aplicacao
+    profiles: ['completo']
+    container_name: beever-app
+    restart: unless-stopped
+    ports:
+      - '${PORT:-3000}:3000'
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  beever-mysql-data:
+  # As ilustrações enviadas pelo painel administrativo são conteúdo, não código:
+  # sem volume elas somem no próximo deploy.
+  beever-uploads:

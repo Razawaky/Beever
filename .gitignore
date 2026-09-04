@@ -1,0 +1,44 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente — nunca versionar (ver .env.example)
+.env
+.env.local
+.env.*.local
+
+# CSS gerado pelo Tailwind CLI
+src/public/css/app.css
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dumps de banco — contêm dados reais de desenvolvimento e hashes de senha
+backups/
+
+# Cobertura e artefatos de teste
+coverage/
+.nyc_output/
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+# Added by code-review-graph
+.code-review-graph/
+
+# Instruções de agentes/IA — locais, não sobem pro repo.
+# O `.github/` é exceção parcial: `workflows/` precisa ser versionado, senão o
+# GitHub Actions nunca lê o portão. Skills, agents e hooks continuam de fora.
+.claude/
+.github/*
+!.github/workflows/
+.impeccable/
+CLAUDE.md
+AGENTS.md
+.mcp.json
+uploads/
+uploads-teste/

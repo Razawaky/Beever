@@ -1,0 +1,75 @@
+import 'dotenv/config';
+
+/**
+ * Única porta de entrada para variáveis de ambiente. Nenhum outro arquivo deve
+ * ler `process.env` direto — assim a configuração é validada em um só lugar e a
+ * aplicação falha na inicialização, não no meio de uma requisição.
+ */
+
+const obrigatorias = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'SESSION_SECRET'];
+
+const faltando = obrigatorias.filter((chave) => !process.env[chave]);
+if (faltando.length > 0) {
+  throw new Error(
+    `Variáveis de ambiente obrigatórias ausentes: ${faltando.join(', ')}. ` +
+      'Copie o .env.example para .env e preencha os valores.'
+  );
+}
+
+function inteiro(valor, padrao) {
+  const numero = Number.parseInt(valor ?? '', 10);
+  return Number.isNaN(numero) ? padrao : numero;
+}
+
+const ambiente = process.env.NODE_ENV ?? 'development';
+
+export const env = {
+  ambiente,
+  producao: ambiente === 'production',
+  teste: ambiente === 'test',
+  porta: inteiro(process.env.PORT, 3000),
+
+  banco: {
+    host: process.env.DB_HOST,
+    porta: inteiro(process.env.DB_PORT, 3306),
+    usuario: process.env.DB_USER,
+    senha: process.env.DB_PASSWORD,
+    nome: process.env.DB_NAME,
+    // Vinte, e não dez nem trinta: medido na T-14.3 com 30 jogadores chegando
+    // ao mesmo tempo. Dez põe fila na aplicação e estoura o teto da RNF-01;
+    // trinta ou mais troca essa fila por disputa dentro do MySQL e piora.
+    limitePool: inteiro(process.env.DB_POOL_LIMIT, 20),
+  },
+
+  sessao: {
+    segredo: process.env.SESSION_SECRET,
+    duracaoMs: inteiro(process.env.SESSION_MAX_AGE_MINUTES, 20) * 60 * 1000,
+  },
+
+  log: {
+    nivel: process.env.LOG_LEVEL ?? (ambiente === 'production' ? 'info' : 'debug'),
+  },
+
+  // Endereço que a política de privacidade publica para pedidos de acesso e
+  // exclusão de dados (Art. 18 da LGPD). Vem do ambiente porque muda de quem
+  // hospeda, e porque publicar e-mail errado numa política é pior que não ter.
+  emailDeContato: process.env.CONTACT_EMAIL ?? 'contato@beever.local',
+
+  // Ilustrações enviadas pelo painel administrativo. A pasta fica fora de
+  // `src/public` porque é conteúdo, não código: numa imagem de contêiner ela
+  // precisa ser volume, senão a arte some no próximo deploy.
+  uploads: {
+    diretorio: process.env.UPLOADS_DIR ?? 'uploads',
+    limiteEmBytes: inteiro(process.env.UPLOAD_MAX_MB, 8) * 1024 * 1024,
+  },
+};
+
+if (env.producao && env.sessao.segredo.startsWith('troque-este-segredo')) {
+  throw new Error('SESSION_SECRET ainda está com o valor de exemplo. Gere um segredo real para produção.');
+}
+
+if (env.producao && env.emailDeContato.endsWith('@beever.local')) {
+  throw new Error(
+    'CONTACT_EMAIL ainda está com o valor de exemplo, e ele é publicado na política de privacidade.'
+  );
+}

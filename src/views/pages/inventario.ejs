@@ -1,0 +1,85 @@
+<%#
+  O inventário (RF-INV-01 a 04). Bens e enfeites ficam em blocos separados
+  porque a diferença é a lição: um vira patrimônio, o outro é consumo (RN-041).
+  A variação de cada item é a diferença entre o que foi pago e o que vale hoje.
+%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+    <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+    <h1 class="text-2xl font-bold">Meus itens</h1>
+    <a href="/loja" class="font-semibold text-tinta hover:underline">Loja &rarr;</a>
+  </div>
+</header>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <%- include('../partials/ui/patrimonio-topo', { patrimonio: resumo.patrimonio }) %>
+
+  <section class="mt-10">
+    <h2 class="font-display text-xl">Bens</h2>
+    <p class="mt-1 text-sm text-tinta-suave">Estes contam no seu patrimônio.</p>
+
+    <% if (resumo.bens.length === 0) { %>
+      <p class="mt-4 rounded-favo bg-white p-6 text-sm text-tinta-suave">
+        Você ainda não tem nenhum bem. Na loja dá para começar pequeno.
+      </p>
+    <% } else { %>
+      <ul class="mt-4 grid gap-4 sm:grid-cols-2">
+        <% resumo.bens.forEach((grupo) => { %>
+          <% const variacao = grupo.valorTotal - grupo.valorPago; %>
+          <li class="rounded-favo bg-white p-5 shadow-md">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="font-bold"><%= grupo.nome %></h3>
+                <p class="text-xs uppercase tracking-wide text-tinta-suave"><%= grupo.categoria %></p>
+              </div>
+              <span class="rounded-pilula bg-cera px-3 py-1 text-sm">x<%= grupo.quantidade %></span>
+            </div>
+
+            <dl class="mt-4 grid gap-1 text-sm tabular-nums">
+              <div class="flex justify-between">
+                <dt class="text-tinta-suave">Você pagou</dt>
+                <dd>🍯 <%= grupo.valorPago %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-tinta-suave">Vale hoje</dt>
+                <dd class="font-semibold">🍯 <%= grupo.valorTotal %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-tinta-suave">Variação</dt>
+                <dd><%= variacao > 0 ? '📈 +' : variacao < 0 ? '📉 ' : '' %><%= variacao %></dd>
+              </div>
+            </dl>
+
+            <ul class="mt-3 grid gap-1 text-sm tabular-nums">
+              <% if (grupo.rendaSemanal > 0) { %>
+                <li>🍯 Rende <%= grupo.rendaSemanal * grupo.quantidade %> de mel por semana</li>
+              <% } %>
+              <% if (grupo.custoSemanal > 0) { %>
+                <li>💸 Custa <%= grupo.custoSemanal * grupo.quantidade %> de mel por semana</li>
+              <% } %>
+            </ul>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="font-display text-xl">Enfeites</h2>
+    <p class="mt-1 text-sm text-tinta-suave">Estes não aumentam seu patrimônio: são só para deixar tudo com a sua cara.</p>
+
+    <% if (resumo.cosmeticos.length === 0) { %>
+      <p class="mt-4 rounded-favo bg-white p-6 text-sm text-tinta-suave">Nenhum enfeite por enquanto.</p>
+    <% } else { %>
+      <ul class="mt-4 grid gap-4 sm:grid-cols-3">
+        <% resumo.cosmeticos.forEach((grupo) => { %>
+          <li class="rounded-favo bg-white p-5 shadow-md">
+            <h3 class="font-bold"><%= grupo.nome %></h3>
+            <p class="text-xs uppercase tracking-wide text-tinta-suave"><%= grupo.categoria %></p>
+            <p class="mt-3 text-sm">x<%= grupo.quantidade %></p>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+</main>

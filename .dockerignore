@@ -1,0 +1,40 @@
+# O que não entra no contexto de build.
+#
+# Vale por dois motivos. O primeiro é velocidade: tudo que está aqui seria
+# enviado ao daemon do Docker a cada build. O segundo é segurança: `.env` tem
+# segredo e `backups/` tem dump de banco com hash de senha, e nenhum dos dois
+# pode acabar dentro de uma imagem por descuido de um `COPY` futuro.
+
+node_modules/
+.git/
+.gitignore
+
+# Segredos e dados reais.
+.env
+.env.local
+.env.*.local
+backups/
+uploads/
+uploads-teste/
+
+# Gerado no próprio build.
+src/public/css/app.css
+coverage/
+.nyc_output/
+*.log
+logs/
+
+# Não serve para rodar em produção.
+test/
+docs/
+venv/
+beever.sql
+
+# Instruções de agentes e ferramentas de desenvolvimento.
+.claude/
+.github/
+.impeccable/
+.code-review-graph/
+.mcp.json
+CLAUDE.md
+AGENTS.md

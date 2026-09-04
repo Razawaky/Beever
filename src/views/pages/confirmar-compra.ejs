@@ -1,0 +1,91 @@
+<%#
+  A confirmação da compra (RF-LOJ-05): antes de gastar, a criança lê para onde
+  vai o patrimônio dela e o que o item vai cobrar por semana. Os números saem
+  prontos de `shopService.previaDaCompra`.
+%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-2xl items-center justify-between gap-4">
+    <a href="/loja" class="font-semibold text-tinta hover:underline">&larr; Loja</a>
+    <h1 class="text-2xl font-bold">Confirmar compra</h1>
+    <p class="font-semibold tabular-nums">🍯 <%= previa.saldoAtual %></p>
+  </div>
+</header>
+
+<main class="mx-auto max-w-2xl px-6 py-10">
+  <article class="rounded-favo bg-white p-6 shadow-md">
+    <span class="text-xs font-semibold uppercase tracking-wide text-tinta-suave"><%= previa.item.category_name %></span>
+    <h2 class="mt-1 text-2xl font-bold"><%= previa.item.name %></h2>
+    <p class="mt-2 text-tinta-suave"><%= previa.item.description_kid %></p>
+
+    <dl class="mt-6 grid gap-3 text-sm tabular-nums">
+      <div class="flex justify-between border-b border-linha pb-2">
+        <dt>Preço</dt>
+        <dd class="font-semibold">🍯 <%= previa.precoDeTabela %></dd>
+      </div>
+      <% if (previa.troca) { %>
+        <div class="flex justify-between border-b border-linha pb-2">
+          <dt>Entregando <%= previa.troca.itemTrocado %></dt>
+          <dd class="font-semibold">−<%= previa.desconto %></dd>
+        </div>
+      <% } %>
+      <div class="flex justify-between border-b border-linha pb-2">
+        <dt>Você vai pagar</dt>
+        <dd class="font-semibold">🍯 <%= previa.precoPago %></dd>
+      </div>
+      <div class="flex justify-between border-b border-linha pb-2">
+        <dt>Seu mel depois da compra</dt>
+        <dd class="font-semibold">🍯 <%= previa.saldoDepois %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt>Seu patrimônio vai para</dt>
+        <dd class="font-semibold">🍯 <%= previa.patrimonioDepois %></dd>
+      </div>
+    </dl>
+
+    <ul class="mt-6 grid gap-2 text-sm tabular-nums">
+      <% if (previa.custoSemanal > 0) { %>
+        <li>💸 Você vai pagar <%= previa.custoSemanal %> de mel por semana para manter.</li>
+      <% } %>
+      <% if (previa.rendaSemanal > 0) { %>
+        <li>🍯 Ele vai render <%= previa.rendaSemanal %> de mel por semana.</li>
+      <% } %>
+      <% if (previa.perdeValor) { %>
+        <li>📉 Ele perde valor toda semana.</li>
+      <% } %>
+      <% if (!previa.entraNoPatrimonio) { %>
+        <li>✨ É um enfeite: isso não aumenta seu patrimônio.</li>
+      <% } %>
+      <% if (previa.avisoDaFaixa) { %>
+        <li class="text-tinta-suave"><%= previa.avisoDaFaixa %></li>
+      <% } %>
+    </ul>
+
+    <% if (previa.bloqueios.length > 0) { %>
+      <ul class="mt-6 grid gap-1 rounded-favo bg-cera p-4 text-sm">
+        <% previa.bloqueios.forEach((bloqueio) => { %>
+          <li>🔒 <%= bloqueio.mensagem %></li>
+        <% }) %>
+      </ul>
+    <% } %>
+
+    <div class="mt-8 flex items-center justify-between gap-4">
+      <a href="/loja" class="rounded-favo px-4 py-2 text-sm font-semibold underline decoration-ambar decoration-2 underline-offset-4 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2">
+        Agora não
+      </a>
+
+      <form method="POST" action="/loja/compras">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="idItem" value="<%= previa.item.id %>" />
+        <input type="hidden" name="chaveDeIdempotencia" value="<%= chaveDeCompra %>" />
+        <% if (previa.troca) { %>
+          <input type="hidden" name="idUnidadeTrocada" value="<%= previa.troca.idUnidade %>" />
+        <% } %>
+        <%- include('../partials/ui/botao', {
+          texto: previa.podeComprar ? 'Comprar agora' : 'Ainda não dá',
+          tipo: 'submit',
+          desabilitado: !previa.podeComprar,
+        }) %>
+      </form>
+    </div>
+  </article>
+</main>

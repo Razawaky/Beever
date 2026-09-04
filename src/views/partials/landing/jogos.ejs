@@ -1,0 +1,72 @@
+<%#
+  Seção 5: os seis jogos que existem, e um deles jogável aqui mesmo.
+
+  O mini quiz não fala com o servidor e não guarda nada: é uma pergunta só, para
+  a pessoa sentir o produto antes de criar conta. A partida de verdade é sempre
+  validada no servidor (RN-007), e nada aqui paga recompensa.
+-%>
+<section id="jogos" class="border-t border-white/10 bg-breu py-16 sm:py-24">
+  <div class="mx-auto max-w-5xl px-6">
+    <h2 class="revela font-display text-3xl text-cera sm:text-4xl">Seis jogos, um assunto cada</h2>
+
+    <div class="cascata mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <%
+        const JOGOS = [
+          { nome: 'Quiz do Favo', ensina: 'Fixa o conceito da célula com perguntas curtas.' },
+          { nome: 'Arraste e Classifique', ensina: 'Separa o que é ganho do que é gasto.' },
+          { nome: 'Monte o Orçamento', ensina: 'Divide uma quantia entre o que precisa e o que quer.' },
+          { nome: 'Cofre do Tempo', ensina: 'Mostra juro composto acontecendo, ciclo a ciclo.' },
+          { nome: 'Mercado Esperto', ensina: 'Compara preço e decide a melhor compra.' },
+          { nome: 'Ordene a Prioridade', ensina: 'Coloca gastos em ordem de importância.' },
+        ];
+      %>
+      <% JOGOS.forEach((jogo) => { %>
+        <article
+          class="revela rounded-favo border border-white/10 bg-white/5 p-5 transition hover:-translate-y-1 hover:border-mel/40"
+        >
+          <h3 class="font-display text-lg text-cera"><%= jogo.nome %></h3>
+          <p class="mt-2 text-sm text-cera/70"><%= jogo.ensina %></p>
+        </article>
+      <% }); %>
+    </div>
+
+    <div class="revela mt-12 rounded-favo border border-mel/30 bg-white/5 p-6 sm:p-8">
+      <h3 class="font-display text-xl text-mel">Experimente uma pergunta</h3>
+      <p id="mini-quiz-enunciado" class="mt-3 text-lg text-cera">
+        Você juntou 100 de mel. A casa pequena custa 300 e valoriza com o tempo. O que
+        acontece se você comprar o patinete de 100 agora?
+      </p>
+
+      <ul class="mt-5 grid gap-3" id="mini-quiz-alternativas">
+        <%
+          const ALTERNATIVAS = [
+            { texto: 'Você fica sem mel e mais longe da casa.', certa: true },
+            { texto: 'A casa fica mais barata na semana seguinte.', certa: false },
+            { texto: 'O patinete vira renda toda semana.', certa: false },
+          ];
+        %>
+        <% ALTERNATIVAS.forEach((alternativa, indice) => { %>
+          <li>
+            <button
+              type="button"
+              class="mini-quiz-opcao min-h-11 w-full rounded-favo border border-white/20 px-4 py-3 text-left text-cera transition hover:border-mel focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+              data-certa="<%= alternativa.certa %>"
+              data-indice="<%= indice %>"
+            >
+              <%= alternativa.texto %>
+            </button>
+          </li>
+        <% }); %>
+      </ul>
+
+      <%# Erro nunca pune (regra 3 da seção 4 do design system): a resposta errada
+          explica, e a certa continua disponível para tocar. -%>
+      <p id="mini-quiz-resposta" class="mt-4 hidden text-cera/80" role="status" aria-live="polite"></p>
+
+      <p class="mt-6 text-sm text-cera/60">
+        No jogo de verdade essa escolha mexe no seu patrimônio, e você vê o impacto antes
+        de confirmar.
+      </p>
+    </div>
+  </div>
+</section>
