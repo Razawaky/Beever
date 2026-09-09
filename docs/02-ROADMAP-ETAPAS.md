@@ -325,6 +325,30 @@ não eram conserto e sim escopo novo. Decidido com o usuário em 2026-09-03.
 
 ---
 
+## E17 — Protótipo final para a banca
+Última etapa planejada. O plano inteiro, com as quatro faixas de prioridade e o
+aceite de cada tarefa, está em `docs/28-PLANO-PARA-A-BANCA.md`. Nada de natureza
+jurídica entra: o time não tem esse poder, e o que a política de privacidade
+promete continua sendo entregue como código.
+
+| Tarefa | Entrega |
+|---|---|
+| T-17.1 | Os dois defeitos visíveis do cofre — concordância da regra escrita (DT-124) e extrato com cabeçalho sobre corpo vazio (DT-125) |
+| T-17.2 | Implantação numa cloud com domínio e TLS, fechando DT-114, DT-115, DT-116 e DT-119 |
+| T-17.3 | Ensaio da instalação do zero por quem não escreveu o projeto, seguindo só o manual |
+| T-17.4 | Seed de demonstração: três contas em estágios e faixas etárias diferentes |
+| T-17.5 | Serviço de e-mail e recuperação de senha com token expirável (RF-AUT-06) |
+| T-17.6 | Segundo fator obrigatório no painel administrativo e opcional para o jogador |
+| T-17.7 | As três telas de P1 cujo dado já está gravado: RF-INV-06, RF-MET-07 e RF-LOJ-08 |
+| T-17.8 | Roteiro de cinco minutos, vídeo de demonstração e QR code para o celular da banca |
+
+**Aceite:** o Beever abre num endereço público em HTTPS, uma conta de
+demonstração conta a história do jogo em vez de mostrar tela vazia, quem esquece
+a senha recupera sozinho, e a apresentação de cinco minutos roda ensaiada — com
+vídeo gravado como plano B.
+
+---
+
 ## Fluxo do usuário (referência para todas as etapas)
 
 ```

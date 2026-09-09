@@ -80,9 +80,11 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: T-16.2 — apagamento definitivo de conta, com anonimização do
-agregado de auditoria (RN-053).** É a última tarefa da E16, e fecha o que a
-política de privacidade promete ao usuário.
+**Próximo passo: a E17, o protótipo final para a banca**, planejada em
+`docs/28-PLANO-PARA-A-BANCA.md` com quatro faixas de prioridade. Começa pelos
+dois defeitos visíveis do cofre (T-17.1) e pela implantação em cloud (T-17.2),
+que sozinha fecha quatro dívidas. A T-16.2 continua aberta e entrou no plano
+como P1.5.
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -1463,6 +1465,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E14 Endurecimento — auditoria | **concluída** | Laudo em `docs/21-AUDITORIA-DA-ETAPA-E14.md`. Os dois bloqueantes foram fechados na mesma sessão: o limite global passou a contar por sessão nas leituras (DT-112, com a carga refeita em 200×600 e nenhum 429), e `validadoresDeJogo` e `usersService` entraram no portão de cobertura, que virou 26 services em 100% de linha com catraca de ramo em 93%. L4 (desktop) e a exclusão de conta viraram a E16; L6 virou o pull request para a `main` |
 | E15 Documentação TCC | **concluída e auditada** | T-15.1 a T-15.6 entregues: rastreabilidade dos 186 requisitos, os quatro diagramas, o documento de arquitetura, o manual canônico de instalação, o laudo de evidências com as duas execuções guardadas e os trabalhos futuros. Falta o laudo de auditoria da etapa |
 | E16 Ajustes antes da defesa | **em andamento** | T-16.1 feita: Colmeia e cofre em duas colunas a partir de `lg`, loja em quatro no `xl`, e a trilha mantida porque já tinha composição desde a T-10.4. Falta a T-16.2, o apagamento definitivo de conta com anonimização da auditoria (RN-053). Nasceram da auditoria da E14, decididas com o usuário em 2026-09-03 |
+| E17 Protótipo final para a banca | do zero | Oito tarefas em quatro faixas de prioridade, planejadas em `docs/28-PLANO-PARA-A-BANCA.md`: defeitos visíveis, implantação em cloud com TLS, ensaio da instalação, seed de demonstração, e-mail com recuperação de senha, segundo fator no painel, as três telas de P1 cujo dado já existe, e o roteiro da apresentação. Nada jurídico entra, por decisão do time |
 
 ---
 
@@ -4383,3 +4386,32 @@ reaproveita "o backend inteiro".
 
 Nove testes novos em `test/integration/composicaoDeDesktop.test.js`, conferidos
 quebrando a grade do cofre de propósito. Suíte em 1121 testes.
+
+### Sessão de 2026-09-09, a E17 e a pergunta que tem duas respostas
+
+"Está pronto para a entrega?" foi respondida separando o que ela quer dizer.
+Como artefato de build, quase: a imagem constrói, a suíte está verde e a
+documentação do TCC está completa e auditada. Como produto que uma criança usa,
+não: não existe host, e por tabela não existe TLS; quem esquece a senha perde a
+conta; e o apagamento definitivo de conta ainda é só uma marcação de inativo.
+
+Daí nasceu a E17, planejada em `docs/28-PLANO-PARA-A-BANCA.md` com quatro faixas
+de obrigação decrescente. O P0 é o que impede a apresentação — os dois defeitos
+visíveis do cofre, a implantação em cloud, o ensaio da instalação do zero e um
+seed de demonstração com história, porque hoje a conta de exemplo está em nível
+1 com a liga vazia e a tela conta que o app está vazio. O P1 é o que deixaria a
+defesa pobre, e começa pelo serviço de e-mail, que sozinho destrava recuperação
+de senha e segundo fator. O P2 é o que faz a apresentação ser boa em vez de só
+correta. O P3 é o depois.
+
+Duas decisões de escopo ficaram registradas. **Nada de natureza jurídica entra**,
+porque o time não tem esse poder — o que a política de privacidade promete
+continua sendo entregue como código, e só a revisão legal sai da lista. E
+**login com Google não serve para a criança**: o Google exige idade mínima que a
+faixa do Beever não alcança, então ele faz sentido do lado do responsável, que é
+quem tem conta. Pelo mesmo motivo, segundo fator obrigatório fica no painel
+administrativo e opcional para o jogador — atrito de autenticação numa criança
+de seis anos derruba o uso.
+
+Quatro testes novos em `test/unit/plano-da-banca.test.js`, conferidos quebrando
+o documento de propósito.
