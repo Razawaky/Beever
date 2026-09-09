@@ -26,6 +26,8 @@ const PORTA_DE_DEPURACAO = 9222;
 const CONTA_DO_JOGADOR = CONTAS[process.env.EVIDENCIAS_CONTA ?? 'demo'] ?? CONTAS.demo;
 
 const LARGURA_DE_CELULAR = 390;
+// O piso da RNF-20: nenhuma tela pode pedir rolagem lateral aqui.
+const LARGURA_ESTREITA = 320;
 const ALTURA_DE_CELULAR = 844;
 const LARGURA_DE_DESKTOP = 1440;
 const ALTURA_DE_DESKTOP = 900;
@@ -269,6 +271,66 @@ async function fotografar(aba, endereco, largura, altura, destino) {
   await writeFile(destino, imagem);
 }
 
+/**
+ * Mede se a página cabe em 320 px sem rolagem horizontal (RNF-20).
+ *
+ * A varredura de acessibilidade lê o HTML servido e não consegue responder
+ * isto: largura só existe depois de o CSS ser aplicado. Aqui a pergunta é feita
+ * ao navegador — `scrollWidth` maior que a janela é a definição de rolagem
+ * lateral, e é o que o checklist da seção 8 do `docs/04` proíbe.
+ */
+async function medirRolagemEstreita(aba, endereco) {
+  await aba.pedir('Emulation.setDeviceMetricsOverride', {
+    width: LARGURA_ESTREITA,
+    height: 640,
+    deviceScaleFactor: 1,
+    mobile: true,
+  });
+
+  const carregou = aba.esperarEvento('Page.loadEventFired');
+  await aba.pedir('Page.navigate', { url: endereco });
+  await carregou;
+  await esperar(800);
+
+  const medir = () => aba.pedir('Runtime.evaluate', {
+    // `scrollWidth` do documento é clampado quando algo esconde o transbordo, e
+    // aí a medida vira sempre "cabe". O que não mente é o elemento mais largo
+    // da página: se ele passa da janela, houve transbordo, escondido ou não.
+    expression: `JSON.stringify((() => {
+      let maior = document.documentElement.scrollWidth;
+      let culpado = 'html';
+      for (const elemento of document.body.querySelectorAll('*')) {
+        const direita = elemento.getBoundingClientRect().right;
+        if (direita > maior) {
+          maior = Math.ceil(direita);
+          culpado = elemento.tagName.toLowerCase() + (elemento.id ? '#' + elemento.id : '') + (elemento.className ? '.' + String(elemento.className).split(' ').slice(0, 3).join('.') : '');
+        }
+      }
+      return {
+        rolagem: document.documentElement.scrollWidth,
+        pagina: maior,
+        janela: window.innerWidth,
+        culpado,
+        caminho: location.pathname,
+      };
+    })())`,
+    returnByValue: true,
+  });
+
+  // O evento de carregamento de uma navegação anterior pode chegar atrasado e
+  // resolver a espera cedo demais — aí a medida sai da página errada. Por isso
+  // a página conferida diz de onde ela veio, e a medição insiste até bater.
+  const esperado = new URL(endereco).pathname;
+  for (let tentativa = 0; tentativa < 5; tentativa += 1) {
+    const { result } = await medir();
+    const medida = JSON.parse(result.value);
+    if (medida.caminho === esperado) return medida;
+    await esperar(600);
+  }
+
+  throw new Error(`A medição não conseguiu chegar em ${esperado}.`);
+}
+
 async function principal() {
   const cookieDeSessao = await entrarComOJogador();
   const caminhoDaCelula = await descobrirCaminhoDaCelula(cookieDeSessao);
@@ -282,6 +344,7 @@ async function principal() {
   const aba = await abrirAba(versao.webSocketDebuggerUrl);
 
   const capturadas = [];
+  const estouraram = [];
 
   async function capturar(tela) {
     const caminho = tela.caminho ?? caminhoDaCelula;
@@ -303,14 +366,7 @@ async function principal() {
     }
   }
 
-  try {
-    // As telas públicas vêm primeiro e sem cookie: com a sessão ligada, `/` e
-    // `/login` redirecionam para a Colmeia e o print sairia da tela errada.
-    await aba.pedir('Network.clearBrowserCookies');
-    for (const tela of TELAS.filter((tela) => tela.publica)) {
-      await capturar(tela);
-    }
-
+  async function ligarSessao() {
     const { hostname } = new URL(ENDERECO_DO_SERVIDOR);
     await aba.pedir('Network.setCookie', {
       name: 'beever.sid',
@@ -319,10 +375,64 @@ async function principal() {
       path: '/',
       httpOnly: true,
     });
+  }
+
+  async function medirTodas(telas) {
+    for (const tela of telas) {
+      const caminho = tela.caminho ?? caminhoDaCelula;
+      if (!caminho) continue;
+
+      const { rolagem, pagina, janela, culpado } = await medirRolagemEstreita(
+        aba,
+        `${ENDERECO_DO_SERVIDOR}${caminho}`,
+      );
+
+      // Sem esta conferência o gate mente: se o navegador não aplicar a largura
+      // pedida, a página é medida numa janela maior e "cabe" sem ter cabido.
+      if (janela !== LARGURA_ESTREITA) {
+        estouraram.push(`${caminho} (medido em ${janela}px, e não em ${LARGURA_ESTREITA}px)`);
+        console.log(`  ${caminho}: NÃO MEDIDO — a janela ficou em ${janela}px`);
+        continue;
+      }
+
+      // Duas medidas, e só a primeira reprova. `scrollWidth` do documento é o
+      // que vira barra de rolagem de verdade; o elemento mais largo pode estar
+      // aparado por um ancestral e não rolar nada — vale como pista, não como
+      // veredito.
+      const sobra = rolagem - janela;
+      if (sobra > 0) {
+        estouraram.push(`${caminho} (rola ${sobra}px além da janela, por ${culpado})`);
+        console.log(`  ${caminho}: ROLA ${sobra}px, por ${culpado}`);
+      } else if (pagina > janela) {
+        console.log(`  ${caminho}: cabe, mas ${culpado} passa da janela e é aparado`);
+      } else {
+        console.log(`  ${caminho}: cabe`);
+      }
+    }
+  }
+
+  try {
+    // As telas públicas vêm primeiro e sem cookie: com a sessão ligada, `/` e
+    // `/login` redirecionam para a Colmeia e o print sairia da tela errada.
+    await aba.pedir('Network.clearBrowserCookies');
+    for (const tela of TELAS.filter((tela) => tela.publica)) {
+      await capturar(tela);
+    }
+
+    await ligarSessao();
 
     for (const tela of TELAS.filter((tela) => !tela.publica)) {
       await capturar(tela);
     }
+
+    console.log('\nRolagem lateral a 320 px:');
+    // Em duas fases, pelo mesmo motivo dos prints: com a sessão ligada, `/` e
+    // `/login` redirecionam para a Colmeia e a medida sairia da tela errada —
+    // três vezes a mesma página, com três vezes o mesmo veredito.
+    await aba.pedir('Network.clearBrowserCookies');
+    await medirTodas(TELAS.filter((tela) => tela.publica));
+    await ligarSessao();
+    await medirTodas(TELAS.filter((tela) => !tela.publica));
   } finally {
     aba.fechar();
     processo.kill();
@@ -342,6 +452,11 @@ async function principal() {
   }
 
   console.log(`\n${capturadas.length} prints em ${PASTA_DE_SAIDA}/`);
+
+  // Falha de propósito: prova que não passa é evidência que não vale.
+  if (estouraram.length > 0) {
+    throw new Error(`Telas com rolagem lateral a ${LARGURA_ESTREITA}px: ${estouraram.join(', ')}`);
+  }
 }
 
 principal().catch((erro) => {
