@@ -13,7 +13,8 @@ código que a sustenta e o laudo que a provou, alinhado ao que
 
 ## 1. Diagrama de entidades e relacionamentos (ER)
 
-O DDL é a verdade e está em `migrations/` (23 arquivos, 61 tabelas). A versão
+O DDL é a verdade e está em `migrations/` (23 arquivos, 60 tabelas; a 61ª é
+`schema_migrations`, criada pelo próprio runner). A versão
 detalhada — área por área, com as colunas que explicam cada ligação — está em
 `docs/MODELO-DE-DADOS.md`. A figura abaixo é o **mapa inteiro do banco em uma
 só visão**: basta para situar qualquer tabela no contexto do jogo, e a
@@ -33,6 +34,8 @@ erDiagram
     age_bands ||--o{ profiles : classifica
     avatars ||--o{ profiles : veste
     initial_goals ||--o{ profiles : motiva
+    %% sessions guarda a sessao de login do express-session: sem FK de proposito
+    sessions { varchar session_id PK }
 
     %% ============ 2. TRILHA ============
     age_bands ||--o{ hives : segmenta
@@ -51,6 +54,8 @@ erDiagram
     levels ||--o{ user_levels : define_curva
     game_types ||--o{ reward_configs : precifica
     age_bands ||--o{ reward_configs : ajusta
+    %% reward_modifiers e catalogo de fatores lido junto de reward_configs (RN-008)
+    reward_modifiers { bigint id PK }
     users ||--o{ game_sessions : joga
     cells ||--o{ game_sessions : e_jogada_em
     game_session_statuses ||--o{ game_sessions : estado
@@ -67,6 +72,8 @@ erDiagram
     goal_types ||--o{ goals : tipifica
     goal_statuses ||--o{ goals : estado
     goal_difficulties ||--o{ goals : calibra
+    goal_difficulties ||--o{ goal_plan_rules : quantas_metas
+    goal_types ||--o{ goal_target_rules : dimensiona_alvo
     goals ||--o{ goals : renova
     users ||--o{ tasks : cumpre
     task_types ||--o{ tasks : tipifica
@@ -83,6 +90,7 @@ erDiagram
     items ||--o{ item_requirements : exige
     item_requirement_types ||--o{ item_requirements : tipifica
     items ||--o{ items : upgrade_de
+    vault_transaction_types ||--o{ vault_transactions : tipifica
     users ||--o{ purchases : compra
     items ||--o{ purchases : e_comprado
     purchases ||--o| inventory : origina

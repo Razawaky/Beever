@@ -122,10 +122,11 @@ Defendendo a escolha:
    aplicação simples e dá ao jogo a complexidade que ele já tinha.
 3. **Escapamento por padrão.** `<%= %>` escapa tudo; o risco de XSS por
    conteúdo de usuário é uma escolha de template, não disciplina.
-4. **Evolução preservada.** Como os controllers já respondem JSON (seção 2), a
-   migração futura para SPA é adicionar consumo, não reescrever: a regra de
-   recompensa nunca entra em template (proibição expressa do
-   `docs/PROMPT-MESTRE.md`).
+4. **Evolução preservada.** Os controllers do jogador e do painel já respondem
+   JSON (seção 2), então a migração futura para SPA é adicionar consumo, não
+   reescrever: a regra de recompensa nunca entra em template (proibição
+   expressa do `docs/PROMPT-MESTRE.md`). Faltam duas rotas, `GET /conquistas` e
+   `GET /liga`, que hoje só renderizam HTML — a RNF-39 está parcial por elas.
 
 **A alternativa rejeitada:** React/Vue como renderizador primário. Sem backend
 de API maduro, dobraria o tempo de construção do MVP para entregar valor
@@ -292,8 +293,8 @@ depois**.
 Cada escolha de hoje deixa uma porta aberta de amanhã (diretriz do
 `CLAUDE.md`): a porta **não é construída** — só não é trancada.
 
-- **SPA/mobile**: controllers já devolvem JSON; o backend de recompensa é
-  reutilizado sem tocar.
+- **SPA/mobile**: os controllers devolvem JSON, menos `GET /conquistas` e
+  `GET /liga`; o backend de recompensa é reutilizado sem tocar.
 - **NestJS na API**: se o Express deixar de dar conta, NestJS é a mesma
   linguagem e mesma base Express/Fastify — a troca reformula a casa, não muda o
   terreno.

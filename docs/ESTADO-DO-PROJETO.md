@@ -70,8 +70,9 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: auditar a E15**, no mesmo molde das etapas anteriores — as seis
-tarefas estão entregues e nenhuma auditoria de etapa foi escrita ainda.
+**Próximo passo: T-16.1 — composição de desktop das quatro telas mais vistas.** A
+E16 também está sem critérios de aceite escritos no roadmap, e vale combiná-los
+antes de começar.
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -1450,7 +1451,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E13 Conquistas e liga | **concluída e auditada** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). **Auditada em `docs/13-AUDITORIA-DA-ETAPA.md`: pode avançar**, com as duas lacunas bloqueantes corrigidas na mesma sessão — a regra do apelido publicado e a liga que aceitava quem nunca jogou |
 | E14 Endurecimento | **concluída** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. T-14.3 feita: `npm run carga` mede a jornada real de 30 jogadores simultâneos, e o padrão do pool subiu de 10 para 20 com base na medição, não em palpite. `cargaSimultanea.test.js` entrou na suíte como regressão de concorrência, incluindo a conferência de que toda conexão volta ao pool. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. T-14.4 feita: a imagem foi construída e subida pela primeira vez, e a conferência dentro do contêiner achou quatro defeitos que o teste estático não veria — healthcheck do banco lendo variável inexistente, `uploads/` sem dono certo depois do `USER node`, `logger.js` pedindo o `pino-pretty` que o `npm prune` tira, e nenhum `.dockerignore`. A aplicação entrou no compose sob o perfil `completo`, com as migrations num serviço separado para permitir réplica depois. O `npm ci` deixou de rodar duas vezes. `ambienteDeConteiner.test.js` passa a reprovar variável de ambiente sem linha no `.env.example` (DT-15). Laudo em `docs/17-CONTEINER-E-AMBIENTE.md`. T-14.5 feita: o portão do CI existe em `.github/workflows/ci.yml`, com cinco jobs — lint com `npm audit` bloqueante, suíte contra MySQL 8.4 por `test:db`, cobertura em execução própria, build da imagem com subida do contêiner, e a medição de carga só em `main` sem reprovar. O achado da tarefa foi o `.gitignore`, que ignorava `.github/` inteiro e teria deixado o workflow invisível ao GitHub; uma exceção para `workflows/` corrigiu. A publicação em registro ficou para depois do aceite (DT-116) e o YAML só se prova no primeiro pull request real (DT-117). Laudo em `docs/18-INTEGRACAO-CONTINUA.md`. T-14.6 feita: o `db:backup` existia desde a E01 e nunca tinha rodado; a primeira execução real funcionou e, na mesma execução, apagou o dump de antes da E01 — a retenção aceitava qualquer `.sql` com mais de sete dias, e agora só toca no que ela mesma cria. O outro lado do backup passou a existir: `scripts/restaurar.js` e `npm run db:restore -- --sim`, com as guardas do reset, provado ponta a ponta com o banco derrubado e trazido de volta idêntico. A suíte que travava dezoito minutos por diretório de schema órfão virou a DT-118. Laudo em `docs/19-BACKUP-E-RESTAURACAO.md`. T-14.7 feita: a acessibilidade passou a ser provada nas trinta telas, e não só na landing. A varredura busca cada tela pelo HTTP, com sessão de jogador e de administrador, e pergunta em todas por foco de teclado, alvo de 44 px, campo com nome, ordem de títulos, contraste do par escrito no elemento, largura que cabe em 320 px, tabela com rolagem própria, zoom liberado, painel de acessibilidade desligado por padrão e animação com saída. O achado foram 411 elementos focáveis sem indicação nenhuma de foco, corrigidos por regra de base no `tema.css` em vez de classe repetida elemento por elemento. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. **A etapa fecha inteira** |
 | E14 Endurecimento — auditoria | **concluída** | Laudo em `docs/21-AUDITORIA-DA-ETAPA-E14.md`. Os dois bloqueantes foram fechados na mesma sessão: o limite global passou a contar por sessão nas leituras (DT-112, com a carga refeita em 200×600 e nenhum 429), e `validadoresDeJogo` e `usersService` entraram no portão de cobertura, que virou 26 services em 100% de linha com catraca de ramo em 93%. L4 (desktop) e a exclusão de conta viraram a E16; L6 virou o pull request para a `main` |
-| E15 Documentação TCC | **concluída, falta auditar** | T-15.1 a T-15.6 entregues: rastreabilidade dos 184 requisitos, os quatro diagramas, o documento de arquitetura, o manual canônico de instalação, o laudo de evidências com as duas execuções guardadas e os trabalhos futuros. Falta o laudo de auditoria da etapa |
+| E15 Documentação TCC | **concluída e auditada** | T-15.1 a T-15.6 entregues: rastreabilidade dos 184 requisitos, os quatro diagramas, o documento de arquitetura, o manual canônico de instalação, o laudo de evidências com as duas execuções guardadas e os trabalhos futuros. Falta o laudo de auditoria da etapa |
 | E16 Ajustes antes da defesa | do zero | T-16.1 composição de desktop das quatro telas mais vistas; T-16.2 apagamento definitivo de conta com anonimização da auditoria (RN-053). Nasceram da auditoria da E14, decididas com o usuário em 2026-09-03 |
 
 ---
@@ -1529,7 +1530,10 @@ Identificadores rastreiam os documentos da E00.
 | DT-121 | A varredura de acessibilidade lê o HTML servido, sem navegador, e três perguntas ficam fora do alcance dela: se o layout quebra de verdade a 320 px com a fonte carregada, se o texto contrasta com o fundo herdado de um elemento ancestral, e se a linguagem é adequada à faixa etária (RNF-24), que não é automatizável. A altura de toque aceita 12 px de espaço vertical como equivalente aos 44 px, o que depende da fonte carregar | T-14.7 | Abrir as telas num navegador a 320 px antes da defesa, e considerar `axe-core` com navegador headless se o projeto seguir depois do TCC |
 | DT-124 | **A regra escrita do Cofre do Tempo concorda no gênero errado.** `src/public/js/cofre.js` monta "o que ficar no cofre rende 10% neste ${nomeDoCiclo}", e o nome do ciclo vem do banco: com "semana" a criança lê "neste semana". Foi o print da T-15.5 que mostrou | T-15.5 | Guardar o gênero junto do nome do ciclo, ou escrever a frase sem preposição de gênero ("rende 10% por semana") |
 | DT-125 | Na rodada 1 do Cofre do Tempo a tabela do extrato desenha o cabeçalho (Ciclo, Guardado, Saldo) sobre um corpo vazio, e o gráfico fica só com a linha da meta: a criança vê títulos de coluna sem nenhuma linha embaixo. O projeto já tem o partial `estado-vazio` para esse caso | T-15.5 | Esconder tabela e gráfico até existir a primeira linha, ou pôr uma frase no lugar |
-| DT-126 | **`test/unit/tcc.test.js` nunca foi commitado.** São 15 testes verdes que guardam os documentos da T-15.2, T-15.3 e T-15.4, e o arquivo está apenas no disco desde então: quem clonar o repositório não tem essas guardas, e o portão de CI não as roda. Ele também tem um erro de lint, uma constante `ROADMAP` declarada e não usada, que é o único erro de `npm run lint` hoje | T-15.6 | Decidir com o usuário se entra como está, sem a constante morta, ou se some |
+| ~~DT-126~~ | ~~`test/unit/tcc.test.js` nunca foi commitado~~ | T-15.6, auditoria da E15 (L-1) | **Resolvida na auditoria da E15**: o arquivo entrou no repositório sem a constante morta que quebrava o lint, e ganhou uma guarda a mais — toda tabela criada em `migrations/` precisa aparecer na figura ER. São 16 testes |
+| DT-127 | **O manual canônico não documenta 7 das 18 variáveis do `.env.example`** — `DB_PORT`, `DB_POOL_LIMIT`, `SESSION_MAX_AGE_MINUTES`, `LOG_LEVEL`, `UPLOAD_MAX_MB`, `BACKUP_CONTAINER` e `EVIDENCIAS_URL` —, e também não cita `npm test`. O teste existente cobre código ↔ `.env.example`; ninguém cobre `.env.example` ↔ manual, que é por onde a lacuna passou | auditoria da E15 (L-4) | Completar a seção de ambiente e acrescentar a guarda que faltou |
+| DT-128 | **"184 requisitos" é o número errado: são 186.** A frase está no próprio `docs/RASTREABILIDADE.md` ("Escopo: os 184 requisitos... todos com linha") e em três pontos deste documento. O teste garante que nenhum requisito fica sem linha, e não o número escrito ao lado | auditoria da E15 (L-5) | Corrigir os quatro pontos e fazer o teste cobrar o número |
+| DT-129 | `scripts/evidencias.js` traz `senha: 'beever123'` literal. É a conta demo do seed, publicada de propósito no manual, então não é vazamento — mas contraria a regra de segredo só por variável de ambiente, e o próprio script já lê `EVIDENCIAS_URL` do ambiente | auditoria da E15 (L-7) | Ler do ambiente, com a conta demo como valor padrão |
 | DT-113 | A primeira visita de um jogador custa muito mais do que as seguintes — é ela que fecha ciclo, julga sequência, abre liga, cria tarefas do dia e monta o plano de metas. Com trinta simultâneos ela fica a 1924 ms de p95, dentro do teto mas sem folga nenhuma | T-14.3 | Se apertar, separar o que precisa acontecer antes de desenhar a tela do que pode acontecer depois da resposta |
 | DT-110 | A cobertura de ramo dos services de cálculo ficou em 92,06%, e não em 100% como a RNF-28 pede ao pé da letra. O que falta é de três famílias que não se fecham com teste honesto: reserva que nunca dispara (`?? 0` sobre dado que sempre vem), parâmetro com valor padrão, e `catch` de falha de infraestrutura, que exigiria mock num projeto que testa contra banco real. O piso de linha está em 100% e o de ramo é catraca em 91% | T-14.2 | Subir a catraca quando um caso de negócio novo cobrir um desses ramos naturalmente. Cobertura de mutação, que é o que de fato mede se a asserção existe, fica para depois da entrega |
 | DT-111 | **RF-INV-06 (histórico de evolução do patrimônio) é P1 e não tem tela.** A foto diária é gravada desde a E09, `patrimonyService.listarEvolucao` a lê, e nenhum controller a chama: o dado se acumula para um gráfico que não existe. Foi a medição de cobertura que apontou, porque a função nunca era executada | T-14.2 | Decidir na E14 se a tela entra ou se o requisito é rebaixado antes da defesa; o dado já está lá |
@@ -4295,3 +4299,40 @@ com decisão pendente.
 
 **A E15 fecha inteira.** Falta a auditoria da etapa, que é o que separa dela a
 E16.
+
+### Sessão de 2026-09-09, auditoria da E15 e as três correções que ela cobrou
+
+A auditoria achou oito lacunas, e a primeira era bloqueante pelo motivo mais
+constrangedor possível: `test/unit/tcc.test.js`, que guarda os documentos da
+T-15.2, T-15.3 e T-15.4, **nunca tinha sido commitado**. Quinze testes verdes
+existiam só no disco de uma máquina, e o portão de CI não rodava nenhum deles.
+Metade das entregas da etapa estava sem a guarda que a própria etapa
+estabeleceu como padrão. Entrou no repositório sem a constante morta que
+quebrava o lint, e com uma guarda a mais.
+
+A segunda lacuna foi encontrada por conferência e não por leitura: a figura ER
+dizia ser "o mapa inteiro do banco em uma só visão" e mostrava 55 de 60
+tabelas. As cinco ausentes eram `goal_plan_rules`, `goal_target_rules`,
+`reward_modifiers`, `sessions` e `vault_transaction_types` — justamente as
+tabelas de calibragem que as decisões travadas destacam como o motivo de não
+haver valor mágico no código. Entraram na figura, e a guarda nova reprova
+qualquer tabela de `migrations/` que fique de fora daqui em diante.
+
+A terceira era uma contradição entre dois documentos da mesma etapa. O
+`docs/23` afirmava sem ressalva que os controllers respondem JSON, enquanto a
+matriz registra a RNF-39 como parcial: `GET /conquistas` e `GET /liga` só
+renderizam HTML, o que foi conferido no `paginaController` antes de escrever.
+Os dois pontos do documento passaram a dizer a exceção.
+
+Cinco lacunas ficaram abertas, todas de risco médio ou baixo, e três viraram
+dívida com número: o manual que não documenta sete variáveis de ambiente
+(DT-127), o "184 requisitos" que na verdade são 186 (DT-128) e a senha demo
+literal no script de evidências (DT-129). As outras duas são o manual não citar
+`npm test` e a E15 não ter critérios de aceite escritos no roadmap, ao
+contrário das etapas anteriores — a auditoria teve que inferir o aceite da
+tabela de entregas.
+
+O laudo está em `docs/27-AUDITORIA-DA-ETAPA-E15.md`, no molde das auditorias
+anteriores, com o veredito de pode avançar e a seção do que a auditoria **não**
+prova: nenhum teste compara o que o `docs/23` afirma com o que o código faz, e o
+manual nunca foi executado do zero por quem não conhece o projeto.
