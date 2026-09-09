@@ -3,8 +3,15 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-09-03 · **Branch:** `refactor/arquitetura-em-camadas` ·
-**Último commit:** T-15.1 — a matriz de rastreabilidade citava 132 dos 184 requisitos, e o que faltava era quase tudo de E01 a E05: autenticação, onboarding, perfil e conteúdo nunca tinham entrado. As 52 linhas foram escritas conferindo arquivo e teste um a um, a tabela passou a ser ordenada por módulo e `test/unit/rastreabilidade.test.js` guarda as duas formas de ela virar ficção — requisito sem linha e caminho de arquivo que não existe mais. A varredura achou três coisas: os dois formatos de jogo nascidos na T-12.4, **Listas Suspensas** e **Quadrinho Interativo**, jogáveis desde então e sem requisito escrito (viraram RF-JOG-09 e RF-JOG-10); seis caminhos citados com nome errado; e sete requisitos P1 sem código nenhum, agora com a situação escrita em vez de ausência silenciosa. De lado, entraram como dívida o bug de formulário que o usuário achou (DT-122) e a tela de perfil incompleta (DT-123).
+**Atualizado em:** 2026-09-08 · **Branch:** `refactor/arquitetura-em-camadas` ·
+
+**Último commit:** T-15.2 — os quatro diagramas do TCC
+(`docs/22-DIAGRAMAS-DO-TCC.md`), validados no renderizador Mermaid: ER de 61
+tabelas em seis áreas, casos de uso com os atores reais das rotas, classes do
+fluxo de recompensa e a sequência da conclusão de partida com RN-007/009/010 e
+RNF-15/16/17 na figura.
+
+**Commit anterior:** T-15.1 — a matriz de rastreabilidade citava 132 dos 184 requisitos, e o que faltava era quase tudo de E01 a E05: autenticação, onboarding, perfil e conteúdo nunca tinham entrado. As 52 linhas foram escritas conferindo arquivo e teste um a um, a tabela passou a ser ordenada por módulo e `test/unit/rastreabilidade.test.js` guarda as duas formas de ela virar ficção — requisito sem linha e caminho de arquivo que não existe mais. A varredura achou três coisas: os dois formatos de jogo nascidos na T-12.4, **Listas Suspensas** e **Quadrinho Interativo**, jogáveis desde então e sem requisito escrito (viraram RF-JOG-09 e RF-JOG-10); seis caminhos citados com nome errado; e sete requisitos P1 sem código nenhum, agora com a situação escrita em vez de ausência silenciosa. De lado, entraram como dívida o bug de formulário que o usuário achou (DT-122) e a tela de perfil incompleta (DT-123).
 
 **Commit anterior:** auditoria da E14, com os dois bloqueantes fechados na mesma sessão. A
 etapa inteira foi conferida contra os requisitos que ela promete, medindo de novo em vez de
@@ -33,7 +40,7 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: T-15.2 — diagramas do TCC (ER, casos de uso, classes e sequência do fluxo de recompensa)**
+**Próximo passo: T-15.3 — documento de arquitetura com a justificativa das decisões**
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -628,7 +635,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Tarefa | Situação |
 |---|---|
 | T-15.1 Rastreabilidade requisito → arquivo → teste | **feita** — os 184 requisitos têm linha, ordenadas por módulo, e `test/unit/rastreabilidade.test.js` reprova requisito sem linha, código inventado, arquivo citado que sumiu e linha com coluna vazia. Dos 52 preenchidos, sete são P1 sem código e agora dizem isso |
-| T-15.2 Diagramas: ER, casos de uso, classes e sequência do fluxo de recompensa | pendente |
+| T-15.2 Diagramas: ER, casos de uso, classes e sequência do fluxo de recompensa | **feita** — `docs/22-DIAGRAMAS-DO-TCC.md`: mapa do banco em uma figura (61 tabelas, seis áreas), casos de uso com os atores reais das rotas, classes do fluxo de recompensa com os métodos que a sequência usa, e a sequência da conclusão de partida com RN-007/009/010 e RNF-15/16/17 na figura, cada um com o teste que o sustenta |
 | T-15.3 Documento de arquitetura com a justificativa das decisões | pendente |
 | T-15.4 Manual de instalação e execução | pendente |
 | T-15.5 Evidências de teste | pendente |
