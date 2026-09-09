@@ -5,7 +5,13 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-08 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** T-15.3 — o documento de arquitetura
+**Último commit:** T-15.4 — o manual canônico de instalação e execução
+(`docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md`): pré-requisitos, `.env`, Docker,
+migrations, seed e contas de exemplo, testes e seus comandos, backup, o
+ambiente completo do compose e o checklist de produção. O quickstart
+`iniciar-proj.md` passou a apontar para o manual como fonte.
+
+**Commit anterior:** T-15.3 — o documento de arquitetura
 (`docs/23-ARQUITETURA-DO-SISTEMA.md`) justifica cada decisão para a banca do
 TCC: camadas, sem ORM, EJS server-rendered, livro-append-only como verdade,
 enum como tabela, transação por conexão emprestada, idempotência no banco,
@@ -47,7 +53,7 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: T-15.4 — manual de instalação e execução**
+**Próximo passo: T-15.5 — evidências de teste (prints, relatório de cobertura)**
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -644,7 +650,7 @@ argumento a favor da rede que a T-02.1 montou.
 | T-15.1 Rastreabilidade requisito → arquivo → teste | **feita** — os 184 requisitos têm linha, ordenadas por módulo, e `test/unit/rastreabilidade.test.js` reprova requisito sem linha, código inventado, arquivo citado que sumiu e linha com coluna vazia. Dos 52 preenchidos, sete são P1 sem código e agora dizem isso |
 | T-15.2 Diagramas: ER, casos de uso, classes e sequência do fluxo de recompensa | **feita** — `docs/22-DIAGRAMAS-DO-TCC.md`: mapa do banco em uma figura (61 tabelas, seis áreas), casos de uso com os atores reais das rotas, classes do fluxo de recompensa com os métodos que a sequência usa, e a sequência da conclusão de partida com RN-007/009/010 e RNF-15/16/17 na figura, cada um com o teste que o sustenta |
 | T-15.3 Documento de arquitetura com a justificativa das decisões | **feita** — `docs/23-ARQUITETURA-DO-SISTEMA.md`: cada escolha justificada para a banca (camadas, sem ORM, EJS), fechando com a tabela decisão → alternativa → porquê e o caminho de evolução sem reescrita |
-| T-15.4 Manual de instalação e execução | pendente |
+| T-15.4 Manual de instalação e execução | **feita** — `docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md`, canônico: instalação do zero, testes, banco, ambiente Docker completo e checklist de produção. `iniciar-proj.md` virou quickstart apontando para o manual |
 | T-15.5 Evidências de teste | pendente |
 | T-15.6 Trabalhos futuros | pendente |
 

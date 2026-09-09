@@ -1,5 +1,10 @@
 # Como iniciar o projeto Beever
 
+> **Este arquivo virou o quickstart.** O manual canônico de instalação e
+> execução é `docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md` — ele mantém a lista
+> completa de comandos, o ambiente Docker inteiro e o caminho até produção.
+> Quando este quickstart e o manual discordarem, vale o manual.
+
 Passo a passo para sair do zero até o servidor rodando. Se algo falhar, veja
 **Problemas comuns** no fim.
 
@@ -74,9 +79,10 @@ Aplica os arquivos de `migrations/` em ordem e registra o que já rodou na tabel
 rodar de novo não reaplica nada e não dá erro — deve responder
 `Nenhuma migration pendente`.
 
-São oito migrations, que criam 56 tabelas. O schema anterior do projeto está
-arquivado em `migrations/_legacy/` e **não é aplicado** — está lá como
-referência histórica. O modelo completo está explicado em
+São **23 migrations**, que criam **61 tabelas** (o texto antigo dizia oito e 56;
+ficou para trás na reestruturação da E01 — a contagem atual é a do manual). O
+schema anterior do projeto está arquivado em `migrations/_legacy/` e **não é
+aplicado** — está lá como referência histórica. O modelo completo está explicado em
 [`docs/MODELO-DE-DADOS.md`](docs/MODELO-DE-DADOS.md).
 
 Se o runner recusar com *"Migration já aplicada foi alterada depois"*, é
