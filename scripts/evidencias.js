@@ -3,6 +3,8 @@ import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { CONTAS } from './seed.js';
+
 /**
  * Gera os prints das telas para a evidência da T-15.5.
  *
@@ -18,9 +20,9 @@ const ENDERECO_DO_SERVIDOR = process.env.EVIDENCIAS_URL ?? 'http://localhost:300
 const PASTA_DE_SAIDA = 'docs/evidencias/telas';
 const PORTA_DE_DEPURACAO = 9222;
 
-// As contas de exemplo do seed, documentadas em
-// `docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md`.
-const CONTA_DO_JOGADOR = { email: 'ana@beever.dev', senha: 'beever123' };
+// A conta de exemplo vem do próprio seed, e não repetida aqui: senha escrita
+// em dois arquivos vira duas verdades no dia em que uma delas mudar.
+const CONTA_DO_JOGADOR = CONTAS.demo;
 
 const LARGURA_DE_CELULAR = 390;
 const ALTURA_DE_CELULAR = 844;

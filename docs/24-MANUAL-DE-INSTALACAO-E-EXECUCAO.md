@@ -65,7 +65,27 @@ defesa: o `.gitignore` e o `.dockerignore`.
 
 > O `.env.example` é um **contrato coberto por teste**
 > (`test/unit/ambienteDeConteiner.test.js`): variável nova que o código passe a
-> ler e não for documentada ali reprova a suíte.
+> ler e não for documentada ali reprova a suíte. Este manual também: variável do
+> `.env.example` que não apareça aqui reprova (`test/unit/tcc.test.js`).
+
+O resto tem padrão e só precisa de atenção quando o ambiente foge do comum:
+
+| Variável | Padrão | Quando mexer |
+|---|---|---|
+| `DB_HOST` | `localhost` | No compose vira `mysql`, o nome do serviço |
+| `DB_PORT` | `3306` | Outra porta publicada pelo MySQL |
+| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | `beever` | Credenciais reais em produção |
+| `DB_ROOT_PASSWORD` | `root` | Só o contêiner do banco usa; a aplicação entra com `DB_USER` |
+| `DB_POOL_LIMIT` | `20` | Medido na T-14.3 para 30 jogadores simultâneos; ver `docs/16-MEDICAO-DE-CARGA.md` |
+| `SESSION_SECRET` | sem padrão | Obrigatória; gere de verdade em produção |
+| `SESSION_MAX_AGE_MINUTES` | `120` | Sessão de login mais curta ou mais longa |
+| `LOG_LEVEL` | `info` | `debug` para investigar, `warn` para calar o normal |
+| `CONTACT_EMAIL` | `contato@beever.local` | Precisa ser um endereço lido de verdade em produção (LGPD, Art. 18) |
+| `UPLOADS_DIR` | `uploads` | Em contêiner precisa ser volume, senão a arte some no deploy |
+| `UPLOAD_MAX_MB` | `8` | Teto do arquivo enviado pelo painel |
+| `BACKUP_CONTAINER` | `mysql` | Nome do contêiner de onde o backup chama o `mysqldump` |
+| `BACKUP_RETENCAO_DIAS` | `7` | Quanto tempo o dump automático fica |
+| `EVIDENCIAS_URL` | `http://localhost:3000` | Endereço que o `npm run evidencias` fotografa |
 
 ### 3.2 Subir o MySQL (Docker)
 

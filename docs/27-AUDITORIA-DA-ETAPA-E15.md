@@ -64,7 +64,9 @@ SQL nem regra de negócio. Sem migration e sem view, os checklists da seção 8 
    `vault_transaction_types` — e as três primeiras são justamente as tabelas de
    calibragem que as decisões travadas e o `docs/23` destacam como o motivo de
    não existir valor mágico no código. **Corrigida na auditoria**, com guarda
-   nova: toda tabela criada em `migrations/` precisa aparecer na figura.
+   nova: toda tabela criada em `migrations/` precisa aparecer na figura. A
+   primeira versão dessa guarda aceitava a tabela citada só em comentário, e
+   isso foi corrigido na segunda passada.
 3. **ALTO — dois documentos da mesma etapa se contradiziam.** O `docs/23`
    afirmava sem ressalva que os controllers respondem JSON, em dois pontos,
    enquanto a matriz registra a RNF-39 como parcial. **Corrigida na auditoria**,

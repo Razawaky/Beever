@@ -29,7 +29,9 @@ import { separarComandos } from './migrate.js';
 const CUSTO_BCRYPT = 10;
 const diretorioSeeds = path.join(path.dirname(fileURLToPath(import.meta.url)), 'seeds');
 
-const CONTAS = {
+// Exportadas porque quem precisa entrar como jogador de exemplo — o script de
+// evidências, por exemplo — deve ler daqui em vez de repetir a senha.
+export const CONTAS = {
   admin: { email: 'admin@beever.dev', senha: 'admin1234', rotulo: 'admin' },
   demo: { email: 'ana@beever.dev', senha: 'beever123', rotulo: 'comum' },
 };

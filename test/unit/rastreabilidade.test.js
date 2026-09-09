@@ -42,6 +42,16 @@ describe('matriz de rastreabilidade', () => {
     assert.deepEqual(semLinha, [], 'requisito sem linha na matriz');
   });
 
+  it('o escopo escrito na matriz é o número real de requisitos', () => {
+    // O texto envelheceu sozinho uma vez: dizia 184 quando já eram 186. Contar
+    // é barato, e o número aparece na primeira linha que a banca lê.
+    const quantos = codigosDe(ler(REQUISITOS)).size;
+    const declarado = /\*\*Escopo:\*\* os (\d+) requisitos/.exec(ler(MATRIZ));
+
+    assert.ok(declarado, 'a matriz não declara mais o escopo em número');
+    assert.equal(Number(declarado[1]), quantos, 'o escopo declarado não é o número de requisitos');
+  });
+
   it('a matriz não inventa requisito que o documento não tem', () => {
     const nosRequisitos = codigosDe(ler(REQUISITOS));
     const inventados = [...codigosDe(ler(MATRIZ))].filter((codigo) => !nosRequisitos.has(codigo)).sort();

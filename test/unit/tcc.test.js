@@ -49,15 +49,20 @@ function tabelasDasMigrations() {
 }
 
 /**
- * Os nomes que aparecem na figura ER.
+ * Os nomes que aparecem na figura ER, sem contar os comentários.
  *
- * Basta olhar as palavras do bloco: se o nome da tabela não está lá, ela não
- * está no desenho. Rótulo de relacionamento também entra na conta, o que só
- * torna a conferência mais permissiva — nunca mais rígida do que deveria.
+ * O comentário cita o nome da tabela para explicar por que ela não tem ligação,
+ * e contá-lo deixaria a tabela "presente" mesmo depois de sumir do desenho —
+ * foi o buraco que a segunda passada da auditoria da E15 encontrou.
  */
 function tabelasDaFiguraEr(texto) {
   const bloco = blocosMermaid(texto).find((b) => b.trim().startsWith('erDiagram')) ?? '';
-  return new Set(bloco.match(/[a-z_][a-z0-9_]*/g) ?? []);
+  const semComentarios = bloco
+    .split('\n')
+    .filter((linha) => !linha.trim().startsWith('%%'))
+    .join('\n');
+
+  return new Set(semComentarios.match(/[a-z_][a-z0-9_]*/g) ?? []);
 }
 
 function blocosMermaid(texto) {
@@ -222,5 +227,13 @@ describe('T-15.4 — manual de instalação e execução', () => {
     const nosRequisitos = achar(ler(REQUISITOS), CODIGO);
     const inventados = [...achar(ler(DOC), CODIGO)].filter((c) => !nosRequisitos.has(c)).sort();
     assert.deepEqual(inventados, [], 'requisito inventado no manual');
+  });
+
+  it('toda variável do .env.example é explicada no manual', () => {
+    const manual = ler(DOC);
+    const doExemplo = [...ler('.env.example').matchAll(/^([A-Z_]+)=/gm)].map(([, nome]) => nome);
+    const semExplicacao = doExemplo.filter((nome) => !manual.includes(nome)).sort();
+
+    assert.deepEqual(semExplicacao, [], 'variável do .env.example que o manual não explica');
   });
 });

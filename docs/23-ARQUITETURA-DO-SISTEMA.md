@@ -60,8 +60,9 @@ sênior:
    somar XP.
 2. **Troca de cliente sem troca de negócio.** Controller pronto para devolver
    JSON na mesma rota que renderiza página significa que uma futura SPA ou
-   aplicativo mobile reutilizam o backend inteiro sem reescrever uma linha de
-   service.
+   aplicativo mobile reaproveitam o backend sem reescrever uma linha de
+   service. Onde a negociação ainda não existe — as duas rotas da seção 4 —
+   o trabalho é acrescentar o formato, não mudar a regra.
 3. **Conceito único de camada num time pequeno.** Quem entra no projeto lê a
    regra de onde os dados saem (repository) até onde a tela os mostra (view)
    sem surpresa — o diagrama de classes (seção 3 do `docs/22`) é a planta que
