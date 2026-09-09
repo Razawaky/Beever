@@ -12,6 +12,7 @@
     "dev": "node --watch src/server.js",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
+    "db:seed:demo": "node scripts/seed.js --demo",
     "db:reset": "node scripts/reset.js",
     "db:reconcile": "node scripts/reconcile.js",
     "db:backup": "node scripts/backup.js",

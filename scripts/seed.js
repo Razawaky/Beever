@@ -29,11 +29,18 @@ import { separarComandos } from './migrate.js';
 const CUSTO_BCRYPT = 10;
 const diretorioSeeds = path.join(path.dirname(fileURLToPath(import.meta.url)), 'seeds');
 
+// A conta de demonstração avançada mora fora de `seeds/` de propósito: o seed
+// padrão é o que os testes aplicam em cada banco descartável, e um jogador com
+// liga e cem dias de sequência muda o resultado de quem conta membros de grupo.
+// Ela entra só com `npm run db:seed:demo`.
+const diretorioDemo = path.join(path.dirname(fileURLToPath(import.meta.url)), 'seeds-demo');
+
 // Exportadas porque quem precisa entrar como jogador de exemplo — o script de
 // evidências, por exemplo — deve ler daqui em vez de repetir a senha.
 export const CONTAS = {
   admin: { email: 'admin@beever.dev', senha: 'admin1234', rotulo: 'admin' },
   demo: { email: 'ana@beever.dev', senha: 'beever123', rotulo: 'comum' },
+  avancado: { email: 'leo@beever.dev', senha: 'beever123', rotulo: 'avançado' },
 };
 
 // Conferido depois do seed: prova que o dado de exemplo cobre o que a etapa
@@ -114,7 +121,7 @@ async function contar(conexao) {
   return resumo;
 }
 
-export async function semear({ diretorio = diretorioSeeds, conexao } = {}) {
+export async function semear({ diretorio = diretorioSeeds, conexao, comDemo = false } = {}) {
   const propria = !conexao;
   const conn =
     conexao ??
@@ -131,14 +138,22 @@ export async function semear({ diretorio = diretorioSeeds, conexao } = {}) {
     // bcrypt não roda em SQL, então os hashes entram como variável de sessão e
     // o arquivo 06 os consome. Melhor do que hash fixo no arquivo, que
     // esconderia qual é a senha.
-    await conn.query('SET @admin_hash = ?, @demo_hash = ?', [
+    await conn.query('SET @admin_hash = ?, @demo_hash = ?, @avancado_hash = ?', [
       await bcrypt.hash(CONTAS.admin.senha, CUSTO_BCRYPT),
       await bcrypt.hash(CONTAS.demo.senha, CUSTO_BCRYPT),
+      await bcrypt.hash(CONTAS.avancado.senha, CUSTO_BCRYPT),
     ]);
 
     const arquivos = await listarSeeds(diretorio);
     for (const arquivo of arquivos) {
       await aplicar(conn, diretorio, arquivo);
+    }
+
+    if (comDemo) {
+      for (const arquivo of await listarSeeds(diretorioDemo)) {
+        await aplicar(conn, diretorioDemo, arquivo);
+        arquivos.push(`seeds-demo/${arquivo}`);
+      }
     }
 
     await derivarComportamentos(conn);
@@ -156,7 +171,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
 
   try {
-    const { arquivos, resumo } = await semear();
+    const { arquivos, resumo } = await semear({ comDemo: process.argv.includes('--demo') });
     arquivos.forEach((arquivo) => console.log(`Aplicado: ${arquivo}`));
 
     console.log('\nEstado do banco depois do seed:');

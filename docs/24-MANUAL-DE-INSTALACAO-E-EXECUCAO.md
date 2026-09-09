@@ -86,6 +86,7 @@ O resto tem padrão e só precisa de atenção quando o ambiente foge do comum:
 | `BACKUP_CONTAINER` | `mysql` | Nome do contêiner de onde o backup chama o `mysqldump` |
 | `BACKUP_RETENCAO_DIAS` | `7` | Quanto tempo o dump automático fica |
 | `EVIDENCIAS_URL` | `http://localhost:3000` | Endereço que o `npm run evidencias` fotografa |
+| `EVIDENCIAS_CONTA` | `demo` | Qual conta o `npm run evidencias` fotografa: `demo` (começo do jogo) ou `avancado` (colmeia cheia) |
 
 ### 3.2 Subir o MySQL (Docker)
 
@@ -132,6 +133,14 @@ app e ver algo além de tela vazia.
 |---|---|---|
 | Comum | `ana@beever.dev` | `beever123` |
 | Administrador | `admin@beever.dev` | `admin1234` |
+
+Para demonstrar o jogo a alguém de fora, a conta da Ana mostra o começo — e
+começo é tela quase vazia. O `npm run db:seed:demo` acrescenta o **Léo**
+(`leo@beever.dev` / `beever123`), com a trilha inteira concluída, patrimônio
+construído, cofre com extrato, cem dias de sequência e uma liga com seis
+pessoas. Ele fica fora do `db:seed` de propósito: o seed padrão é o que os
+testes aplicam, e um jogador com liga mudaria o resultado de quem conta membros
+de grupo.
 
 O seed **recusa rodar com `NODE_ENV=production`**: as senhas acima são
 públicas.

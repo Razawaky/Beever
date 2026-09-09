@@ -22,7 +22,8 @@ const PORTA_DE_DEPURACAO = 9222;
 
 // A conta de exemplo vem do próprio seed, e não repetida aqui: senha escrita
 // em dois arquivos vira duas verdades no dia em que uma delas mudar.
-const CONTA_DO_JOGADOR = CONTAS.demo;
+// `EVIDENCIAS_CONTA=avancado` fotografa a colmeia de quem já jogou muito.
+const CONTA_DO_JOGADOR = CONTAS[process.env.EVIDENCIAS_CONTA ?? 'demo'] ?? CONTAS.demo;
 
 const LARGURA_DE_CELULAR = 390;
 const ALTURA_DE_CELULAR = 844;
