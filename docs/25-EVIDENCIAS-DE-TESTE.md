@@ -1,6 +1,6 @@
 # Evidências de teste — T-15.5
 
-**Data:** 2026-09-09 · **Base:** `c158d46` mais as mudanças da T-15.6 · **Requisito:** RNF-28 (cobertura),
+**Data:** 2026-09-09 · **Base:** `fd69eca` mais as mudanças da T-16.1 · **Requisito:** RNF-28 (cobertura),
 RNF-01 e RNF-04 (tempo de resposta), RNF-05 a RNF-08 (segurança).
 **Ambiente:** Node 22.22.3, MySQL 8.4.11, Brave em modo sem janela.
 
@@ -20,10 +20,10 @@ número que eles cobram.
 
 | Execução | Comando | Saída guardada | Testes | Passaram | Falharam | Pulados | Duração |
 |---|---|---|---|---|---|---|---|
-| Suíte completa contra banco | `npm run test:db` | `docs/evidencias/suite.txt` | 1111 | 1111 | 0 | 0 | 3 min 51 s |
-| Cobertura dos services de cálculo | `npm run test:cobertura` | `docs/evidencias/cobertura.txt` | 1111 | 1108 | 0 | 3 | 3 min 53 s |
+| Suíte completa contra banco | `npm run test:db` | `docs/evidencias/suite.txt` | 1123 | 1123 | 0 | 0 | 4 min 11 s |
+| Cobertura dos services de cálculo | `npm run test:cobertura` | `docs/evidencias/cobertura.txt` | 1123 | 1120 | 0 | 3 | 5 min 12 s |
 
-São 210 suítes em 139 arquivos, 95 de integração contra MySQL real e 44
+São 211 suítes em 140 arquivos, 96 de integração contra MySQL real e 44
 unitários. Nenhum teste é pulado em silêncio: com `TESTES_DE_BANCO=1` a ausência
 de banco vira falha, e foi assim que as duas execuções rodaram.
 
