@@ -293,7 +293,7 @@ Cada escolha de hoje deixa uma porta aberta de amanhã (diretriz do
 `CLAUDE.md`): a porta **não é construída** — só não é trancada.
 
 - **SPA/mobile**: controllers já devolvem JSON; o backend de recompensa é
-  reutilizado sem tocar. (Trabalho futuro T-15.6.)
+  reutilizado sem tocar.
 - **NestJS na API**: se o Express deixar de dar conta, NestJS é a mesma
   linguagem e mesma base Express/Fastify — a troca reformula a casa, não muda o
   terreno.
@@ -305,6 +305,10 @@ Cada escolha de hoje deixa uma porta aberta de amanhã (diretriz do
   responsável são camadas novas sobre os mesmos dados — não exigem mudança nos
   book de saldo nem na auditoria.
 
+Este documento justifica o que **foi** feito. O que fica do outro lado de cada
+porta — custo, risco e o que já habilita cada frente — está em
+`docs/26-TRABALHOS-FUTUROS.md`, e não é repetido aqui.
+
 ---
 
 ## Referências
@@ -313,6 +317,7 @@ Cada escolha de hoje deixa uma porta aberta de amanhã (diretriz do
 - `docs/02-ROADMAP-ETAPAS.md` — (E15, T-15.3 e T-15.6)
 - `docs/03-BANCO-DE-DADOS-DBA.md` e `docs/MODELO-DE-DADOS.md` — o banco
 - `docs/22-DIAGRAMAS-DO-TCC.md` — figuras: classes (3a e 3b) e sequência (4)
+- `docs/26-TRABALHOS-FUTUROS.md` — o que fica do outro lado das portas da seção 11
 - `docs/RASTREABILIDADE.md` — requisito → arquivo → teste
 - `docs/06-AUDITORIA-DA-ETAPA.md`, `docs/15-COBERTURA-DE-TESTES.md`,
   `docs/16-MEDICAO-DE-CARGA.md`, `docs/17-CONTEINER-E-AMBIENTE.md`,

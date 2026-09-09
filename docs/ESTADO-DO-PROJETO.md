@@ -3,9 +3,18 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-09-08 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Atualizado em:** 2026-09-09 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** T-15.5 — o laudo de evidências
+**Último commit:** T-15.6 — o documento de trabalhos futuros
+(`docs/26-TRABALHOS-FUTUROS.md`), que fecha a E15: as quatro frentes do roadmap
+(SPA, mobile, painel do responsável e recomendação de conteúdo) com o que já as
+habilita no código de hoje, os dez requisitos escritos que o MVP não entrega, a
+dívida que depende de host, de volume ou de decisão de produto, e uma ordem
+sugerida de continuação. `test/unit/trabalhos-futuros.test.js` reprova requisito
+inventado, dívida que não está na seção 5, arquivo citado que sumiu e frente do
+roadmap sem seção.
+
+**Commit anterior:** T-15.5 — o laudo de evidências
 (`docs/25-EVIDENCIAS-DE-TESTE.md`) com as duas execuções guardadas em
 `docs/evidencias/`: 1085 testes passando na suíte limpa e cobertura de 100% de
 linha, 93,11% de ramo e 99,39% de função nos services de cálculo. Os dezesseis
@@ -61,7 +70,8 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: T-15.6 — seção de trabalhos futuros (SPA, mobile, painel do responsável, IA de recomendação de conteúdo)**
+**Próximo passo: auditar a E15**, no mesmo molde das etapas anteriores — as seis
+tarefas estão entregues e nenhuma auditoria de etapa foi escrita ainda.
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -660,7 +670,7 @@ argumento a favor da rede que a T-02.1 montou.
 | T-15.3 Documento de arquitetura com a justificativa das decisões | **feita** — `docs/23-ARQUITETURA-DO-SISTEMA.md`: cada escolha justificada para a banca (camadas, sem ORM, EJS), fechando com a tabela decisão → alternativa → porquê e o caminho de evolução sem reescrita |
 | T-15.4 Manual de instalação e execução | **feita** — `docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md`, canônico: instalação do zero, testes, banco, ambiente Docker completo e checklist de produção. `iniciar-proj.md` virou quickstart apontando para o manual |
 | T-15.5 Evidências de teste | **feita** — `docs/25-EVIDENCIAS-DE-TESTE.md` com as duas execuções guardadas ao lado: 1085 testes passando na suíte limpa e 100% de linha, 93,11% de ramo e 99,39% de função nos services de cálculo. Os dezesseis prints das telas vêm de `npm run evidencias`, e o laudo tem seção do que **não** está provado |
-| T-15.6 Trabalhos futuros | pendente |
+| T-15.6 Trabalhos futuros | **feita** — `docs/26-TRABALHOS-FUTUROS.md`: as quatro frentes do roadmap com o que já as habilita e o que precisaria mudar, os requisitos escritos sem código, a dívida que é escopo e não conserto, e a ordem sugerida de continuação. O `docs/23` deixou de repetir o assunto e passou a apontar para ele |
 
 Fora da etapa: a E16 (desktop e apagamento de conta) e o pull request #1, aberto e com o portão
 verde, esperando a decisão de merge.
@@ -1436,11 +1446,11 @@ A T-02.3 devolveu a aplicação ao ar.
 | E09 Economia | **concluída e auditada** | Loja, patrimônio, cofre, ciclo semanal preguiçoso e idempotente, regras por faixa (RN-038), as quatro telas e o aviso do ciclo na Colmeia. O aceite da etapa está provado em `test/integration/aceiteDaEconomia.test.js`: seis semanas fora aplicadas numa visita só, extrato claro, patrimônio fechando na soma e nenhuma linha negativa no livro. O laudo está em `docs/09-AUDITORIA-DA-ETAPA.md`, com três lacunas fechadas na mesma sessão; falta o passe de olho humano nas telas (DT-22) |
 | E10 Colmeia | **concluída e auditada** | T-10.1 a T-10.7 entregues: agregador sem N+1, cabeçalho grudado com nível, mel, patrimônio e sequência, meta em destaque com prazo em palavra, trilha em hexágonos com foco no favo atual, tarefas do dia com recebimento no lugar, aviso do ciclo que sobrevive ao recarregar (DT-63 paga) e o botão "Continuar" que leva ao jogo. O aceite está provado com jogador avançado, e a auditoria (`docs/10-AUDITORIA-DA-ETAPA.md`) aprovou sem bloqueantes, com três lacunas fechadas na mesma sessão |
 | E11 Landing | **concluída e auditada** | T-11.1 a T-11.7 entregues, mais a T-11.8 (o painel de acessibilidade, pedido do usuário fora do roadmap). O laudo está em `docs/11-AUDITORIA-DA-ETAPA.md`: pode avançar, com oito das nove lacunas corrigidas na mesma sessão. A nona é a medição de LCP e fps, que exige navegador (DT-74) |
-| E12 Admin | **em andamento** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
+| E12 Admin | **concluída e auditada** | T-12.1 feita: login administrativo em `/admin/login` verificado por join, `requireAdmin` montado uma vez para todo o prefixo `/admin`, e a listagem de contas migrada de `GET /users` para `/admin/usuarios`. T-12.2 feita: CRUD de favo, célula e conteúdo, com o validador do tipo de jogo como portão e versão nova a cada edição — o aceite "aparece para o jogador sem `db:seed`" está provado. T-12.3 feita: catálogo da loja cadastrável, com ilustração convertida para WebP no servidor e comportamento econômico derivado dos números em vez de escrito no seed. T-12.4 feita: formulário por tipo de jogo, mídia na casca comum e dois formatos novos (Listas Suspensas e Quadrinho Interativo), que subiram o motor de seis para oito jogos. T-12.5 feita: a célula ganhou acervo, a partida sorteia entre as atividades ativas e grava qual jogou. T-12.6 feita: consulta da trilha com sete filtros, paginação e exportação em CSV, com os índices que a consulta por ação e por data exigia. **Auditada**, com as dez lacunas corrigidas na mesma sessão, incluindo as duas que bloqueavam: o expurgo que guardava dado pessoal e a linha de evolução do item, que o painel não cadastrava. T-12.7 feita: o painel virou dashboard com as quatro métricas da RF-ADM-04 sobre cinco períodos, e a migration 021 deu índice de data às três tabelas que mais crescem. **Etapa concluída**, e as quatro decisões de modelagem continuam abertas |
 | E13 Conquistas e liga | **concluída e auditada** | T-13.1 feita: o critério da conquista virou dado no banco (migration 022) e o catálogo cobre as cinco famílias da RF-GAM-01, com quatro degraus cada. T-13.2 feita: as quatro famílias novas desbloqueiam sozinhas, no evento ou na visita, conforme o custo da conta. T-13.3 feita: a liga semanal existe, com grupos, ranque do livro e pódio sem rebaixamento. T-13.4 feita: `/conquistas` e `/liga` existem, o desbloqueio comemora na Colmeia e no fim da partida, e o ranque mostra só apelido (RF-GAM-03). **Auditada em `docs/13-AUDITORIA-DA-ETAPA.md`: pode avançar**, com as duas lacunas bloqueantes corrigidas na mesma sessão — a regra do apelido publicado e a liga que aceitava quem nunca jogou |
 | E14 Endurecimento | **concluída** | T-14.1 feita: varredura de segurança em duas frentes — a estática lê o código (interpolação em SQL, validador em rota de escrita, saída sem escape em view, segredo literal) e a dinâmica exercita as 36 rotas pelo HTTP. Três correções: limite de login por credencial (DT-24), `normalizeEmail` fora (DT-26) e lista fechada para os dois identificadores dinâmicos em SQL. `npm audit` limpo. Laudo em `docs/14-VARREDURA-DE-SEGURANCA.md`. T-14.2 feita: `npm run test:cobertura` mede os 24 services de cálculo com a cobertura embutida do Node, com piso de 100% de linha e catraca de 91% de ramo. As guardas de saldo, a posse da partida, o seed incompleto e os requisitos de item que o catálogo não usa ganharam teste; oito exportações mortas saíram. Laudo em `docs/15-COBERTURA-DE-TESTES.md`. T-14.3 feita: `npm run carga` mede a jornada real de 30 jogadores simultâneos, e o padrão do pool subiu de 10 para 20 com base na medição, não em palpite. `cargaSimultanea.test.js` entrou na suíte como regressão de concorrência, incluindo a conferência de que toda conexão volta ao pool. Laudo em `docs/16-MEDICAO-DE-CARGA.md`. T-14.4 feita: a imagem foi construída e subida pela primeira vez, e a conferência dentro do contêiner achou quatro defeitos que o teste estático não veria — healthcheck do banco lendo variável inexistente, `uploads/` sem dono certo depois do `USER node`, `logger.js` pedindo o `pino-pretty` que o `npm prune` tira, e nenhum `.dockerignore`. A aplicação entrou no compose sob o perfil `completo`, com as migrations num serviço separado para permitir réplica depois. O `npm ci` deixou de rodar duas vezes. `ambienteDeConteiner.test.js` passa a reprovar variável de ambiente sem linha no `.env.example` (DT-15). Laudo em `docs/17-CONTEINER-E-AMBIENTE.md`. T-14.5 feita: o portão do CI existe em `.github/workflows/ci.yml`, com cinco jobs — lint com `npm audit` bloqueante, suíte contra MySQL 8.4 por `test:db`, cobertura em execução própria, build da imagem com subida do contêiner, e a medição de carga só em `main` sem reprovar. O achado da tarefa foi o `.gitignore`, que ignorava `.github/` inteiro e teria deixado o workflow invisível ao GitHub; uma exceção para `workflows/` corrigiu. A publicação em registro ficou para depois do aceite (DT-116) e o YAML só se prova no primeiro pull request real (DT-117). Laudo em `docs/18-INTEGRACAO-CONTINUA.md`. T-14.6 feita: o `db:backup` existia desde a E01 e nunca tinha rodado; a primeira execução real funcionou e, na mesma execução, apagou o dump de antes da E01 — a retenção aceitava qualquer `.sql` com mais de sete dias, e agora só toca no que ela mesma cria. O outro lado do backup passou a existir: `scripts/restaurar.js` e `npm run db:restore -- --sim`, com as guardas do reset, provado ponta a ponta com o banco derrubado e trazido de volta idêntico. A suíte que travava dezoito minutos por diretório de schema órfão virou a DT-118. Laudo em `docs/19-BACKUP-E-RESTAURACAO.md`. T-14.7 feita: a acessibilidade passou a ser provada nas trinta telas, e não só na landing. A varredura busca cada tela pelo HTTP, com sessão de jogador e de administrador, e pergunta em todas por foco de teclado, alvo de 44 px, campo com nome, ordem de títulos, contraste do par escrito no elemento, largura que cabe em 320 px, tabela com rolagem própria, zoom liberado, painel de acessibilidade desligado por padrão e animação com saída. O achado foram 411 elementos focáveis sem indicação nenhuma de foco, corrigidos por regra de base no `tema.css` em vez de classe repetida elemento por elemento. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. **A etapa fecha inteira** |
 | E14 Endurecimento — auditoria | **concluída** | Laudo em `docs/21-AUDITORIA-DA-ETAPA-E14.md`. Os dois bloqueantes foram fechados na mesma sessão: o limite global passou a contar por sessão nas leituras (DT-112, com a carga refeita em 200×600 e nenhum 429), e `validadoresDeJogo` e `usersService` entraram no portão de cobertura, que virou 26 services em 100% de linha com catraca de ramo em 93%. L4 (desktop) e a exclusão de conta viraram a E16; L6 virou o pull request para a `main` |
-| E15 Documentação TCC | do zero | — |
+| E15 Documentação TCC | **concluída, falta auditar** | T-15.1 a T-15.6 entregues: rastreabilidade dos 184 requisitos, os quatro diagramas, o documento de arquitetura, o manual canônico de instalação, o laudo de evidências com as duas execuções guardadas e os trabalhos futuros. Falta o laudo de auditoria da etapa |
 | E16 Ajustes antes da defesa | do zero | T-16.1 composição de desktop das quatro telas mais vistas; T-16.2 apagamento definitivo de conta com anonimização da auditoria (RN-053). Nasceram da auditoria da E14, decididas com o usuário em 2026-09-03 |
 
 ---
@@ -1519,6 +1529,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-121 | A varredura de acessibilidade lê o HTML servido, sem navegador, e três perguntas ficam fora do alcance dela: se o layout quebra de verdade a 320 px com a fonte carregada, se o texto contrasta com o fundo herdado de um elemento ancestral, e se a linguagem é adequada à faixa etária (RNF-24), que não é automatizável. A altura de toque aceita 12 px de espaço vertical como equivalente aos 44 px, o que depende da fonte carregar | T-14.7 | Abrir as telas num navegador a 320 px antes da defesa, e considerar `axe-core` com navegador headless se o projeto seguir depois do TCC |
 | DT-124 | **A regra escrita do Cofre do Tempo concorda no gênero errado.** `src/public/js/cofre.js` monta "o que ficar no cofre rende 10% neste ${nomeDoCiclo}", e o nome do ciclo vem do banco: com "semana" a criança lê "neste semana". Foi o print da T-15.5 que mostrou | T-15.5 | Guardar o gênero junto do nome do ciclo, ou escrever a frase sem preposição de gênero ("rende 10% por semana") |
 | DT-125 | Na rodada 1 do Cofre do Tempo a tabela do extrato desenha o cabeçalho (Ciclo, Guardado, Saldo) sobre um corpo vazio, e o gráfico fica só com a linha da meta: a criança vê títulos de coluna sem nenhuma linha embaixo. O projeto já tem o partial `estado-vazio` para esse caso | T-15.5 | Esconder tabela e gráfico até existir a primeira linha, ou pôr uma frase no lugar |
+| DT-126 | **`test/unit/tcc.test.js` nunca foi commitado.** São 15 testes verdes que guardam os documentos da T-15.2, T-15.3 e T-15.4, e o arquivo está apenas no disco desde então: quem clonar o repositório não tem essas guardas, e o portão de CI não as roda. Ele também tem um erro de lint, uma constante `ROADMAP` declarada e não usada, que é o único erro de `npm run lint` hoje | T-15.6 | Decidir com o usuário se entra como está, sem a constante morta, ou se some |
 | DT-113 | A primeira visita de um jogador custa muito mais do que as seguintes — é ela que fecha ciclo, julga sequência, abre liga, cria tarefas do dia e monta o plano de metas. Com trinta simultâneos ela fica a 1924 ms de p95, dentro do teto mas sem folga nenhuma | T-14.3 | Se apertar, separar o que precisa acontecer antes de desenhar a tela do que pode acontecer depois da resposta |
 | DT-110 | A cobertura de ramo dos services de cálculo ficou em 92,06%, e não em 100% como a RNF-28 pede ao pé da letra. O que falta é de três famílias que não se fecham com teste honesto: reserva que nunca dispara (`?? 0` sobre dado que sempre vem), parâmetro com valor padrão, e `catch` de falha de infraestrutura, que exigiria mock num projeto que testa contra banco real. O piso de linha está em 100% e o de ramo é catraca em 91% | T-14.2 | Subir a catraca quando um caso de negócio novo cobrir um desses ramos naturalmente. Cobertura de mutação, que é o que de fato mede se a asserção existe, fica para depois da entrega |
 | DT-111 | **RF-INV-06 (histórico de evolução do patrimônio) é P1 e não tem tela.** A foto diária é gravada desde a E09, `patrimonyService.listarEvolucao` a lê, e nenhum controller a chama: o dado se acumula para um gráfico que não existe. Foi a medição de cobertura que apontou, porque a função nunca era executada | T-14.2 | Decidir na E14 se a tela entra ou se o requisito é rebaixado antes da defesa; o dado já está lá |
@@ -4235,3 +4246,52 @@ entrega ainda sem TLS, host e réplica de verdade (DT-114, DT-115, DT-119).
 
 Sete testes novos em `test/unit/evidencias.test.js`, cada guarda conferida
 quebrando o documento de propósito antes de dar por pronta.
+
+### Sessão de 2026-09-09, T-15.6 e a E15 fechada pelo que ela não faz
+
+O último documento da etapa é o que descreve o que o Beever **não** entrega:
+`docs/26-TRABALHOS-FUTUROS.md`. A regra que o manteve honesto foi obrigar cada
+frente futura a dizer o que no código de hoje já a habilita, em vez de listar
+desejo. Quatro coisas apareceram nessa conta e nenhuma delas foi feita pensando
+no futuro — negociação de conteúdo nos controllers, regra inteira nos services,
+livro append-only como verdade e sessão no MySQL resolveram problema do presente
+e ficaram servindo depois.
+
+A ordem sugerida de continuação contraria a expectativa mais óbvia. O primeiro
+item não é SPA nem IA: são as telas dos P1 cujo dado já está gravado e ninguém
+lê — evolução do patrimônio (DT-111), histórico de metas e venda voluntária
+(DT-53). O painel do responsável vem antes do SPA de propósito, porque migrar o
+cliente com um ator a menos faria a migração acontecer duas vezes. E a
+recomendação começa por medir se o sorteio atual erra, não por modelo.
+
+Duas correções de documento entraram junto. O `docs/23` repetia o assunto na
+seção 11 e agora aponta para o novo, com a fronteira escrita: o 23 justifica o
+que foi feito, o 26 descreve o que não foi. E a tabela de roadmap do estado ainda
+dizia "E12 em andamento", parada desde a T-12.7 — a mesma tabela onde a E15
+entrou como concluída.
+
+Quatro testes novos em `test/unit/trabalhos-futuros.test.js`, cada guarda
+conferida quebrando o documento de propósito: requisito inventado, dívida fora da
+seção 5, arquivo citado que sumiu e frente do roadmap sem seção.
+
+Dois consertos da T-15.5 saíram antes, em commit próprio (`5ea4fb4`). A saída
+guardada em `docs/evidencias/suite.txt` estava truncada no meio, sem o resumo
+TAP: o laudo afirmava 1085 testes e o arquivo ao lado não provava nada. As duas
+execuções foram refeitas inteiras — 1111 testes passando em 3 min 51 s, e a
+cobertura em 100% de linha, 92,93% de ramo e 99,39% de função. O `EVIDENCIAS_URL`
+entrou no `.env.example`, e a contagem de arquivos do laudo virou a real: 210
+suítes em 139 arquivos.
+
+A suíte também custou meia hora antes de fechar, e a culpa é da DT-118: dois
+arquivos travaram para sempre em vez de reprovar, porque duas pastas de schema
+órfãs ficaram em `/var/lib/mysql` sem registro no dicionário de dados. O
+`rmdir` documentado na seção 7 resolveu, e fica a confirmação de que o conserto
+da dívida é dar prazo ao `before`.
+
+De lado, um achado que não é desta tarefa: `test/unit/tcc.test.js` existe no
+disco, roda verde com quinze testes e **nunca foi commitado** — as guardas dos
+documentos da T-15.2, T-15.3 e T-15.4 não estão no repositório. Virou a DT-126,
+com decisão pendente.
+
+**A E15 fecha inteira.** Falta a auditoria da etapa, que é o que separa dela a
+E16.
