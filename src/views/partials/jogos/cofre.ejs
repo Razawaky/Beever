@@ -13,7 +13,16 @@
 -%>
 <h2 id="cofre-enunciado" tabindex="-1" class="mt-6 font-display text-xl text-tinta" aria-live="polite"></h2>
 
-<figure class="mt-5">
+<%#
+  Na primeira rodada não há nada guardado ainda: o gráfico teria só a linha da
+  meta e a tabela, cabeçalho sobre corpo vazio. Os dois aparecem quando existe o
+  primeiro depósito, e até lá a criança lê uma frase em vez de colunas vazias.
+-%>
+<p id="cofre-ainda-vazio" class="mt-5 rounded-favo bg-cera p-4 text-center text-sm text-tinta-suave">
+  O seu cofre aparece aqui assim que você guardar.
+</p>
+
+<figure id="cofre-figura" class="mt-5 hidden">
   <svg
     id="cofre-grafico"
     viewBox="0 0 120 70"
@@ -29,7 +38,7 @@
   <figcaption id="cofre-legenda" class="mt-2 text-center text-sm text-tinta-suave"></figcaption>
 </figure>
 
-<table class="mt-4 w-full text-left text-sm">
+<table id="cofre-tabela" class="mt-4 hidden w-full text-left text-sm">
   <caption class="sr-only">Depósito e saldo do cofre em cada ciclo</caption>
   <thead>
     <tr class="text-tinta-suave">

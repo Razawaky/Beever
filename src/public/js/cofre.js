@@ -18,6 +18,9 @@ const botaoTirar = document.getElementById('cofre-tirar');
 const botaoColocar = document.getElementById('cofre-colocar');
 const botaoConfirmar = document.getElementById('cofre-confirmar');
 const rodada = document.getElementById('cofre-rodada');
+const figura = document.getElementById('cofre-figura');
+const tabela = document.getElementById('cofre-tabela');
+const aindaVazio = document.getElementById('cofre-ainda-vazio');
 
 const ESPACO_SVG = 'http://www.w3.org/2000/svg';
 // O desenho vive num viewBox de 120 por 70: as barras crescem da linha de baixo
@@ -77,6 +80,12 @@ function registrarNoHistorico(indiceDoCiclo, deposito) {
     linha.append(celula);
   });
   historico.append(linha);
+
+  // O gráfico e a tabela só existem depois do primeiro depósito: antes dele não
+  // há o que mostrar, e cabeçalho sobre corpo vazio confunde.
+  aindaVazio.classList.add('hidden');
+  figura.classList.remove('hidden');
+  tabela.classList.remove('hidden');
 }
 
 function atualizarLegenda() {
@@ -98,7 +107,9 @@ function mostrarCiclo() {
   depositoAtual = conteudo.minimoPorCiclo;
 
   pergunta.textContent = `${conteudo.nomeDoCiclo} ${cicloAtual + 1}: entraram ${conteudo.entradaPorCiclo} de mel. Quanto vai para o cofre?`;
-  regra.textContent = `De ${conteudo.minimoPorCiclo} a ${conteudo.entradaPorCiclo}, de ${passo} em ${passo}. O que ficar no cofre rende ${conteudo.taxaPorCiclo}% neste ${conteudo.nomeDoCiclo}.`;
+  // "por semana", e não "neste semana": o nome do ciclo vem do banco e pode ser
+  // masculino ou feminino, então a frase é escrita sem depender do gênero dele.
+  regra.textContent = `De ${conteudo.minimoPorCiclo} a ${conteudo.entradaPorCiclo}, de ${passo} em ${passo}. O que ficar no cofre rende ${conteudo.taxaPorCiclo}% por ${conteudo.nomeDoCiclo}.`;
   botaoConfirmar.textContent = cicloAtual === conteudo.ciclos - 1 ? 'Terminar' : 'Guardar';
   mostrarProgresso(`${conteudo.nomeDoCiclo} ${cicloAtual + 1} de ${conteudo.ciclos}`, cicloAtual, conteudo.ciclos);
   atualizarControles();
