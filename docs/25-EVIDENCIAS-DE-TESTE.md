@@ -1,6 +1,6 @@
 # Evidências de teste — T-15.5
 
-**Data:** 2026-09-08 · **Commit:** `c5336bd` · **Requisito:** RNF-28 (cobertura),
+**Data:** 2026-09-09 · **Base:** `c158d46` mais as mudanças da T-15.6 · **Requisito:** RNF-28 (cobertura),
 RNF-01 e RNF-04 (tempo de resposta), RNF-05 a RNF-08 (segurança).
 **Ambiente:** Node 22.22.3, MySQL 8.4.11, Brave em modo sem janela.
 
@@ -20,10 +20,10 @@ número que eles cobram.
 
 | Execução | Comando | Saída guardada | Testes | Passaram | Falharam | Pulados | Duração |
 |---|---|---|---|---|---|---|---|
-| Suíte completa contra banco | `npm run test:db` | `docs/evidencias/suite.txt` | 1085 | 1085 | 0 | 0 | 4 min 45 s |
-| Cobertura dos services de cálculo | `npm run test:cobertura` | `docs/evidencias/cobertura.txt` | 1085 | 1082 | 0 | 3 | 5 min 58 s |
+| Suíte completa contra banco | `npm run test:db` | `docs/evidencias/suite.txt` | 1111 | 1111 | 0 | 0 | 3 min 51 s |
+| Cobertura dos services de cálculo | `npm run test:cobertura` | `docs/evidencias/cobertura.txt` | 1111 | 1108 | 0 | 3 | 3 min 53 s |
 
-São 205 suítes em 136 arquivos, 95 de integração contra MySQL real e 41
+São 210 suítes em 139 arquivos, 95 de integração contra MySQL real e 44
 unitários. Nenhum teste é pulado em silêncio: com `TESTES_DE_BANCO=1` a ausência
 de banco vira falha, e foi assim que as duas execuções rodaram.
 
@@ -37,7 +37,7 @@ está explicado em `docs/15-COBERTURA-DE-TESTES.md`.
 | | piso do portão | medido nesta execução |
 |---|---|---|
 | Linha | 100% | **100,00%** |
-| Ramo | 92% | **93,11%** |
+| Ramo | 92% | **92,93%** |
 | Função | 99% | **99,39%** |
 
 Linha em 100% é o que a RNF-28 cobra e não se negocia. Ramo e função são catraca:
@@ -109,7 +109,7 @@ contraste, foco e alvo de toque por cálculo, mas o que só um leitor de tela re
 revela continua fora (DT-121). O fim de partida não tem print: a comemoração é
 desenhada no navegador depois de a criança responder, e fotografá-la exigiria
 conduzir o jogo de fora — quem prova esse caminho é o teste de integração da
-conclusão de partida. Cobertura de ramo está em 93,11% e não em 100%, com os
+conclusão de partida. Cobertura de ramo está em 92,93% e não em 100%, com os
 ramos que faltam listados no `docs/15`. E a entrega em si segue sem TLS, sem host
 e sem duas réplicas de verdade (DT-114, DT-115, DT-119).
 
