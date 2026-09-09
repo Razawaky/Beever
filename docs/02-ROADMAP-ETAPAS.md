@@ -321,6 +321,8 @@ não eram conserto e sim escopo novo. Decidido com o usuário em 2026-09-03.
 | T-16.1 | Composição de desktop das quatro telas mais vistas — Colmeia, trilha, loja e cofre —, saindo da coluna de celular centralizada que a seção 8 do `docs/04` recusa |
 | T-16.2 | Apagamento definitivo de conta, com anonimização do agregado de auditoria (RN-053), que é o que a política de privacidade promete ao usuário |
 
+**Aceite:** as quatro telas mais vistas abertas a 1440 px têm composição própria — grade, não coluna de celular centralizada —, o celular a 320 px continua sem rolagem horizontal, e apagar a conta remove de fato o dado pessoal, deixando a auditoria anônima e íntegra.
+
 ---
 
 ## Fluxo do usuário (referência para todas as etapas)

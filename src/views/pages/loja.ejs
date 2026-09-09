@@ -4,14 +4,14 @@
   faixa. A tela agrupa por categoria e desenha.
 %>
 <header class="bg-mel px-6 py-6">
-  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+  <div class="mx-auto flex max-w-5xl lg:max-w-7xl items-center justify-between gap-4">
     <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
     <h1 class="text-2xl font-bold">Loja</h1>
     <a href="/inventario" class="font-semibold text-tinta hover:underline">Meus itens &rarr;</a>
   </div>
 </header>
 
-<main class="mx-auto max-w-5xl px-6 py-10">
+<main class="mx-auto max-w-5xl lg:max-w-7xl px-6 py-10">
   <%- include('../partials/ui/patrimonio-topo', { patrimonio: vitrine.patrimonio }) %>
 
   <% if (vitrine.itens.length === 0) { %>
@@ -32,7 +32,7 @@
   <% for (const [categoria, itens] of porCategoria) { %>
     <section class="mt-10">
       <h2 class="font-display text-xl"><%= categoria %></h2>
-      <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <% itens.forEach((item) => { %>
           <%- include('../partials/ui/item-card', { item }) %>
         <% }) %>

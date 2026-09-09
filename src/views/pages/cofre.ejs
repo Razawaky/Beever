@@ -2,16 +2,21 @@
   O cofre (RF-COF-01 a 04): guardar, tirar, ver o extrato, declarar a meta e
   enxergar a projeção. O formulário é POST comum, sem JavaScript — o gráfico é
   enfeite útil, e a página funciona inteira sem ele.
+
+  A partir de `lg` as quatro seções param de competir em pilha: as que pedem
+  ação ficam à esquerda, as que só mostram números ficam à direita.
 %>
 <header class="bg-mel px-6 py-6">
-  <div class="mx-auto flex max-w-4xl items-center justify-between gap-4">
+  <div class="mx-auto flex max-w-4xl lg:max-w-6xl items-center justify-between gap-4">
     <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
     <h1 class="text-2xl font-bold">Meu cofre</h1>
     <%- include('../partials/ui/badge-recurso', { icone: '🍯', rotulo: 'Na carteira', valor: perfil.mel }) %>
   </div>
 </header>
 
-<main class="mx-auto max-w-4xl px-6 py-10">
+<main class="mx-auto max-w-4xl lg:max-w-6xl px-6 py-10">
+  <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
+    <div>
   <section class="rounded-favo bg-white p-6 shadow-md">
     <%- include('../partials/ui/badge-recurso', {
       icone: '🍯',
@@ -78,7 +83,9 @@
       <p class="mt-2 text-sm text-tinta-suave">Você ainda não tem uma meta. Quem tem meta guarda mais.</p>
     <% } %>
 
-    <form method="POST" action="/cofre/meta" class="mt-4 grid gap-3 sm:grid-cols-3 sm:items-end">
+    <%# Os três campos da meta só cabem lado a lado em largura inteira. A partir
+        de `lg` a seção é meia coluna em qualquer tela, então ficam dois. %>
+    <form method="POST" action="/cofre/meta" class="mt-4 grid gap-3 sm:grid-cols-3 sm:items-end lg:grid-cols-2">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <div class="grid gap-2">
         <label for="valor-meta" class="text-sm font-semibold">Quero juntar</label>
@@ -104,7 +111,10 @@
     </form>
   </section>
 
-  <section class="mt-8 rounded-favo bg-white p-6 shadow-md">
+    </div>
+
+    <div>
+  <section class="mt-8 rounded-favo bg-white p-6 shadow-md lg:mt-0">
     <h2 class="font-display text-xl">Se você guardar todo mês</h2>
 
     <form method="GET" action="/cofre" class="mt-4 flex flex-wrap items-end gap-3">
@@ -147,7 +157,9 @@
       data-totais="<%= projecao.map((linha) => linha.total).join(',') %>"
     ></canvas>
 
-    <ol class="mt-4 grid gap-1 text-sm tabular-nums sm:grid-cols-2">
+    <%# Duas colunas de semana só cabem quando a seção tem largura inteira; em
+        meia coluna elas colam e viram uma linha só de números. %>
+    <ol class="mt-4 grid gap-x-8 gap-y-1 text-sm tabular-nums sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
       <% projecao.forEach((linha) => { %>
         <li class="flex justify-between border-b border-linha py-1">
           <span class="text-tinta-suave">Semana <%= linha.semana %></span>
@@ -175,4 +187,6 @@
       </ul>
     <% } %>
   </section>
+    </div>
+  </div>
 </main>
