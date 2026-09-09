@@ -22,6 +22,7 @@
           <th scope="col" class="px-4 py-3 font-semibold">Situação</th>
           <th scope="col" class="px-4 py-3 font-semibold">Último acesso</th>
           <th scope="col" class="px-4 py-3 font-semibold">Administrador</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Apagar</th>
         </tr>
       </thead>
       <tbody>
@@ -45,6 +46,23 @@
                   tamanho: 'medio',
                   formato: 'pilula',
                   rotuloAcessivel: `${conta.eh_admin ? 'Rebaixar' : 'Promover'} ${conta.nickname}`,
+                }) %>
+              </form>
+            </td>
+            <td class="px-4 py-3">
+              <form
+                method="POST"
+                action="/admin/usuarios/<%= conta.id %>/definitivo"
+                onsubmit="return confirm('Apagar a conta de <%= conta.nickname %> e todo o dado dela? A auditoria anônima permanece.')"
+              >
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <%- include('../../partials/ui/botao', {
+                  texto: 'Apagar',
+                  tipo: 'submit',
+                  variante: 'secundario',
+                  tamanho: 'medio',
+                  formato: 'pilula',
+                  rotuloAcessivel: `Apagar definitivamente ${conta.nickname}`,
                 }) %>
               </form>
             </td>

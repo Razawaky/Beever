@@ -132,3 +132,9 @@ export async function removerPorIds(ids) {
   const resultado = await consultar(`DELETE FROM users WHERE id IN (${marcadores})`, ids);
   return resultado.affectedRows;
 }
+
+/** Apagamento definitivo de uma conta (RN-053); a cascata leva o resto. */
+export async function removerPorId(id) {
+  const resultado = await consultar('DELETE FROM users WHERE id = ?', [id]);
+  return resultado.affectedRows;
+}

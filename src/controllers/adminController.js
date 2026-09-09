@@ -74,3 +74,18 @@ export const definirAdministrador = assincrono(async (req, res) => {
   if (querJson(req)) return res.json({ ehAdmin: deveSerAdmin });
   res.redirect('/admin/usuarios');
 });
+
+/**
+ * Apagamento definitivo de uma conta (RN-053) a pedido da pessoa ou do
+ * responsável (Art. 18 da LGPD). O formulário da listagem pede confirmação
+ * explícita; aqui só se executa, registrando o pedido na auditoria anônima.
+ */
+export const apagarDefinitivamente = assincrono(async (req, res) => {
+  await usersService.apagarDefinitivamente(Number(req.params.id), {
+    id: req.session.usuarioId,
+    ehAdmin: req.session.ehAdmin,
+  });
+
+  if (querJson(req)) return res.json({ apagado: true });
+  res.redirect('/admin/usuarios');
+});

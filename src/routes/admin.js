@@ -54,6 +54,15 @@ router.post(
   adminController.definirAdministrador,
 );
 
+// Ação irreversível: o formulário da tela pede confirmação no navegador, e a
+// auditoria registra quem apagou e o agregado do que foi embora (RN-053).
+router.post(
+  '/usuarios/:id/definitivo',
+  param('id').isInt({ min: 1 }),
+  validate,
+  adminController.apagarDefinitivamente,
+);
+
 /**
  * Cadastro de conteúdo (RF-ADM-02). O corpo da atividade não é validado aqui:
  * quem diz se ele é jogável é o validador do tipo de jogo, no service, e

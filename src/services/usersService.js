@@ -168,17 +168,25 @@ export async function criar({ email, dataNasc, senha, apelido, consentimentoResp
   // grande.
   await profilesRepository.atualizar(idPerfil, { faixaEtaria: faixa.code });
 
+  // A trilha nasce anônima (RN-053): apelido e e-mail são dado pessoal e a
+  // tabela é append-only por gatilho (RNF-17) — o que entrar aqui sobrevive à
+  // exclusão da conta para sempre. Entra só o agregado: a faixa e o fato de
+  // haver consentimento, que é o que a auditoria precisa saber depois.
   await auditService.registrar(auditService.usuario(idUsuario), 'conta.criada', {
     entidade: 'user',
     id: idUsuario,
-    depois: { email, apelido: apelidoLimpo, faixaEtaria: faixa.code, consentimentoDeResponsavel: precisaDeConsentimento },
+    depois: { faixaEtaria: faixa.code, consentimentoDeResponsavel: precisaDeConsentimento },
   });
 
   if (precisaDeConsentimento) {
+    // O e-mail do responsável não entra aqui pelo mesmo motivo do apelido na
+    // linha acima. Quem provou o consentimento na hora é a tabela
+    // `guardian_consents`, que acompanha o ciclo de vida da conta e sai junto
+    // quando ela é apagada.
     await auditService.registrar(auditService.usuario(idUsuario), 'consentimento.registrado', {
       entidade: 'user',
       id: idUsuario,
-      depois: { emailResponsavel: email, idade },
+      depois: { idade },
     });
   }
 
@@ -195,8 +203,6 @@ export async function criar({ email, dataNasc, senha, apelido, consentimentoResp
 export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
   exigirPosse(id, ator);
 
-  const anterior = await obter(id);
-
   let senhaHash = null;
   if (senha) {
     exigirSenhaValida(senha);
@@ -209,11 +215,13 @@ export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
   await auditService.registrar(quemAgiu(ator), 'conta.atualizada', {
     entidade: 'user',
     id,
-    antes: { apelido: anterior.nickname, email: anterior.email },
-    // A senha nova nunca entra na auditoria, só o fato de ter mudado.
+    // Nada de valor pessoal entra na trilha: apenas o que mudou. Apelido,
+    // e-mail e data de nascimento são dado pessoal (RN-049), e apagar a conta
+    // um dia (RN-053) não pode deixar cópia deles no histórico imutável.
     depois: {
-      apelido: apelido ?? anterior.nickname,
-      email: email ?? anterior.email,
+      emailAlterado: Boolean(email),
+      apelidoAlterado: Boolean(apelido),
+      dataNascAlterada: Boolean(dataNasc),
       senhaAlterada: Boolean(senha),
     },
   });
@@ -239,4 +247,36 @@ export async function inativar(id, ator) {
     antes: { ativa: Boolean(usuario.is_active) },
     depois: { ativa: false },
   });
+}
+
+/**
+ * Apagamento definitivo (RN-053): remove a linha do usuário e, pela cascata
+ * das foreign keys, tudo o que a conta possui — perfil, carteira, metas,
+ * compras, consentimento. É o que a política de privacidade oferece a quem
+ * pede a exclusão pelo Art. 18 da LGPD: o dado sai de verdade.
+ *
+ * A trilha de auditoria não pode ser reescrita (RNF-17 a tornou imutável por
+ * gatilho), e ela não tem foreign key para `users` justamente para sobreviver
+ * à exclusão. O que mantém a RN-053 inteira é o agregado já nascer anônimo —
+ * `conta.criada`, `conta.atualizada` e `consentimento.registrado` não gravam
+ * apelido, e-mail nem data, então quando o expurgo chega não há o que apagar.
+ */
+export async function apagarDefinitivamente(id, ator) {
+  exigirPosse(id, ator);
+
+  // O `obter` garante que a conta existe; sem ele, o registro sairia sobre um
+  // id que não pertence a ninguém.
+  const usuario = await obter(id);
+
+  // O registro sai antes do `DELETE`: a linha de auditoria precisa do id
+  // enquanto ele ainda existe. É a mesma ordem do expurgo do cron
+  // (`limpezaService`), e o que ele guarda é só o agregado.
+  await auditService.registrar(quemAgiu(ator), 'conta.apagada', {
+    entidade: 'user',
+    id,
+    antes: { ativa: Boolean(usuario.is_active) },
+    depois: { tinhaOnboarding: Boolean(usuario.onboarding_completed_at) },
+  });
+
+  await usersRepository.removerPorId(id);
 }
