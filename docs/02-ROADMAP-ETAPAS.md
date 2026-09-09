@@ -319,7 +319,7 @@ não eram conserto e sim escopo novo. Decidido com o usuário em 2026-09-03.
 | Tarefa | Entrega |
 |---|---|
 | T-16.1 | Composição de desktop das quatro telas mais vistas — Colmeia, trilha, loja e cofre —, saindo da coluna de celular centralizada que a seção 8 do `docs/04` recusa |
-| T-16.2 | Apagamento definitivo de conta, com anonimização do agregado de auditoria (RN-053), que é o que a política de privacidade promete ao usuário |
+| T-16.2 | Apagamento definitivo de conta, com anonimização do agregado de auditoria (RN-053), que é o que a política de privacidade promete ao usuário | **feita** — `POST /admin/usuarios/:id/definitivo` remove a conta e, pela cascata das foreign keys, tudo o que ela tem; a trilha imutável grava só agregados desde a origem (`conta.criada`, `conta.atualizada`, `consentimento.registrado` não recebem apelido, e-mail nem data), então não há o que apagar no histórico. Sete testes novos em `test/integration/exclusaoDefinitiva.test.js`. **A E16 fecha inteira** |
 
 **Aceite:** as quatro telas mais vistas abertas a 1440 px têm composição própria — grade, não coluna de celular centralizada —, o celular a 320 px continua sem rolagem horizontal, e apagar a conta remove de fato o dado pessoal, deixando a auditoria anônima e íntegra.
 
