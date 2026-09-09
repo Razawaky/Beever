@@ -174,6 +174,7 @@ npm run test:carga       # 30 jogadores simultâneos (precisa de banco)
 npm run test:cobertura   # portão da RNF-28: 100% de linha nos services
 npm run lint             # ESLint no projeto inteiro
 npm run audit            # npm audit --omit=dev, bloqueia em alta
+npm run evidencias       # prints das telas para o laudo de evidências
 ```
 
 O que esperar:
@@ -209,6 +210,7 @@ O que esperar:
 | `npm run test:carga` | 30 simultâneos, não reprova |
 | `npm run test:cobertura` | Portão de cobertura da RNF-28 |
 | `npm run lint` / `npm run audit` | Portões de qualidade/segurança |
+| `npm run evidencias` | Refaz os prints das telas em `docs/evidencias/telas/` (precisa do servidor de pé e de um navegador) |
 
 ---
 

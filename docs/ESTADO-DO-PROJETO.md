@@ -5,7 +5,15 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-08 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** T-15.4 — o manual canônico de instalação e execução
+**Último commit:** T-15.5 — o laudo de evidências
+(`docs/25-EVIDENCIAS-DE-TESTE.md`) com as duas execuções guardadas em
+`docs/evidencias/`: 1085 testes passando na suíte limpa e cobertura de 100% de
+linha, 93,11% de ramo e 99,39% de função nos services de cálculo. Os dezesseis
+prints das telas saem de `npm run evidencias`, que sobe o navegador sem janela e
+fotografa cada endereço; `test/unit/evidencias.test.js` reprova o laudo que citar
+print sumido ou número diferente do que o portão aplica.
+
+**Commit anterior:** T-15.4 — o manual canônico de instalação e execução
 (`docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md`): pré-requisitos, `.env`, Docker,
 migrations, seed e contas de exemplo, testes e seus comandos, backup, o
 ambiente completo do compose e o checklist de produção. O quickstart
@@ -53,7 +61,7 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: T-15.5 — evidências de teste (prints, relatório de cobertura)**
+**Próximo passo: T-15.6 — seção de trabalhos futuros (SPA, mobile, painel do responsável, IA de recomendação de conteúdo)**
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -651,7 +659,7 @@ argumento a favor da rede que a T-02.1 montou.
 | T-15.2 Diagramas: ER, casos de uso, classes e sequência do fluxo de recompensa | **feita** — `docs/22-DIAGRAMAS-DO-TCC.md`: mapa do banco em uma figura (61 tabelas, seis áreas), casos de uso com os atores reais das rotas, classes do fluxo de recompensa com os métodos que a sequência usa, e a sequência da conclusão de partida com RN-007/009/010 e RNF-15/16/17 na figura, cada um com o teste que o sustenta |
 | T-15.3 Documento de arquitetura com a justificativa das decisões | **feita** — `docs/23-ARQUITETURA-DO-SISTEMA.md`: cada escolha justificada para a banca (camadas, sem ORM, EJS), fechando com a tabela decisão → alternativa → porquê e o caminho de evolução sem reescrita |
 | T-15.4 Manual de instalação e execução | **feita** — `docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md`, canônico: instalação do zero, testes, banco, ambiente Docker completo e checklist de produção. `iniciar-proj.md` virou quickstart apontando para o manual |
-| T-15.5 Evidências de teste | pendente |
+| T-15.5 Evidências de teste | **feita** — `docs/25-EVIDENCIAS-DE-TESTE.md` com as duas execuções guardadas ao lado: 1085 testes passando na suíte limpa e 100% de linha, 93,11% de ramo e 99,39% de função nos services de cálculo. Os dezesseis prints das telas vêm de `npm run evidencias`, e o laudo tem seção do que **não** está provado |
 | T-15.6 Trabalhos futuros | pendente |
 
 Fora da etapa: a E16 (desktop e apagamento de conta) e o pull request #1, aberto e com o portão
@@ -1509,6 +1517,8 @@ Identificadores rastreiam os documentos da E00.
 | DT-122 | **Formulário que erra manda a pessoa para a página de erro.** O `validate` transforma falha de campo em `erroValidacao`, e o handler global responde a requisição de página renderizando `erro.ejs`: quem se cadastra com senha fraca perde tudo o que digitou e cai numa tela de erro com código, em vez de ver o campo marcado no próprio formulário. Vale para todo formulário HTML, não só o cadastro — foi o usuário quem achou, no cadastro | T-15.1 | Fazer o caminho HTML voltar ao formulário com os valores preenchidos e a mensagem por campo, mantendo o JSON como está |
 | DT-123 | A tela de perfil mostra e edita só a semana. A rota `PUT /perfil/:id` já aceita apelido, avatar, fuso, tempo de sessão e as duas preferências, e as estatísticas da RF-PER-02 existem na Colmeia: o buraco é de tela, não de regra | T-15.1 | Levar os campos que a rota já aceita para `perfil.ejs`, junto com as estatísticas que a Colmeia calcula |
 | DT-121 | A varredura de acessibilidade lê o HTML servido, sem navegador, e três perguntas ficam fora do alcance dela: se o layout quebra de verdade a 320 px com a fonte carregada, se o texto contrasta com o fundo herdado de um elemento ancestral, e se a linguagem é adequada à faixa etária (RNF-24), que não é automatizável. A altura de toque aceita 12 px de espaço vertical como equivalente aos 44 px, o que depende da fonte carregar | T-14.7 | Abrir as telas num navegador a 320 px antes da defesa, e considerar `axe-core` com navegador headless se o projeto seguir depois do TCC |
+| DT-124 | **A regra escrita do Cofre do Tempo concorda no gênero errado.** `src/public/js/cofre.js` monta "o que ficar no cofre rende 10% neste ${nomeDoCiclo}", e o nome do ciclo vem do banco: com "semana" a criança lê "neste semana". Foi o print da T-15.5 que mostrou | T-15.5 | Guardar o gênero junto do nome do ciclo, ou escrever a frase sem preposição de gênero ("rende 10% por semana") |
+| DT-125 | Na rodada 1 do Cofre do Tempo a tabela do extrato desenha o cabeçalho (Ciclo, Guardado, Saldo) sobre um corpo vazio, e o gráfico fica só com a linha da meta: a criança vê títulos de coluna sem nenhuma linha embaixo. O projeto já tem o partial `estado-vazio` para esse caso | T-15.5 | Esconder tabela e gráfico até existir a primeira linha, ou pôr uma frase no lugar |
 | DT-113 | A primeira visita de um jogador custa muito mais do que as seguintes — é ela que fecha ciclo, julga sequência, abre liga, cria tarefas do dia e monta o plano de metas. Com trinta simultâneos ela fica a 1924 ms de p95, dentro do teto mas sem folga nenhuma | T-14.3 | Se apertar, separar o que precisa acontecer antes de desenhar a tela do que pode acontecer depois da resposta |
 | DT-110 | A cobertura de ramo dos services de cálculo ficou em 92,06%, e não em 100% como a RNF-28 pede ao pé da letra. O que falta é de três famílias que não se fecham com teste honesto: reserva que nunca dispara (`?? 0` sobre dado que sempre vem), parâmetro com valor padrão, e `catch` de falha de infraestrutura, que exigiria mock num projeto que testa contra banco real. O piso de linha está em 100% e o de ramo é catraca em 91% | T-14.2 | Subir a catraca quando um caso de negócio novo cobrir um desses ramos naturalmente. Cobertura de mutação, que é o que de fato mede se a asserção existe, fica para depois da entrega |
 | DT-111 | **RF-INV-06 (histórico de evolução do patrimônio) é P1 e não tem tela.** A foto diária é gravada desde a E09, `patrimonyService.listarEvolucao` a lê, e nenhum controller a chama: o dado se acumula para um gráfico que não existe. Foi a medição de cobertura que apontou, porque a função nunca era executada | T-14.2 | Decidir na E14 se a tela entra ou se o requisito é rebaixado antes da defesa; o dado já está lá |
@@ -4177,3 +4187,51 @@ tela. Hook que pendura transforma diagnóstico de dois segundos em vinte minutos
 num runner de CI seria timeout sem explicação nenhuma.
 
 Laudo em `docs/19-BACKUP-E-RESTAURACAO.md`. Oito testes novos, 1037 na suíte.
+
+---
+
+### Sessão de 2026-09-08, T-15.5 e os prints que o navegador quase falsificou
+
+A sessão abriu com a mesma divergência da T-14.6: o estado dizia que o último
+commit era a T-15.4 e o histórico do git parava na T-15.1. Os três documentos da
+T-15.2, T-15.3 e T-15.4 estavam na árvore sem rastreio. Foram commitados um por
+tarefa antes de qualquer coisa nova, reconstruindo o cabeçalho intermediário do
+estado em cada um, porque três tarefas num commit só é histórico ilegível.
+
+A tarefa pedia prints, e print tirado à mão envelhece sem ninguém saber de qual
+versão saiu. Entrou o `scripts/evidencias.js`, que sobe o navegador sem janela,
+entra com a conta do seed e fotografa cada tela pelo endereço. É WebSocket cru
+falando o protocolo do Chrome DevTools, de propósito: o Node 22 já traz cliente
+embutido e o projeto não ganha dependência nova para tirar foto.
+
+Dois defeitos do gerador só apareceram ao olhar o resultado. Com a sessão ligada,
+`/` e `/login` redirecionam para a Colmeia, e os três primeiros prints saíram
+byte a byte idênticos — três fotos da mesma tela, todas com nome de tela
+diferente. E o WebP não passa de 16383 px de altura: a landing e a loja em escala
+dobrada estouram isso, e o navegador devolve arquivo de zero byte sem erro
+nenhum. O gerador gravou os dois vazios como se estivesse tudo certo. Agora a
+tela pública é fotografada antes do login com os cookies limpos, a escala cai
+quando a página é longa demais, e print vazio virou falha.
+
+É a quarta vez seguida que a mesma lição aparece, depois da T-14.4, da T-14.5 e
+da T-14.6: o que não foi executado e olhado não está pronto. Aqui a execução
+existia e passava — o que faltava era alguém abrir o arquivo gerado.
+
+As fotos também acharam dois defeitos de tela, os dois no jogo Cofre do Tempo. A
+rodada 1 desenha o cabeçalho do extrato sobre uma tabela vazia (DT-125), e a
+regra escrita monta "rende 10% neste semana", porque o nome do ciclo vem do banco
+e o texto assume gênero masculino (DT-124). Nenhum dos dois é conserto desta
+tarefa, e os dois estão nas dívidas.
+
+As duas execuções que sustentam o laudo foram feitas nesta sessão e guardadas em
+`docs/evidencias/`: 1085 testes passando na suíte limpa, e a cobertura em 100% de
+linha, 93,11% de ramo e 99,39% de função contra pisos de 100, 92 e 99. O ramo
+subiu de 92,06% para 93,11% desde a T-14.2 sem ninguém perseguir o número.
+
+O laudo tem seção do que **não** está provado, e ela é metade do valor do
+documento: LCP em 4G sem medir (DT-74), o que só leitor de tela revela (DT-121),
+o fim de partida sem print porque a comemoração é desenhada no navegador, e a
+entrega ainda sem TLS, host e réplica de verdade (DT-114, DT-115, DT-119).
+
+Sete testes novos em `test/unit/evidencias.test.js`, cada guarda conferida
+quebrando o documento de propósito antes de dar por pronta.

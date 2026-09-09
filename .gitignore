@@ -34,6 +34,7 @@ Thumbs.db
 # O `.github/` é exceção parcial: `workflows/` precisa ser versionado, senão o
 # GitHub Actions nunca lê o portão. Skills, agents e hooks continuam de fora.
 .claude/
+.opencode/
 .github/*
 !.github/workflows/
 .impeccable/

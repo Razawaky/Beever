@@ -1,0 +1,956 @@
+
+> beever@1.0.0 test:db
+> TESTES_DE_BANCO=1 NODE_ENV=test node --test "test/**/*.test.js"
+
+TAP version 13
+# Subtest: aceite da Colmeia
+    # Subtest: o cenário é mesmo o de um jogador avançado
+    ok 1 - o cenário é mesmo o de um jogador avançado
+      ---
+      duration_ms: 16.123104
+      type: 'test'
+      ...
+    # Subtest: a Colmeia do jogador avançado vem inteira e correta
+    ok 2 - a Colmeia do jogador avançado vem inteira e correta
+      ---
+      duration_ms: 512.668185
+      type: 'test'
+      ...
+    # Subtest: a página desenhada carrega dentro do teto de 2 s da RNF-01
+    ok 3 - a página desenhada carrega dentro do teto de 2 s da RNF-01
+      ---
+      duration_ms: 1396.245119
+      type: 'test'
+      ...
+    # Colmeia do jogador avançado: 556 ms, 494 ms, 344 ms (teto 2000 ms)
+    # Subtest: a Colmeia não cobra mais consultas quando o jogador acumula mais dado (RNF-04)
+    ok 4 - a Colmeia não cobra mais consultas quando o jogador acumula mais dado (RNF-04)
+      ---
+      duration_ms: 1871.20581
+      type: 'test'
+      ...
+    # consultas por visita: 68 antes, 68 com oito itens a mais
+    # Subtest: o "Continuar" do jogador avançado leva a uma célula que abre de verdade
+    ok 5 - o "Continuar" do jogador avançado leva a uma célula que abre de verdade
+      ---
+      duration_ms: 307.417036
+      type: 'test'
+      ...
+    1..5
+ok 1 - aceite da Colmeia
+  ---
+  duration_ms: 27085.152857
+  type: 'suite'
+  ...
+# Subtest: aceite da E09 — economia
+    # Subtest: comprar sem mel é recusado e não deixa rastro
+    ok 1 - comprar sem mel é recusado e não deixa rastro
+      ---
+      duration_ms: 1336.166405
+      type: 'test'
+      ...
+    # Subtest: dois cliques no mesmo botão compram uma vez só, pelo HTTP
+    ok 2 - dois cliques no mesmo botão compram uma vez só, pelo HTTP
+      ---
+      duration_ms: 1400.668391
+      type: 'test'
+      ...
+    # Subtest: guardar mel no cofre não muda o patrimônio
+    ok 3 - guardar mel no cofre não muda o patrimônio
+      ---
+      duration_ms: 185.902206
+      type: 'test'
+      ...
+    # Subtest: seis semanas fora são aplicadas de uma vez, na primeira visita à Colmeia
+    ok 4 - seis semanas fora são aplicadas de uma vez, na primeira visita à Colmeia
+      ---
+      duration_ms: 1794.281291
+      type: 'test'
+      ...
+    # Subtest: voltar de novo não aplica ciclo nenhum outra vez
+    ok 5 - voltar de novo não aplica ciclo nenhum outra vez
+      ---
+      duration_ms: 524.697458
+      type: 'test'
+      ...
+    # Subtest: o extrato explica cada semana, e o cofre rendeu uma vez por ciclo
+    ok 6 - o extrato explica cada semana, e o cofre rendeu uma vez por ciclo
+      ---
+      duration_ms: 27.762696
+      type: 'test'
+      ...
+    # Subtest: o item que ficou duas semanas devendo foi vendido por 50%
+    ok 7 - o item que ficou duas semanas devendo foi vendido por 50%
+      ---
+      duration_ms: 11.01767
+      type: 'test'
+      ...
+    # Subtest: a carteira nunca ficou negativa em nenhum lançamento
+    ok 8 - a carteira nunca ficou negativa em nenhum lançamento
+      ---
+      duration_ms: 10.638169
+      type: 'test'
+      ...
+    # Subtest: o patrimônio fecha no centavo com a soma das partes
+    ok 9 - o patrimônio fecha no centavo com a soma das partes
+      ---
+      duration_ms: 38.942146
+      type: 'test'
+      ...
+    1..9
+ok 2 - aceite da E09 — economia
+  ---
+  duration_ms: 25211.61718
+  type: 'suite'
+  ...
+# Subtest: aceite da trilha (E05)
+    # Subtest: a trilha nasce navegável: um favo aberto, o seguinte travado com motivo
+    ok 1 - a trilha nasce navegável: um favo aberto, o seguinte travado com motivo
+      ---
+      duration_ms: 305.793662
+      type: 'test'
+      ...
+    # Subtest: célula travada não abre por porta nenhuma
+    ok 2 - célula travada não abre por porta nenhuma
+      ---
+      duration_ms: 250.896033
+      type: 'test'
+      ...
+    # Subtest: favo travado não se abre digitando a URL
+    ok 3 - favo travado não se abre digitando a URL
+      ---
+      duration_ms: 70.732372
+      type: 'test'
+      ...
+    # Subtest: 60% não libera o favo seguinte; 80% libera
+    ok 4 - 60% não libera o favo seguinte; 80% libera
+      ---
+      duration_ms: 928.798787
+      type: 'test'
+      ...
+    # Subtest: requisito de patrimônio é respeitado, e some quando cumprido
+    ok 5 - requisito de patrimônio é respeitado, e some quando cumprido
+      ---
+      duration_ms: 362.764907
+      type: 'test'
+      ...
+    # Subtest: fechar todas as células fecha o favo, e a trilha registra
+    ok 6 - fechar todas as células fecha o favo, e a trilha registra
+      ---
+      duration_ms: 310.837446
+      type: 'test'
+      ...
+    1..6
+ok 3 - aceite da trilha (E05)
+  ---
+  duration_ms: 21698.571352
+  type: 'suite'
+  ...
+# Subtest: aceite da E06 — motor de recompensas
+    # Subtest: cinco conclusões da mesma partida, em paralelo, creditam exatamente uma vez
+    ok 1 - cinco conclusões da mesma partida, em paralelo, creditam exatamente uma vez
+      ---
+      duration_ms: 825.756946
+      type: 'test'
+      ...
+    # Subtest: cinco compras simultâneas com a mesma chave compram uma vez (DT-18)
+    ok 2 - cinco compras simultâneas com a mesma chave compram uma vez (DT-18)
+      ---
+      duration_ms: 133.599764
+      type: 'test'
+      ...
+    # Subtest: repetir a célula paga 25% de XP e zero mel (RN-008)
+    ok 3 - repetir a célula paga 25% de XP e zero mel (RN-008)
+      ---
+      duration_ms: 340.287656
+      type: 'test'
+      ...
+    # Subtest: cliente mentindo na pontuação é ignorado (RN-007)
+    ok 4 - cliente mentindo na pontuação é ignorado (RN-007)
+      ---
+      duration_ms: 260.82265
+      type: 'test'
+      ...
+    1..4
+ok 4 - aceite da E06 — motor de recompensas
+  ---
+  duration_ms: 18478.00623
+  type: 'suite'
+  ...
+# Subtest: acessibilidade da landing
+    # Subtest: nenhum elemento clicável apaga o foco do teclado
+    ok 1 - nenhum elemento clicável apaga o foco do teclado
+      ---
+      duration_ms: 6.884579
+      type: 'test'
+      ...
+    # Subtest: os botões e o acordeão respeitam o alvo de toque de 44 px (RNF-22)
+    ok 2 - os botões e o acordeão respeitam o alvo de toque de 44 px (RNF-22)
+      ---
+      duration_ms: 3.184569
+      type: 'test'
+      ...
+    # Subtest: nenhuma informação depende só de cor (RNF-25, e daltonismo)
+    ok 3 - nenhuma informação depende só de cor (RNF-25, e daltonismo)
+      ---
+      duration_ms: 1.203594
+      type: 'test'
+      ...
+    # Subtest: todo movimento em laço pode ser desligado
+    ok 4 - todo movimento em laço pode ser desligado
+      ---
+      duration_ms: 3.210039
+      type: 'test'
+      ...
+    # Subtest: o script da landing respeita quem pede menos movimento, pelo sistema ou pelo painel
+    ok 5 - o script da landing respeita quem pede menos movimento, pelo sistema ou pelo painel
+      ---
+      duration_ms: 2.502926
+      type: 'test'
+      ...
+    # Subtest: religar o movimento não pode esconder seção nenhuma (lacuna L-1 do laudo)
+    ok 6 - religar o movimento não pode esconder seção nenhuma (lacuna L-1 do laudo)
+      ---
+      duration_ms: 0.965253
+      type: 'test'
+      ...
+    # Subtest: o painel de acessibilidade existe em toda tela, e o padrão é o modo normal
+    ok 7 - o painel de acessibilidade existe em toda tela, e o padrão é o modo normal
+      ---
+      duration_ms: 1.848525
+      type: 'test'
+      ...
+    # Subtest: o painel só aparece com script, e a escolha fica guardada no navegador
+    ok 8 - o painel só aparece com script, e a escolha fica guardada no navegador
+      ---
+      duration_ms: 2.013616
+      type: 'test'
+      ...
+    # Subtest: o painel não aparece na tela de jogo, que não tem nada clicável fora do jogo
+    ok 9 - o painel não aparece na tela de jogo, que não tem nada clicável fora do jogo
+      ---
+      duration_ms: 1.570575
+      type: 'test'
+      ...
+    # Subtest: o painel não fica por cima do "Continuar" no celular (lacuna L-2 do laudo)
+    ok 10 - o painel não fica por cima do "Continuar" no celular (lacuna L-2 do laudo)
+      ---
+      duration_ms: 1.571134
+      type: 'test'
+      ...
+    # Subtest: a página tem uma ordem de títulos que dá para navegar por voz
+    ok 11 - a página tem uma ordem de títulos que dá para navegar por voz
+      ---
+      duration_ms: 1.137423
+      type: 'test'
+      ...
+    1..11
+ok 5 - acessibilidade da landing
+  ---
+  duration_ms: 500.464162
+  type: 'suite'
+  ...
+# Subtest: acessibilidade de todas as telas
+    # Subtest: coletou as trinta telas que a aplicação serve
+    ok 1 - coletou as trinta telas que a aplicação serve
+      ---
+      duration_ms: 10.566479
+      type: 'test'
+      ...
+    # Subtest: o foco visível é regra de base, e não classe que cada tela precisa lembrar (RNF-23)
+    ok 2 - o foco visível é regra de base, e não classe que cada tela precisa lembrar (RNF-23)
+      ---
+      duration_ms: 4.722533
+      type: 'test'
+      ...
+    # Subtest: nenhuma tela apaga o foco sem pôr outro no lugar (RNF-23)
+    ok 3 - nenhuma tela apaga o foco sem pôr outro no lugar (RNF-23)
+      ---
+      duration_ms: 39.871588
+      type: 'test'
+      ...
+    # Subtest: botão e link em forma de botão alcançam o alvo de 44 px (RNF-22)
+    ok 4 - botão e link em forma de botão alcançam o alvo de 44 px (RNF-22)
+      ---
+      duration_ms: 13.613847
+      type: 'test'
+      ...
+    # Subtest: todo campo de formulário tem nome que o leitor de tela leia
+    ok 5 - todo campo de formulário tem nome que o leitor de tela leia
+      ---
+      duration_ms: 9.170685
+      type: 'test'
+      ...
+    # Subtest: cada tela tem um h1 só e nenhum salto de nível de título
+    ok 6 - cada tela tem um h1 só e nenhum salto de nível de título
+      ---
+      duration_ms: 2.735197
+      type: 'test'
+      ...
+    # Subtest: todo par de cor escrito no mesmo elemento alcança 4,5:1 (RNF-21)
+    ok 7 - todo par de cor escrito no mesmo elemento alcança 4,5:1 (RNF-21)
+      ---
+      duration_ms: 38.677705
+      type: 'test'
+      ...
+    # Subtest: nenhuma tela fixa largura maior que a tela de 320 px (RNF-20)
+    ok 8 - nenhuma tela fixa largura maior que a tela de 320 px (RNF-20)
+      ---
+      duration_ms: 5.020674
+      type: 'test'
+      ...
+    # Subtest: toda tabela rola sozinha, em vez de esticar a página (RNF-20)
+    ok 9 - toda tabela rola sozinha, em vez de esticar a página (RNF-20)
+      ---
+      duration_ms: 4.713703
+      type: 'test'
+      ...
+    # Subtest: toda tela declara idioma e deixa o navegador ampliar (RNF-20)
+    ok 10 - toda tela declara idioma e deixa o navegador ampliar (RNF-20)
+      ---
+      duration_ms: 1.941476
+      type: 'test'
+      ...
+    # Subtest: o painel de acessibilidade está em toda tela, menos na de jogo
+    ok 11 - o painel de acessibilidade está em toda tela, menos na de jogo
+      ---
+      duration_ms: 3.009478
+      type: 'test'
+      ...
+    # Subtest: nenhum ajuste do painel nasce ligado: o padrão é a tela como foi desenhada
+    ok 12 - nenhum ajuste do painel nasce ligado: o padrão é a tela como foi desenhada
+      ---
+      duration_ms: 2.673208
+      type: 'test'
+      ...
+    # Subtest: toda folha de estilo com animação atende quem pede menos movimento (RNF-26)
+    ok 13 - toda folha de estilo com animação atende quem pede menos movimento (RNF-26)
+      ---
+      duration_ms: 3.68315
+      type: 'test'
+      ...
+    # Subtest: os jogos de arrastar têm o mesmo caminho por clique e por teclado (RNF-23)
+    ok 14 - os jogos de arrastar têm o mesmo caminho por clique e por teclado (RNF-23)
+      ---
+      duration_ms: 3.945791
+      type: 'test'
+      ...
+    # Subtest: estado nenhum depende só de cor: acerto, atenção e erro vêm com palavra (RNF-25)
+    ok 15 - estado nenhum depende só de cor: acerto, atenção e erro vêm com palavra (RNF-25)
+      ---
+      duration_ms: 1.834755
+      type: 'test'
+      ...
+    1..15
+ok 6 - acessibilidade de todas as telas
+  ---
+  duration_ms: 25397.165915
+  type: 'suite'
+  ...
+# Subtest: acesso à área administrativa
+    # Subtest: o administrador do seed tem linha em `admins`, e a jogadora não
+    ok 1 - o administrador do seed tem linha em `admins`, e a jogadora não
+      ---
+      duration_ms: 14.077468
+      type: 'test'
+      ...
+    # Subtest: o anônimo é mandado ao login administrativo quando pede página
+    ok 2 - o anônimo é mandado ao login administrativo quando pede página
+      ---
+      duration_ms: 143.41493
+      type: 'test'
+      ...
+    # Subtest: o anônimo recebe 401 quando pede JSON
+    ok 3 - o anônimo recebe 401 quando pede JSON
+      ---
+      duration_ms: 98.857089
+      type: 'test'
+      ...
+    # Subtest: a jogadora comum recebe 403 em toda rota admin
+    ok 4 - a jogadora comum recebe 403 em toda rota admin
+      ---
+      duration_ms: 593.889285
+      type: 'test'
+      ...
+    # Subtest: a porta administrativa recusa a jogadora mesmo com a senha certa
+    ok 5 - a porta administrativa recusa a jogadora mesmo com a senha certa
+      ---
+      duration_ms: 288.209724
+      type: 'test'
+      ...
+    # Subtest: a tentativa recusada fica na auditoria
+    ok 6 - a tentativa recusada fica na auditoria
+      ---
+      duration_ms: 4.396162
+      type: 'test'
+      ...
+    # Subtest: o administrador entra e vê o painel e as contas
+    ok 7 - o administrador entra e vê o painel e as contas
+      ---
+      duration_ms: 608.300524
+      type: 'test'
+      ...
+    # Subtest: a listagem de contas não responde mais no endereço antigo
+    ok 8 - a listagem de contas não responde mais no endereço antigo
+      ---
+      duration_ms: 347.762356
+      type: 'test'
+      ...
+    1..8
+ok 7 - acesso à área administrativa
+  ---
+  duration_ms: 20018.346392
+  type: 'suite'
+  ...
+# Subtest: cadastro de atividade pelo formulário
+    # Subtest: o seed traz os dois formatos novos com conteúdo jogável
+    ok 1 - o seed traz os dois formatos novos com conteúdo jogável
+      ---
+      duration_ms: 37.296112
+      type: 'test'
+      ...
+    # Subtest: quiz-do-favo: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 2 - quiz-do-favo: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 1271.982431
+      type: 'test'
+      ...
+    # Subtest: arraste-e-classifique: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 3 - arraste-e-classifique: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 899.220296
+      type: 'test'
+      ...
+    # Subtest: monte-o-orcamento: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 4 - monte-o-orcamento: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 949.467903
+      type: 'test'
+      ...
+    # Subtest: cofre-do-tempo: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 5 - cofre-do-tempo: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 605.819209
+      type: 'test'
+      ...
+    # Subtest: mercado-esperto: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 6 - mercado-esperto: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 609.225018
+      type: 'test'
+      ...
+    # Subtest: ordene-a-prioridade: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 7 - ordene-a-prioridade: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 482.889484
+      type: 'test'
+      ...
+    # Subtest: listas-suspensas: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 8 - listas-suspensas: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 326.969799
+      type: 'test'
+      ...
+    # Subtest: quadrinho-interativo: cadastrado pelo formulário, a partida abre para a jogadora
+    ok 9 - quadrinho-interativo: cadastrado pelo formulário, a partida abre para a jogadora
+      ---
+      duration_ms: 329.849467
+      type: 'test'
+      ...
+    # Subtest: a imagem da atividade é convertida e chega ao conteúdo da partida
+    ok 10 - a imagem da atividade é convertida e chega ao conteúdo da partida
+      ---
+      duration_ms: 206.839652
+      type: 'test'
+      ...
+    # Subtest: publicar de novo sem arquivo mantém a imagem que já estava no ar
+    ok 11 - publicar de novo sem arquivo mantém a imagem que já estava no ar
+      ---
+      duration_ms: 155.301652
+      type: 'test'
+      ...
+    # Subtest: o formulário não escapa do validador: quiz com uma alternativa é recusado
+    ok 12 - o formulário não escapa do validador: quiz com uma alternativa é recusado
+      ---
+      duration_ms: 72.515337
+      type: 'test'
+      ...
+    # Subtest: o modo avançado continua aceitando JSON colado
+    ok 13 - o modo avançado continua aceitando JSON colado
+      ---
+      duration_ms: 185.114393
+      type: 'test'
+      ...
+    1..13
+ok 8 - cadastro de atividade pelo formulário
+  ---
+  duration_ms: 26726.517291
+  type: 'suite'
+  ...
+# Subtest: consulta da trilha de auditoria
+    # Subtest: a jogadora comum não consulta a trilha
+    not ok 1 - a jogadora comum não consulta a trilha
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:113:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: sem filtro nenhum, devolve a trilha inteira paginada
+    not ok 2 - sem filtro nenhum, devolve a trilha inteira paginada
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:118:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: filtra por ação, e nada de outra ação entra
+    not ok 3 - filtra por ação, e nada de outra ação entra
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:127:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: filtra por quem agiu
+    not ok 4 - filtra por quem agiu
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:134:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: filtra por entidade e por id da entidade
+    not ok 5 - filtra por entidade e por id da entidade
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:143:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: filtra por período, e o dia de hoje entra inteiro
+    not ok 6 - filtra por período, e o dia de hoje entra inteiro
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:152:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: dois filtros juntos valem ao mesmo tempo
+    not ok 7 - dois filtros juntos valem ao mesmo tempo
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:160:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: o id da requisição liga a linha à requisição que a produziu
+    not ok 8 - o id da requisição liga a linha à requisição que a produziu
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:170:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: filtro inválido é recusado antes de virar consulta
+    not ok 9 - filtro inválido é recusado antes de virar consulta
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:180:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: a paginação leva os filtros junto e não repete linha
+    not ok 10 - a paginação leva os filtros junto e não repete linha
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:186:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: o CSV sai com cabeçalho e respeita o mesmo filtro
+    not ok 11 - o CSV sai com cabeçalho e respeita o mesmo filtro
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:201:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    # Subtest: a tela não oferece caminho de escrita: a trilha é append-only (RNF-17)
+    not ok 12 - a tela não oferece caminho de escrita: a trilha é append-only (RNF-17)
+      ---
+      duration_ms: 0
+      type: 'test'
+      location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:213:3'
+      failureType: 'cancelledByParent'
+      error: 'test did not finish before its parent and was cancelled'
+      code: 'ERR_TEST_FAILURE'
+      ...
+    1..12
+not ok 9 - consulta da trilha de auditoria
+  ---
+  duration_ms: 30602.481625
+  type: 'suite'
+  location: '/home/dorte/Área de trabalho/beever/Beever/test/integration/adminAuditoria.test.js:30:1'
+  failureType: 'hookFailed'
+  error: 'expected 200 "OK", got 403 "Forbidden"'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    entrar (file:///home/dorte/%C3%81rea%20de%20trabalho/beever/Beever/test/integration/adminAuditoria.test.js:53:8)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async SuiteContext.<anonymous> (file:///home/dorte/%C3%81rea%20de%20trabalho/beever/Beever/test/integration/adminAuditoria.test.js:68:13)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+    async Suite.runHook (node:internal/test_runner/test:965:9)
+    async Suite.run (node:internal/test_runner/test:1436:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+    Test._assertStatus (/home/dorte/Área de trabalho/beever/Beever/node_modules/supertest/lib/test.js:309:14)
+    /home/dorte/Área de trabalho/beever/Beever/node_modules/supertest/lib/test.js:365:13
+    Test._assertFunction (/home/dorte/Área de trabalho/beever/Beever/node_modules/supertest/lib/test.js:342:13)
+    Test.assert (/home/dorte/Área de trabalho/beever/Beever/node_modules/supertest/lib/test.js:195:23)
+    localAssert (/home/dorte/Área de trabalho/beever/Beever/node_modules/supertest/lib/test.js:138:14)
+    Server.<anonymous> (/home/dorte/Área de trabalho/beever/Beever/node_modules/supertest/lib/test.js:152:11)
+    Object.onceWrapper (node:events:633:28)
+    Server.emit (node:events:519:28)
+    emitCloseNT (node:net:2419:8)
+    process.processTicksAndRejections (node:internal/process/task_queues:88:21)
+  ...
+# Subtest: cadastro de conteúdo pelo painel
+    # Subtest: a jogadora comum não chega a nenhuma rota de conteúdo
+    ok 1 - a jogadora comum não chega a nenhuma rota de conteúdo
+      ---
+      duration_ms: 62.862251
+      type: 'test'
+      ...
+    # Subtest: cria um favo, gerando o endereço a partir do título
+    ok 2 - cria um favo, gerando o endereço a partir do título
+      ---
+      duration_ms: 42.123795
+      type: 'test'
+      ...
+    # Subtest: recusa o segundo favo com o mesmo endereço
+    ok 3 - recusa o segundo favo com o mesmo endereço
+      ---
+      duration_ms: 30.025351
+      type: 'test'
+      ...
+    # Subtest: recusa conteúdo torto antes de ele chegar à criança
+    ok 4 - recusa conteúdo torto antes de ele chegar à criança
+      ---
+      duration_ms: 163.343124
+      type: 'test'
+      ...
+    # Subtest: a célula publicada pelo painel aparece jogável para a jogadora, sem seed
+    ok 5 - a célula publicada pelo painel aparece jogável para a jogadora, sem seed
+      ---
+      duration_ms: 1207.409005
+      type: 'test'
+      ...
+    # Subtest: editar o conteúdo publica uma versão nova e aposenta a anterior
+    ok 6 - editar o conteúdo publica uma versão nova e aposenta a anterior
+      ---
+      duration_ms: 318.799707
+      type: 'test'
+      ...
+    # Subtest: mover a célula troca a ordem com a vizinha, respeitando a UNIQUE do favo
+    ok 7 - mover a célula troca a ordem com a vizinha, respeitando a UNIQUE do favo
+      ---
+      duration_ms: 153.038987
+      type: 'test'
+      ...
+    # Subtest: desativar a célula tira ela da trilha sem apagar o progresso já pago
+    ok 8 - desativar a célula tira ela da trilha sem apagar o progresso já pago
+      ---
+      duration_ms: 216.516439
+      type: 'test'
+      ...
+    # Subtest: toda ação de cadastro deixa linha na auditoria, com ator admin
+    ok 9 - toda ação de cadastro deixa linha na auditoria, com ator admin
+      ---
+      duration_ms: 6.697368
+      type: 'test'
+      ...
+    1..9
+ok 10 - cadastro de conteúdo pelo painel
+  ---
+  duration_ms: 44807.539557
+  type: 'suite'
+  ...
+# Subtest: cadastro de itens pelo painel
+    # Subtest: a jogadora comum não chega a nenhuma rota de item
+    ok 1 - a jogadora comum não chega a nenhuma rota de item
+      ---
+      duration_ms: 46.437687
+      type: 'test'
+      ...
+    # Subtest: cria o item, converte a ilustração para WebP e deriva o comportamento
+    ok 2 - cria o item, converte a ilustração para WebP e deriva o comportamento
+      ---
+      duration_ms: 375.945793
+      type: 'test'
+      ...
+    # Subtest: o item novo aparece na loja da jogadora, sem seed
+    ok 3 - o item novo aparece na loja da jogadora, sem seed
+      ---
+      duration_ms: 284.171873
+      type: 'test'
+      ...
+    # Subtest: recusa o segundo item com o mesmo endereço
+    ok 4 - recusa o segundo item com o mesmo endereço
+      ---
+      duration_ms: 49.884446
+      type: 'test'
+      ...
+    # Subtest: recusa arquivo que não é imagem, sem criar o item
+    ok 5 - recusa arquivo que não é imagem, sem criar o item
+      ---
+      duration_ms: 32.96967
+      type: 'test'
+      ...
+    # Subtest: recusa o valor mínimo maior que o máximo
+    ok 6 - recusa o valor mínimo maior que o máximo
+      ---
+      duration_ms: 21.894029
+      type: 'test'
+      ...
+    # Subtest: mudar o preço não mexe em compra já feita
+    ok 7 - mudar o preço não mexe em compra já feita
+      ---
+      duration_ms: 132.706671
+      type: 'test'
+      ...
+    # Subtest: desativar tira o item da loja sem sumir do inventário de quem comprou
+    ok 8 - desativar tira o item da loja sem sumir do inventário de quem comprou
+      ---
+      duration_ms: 11515.451067
+      type: 'test'
+      ...
+    # Subtest: toda ação de catálogo deixa linha na auditoria, com ator admin
+    ok 9 - toda ação de catálogo deixa linha na auditoria, com ator admin
+      ---
+      duration_ms: 4.158311
+      type: 'test'
+      ...
+    1..9
+ok 11 - cadastro de itens pelo painel
+  ---
+  duration_ms: 45088.388191
+  type: 'suite'
+  ...
+# Subtest: métricas do painel administrativo
+    # Subtest: a jogadora comum não vê o painel
+    ok 1 - a jogadora comum não vê o painel
+      ---
+      duration_ms: 41.876624
+      type: 'test'
+      ...
+    # Subtest: sem período escolhido, o painel usa trinta dias
+    ok 2 - sem período escolhido, o painel usa trinta dias
+      ---
+      duration_ms: 155.140872
+      type: 'test'
+      ...
+    # Subtest: conta jogadores ativos e conclusões dentro da janela
+    ok 3 - conta jogadores ativos e conclusões dentro da janela
+      ---
+      duration_ms: 45.211463
+      type: 'test'
+      ...
+    # Subtest: o período muda o resultado, e é isso que ele existe para fazer
+    ok 4 - o período muda o resultado, e é isso que ele existe para fazer
+      ---
+      duration_ms: 69.87352
+      type: 'test'
+      ...
+    # Subtest: lista os itens mais comprados do período, agregados por item
+    ok 5 - lista os itens mais comprados do período, agregados por item
+      ---
+      duration_ms: 44.602732
+      type: 'test'
+      ...
+    # Subtest: a retenção conta só dia marcado, e o neutro fica de fora
+    ok 6 - a retenção conta só dia marcado, e o neutro fica de fora
+      ---
+      duration_ms: 54.609678
+      type: 'test'
+      ...
+    # Subtest: o gráfico traz um ponto por dia com conclusão
+    ok 7 - o gráfico traz um ponto por dia com conclusão
+      ---
+      duration_ms: 117.40867
+      type: 'test'
+      ...
+    # Subtest: período fora da lista cai no padrão, e período inválido é recusado
+    ok 8 - período fora da lista cai no padrão, e período inválido é recusado
+      ---
+      duration_ms: 100.115492
+      type: 'test'
+      ...
+    # Subtest: a página desenha as métricas e responde dentro do teto da RNF-01
+    ok 9 - a página desenha as métricas e responde dentro do teto da RNF-01
+      ---
+      duration_ms: 75.465565
+      type: 'test'
+      ...
+    1..9
+ok 12 - métricas do painel administrativo
+  ---
+  duration_ms: 45241.124257
+  type: 'suite'
+  ...
+# Subtest: aplicação
+    # Subtest: renderiza a página inicial em HTML
+    ok 1 - renderiza a página inicial em HTML
+      ---
+      duration_ms: 242.242859
+      type: 'test'
+      ...
+    # Subtest: aplica os headers de segurança do helmet
+    ok 2 - aplica os headers de segurança do helmet
+      ---
+      duration_ms: 95.60248
+      type: 'test'
+      ...
+    # Subtest: responde /health atravessando repository, service e controller
+    ok 3 - responde /health atravessando repository, service e controller
+      ---
+      duration_ms: 74.126692
+      type: 'test'
+      ...
+    # Subtest: devolve 404 em JSON quando o cliente pede JSON
+    ok 4 - devolve 404 em JSON quando o cliente pede JSON
+      ---
+      duration_ms: 56.765254
+      type: 'test'
+      ...
+    # Subtest: devolve 404 em HTML quando o cliente pede HTML
+    ok 5 - devolve 404 em HTML quando o cliente pede HTML
+      ---
+      duration_ms: 66.00963
+      type: 'test'
+      ...
+    # Subtest: rejeita POST sem token CSRF
+    ok 6 - rejeita POST sem token CSRF
+      ---
+      duration_ms: 88.838792
+      type: 'test'
+      ...
+    # Subtest: serve os arquivos estáticos de src/public
+    ok 7 - serve os arquivos estáticos de src/public
+      ---
+      duration_ms: 36.57668
+      type: 'test'
+      ...
+    # Subtest: layout base
+        # Subtest: monta / dentro do layout
+        ok 1 - monta / dentro do layout
+          ---
+          duration_ms: 80.617049
+          type: 'test'
+          ...
+        # Subtest: monta /login dentro do layout
+        ok 2 - monta /login dentro do layout
+          ---
+          duration_ms: 65.867719
+          type: 'test'
+          ...
+        # Subtest: monta /cadastro dentro do layout
+        ok 3 - monta /cadastro dentro do layout
+          ---
+          duration_ms: 32.830779
+          type: 'test'
+          ...
+        # Subtest: monta /manutencao dentro do layout
+        ok 4 - monta /manutencao dentro do layout
+          ---
+          duration_ms: 30.345432
+          type: 'test'
+          ...
+        # Subtest: a landing tem casca própria, e a tela de entrar não tem casca nenhuma
+        ok 5 - a landing tem casca própria, e a tela de entrar não tem casca nenhuma
+          ---
+          duration_ms: 91.97489
+          type: 'test'
+          ...
+        # Subtest: carrega o script só na página que precisa dele
+        ok 6 - carrega o script só na página que precisa dele
+          ---
+          duration_ms: 79.867257
+          type: 'test'
+          ...
+        1..6
+    ok 8 - layout base
+      ---
+      duration_ms: 386.306211
+      type: 'suite'
+      ...
+    # Subtest: identificação da requisição
+        # Subtest: devolve um id em toda resposta
+        ok 1 - devolve um id em toda resposta
+          ---
+          duration_ms: 67.582274
+          type: 'test'
+          ...
+        # Subtest: cada requisição recebe o seu
+        ok 2 - cada requisição recebe o seu
+          ---
+          duration_ms: 75.050904
+          type: 'test'
+          ...
+        # Subtest: reaproveita o id que o proxy já atribuiu
+        ok 3 - reaproveita o id que o proxy já atribuiu
+          ---
+          duration_ms: 38.876616
+          type: 'test'
+          ...
+        # Subtest: recusa id malformado e gera um limpo no lugar
+        ok 4 - recusa id malformado e gera um limpo no lugar
+          ---
+          duration_ms: 140.661213
+          type: 'test'
+          ...
+        # Subtest: o erro em JSON carrega o mesmo id do header
+        ok 5 - o erro em JSON carrega o mesmo id do header
+          ---
+          duration_ms: 58.014268
+          type: 'test'
+          ...
+        # Subtest: a página de erro mostra o id para a pessoa poder citá-lo
+        ok 6 - a página de erro mostra o id para a pessoa poder citá-lo
+          ---
+          duration_ms: 46.659787
+          type: 'test'
+          ...
+        1..6
+    ok 9 - identificação da requisição
+      ---
+      duration_ms: 432.742698
+      type: 'suite'
+      ...
+    1..9
+ok 13 - aplicação
+  ---
+  duration_ms: 45824.082193
+  type: 'suite'
+  ...
