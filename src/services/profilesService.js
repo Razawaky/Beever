@@ -257,17 +257,21 @@ export async function atualizar(
     exigirDoCatalogo(catalogo.avatar, avatar, 'Escolha sua abelha');
   }
 
+  // O apelido anterior não é mais lido: ele existia só para entrar na trilha,
+  // e a trilha deixou de guardá-lo.
   const anterior = await profilesRepository.buscarDetalhadoPorUsuario(idUsuario);
-  const usuarioAnterior = await usersRepository.buscarPorId(idUsuario);
 
   if (apelido) await usersRepository.atualizar(idUsuario, { apelido });
   await profilesRepository.atualizar(idPerfil, { avatar, fuso, minutosPorSessao, somAtivo, animacaoReduzida });
 
+  // Apelido é dado pessoal (RN-049) e a trilha é imutável por gatilho (RNF-17):
+  // o que entrar aqui sobrevive ao apagamento da conta (RN-053). Entra o fato de
+  // ter mudado, não o nome. O avatar é escolha de catálogo, e pode ficar.
   await auditService.registrar(auditService.usuario(idUsuario), 'perfil.atualizado', {
     entidade: 'profile',
     id: idPerfil,
-    antes: { apelido: usuarioAnterior?.nickname, avatar: anterior?.avatar },
-    depois: { apelido: apelido ?? usuarioAnterior?.nickname, avatar: avatar ?? anterior?.avatar },
+    antes: { avatar: anterior?.avatar },
+    depois: { apelidoAlterado: Boolean(apelido), avatar: avatar ?? anterior?.avatar },
   });
 
   return obterDoUsuario(idUsuario);
@@ -398,11 +402,12 @@ export async function salvarOnboarding(
     return { nivelInicial, diasMarcados };
   });
 
+  // Sem o apelido, pelo mesmo motivo do `perfil.atualizado`: a trilha não pode
+  // guardar nome que o apagamento da conta teria de levar embora (RN-053).
   await auditService.registrar(auditService.usuario(idUsuario), 'onboarding.concluido', {
     entidade: 'profile',
     id: idPerfil,
     depois: {
-      apelido,
       avatar,
       objetivo,
       nivelInicial: resultado.nivelInicial.nivel,

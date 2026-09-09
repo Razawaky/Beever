@@ -10,6 +10,7 @@ import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
+import * as profilesService from '../../src/services/profilesService.js';
 import * as usersService from '../../src/services/usersService.js';
 
 /**
@@ -98,12 +99,21 @@ describe('apagamento definitivo de conta', opcoes, () => {
     const conta = await criarContaDescartavel();
     const apelido = conta.apelido;
 
+    // O perfil é editado de propósito antes de apagar: `perfil.atualizado` é o
+    // evento que guardava o apelido, e sem exercitá-lo aqui a guarda não prova
+    // nada sobre ele.
+    const apelidoNovo = apelidoUnico();
+    await profilesService.atualizar(conta.idPerfil, conta.id, { apelido: apelidoNovo });
+
     await usersService.apagarDefinitivamente(conta.id, conta.ator);
 
+    // Sem filtrar por `entity_type`: a auditoria da E16 encontrou o apelido em
+    // linhas de `profile`, que a versão anterior desta consulta não olhava.
+    // Quem faz a linha é o ator, e é por ele que a trilha da conta se acha.
     const [linhas] = await banco.conexao.query(
-      `SELECT l.action, l.before_state, l.after_state
+      `SELECT l.action, l.entity_type, l.before_state, l.after_state
          FROM audit_logs l
-        WHERE l.entity_type = 'user' AND l.entity_id = ?
+        WHERE l.actor_id = ?
         ORDER BY l.id`,
       [conta.id],
     );
@@ -117,6 +127,11 @@ describe('apagamento definitivo de conta', opcoes, () => {
     assert.doesNotMatch(texto, /emailResponsavel/, 'e-mail do responsável não pode morar na trilha');
     assert.doesNotMatch(texto, new RegExp(conta.email), 'o e-mail da conta não pode morar na trilha');
     assert.doesNotMatch(texto, new RegExp(apelido), 'o apelido não pode morar na trilha');
+    assert.doesNotMatch(texto, new RegExp(apelidoNovo), 'nem o apelido que substituiu o primeiro');
+    assert.ok(
+      linhas.some((linha) => linha.entity_type === 'profile'),
+      'a conferência precisa alcançar as linhas de perfil, e não só as de usuário',
+    );
   });
 
   it('a atualização auditada registra o fato, nunca o valor novo', async () => {
