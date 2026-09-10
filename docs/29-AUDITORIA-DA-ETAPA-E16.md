@@ -88,6 +88,33 @@ correção da lacuna 1 ficou **uma hora no disco sem ser commitada**, com o HEAD
 ainda gravando o apelido. Foi o usuário quem apontou. Conserto que não está no
 histórico não existe, e essa frase já estava escrita no laudo da etapa anterior.
 
+## Segunda varredura
+
+A varredura de conferência achou quatro lacunas nas próprias correções, e as
+quatro foram corrigidas e commitadas.
+
+A mais importante repete o padrão desta etapa: a guarda da RN-053 tinha trocado
+`entity_type = 'user'` por `actor_id` e, com isso, o buraco simétrico — linha
+que **outra pessoa** escreve sobre a conta tem o ator dela, e `admin.promovido`,
+`admin.rebaixado` e o `conta.apagada` feito pelo painel são exatamente essa
+forma. Um filtro estreito trocado por outro estreito. A consulta virou a união
+das duas pontas (`019d7d1`).
+
+O gate de 320 px existia mas não era portão: `npm run evidencias` precisa de
+servidor e navegador, e o CI não o rodava. Virou o job `rolagem` (`af084c2`),
+com modo de medição sem prints, e o painel administrativo entrou na conta —
+cinco rotas, com sessão de admin. A medição também passou a separar conteúdo
+cortado de conteúdo que rola dentro do próprio contêiner: as tabelas do painel
+usam `overflow-x-auto`, e a versão anterior as acusaria por engano.
+
+A barra de progresso do favo ganhou `max-w-full` (`fde64c6`): 160 px fixos não
+cabiam ao lado do hexágono a 320 px. E o próprio gate reprovava por um pixel,
+porque a janela às vezes volta 321 px — agora tolera arredondamento e só reprova
+quando ela abre bem maior que a pedida.
+
+São dezessete telas medidas, nenhuma rola, e o único conteúdo cortado é o fundo
+decorativo da landing, aparado de propósito.
+
 ## O que esta auditoria não prova
 
 O gate de 320 px mede rolagem, e rolagem não é a mesma coisa que legibilidade:
