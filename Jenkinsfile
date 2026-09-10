@@ -5,7 +5,8 @@
 def agente
 
 // Sobe um MySQL novo, espera ele aceitar conexão e roda os comandos no agente ligado a ele.
-def comMysql(String banco, String comandos) {
+// O agente vem por parâmetro: função do Jenkinsfile não enxerga o `def agente` de fora.
+def comMysql(agente, String banco, String comandos) {
   docker.image('mysql:8.4').withRun("-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=${banco}") { mysql ->
     sh "until docker exec ${mysql.id} mysqladmin ping -h 127.0.0.1 -uroot -proot --silent; do sleep 2; done"
     agente.inside("--link ${mysql.id}:mysql -e DB_NAME=${banco}") {
@@ -59,7 +60,7 @@ pipeline {
       }
       steps {
         script {
-          comMysql('beever_teste', 'npm run test:db')
+          comMysql(agente, 'beever_teste', 'npm run test:db')
         }
       }
     }
@@ -67,7 +68,7 @@ pipeline {
     stage('Cobertura') {
       steps {
         script {
-          comMysql('beever_teste', 'npm run test:cobertura')
+          comMysql(agente, 'beever_teste', 'npm run test:cobertura')
         }
       }
     }
@@ -76,7 +77,7 @@ pipeline {
     stage('Rolagem a 320 px') {
       steps {
         script {
-          comMysql('beever_rolagem', '''
+          comMysql(agente, 'beever_rolagem', '''
             npm run db:migrate
             npm run db:seed
             npm run css:build
