@@ -5,7 +5,17 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-10 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** o atalho da área administrativa no painel do jogador, fora do
+**Último commit:** T-17.5 — a recuperação de senha (RF-AUT-06), o último P1 sem
+código. O login ganhou "Esqueceu a senha?", que manda por e-mail um link de 60
+minutos e uso único; o banco guarda só o hash SHA-256 do token, a resposta é a
+mesma exista a conta ou não, e o pedido é limitado a três por e-mail por hora.
+Na tela da senha nova o usuário escolhe se quer sair de todos os aparelhos, e
+só então as sessões da conta caem. O envio veio no commit de antes, com
+`nodemailer` e o Mailpit no `docker-compose` fazendo papel de caixa de correio
+em desenvolvimento. O caminho inteiro foi percorrido com o servidor de pé e o
+e-mail chegando de verdade no Mailpit, e o token não aparece no log.
+
+**Commit anterior:** o atalho da área administrativa no painel do jogador, fora do
 roadmap. Até aqui o admin que entrava pelo login comum caía em `/painel` e só
 chegava a `/admin` digitando o endereço. Agora a Colmeia mostra um quarto card,
 "Área administrativa", só quando a sessão tem `ehAdmin`; a landing e o login
@@ -101,11 +111,12 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: a T-17.1 — os dois defeitos visíveis do cofre (DT-124 e
-DT-125)** —, primeira tarefa da E17, o protótipo final para a banca, planejada
-em `docs/28-PLANO-PARA-A-BANCA.md` com quatro faixas de prioridade. A T-16.2
-saiu do plano: o apagamento definitivo de conta foi entregue, e a E16 fechou
-inteira.
+**Próximo passo: o login com Google, e depois o Jenkins**, as duas frentes que o
+usuário pediu antes do deploy. O Google fica aberto a qualquer jogador com conta
+Google, passando pelo mesmo onboarding e pelas mesmas regras de idade, o que
+muda a decisão da seção P3 do `docs/28`. O Jenkins entra ao lado do GitHub
+Actions, com as mesmas etapas, e não no lugar dele. Da E17 já estão feitas a
+T-17.1, a T-17.4 e a T-17.5.
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -652,6 +663,7 @@ argumento a favor da rede que a T-02.1 montou.
 | Item | Por que está aqui |
 |---|---|
 | O atalho administrativo no painel, em navegador real | O caminho está coberto por teste pelo HTTP: o admin que entra pelo login comum acha o link para `/admin` na Colmeia, e a jogadora comum não. O que **não** foi visto por olho humano é o quarto card na grade de atalhos, que a 320 px e em `lg` quebra a linha de um jeito diferente dos outros três |
+| A recuperação de senha em produção e aos olhos de alguém | O fluxo foi percorrido pelo HTTP com o servidor de pé e o e-mail chegando no Mailpit, nos dois sentidos, e a senha da Ana voltou a `beever123`. Falta um SMTP real (Gmail com senha de app ou Brevo) entregar numa caixa de verdade, sem cair no spam, e alguém olhar as duas telas novas a 320 px com o olho, além da medição automática |
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | As trinta telas abertas num navegador de verdade (T-14.7) | A varredura conferiu foco de teclado, alvo de 44 px, campo com nome, ordem de títulos, contraste do par escrito no elemento, largura fixa, tabela com rolagem e zoom liberado em todas elas, e as seis faltas que achou foram corrigidas. O que **não** aconteceu é alguém abrir as telas a 320 px e olhar: quebra de layout com fonte carregada e contraste sobre fundo herdado seguem por provar. É a DT-121 |
 | O backup rodando sozinho, na hora marcada (T-14.6) | O comando foi executado de verdade e a restauração foi provada ponta a ponta, mas quem dispara isso todo dia às 3h é o cron do host — e host de implantação ainda não existe. O que está entregue é a rotina documentada, que é o que a RNF-19 pede. É a DT-119 |
@@ -1487,7 +1499,7 @@ A T-02.3 devolveu a aplicação ao ar.
 | E14 Endurecimento — auditoria | **concluída** | Laudo em `docs/21-AUDITORIA-DA-ETAPA-E14.md`. Os dois bloqueantes foram fechados na mesma sessão: o limite global passou a contar por sessão nas leituras (DT-112, com a carga refeita em 200×600 e nenhum 429), e `validadoresDeJogo` e `usersService` entraram no portão de cobertura, que virou 26 services em 100% de linha com catraca de ramo em 93%. L4 (desktop) e a exclusão de conta viraram a E16; L6 virou o pull request para a `main` |
 | E15 Documentação TCC | **concluída e auditada** | T-15.1 a T-15.6 entregues: rastreabilidade dos 186 requisitos, os quatro diagramas, o documento de arquitetura, o manual canônico de instalação, o laudo de evidências com as duas execuções guardadas e os trabalhos futuros. Falta o laudo de auditoria da etapa |
 | E16 Ajustes antes da defesa | **concluída e auditada** | T-16.1 feita: Colmeia e cofre em duas colunas a partir de `lg`, loja em quatro no `xl`, e a trilha mantida porque já tinha composição desde a T-10.4. T-16.2 feita: o apagamento definitivo remove a conta e a cascata leva perfil, carteira, metas e consentimento; a trilha imutável grava só agregados desde a origem, então não há o que apagar no histórico, e `POST /admin/usuarios/:id/definitivo` executa o pedido (DT-79 paga). O aceite — apagar a conta remove de fato o dado pessoal, deixando a auditoria anônima e íntegra — está provado. Nasceram da auditoria da E14, decididas com o usuário em 2026-09-03 |
-| E17 Protótipo final para a banca | do zero | Oito tarefas em quatro faixas de prioridade, planejadas em `docs/28-PLANO-PARA-A-BANCA.md`: defeitos visíveis, implantação em cloud com TLS, ensaio da instalação, seed de demonstração, e-mail com recuperação de senha, segundo fator no painel, as três telas de P1 cujo dado já existe, e o roteiro da apresentação. Nada jurídico entra, por decisão do time |
+| E17 Protótipo final para a banca | **em andamento** | Oito tarefas em quatro faixas de prioridade, planejadas em `docs/28-PLANO-PARA-A-BANCA.md`: defeitos visíveis, implantação em cloud com TLS, ensaio da instalação, seed de demonstração, e-mail com recuperação de senha, segundo fator no painel, as três telas de P1 cujo dado já existe, e o roteiro da apresentação. Nada jurídico entra, por decisão do time. Feitas: T-17.1 (defeitos do cofre), T-17.4 (conta de demonstração do Léo) e T-17.5 (e-mail e recuperação de senha) |
 
 ---
 
@@ -1652,6 +1664,9 @@ Não reabrir sem motivo novo.
 
 | Decisão | Onde foi registrada |
 |---|---|
+| Recuperação de senha: link de 60 minutos e uso único, só o hash do token no banco, resposta igual para qualquer e-mail e três pedidos por e-mail por hora. Derrubar as sessões abertas é escolha do usuário numa caixa desmarcada, e não automático | T-17.5, checkpoint de 2026-09-10 |
+| Login com Google para qualquer jogador com conta Google, com o mesmo onboarding e as mesmas regras de idade. Substitui a ideia do `docs/28` de guardar o Google só para o responsável | pedido do usuário em 2026-09-10 |
+| Jenkins roda ao lado do GitHub Actions, com as mesmas etapas, e não no lugar dele | pedido do usuário em 2026-09-10 |
 | `beever.sql` da raiz é a base da E01, reestruturado como DBA; `migrations/001` e `002` vão para `migrations/_legacy/` sem serem apagados | T-00.1, D-01 |
 | Identificadores em inglês, comentários/docs/commits em português. Termos de produto (`mel`, `pólen`, `favo`, `patrimônio`) ficam no texto da interface e nos comentários, **não** nos nomes de tabela e coluna | T-00.1 decisão 3, detalhado em `00-MAPA-DE-NOMES-LEGADO.md` |
 | Mapa completo `nome legado → nome novo`, tabela e coluna, para a E01 usar | `00-MAPA-DE-NOMES-LEGADO.md` |

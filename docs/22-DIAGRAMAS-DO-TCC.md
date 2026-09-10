@@ -31,6 +31,7 @@ erDiagram
     users ||--o| admins : "join (RN-051)"
     users ||--o{ guardian_consents : "RNF-34"
     users ||--o{ schedules : "RN-011"
+    users ||--o{ password_reset_tokens : "RF-AUT-06"
     age_bands ||--o{ profiles : classifica
     avatars ||--o{ profiles : veste
     initial_goals ||--o{ profiles : motiva

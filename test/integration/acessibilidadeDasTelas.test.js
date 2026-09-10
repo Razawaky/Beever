@@ -9,7 +9,7 @@ import request from 'supertest';
 // `ambiente.js` aponta o pool da aplicação para o banco de teste e precisa ser
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
-import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
+import { criarBancoDeTeste, idDoUsuario, motivoParaPular } from '../helpers/banco.js';
 import {
   apagaOFoco,
   camposSemRotulo,
@@ -26,6 +26,7 @@ import {
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
+import { gerarToken, hashDoToken } from '../../src/services/passwordResetService.js';
 
 /**
  * Acessibilidade e responsividade em todas as telas (T-14.7).
@@ -86,6 +87,17 @@ describe('acessibilidade de todas as telas', opcoes, () => {
     await coletar(anonimo, 'manutenção', '/manutencao');
     await coletar(anonimo, 'erro', '/rota-que-nao-existe', 404);
     await coletar(anonimo, 'login do admin', '/admin/login');
+    await coletar(anonimo, 'recuperar senha', '/recuperar-senha');
+    await coletar(anonimo, 'link de senha vencido', '/redefinir-senha');
+
+    // A tela da senha nova só mostra o formulário com um token válido gravado.
+    const token = gerarToken();
+    await banco.conexao.query(
+      `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+       VALUES (?, ?, DATE_ADD(UTC_TIMESTAMP(), INTERVAL 60 MINUTE))`,
+      [await idDoUsuario(banco.conexao, 'ana@beever.dev'), hashDoToken(token)],
+    );
+    await coletar(anonimo, 'senha nova', `/redefinir-senha?token=${token}`);
 
     const jogador = request.agent(app);
     let csrf = await lerToken(jogador, '/login');

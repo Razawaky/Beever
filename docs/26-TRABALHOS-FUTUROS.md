@@ -154,34 +154,12 @@ sugestão.
 
 ## 5. Recuperação de Senha (RF-AUT-06)
 
-**Contexto.** A RF-AUT-06 é o único requisito P1 sem código nem
-tarefa no roadmap (ver `docs/RASTREABILIDADE.md`, linha 33). Exige
-serviço de e-mail, que o projeto não tem hoje. Não é blocks para a
-defesa, mas é uma lacuna que qualquer usuário real encontraria no
-primeiro esquecimento de senha.
-
-**O que já existe.** O registro já grava e-mail do responsável para
-menores (RNF-34). A política de privacidade em `/privacidade` lista
-os dados coletados. A tabela `users` tem `email` (único) e
-`password_hash`.
-
-**Caminho proposto.**
-
-- Tabela `password_reset_tokens` com `user_id`, `token` (hash),
-  `expires_at` e `used_at`.
-- Endpoint `POST /recuperar-senha` que gera token, envia e-mail com
-  link e rate-limita por IP (o mesmo `ip_hash` da auditoria).
-- Endpoint `POST /redefinir-senha` que valida token, exige senha
-  nova com as mesmas regras do registro, e invalida todas as sessões
-  ativas do usuário.
-- Serviço de e-mail: nodemailer com SMTP transacional (Brevo, Mailgun
-  ou SES), com variável de ambiente para credenciais e fallback para
-  log em desenvolvimento.
-
-**Impacto.** Fecha o último P1 aberto, elimina a necessidade de
-reset manual de senha pelo administrador, e abre o caminho para
-notificações por e-mail (ciclo processado, resultado da liga) que
-os trabalhos futuros acima mencionam.
+Saiu dos trabalhos futuros: foi entregue na T-17.5, com o caminho que esta
+seção propunha. O link vale 60 minutos e uma vez só, o banco guarda apenas o
+hash do token, a resposta é igual exista a conta ou não, e o usuário escolhe
+se quer derrubar as sessões abertas. O que continua para depois é o que o
+serviço de e-mail passa a permitir: notificação de ciclo processado e de
+resultado da liga, que as frentes acima mencionam.
 
 ---
 
@@ -191,6 +169,6 @@ os trabalhos futuros acima mencionam.
   seção 4 (por que EJS) e seção 11 (por que escala sem reescrever)
 - `docs/01-REQUISITOS-E-REGRAS.md` — RF-AUT-06 (linha 193),
   RF-LAN-04 (linha 337), RNF-39 (linha 395)
-- `docs/RASTREABILIDADE.md` — linha 33 (RF-AUT-06 como candidata)
+- `docs/RASTREABILIDADE.md` — linha 33 (RF-AUT-06, atendido na T-17.5)
 - `docs/ESTADO-DO-PROJETO.md` — seção 6 (decisões travadas)
 - `docs/02-ROADMAP-ETAPAS.md` — E16 (ajustes antes da defesa)

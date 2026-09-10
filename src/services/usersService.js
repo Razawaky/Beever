@@ -19,7 +19,8 @@ import * as auditService from './auditService.js';
  * obrigatório — antes era opcional, com o nome real fazendo as vezes dele.
  */
 
-const CUSTO_BCRYPT = 10;
+// Exportado para a recuperação de senha gravar o hash com o mesmo custo do cadastro.
+export const CUSTO_BCRYPT = 10;
 
 /**
  * O ator pode ser o dono da conta ou um administrador agindo sobre ela — a

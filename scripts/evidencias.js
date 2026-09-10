@@ -60,6 +60,7 @@ const TELAS = [
   { arquivo: '10-liga', caminho: '/liga' },
   { arquivo: '11-inventario', caminho: '/inventario' },
   { arquivo: '12-privacidade', caminho: '/privacidade', publica: true },
+  { arquivo: '13-recuperar-senha', caminho: '/recuperar-senha', publica: true },
 ];
 
 /**

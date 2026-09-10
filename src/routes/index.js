@@ -40,6 +40,13 @@ router.get('/health', healthController.mostrar);
 router.get('/privacidade', paginaController.privacidade);
 router.get('/login', paginaController.login);
 router.get('/cadastro', paginaController.cadastro);
+router.get('/recuperar-senha', paginaController.recuperarSenha);
+router.get(
+  '/redefinir-senha',
+  [query('token').optional().isString()],
+  validateEnderecoDePagina,
+  paginaController.redefinirSenha,
+);
 router.get('/onboarding', requireOnboardingPendente, paginaController.onboarding);
 router.get('/painel', requireOnboarding, paginaController.painel);
 router.get('/loja', somentePagina, requireOnboarding, paginaController.loja);

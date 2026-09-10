@@ -17,6 +17,12 @@
         <h1 class="mt-6 text-3xl font-bold">Entrar</h1>
         <p class="mt-2 text-tinta-suave">Digite seu e-mail e senha para entrar na conta.</p>
 
+        <% if (senhaAlterada) { %>
+          <p role="status" class="mt-6 rounded-favo border border-linha bg-cera p-4 text-sm">
+            Senha alterada. Agora é só entrar com a senha nova.
+          </p>
+        <% } %>
+
         <form method="POST" action="/sessao/login" class="mt-8 space-y-4">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
@@ -44,6 +50,7 @@
               placeholder="Sua senha"
               class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
             />
+            <a href="/recuperar-senha" class="mt-2 inline-block text-sm text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Esqueceu a senha?</a>
           </div>
 
           <%- include('../partials/ui/botao', { texto: 'Entrar', tipo: 'submit', classe: 'w-full' }) %>

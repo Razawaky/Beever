@@ -45,6 +45,12 @@ export async function buscarPorEmailComSenha(email) {
   return linhas[0] ?? null;
 }
 
+/** Sem o hash da senha: usado pela recuperação de senha, que só precisa saber para quem enviar. */
+export async function buscarPorEmail(email) {
+  const linhas = await consultar('SELECT id, email, nickname, is_active FROM users WHERE email = ?', [email]);
+  return linhas[0] ?? null;
+}
+
 export async function emailJaUsado(email) {
   const linhas = await consultar('SELECT 1 FROM users WHERE email = ? LIMIT 1', [email]);
   return linhas.length > 0;

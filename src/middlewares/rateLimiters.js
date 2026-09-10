@@ -114,6 +114,18 @@ export const limiteAdministrativo = rateLimit({
   message: { erro: 'Muitas alterações seguidas. Aguarde alguns minutos.' },
 });
 
+/**
+ * Pedido de link de troca de senha, contado pelo e-mail. Conta até pedido que deu
+ * certo: cada um dispara um e-mail, e sem teto dava para lotar a caixa de alguém.
+ */
+export const limiteRecuperacaoDeSenha = rateLimit({
+  ...base,
+  windowMs: 60 * 60 * 1000,
+  limit: 3,
+  keyGenerator: chaveDaCredencial,
+  message: { erro: 'Muitos pedidos de troca de senha. Tente de novo daqui a uma hora.' },
+});
+
 /** Compras: evita duplo clique virar débito duplo e limita abuso. */
 export const limiteCompra = rateLimit({
   ...base,

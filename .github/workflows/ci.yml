@@ -106,7 +106,7 @@ jobs:
           --health-retries=20
 
     # A RNF-20 pede de 320 px a desktop, e largura só existe depois do CSS: a
-    # varredura estática não consegue responder isto. Aqui as dezessete telas
+    # varredura estática não consegue responder isto. Aqui as dezoito telas
     # são abertas num Chrome sem janela e o job reprova se alguma rolar.
     env:
       DB_HOST: 127.0.0.1

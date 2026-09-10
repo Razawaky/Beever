@@ -7,6 +7,7 @@ import * as goalsService from '../services/goalsService.js';
 import * as homeService from '../services/homeService.js';
 import * as inventoryService from '../services/inventoryService.js';
 import * as leagueService from '../services/leagueService.js';
+import * as passwordResetService from '../services/passwordResetService.js';
 import * as profilesService from '../services/profilesService.js';
 import * as schedulesService from '../services/schedulesService.js';
 import * as shopService from '../services/shopService.js';
@@ -45,8 +46,18 @@ export const privacidade = (req, res) =>
 
 export const login = (req, res) => {
   if (req.session?.usuarioId) return redirecionarLogado(req, res);
-  renderizarPagina(res, 'login', { titulo: 'Entrar — Beever' });
+  renderizarPagina(res, 'login', { titulo: 'Entrar — Beever', senhaAlterada: req.query.senha === 'alterada' });
 };
+
+export const recuperarSenha = (req, res) =>
+  renderizarPagina(res, 'recuperar-senha', { titulo: 'Esqueceu a senha? — Beever', enviado: false });
+
+// O link é conferido antes do formulário: sem isso a criança digitaria a senha duas vezes para só então saber que ele venceu.
+export const redefinirSenha = assincrono(async (req, res) => {
+  const token = req.query.token ?? '';
+  const linkValido = await passwordResetService.linkValido(token);
+  renderizarPagina(res, 'redefinir-senha', { titulo: 'Senha nova — Beever', linkValido, token });
+});
 
 export const cadastro = (req, res) => {
   if (req.session?.usuarioId) return redirecionarLogado(req, res);

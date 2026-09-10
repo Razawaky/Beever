@@ -81,6 +81,10 @@ O resto tem padrão e só precisa de atenção quando o ambiente foge do comum:
 | `SESSION_MAX_AGE_MINUTES` | `120` | Sessão de login mais curta ou mais longa |
 | `LOG_LEVEL` | `info` | `debug` para investigar, `warn` para calar o normal |
 | `CONTACT_EMAIL` | `contato@beever.local` | Precisa ser um endereço lido de verdade em produção (LGPD, Art. 18) |
+| `APP_URL` | `http://localhost:3000` | Endereço público usado nos links do e-mail; obrigatório em produção |
+| `SMTP_HOST` / `SMTP_PORT` | `localhost` / `1025` | O padrão é o Mailpit do compose, que mostra os e-mails em `http://localhost:8025`. Em produção, um SMTP real; `SMTP_HOST` é obrigatório |
+| `SMTP_USER` / `SMTP_PASSWORD` | vazio | Login do SMTP de produção (Gmail com senha de app, Brevo); o Mailpit não pede |
+| `MAIL_FROM` | `Beever <nao-responda@beever.local>` | Remetente que aparece no e-mail de troca de senha |
 | `UPLOADS_DIR` | `uploads` | Em contêiner precisa ser volume, senão a arte some no deploy |
 | `UPLOAD_MAX_MB` | `8` | Teto do arquivo enviado pelo painel |
 | `BACKUP_CONTAINER` | `mysql` | Nome do contêiner de onde o backup chama o `mysqldump` |
@@ -321,7 +325,7 @@ verde, cadastro real gravando, CSS servido da imagem) está em
 começa em:
 
 1. `NODE_ENV=production` — e então `SESSION_SECRET` e `CONTACT_EMAIL` com valor
-   real, senão o `env.js` recusa subir (por bom motivo).
+   real, mais `SMTP_HOST` e `APP_URL`, senão o `env.js` recusa subir (por bom motivo).
 2. Credenciais de banco reais (`DB_USER`/`DB_PASSWORD`/`DB_ROOT_PASSWORD`).
 3. Um proxy reverso (nginx/Caddy) na frente terminando TLS — é o passo que
    fecha a exigência de tráfego cifrado; ainda não há receita dele no

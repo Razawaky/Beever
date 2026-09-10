@@ -58,6 +58,13 @@ export function criarApp() {
       // log teria dois identificadores diferentes para a mesma requisição.
       genReqId: (req) => req.id,
       autoLogging: { ignore: (req) => req.url === '/health' },
+      // O token do link de troca de senha vale como senha até ser usado, então não entra no log.
+      serializers: {
+        req(req) {
+          req.url = req.url.replace(/token=[^&]*/, 'token=[oculto]');
+          return req;
+        },
+      },
     }),
   );
 
