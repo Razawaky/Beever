@@ -4432,3 +4432,28 @@ de seis anos derruba o uso.
 
 Quatro testes novos em `test/unit/plano-da-banca.test.js`, conferidos quebrando
 o documento de propósito.
+
+### Sessão de 2026-09-09, auditoria da E16 e a lição repetida
+
+O laudo está em `docs/29-AUDITORIA-DA-ETAPA-E16.md`, com veredito de pode
+avançar. A lacuna bloqueante foi a anonimização da trilha pela metade: a T-16.2
+tirou o dado pessoal de três eventos e deixou dois de fora — `perfil.atualizado`
+gravava o apelido em `antes` e em `depois`, e `onboarding.concluido` gravava o
+apelido. Como a trilha é imutável e não tem chave estrangeira para `users`, os
+dois sobreviveriam ao apagamento, que é o oposto da RN-053.
+
+O que fez a falha durar foi a prova: a guarda filtrava `entity_type = 'user'` e
+os dois eventos são de `profile`, então ela nunca olharia para eles. É o segundo
+caso, em duas etapas seguidas, de guarda cobrindo menos do que o texto promete —
+na E15 foi o teste que existia só no disco.
+
+E a lição da E15 se repetiu dentro desta auditoria: o conserto ficou uma hora no
+disco sem commit, com o HEAD ainda gravando o apelido, e foi o usuário quem
+apontou. Conserto que não está no histórico não existe.
+
+De positivo, os 320 px deixaram de ser afirmação. O `npm run evidencias` passou
+a medir as doze telas num navegador de verdade e a falhar se alguma rolar
+lateralmente — nenhuma rola. A medição errou de três formas antes de ficar de pé
+(saldo aparado por transbordo escondido, telas públicas medidas depois do login
+e por isso redirecionadas, e o navegador ignorando largura abaixo de uns 250 px),
+e os dois caminhos de reprovação foram exercitados de propósito.
