@@ -153,6 +153,9 @@ async function subirNavegador(perfilTemporario) {
       ],
       { stdio: 'ignore' },
     );
+    // Navegador que não está instalado chega como evento `error`; sem ouvir, o
+    // script morria no primeiro da lista em vez de tentar o próximo.
+    processo.on('error', () => {});
 
     for (let tentativa = 0; tentativa < 40; tentativa += 1) {
       await esperar(250);
