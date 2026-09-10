@@ -67,6 +67,27 @@ ainda sobe, que era exatamente o buraco da T-14.4.
 Fica registrado como **DT-116**: publicar a imagem em registro no merge para
 `main`, fechando a segunda metade da RNF-40.
 
+## O Jenkins local, ao lado do Actions
+
+Desde 2026-09-10 o mesmo portão também roda num Jenkins em contêiner, a pedido do
+usuário, sem tirar o lugar do Actions. A imagem é a oficial `jenkins/jenkins` LTS
+com o CLI do Docker e os plugins do pipeline, e tudo o que seria clique no
+assistente de instalação está no `jenkins/casc.yaml`: o usuário `admin`, com
+senha vinda do `.env`, e um job multibranch que lê o repositório desta máquina
+montado em `/repo` e varre de cinco em cinco minutos. Commit novo numa branch com
+`Jenkinsfile` vira build sozinho, sem webhook, que um Jenkins local não recebe.
+
+O `Jenkinsfile` repete as etapas do `ci.yml` na mesma ordem: dependências, lint e
+auditoria, suíte contra MySQL, cobertura, rolagem a 320 px e build da imagem. A
+medição de carga fica de fora, como no Actions fora da `main`. Cada etapa roda
+num contêiner do agente (`jenkins/agente.Dockerfile`, Node 22 com Chromium) e as
+que precisam de banco ganham um MySQL 8.4 próprio, descartado no fim.
+
+O Jenkins usa o Docker do host pelo socket, o que equivale a root na máquina. Por
+isso ele só escuta em `127.0.0.1` e sobe por um perfil próprio do compose
+(`docker compose --profile jenkins up -d`): serve para desenvolvimento e para a
+demonstração, nunca para um servidor compartilhado.
+
 ## O que o teste automático cobre
 
 `test/unit/fluxoDeIntegracao.test.js` é estático e roda em milissegundos, sem
