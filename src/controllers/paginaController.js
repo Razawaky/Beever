@@ -15,6 +15,7 @@ import * as streakService from '../services/streakService.js';
 import * as tasksService from '../services/tasksService.js';
 import * as vaultService from '../services/vaultService.js';
 import { env } from '../config/env.js';
+import { googleConfigurado } from '../config/google.js';
 import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
 import { querJson } from '../utils/resposta.js';
@@ -46,7 +47,11 @@ export const privacidade = (req, res) =>
 
 export const login = (req, res) => {
   if (req.session?.usuarioId) return redirecionarLogado(req, res);
-  renderizarPagina(res, 'login', { titulo: 'Entrar — Beever', senhaAlterada: req.query.senha === 'alterada' });
+  renderizarPagina(res, 'login', {
+    titulo: 'Entrar — Beever',
+    senhaAlterada: req.query.senha === 'alterada',
+    googleConfigurado,
+  });
 };
 
 export const recuperarSenha = (req, res) =>
@@ -64,7 +69,15 @@ export const cadastro = (req, res) => {
   renderizarPagina(res, 'cadastro', {
     titulo: 'Criar conta — Beever',
     scripts: ['/js/cadastro.js'],
+    googleConfigurado,
   });
+};
+
+// Só chega aqui quem voltou do Google sem conta; o e-mail já veio verificado de lá.
+export const completarCadastroGoogle = (req, res) => {
+  const pendente = req.session?.cadastroGoogle;
+  if (!pendente) return res.redirect('/login');
+  renderizarPagina(res, 'completar-cadastro', { titulo: 'Criar conta — Beever', email: pendente.email });
 };
 
 // Quem pode ver esta tela é decidido pelo `requireOnboardingPendente` na rota,

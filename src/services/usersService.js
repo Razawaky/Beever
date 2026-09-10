@@ -115,7 +115,15 @@ export async function obter(id) {
  */
 export async function criar({ email, dataNasc, senha, apelido, consentimentoResponsavel = false }) {
   exigirSenhaValida(senha);
+  return criarConta({ email, dataNasc, apelido, consentimentoResponsavel, senha });
+}
 
+/** Conta nascida do login com Google: sem senha, com o id do Google no lugar. */
+export async function criarComGoogle({ email, googleSub, dataNasc, apelido, consentimentoResponsavel = false }) {
+  return criarConta({ email, dataNasc, apelido, consentimentoResponsavel, googleSub });
+}
+
+async function criarConta({ email, dataNasc, apelido, consentimentoResponsavel, senha = null, googleSub = null }) {
   const apelidoLimpo = apelido?.trim();
   if (!apelidoLimpo) throw erroValidacao('Informe como você quer ser chamado');
 
@@ -136,12 +144,15 @@ export async function criar({ email, dataNasc, senha, apelido, consentimentoResp
     throw new ErroAplicacao('Este e-mail já está cadastrado', { status: 409, codigo: 'EMAIL_EM_USO' });
   }
 
-  const senhaHash = await bcrypt.hash(senha, CUSTO_BCRYPT);
+  const senhaHash = senha ? await bcrypt.hash(senha, CUSTO_BCRYPT) : null;
   const faixas = await profilesRepository.listarFaixasEtarias();
   const faixa = faixaParaIdade(faixas, idade);
 
   const { idUsuario, idPerfil } = await emTransacao(async (conexao) => {
-    const usuario = await usersRepository.criar({ email, apelido: apelidoLimpo, dataNasc, senhaHash }, conexao);
+    const usuario = await usersRepository.criar(
+      { email, apelido: apelidoLimpo, dataNasc, senhaHash, googleSub },
+      conexao,
+    );
     const perfil = await profilesRepository.criar({ idUsuario: usuario }, conexao);
     await walletsRepository.criar(usuario, conexao);
     await userLevelsRepository.criar(usuario, conexao);

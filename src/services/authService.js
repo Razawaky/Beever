@@ -14,11 +14,20 @@ const erroCredenciais = () =>
 
 export async function autenticar({ email, senha }) {
   const usuario = await usersRepository.buscarPorEmailComSenha(email);
-  if (!usuario) throw erroCredenciais();
+  // Conta criada pelo Google não tem senha: entra pelo Google ou define uma pelo "Esqueceu a senha?".
+  if (!usuario || !usuario.password_hash) throw erroCredenciais();
 
   const senhaCorreta = await bcrypt.compare(senha, usuario.password_hash);
   if (!senhaCorreta) throw erroCredenciais();
 
+  return concluirLogin(usuario, 'senha');
+}
+
+/**
+ * Parte do login que vale para senha e para Google: confere se a conta está ativa,
+ * registra a entrada e devolve o que vai para a sessão.
+ */
+export async function concluirLogin(usuario, metodo) {
   if (!usuario.is_active) {
     throw new ErroAplicacao('Esta conta está inativa', { status: 403, codigo: 'CONTA_INATIVA' });
   }
@@ -28,7 +37,7 @@ export async function autenticar({ email, senha }) {
   const perfil = await profilesRepository.buscarPorUsuario(usuario.id);
 
   const ator = usuario.eh_admin ? auditService.admin(usuario.id) : auditService.usuario(usuario.id);
-  await auditService.registrar(ator, 'sessao.login', { entidade: 'user', id: usuario.id });
+  await auditService.registrar(ator, 'sessao.login', { entidade: 'user', id: usuario.id, depois: { metodo } });
 
   return {
     id: usuario.id,

@@ -56,6 +56,10 @@
           <%- include('../partials/ui/botao', { texto: 'Entrar', tipo: 'submit', classe: 'w-full' }) %>
         </form>
 
+        <% if (googleConfigurado) { %>
+          <%- include('../partials/ui/botao-google', { texto: 'Entrar com Google' }) %>
+        <% } %>
+
         <p class="mt-6 text-center text-sm text-tinta-suave">
           Não tem uma conta?
           <a href="/cadastro" class="font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Cadastre-se</a>

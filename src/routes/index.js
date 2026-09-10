@@ -40,6 +40,7 @@ router.get('/health', healthController.mostrar);
 router.get('/privacidade', paginaController.privacidade);
 router.get('/login', paginaController.login);
 router.get('/cadastro', paginaController.cadastro);
+router.get('/cadastro/google', paginaController.completarCadastroGoogle);
 router.get('/recuperar-senha', paginaController.recuperarSenha);
 router.get(
   '/redefinir-senha',

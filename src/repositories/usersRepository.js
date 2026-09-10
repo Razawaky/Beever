@@ -32,7 +32,7 @@ export async function buscarPorId(id) {
   return linhas[0] ?? null;
 }
 
-/** Inclui o hash da senha: usado só pelo login, que precisa comparar. */
+/** Inclui o hash da senha: usado pelo login, que precisa comparar, e pelo vínculo com o Google. */
 export async function buscarPorEmailComSenha(email) {
   const linhas = await consultar(
     `SELECT u.id, u.email, u.nickname, u.password_hash, u.is_active, u.onboarding_completed_at,
@@ -43,6 +43,23 @@ export async function buscarPorEmailComSenha(email) {
     [email],
   );
   return linhas[0] ?? null;
+}
+
+/** Mesmos campos do login por senha, para o login pelo Google montar a sessão igual. */
+export async function buscarPorGoogleSub(googleSub) {
+  const linhas = await consultar(
+    `SELECT u.id, u.email, u.nickname, u.is_active, u.onboarding_completed_at,
+            (a.id IS NOT NULL) AS eh_admin
+       FROM users u
+       LEFT JOIN admins a ON a.user_id = u.id
+      WHERE u.google_sub = ?`,
+    [googleSub],
+  );
+  return linhas[0] ?? null;
+}
+
+export async function vincularGoogle(id, googleSub) {
+  await consultar('UPDATE users SET google_sub = ? WHERE id = ?', [googleSub, id]);
 }
 
 /** Sem o hash da senha: usado pela recuperação de senha, que só precisa saber para quem enviar. */
@@ -56,11 +73,12 @@ export async function emailJaUsado(email) {
   return linhas.length > 0;
 }
 
-export async function criar({ email, apelido, dataNasc, senhaHash }, conexao = null) {
+/** Conta criada pelo Google chega com `senhaHash` nulo e `googleSub` preenchido. */
+export async function criar({ email, apelido, dataNasc, senhaHash, googleSub = null }, conexao = null) {
   const resultado = await consultarEm(
     conexao,
-    'INSERT INTO users (email, nickname, birth_date, password_hash) VALUES (?, ?, ?, ?)',
-    [email, apelido, dataNasc, senhaHash],
+    'INSERT INTO users (email, nickname, birth_date, password_hash, google_sub) VALUES (?, ?, ?, ?, ?)',
+    [email, apelido, dataNasc, senhaHash, googleSub],
   );
   return resultado.insertId;
 }

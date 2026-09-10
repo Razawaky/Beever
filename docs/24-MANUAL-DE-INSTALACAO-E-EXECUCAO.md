@@ -85,6 +85,7 @@ O resto tem padrão e só precisa de atenção quando o ambiente foge do comum:
 | `SMTP_HOST` / `SMTP_PORT` | `localhost` / `1025` | O padrão é o Mailpit do compose, que mostra os e-mails em `http://localhost:8025`. Em produção, um SMTP real; `SMTP_HOST` é obrigatório |
 | `SMTP_USER` / `SMTP_PASSWORD` | vazio | Login do SMTP de produção (Gmail com senha de app, Brevo); o Mailpit não pede |
 | `MAIL_FROM` | `Beever <nao-responda@beever.local>` | Remetente que aparece no e-mail de troca de senha |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | vazio | Liga o login com Google. Crie um ID do cliente OAuth (aplicativo da Web) no Google Cloud Console com o redirecionamento `APP_URL` + `/sessao/google/retorno`; vazio, o botão não aparece |
 | `UPLOADS_DIR` | `uploads` | Em contêiner precisa ser volume, senão a arte some no deploy |
 | `UPLOAD_MAX_MB` | `8` | Teto do arquivo enviado pelo painel |
 | `BACKUP_CONTAINER` | `mysql` | Nome do contêiner de onde o backup chama o `mysqldump` |

@@ -63,11 +63,11 @@ Estas não entram no protótipo, e estão aqui para a pergunta "e daqui pra
 frente?" ter resposta ordenada. O detalhe de cada frente está em
 `docs/26-TRABALHOS-FUTUROS.md`.
 
-Primeiro o que já tem dado esperando: o login do responsável, que é onde entrar
-com Google faz sentido — a criança não tem conta, porque o Google exige idade
-mínima que a faixa do Beever não alcança, e o responsável tem. Dele nasce o
-painel do responsável, que é a frente mais barata das grandes, porque o
-histórico já é confiável.
+Primeiro o que já tem dado esperando: o login do responsável e, dele, o painel
+do responsável, que é a frente mais barata das grandes, porque o histórico já é
+confiável. O login com Google deixou de esperar por ele: em 2026-09-10 o usuário
+decidiu abri-lo a qualquer jogador com conta Google, com o mesmo onboarding e as
+mesmas regras de idade, e ele foi entregue antes do deploy.
 
 Depois a dívida que só dói com volume: a Colmeia que custa 60 consultas por
 visita (DT-72) e as métricas do painel administrativo recalculadas a cada

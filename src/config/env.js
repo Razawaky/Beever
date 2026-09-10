@@ -75,6 +75,12 @@ export const env = {
     senha: process.env.SMTP_PASSWORD ?? '',
     remetente: process.env.MAIL_FROM ?? 'Beever <nao-responda@beever.local>',
   },
+
+  // Login com Google. Opcional: sem as duas chaves o botão simplesmente não aparece.
+  google: {
+    idDoCliente: process.env.GOOGLE_CLIENT_ID ?? '',
+    segredoDoCliente: process.env.GOOGLE_CLIENT_SECRET ?? '',
+  },
 };
 
 if (env.producao && env.sessao.segredo.startsWith('troque-este-segredo')) {

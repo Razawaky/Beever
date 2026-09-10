@@ -40,6 +40,8 @@ x-aplicacao: &aplicacao
     SMTP_HOST: mailpit
     SMTP_PORT: 1025
     MAIL_FROM: ${MAIL_FROM:-Beever <nao-responda@beever.local>}
+    GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     UPLOADS_DIR: /app/uploads
     UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-8}
   volumes:

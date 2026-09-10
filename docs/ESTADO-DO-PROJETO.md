@@ -5,7 +5,19 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-10 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** T-17.5 — a recuperação de senha (RF-AUT-06), o último P1 sem
+**Último commit:** o login com Google, fora do roadmap e pedido pelo usuário.
+Login e cadastro ganharam "Entrar com Google", que só aparece com
+`GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` configurados. A ida leva `state` e
+PKCE, e o escopo é só `openid email`, então o nome completo nem chega. Quem já
+tem conta com o mesmo e-mail, verificado pelo Google, tem a conta vinculada e
+entra nela; quem não tem cai numa tela curta com apelido em branco, data de
+nascimento e consentimento do responsável, as mesmas regras do cadastro. A
+migration 025 deixou `password_hash` aceitar nulo e criou `google_sub`; conta
+nascida do Google não entra por senha até definir uma pelo "Esqueceu a senha?".
+Dez testes em `test/integration/loginComGoogle.test.js`, com os dois métodos do
+cliente que falam com o Google trocados por respostas prontas.
+
+**Commit anterior:** T-17.5 — a recuperação de senha (RF-AUT-06), o último P1 sem
 código. O login ganhou "Esqueceu a senha?", que manda por e-mail um link de 60
 minutos e uso único; o banco guarda só o hash SHA-256 do token, a resposta é a
 mesma exista a conta ou não, e o pedido é limitado a três por e-mail por hora.
@@ -111,12 +123,10 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: o login com Google, e depois o Jenkins**, as duas frentes que o
-usuário pediu antes do deploy. O Google fica aberto a qualquer jogador com conta
-Google, passando pelo mesmo onboarding e pelas mesmas regras de idade, o que
-muda a decisão da seção P3 do `docs/28`. O Jenkins entra ao lado do GitHub
-Actions, com as mesmas etapas, e não no lugar dele. Da E17 já estão feitas a
-T-17.1, a T-17.4 e a T-17.5.
+**Próximo passo: o Jenkins**, a última das frentes que o usuário pediu antes do
+deploy. Ele entra ao lado do GitHub Actions, com as mesmas etapas, e não no
+lugar dele. Da E17 já estão feitas a T-17.1, a T-17.4 e a T-17.5, e o login com
+Google foi entregue fora do roadmap.
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -664,6 +674,7 @@ argumento a favor da rede que a T-02.1 montou.
 |---|---|
 | O atalho administrativo no painel, em navegador real | O caminho está coberto por teste pelo HTTP: o admin que entra pelo login comum acha o link para `/admin` na Colmeia, e a jogadora comum não. O que **não** foi visto por olho humano é o quarto card na grade de atalhos, que a 320 px e em `lg` quebra a linha de um jeito diferente dos outros três |
 | A recuperação de senha em produção e aos olhos de alguém | O fluxo foi percorrido pelo HTTP com o servidor de pé e o e-mail chegando no Mailpit, nos dois sentidos, e a senha da Ana voltou a `beever123`. Falta um SMTP real (Gmail com senha de app ou Brevo) entregar numa caixa de verdade, sem cair no spam, e alguém olhar as duas telas novas a 320 px com o olho, além da medição automática |
+| O login com Google contra o Google de verdade | Tudo o que vem depois da resposta do Google está coberto pelo HTTP, com `getToken` e `verifyIdToken` trocados por respostas prontas. A troca real do código e a verificação da assinatura nunca rodaram, porque ainda não existe ID do cliente OAuth no Google Cloud Console. Conta de menor de 13 anos depende do Google deixar a conta supervisionada entrar em app de terceiros, o que o Beever não controla |
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | As trinta telas abertas num navegador de verdade (T-14.7) | A varredura conferiu foco de teclado, alvo de 44 px, campo com nome, ordem de títulos, contraste do par escrito no elemento, largura fixa, tabela com rolagem e zoom liberado em todas elas, e as seis faltas que achou foram corrigidas. O que **não** aconteceu é alguém abrir as telas a 320 px e olhar: quebra de layout com fonte carregada e contraste sobre fundo herdado seguem por provar. É a DT-121 |
 | O backup rodando sozinho, na hora marcada (T-14.6) | O comando foi executado de verdade e a restauração foi provada ponta a ponta, mas quem dispara isso todo dia às 3h é o cron do host — e host de implantação ainda não existe. O que está entregue é a rotina documentada, que é o que a RNF-19 pede. É a DT-119 |
