@@ -62,6 +62,19 @@ export const env = {
     diretorio: process.env.UPLOADS_DIR ?? 'uploads',
     limiteEmBytes: inteiro(process.env.UPLOAD_MAX_MB, 8) * 1024 * 1024,
   },
+
+  // Base dos links enviados por e-mail. Vem daqui, e não do cabeçalho Host,
+  // porque o Host é escrito por quem faz a requisição e poderia apontar o link
+  // para outro site.
+  urlDaAplicacao: process.env.APP_URL ?? 'http://localhost:3000',
+
+  email: {
+    host: process.env.SMTP_HOST ?? '',
+    porta: inteiro(process.env.SMTP_PORT, 587),
+    usuario: process.env.SMTP_USER ?? '',
+    senha: process.env.SMTP_PASSWORD ?? '',
+    remetente: process.env.MAIL_FROM ?? 'Beever <nao-responda@beever.local>',
+  },
 };
 
 if (env.producao && env.sessao.segredo.startsWith('troque-este-segredo')) {
@@ -72,4 +85,8 @@ if (env.producao && env.emailDeContato.endsWith('@beever.local')) {
   throw new Error(
     'CONTACT_EMAIL ainda está com o valor de exemplo, e ele é publicado na política de privacidade.'
   );
+}
+
+if (env.producao && (!env.email.host || !process.env.APP_URL)) {
+  throw new Error('SMTP_HOST e APP_URL são obrigatórios em produção: sem eles a recuperação de senha não chega.');
 }

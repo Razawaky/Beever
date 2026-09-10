@@ -1,8 +1,8 @@
 # Ambiente de desenvolvimento local: banco sozinho por padrão, aplicação
 # inteira sob demanda.
 #
-#   docker compose up -d                    só o MySQL, como sempre foi
-#   docker compose --profile completo up     MySQL + migrations + aplicação
+#   docker compose up -d                    MySQL e Mailpit
+#   docker compose --profile completo up     MySQL + Mailpit + migrations + aplicação
 #
 # O perfil existe para não quebrar quem já roda o Node fora do compose, que é
 # como o projeto foi desenvolvido até aqui.
@@ -35,6 +35,11 @@ x-aplicacao: &aplicacao
     SESSION_MAX_AGE_MINUTES: ${SESSION_MAX_AGE_MINUTES:-20}
     LOG_LEVEL: ${LOG_LEVEL:-info}
     CONTACT_EMAIL: ${CONTACT_EMAIL:-contato@beever.local}
+    APP_URL: ${APP_URL:-http://localhost:3000}
+    # Dentro do compose o Mailpit atende pelo nome do serviço, como o banco.
+    SMTP_HOST: mailpit
+    SMTP_PORT: 1025
+    MAIL_FROM: ${MAIL_FROM:-Beever <nao-responda@beever.local>}
     UPLOADS_DIR: /app/uploads
     UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-8}
   volumes:
@@ -75,6 +80,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+
+  # Caixa de correio falsa de desenvolvimento: recebe todo e-mail que a aplicação
+  # manda e mostra em http://localhost:8025, sem entregar nada a ninguém.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: beever-mailpit
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
 
   # Roda as migrations e sai. A aplicação espera este serviço terminar bem, em
   # vez de migrar no próprio boot: com mais de uma réplica, todas tentariam
