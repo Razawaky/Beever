@@ -25,6 +25,11 @@ const PORTA_DE_DEPURACAO = 9222;
 // `EVIDENCIAS_CONTA=avancado` fotografa a colmeia de quem já jogou muito.
 const CONTA_DO_JOGADOR = CONTAS[process.env.EVIDENCIAS_CONTA ?? 'demo'] ?? CONTAS.demo;
 
+// `--somente-rolagem` pula os prints e roda só a medição de 320 px. É o que o
+// portão do CI executa: lá o que importa é reprovar a rolagem, e imagem gerada
+// dentro do CI ninguém olha.
+const SOMENTE_ROLAGEM = process.argv.includes('--somente-rolagem');
+
 const LARGURA_DE_CELULAR = 390;
 // O piso da RNF-20: nenhuma tela pode pedir rolagem lateral aqui.
 const LARGURA_ESTREITA = 320;
@@ -57,6 +62,13 @@ const TELAS = [
   { arquivo: '12-privacidade', caminho: '/privacidade', publica: true },
 ];
 
+/**
+ * O painel administrativo entra na medição de 320 px, mas não no álbum de
+ * prints: o laudo do TCC mostra o que a criança vê. Ele exige a conta de
+ * administrador, que é outra sessão.
+ */
+const TELAS_DO_PAINEL = ['/admin', '/admin/usuarios', '/admin/itens', '/admin/favos', '/admin/auditoria'];
+
 /** O navegador instalado. Brave e Chromium falam o mesmo protocolo. */
 const NAVEGADORES_POSSIVEIS = ['brave', 'chromium', 'google-chrome', 'google-chrome-stable'];
 
@@ -78,14 +90,14 @@ function extrairTokenCsrf(html) {
  * login troca a sessão por outra, então o cookie que vale é o da resposta do
  * POST, não o da página do formulário.
  */
-async function entrarComOJogador() {
+async function entrar(conta) {
   const paginaDeLogin = await fetch(`${ENDERECO_DO_SERVIDOR}/login`);
   const cookieAnonimo = extrairCookieDeSessao(paginaDeLogin);
   const token = extrairTokenCsrf(await paginaDeLogin.text());
 
   const corpo = new URLSearchParams({
-    email: CONTA_DO_JOGADOR.email,
-    senha: CONTA_DO_JOGADOR.senha,
+    email: conta.email,
+    senha: conta.senha,
     _csrf: token,
   });
 
@@ -100,7 +112,7 @@ async function entrarComOJogador() {
   });
 
   if (resposta.status >= 400) {
-    throw new Error(`O login recusou a conta do seed (HTTP ${resposta.status}).`);
+    throw new Error(`O login recusou ${conta.email} (HTTP ${resposta.status}).`);
   }
 
   return extrairCookieDeSessao(resposta) ?? cookieAnonimo;
@@ -299,11 +311,23 @@ async function medirRolagemEstreita(aba, endereco) {
     expression: `JSON.stringify((() => {
       let maior = document.documentElement.scrollWidth;
       let culpado = 'html';
+      let contencao = 'nenhuma';
       for (const elemento of document.body.querySelectorAll('*')) {
         const direita = elemento.getBoundingClientRect().right;
-        if (direita > maior) {
-          maior = Math.ceil(direita);
-          culpado = elemento.tagName.toLowerCase() + (elemento.id ? '#' + elemento.id : '') + (elemento.className ? '.' + String(elemento.className).split(' ').slice(0, 3).join('.') : '');
+        if (direita <= maior) continue;
+
+        maior = Math.ceil(direita);
+        culpado = elemento.tagName.toLowerCase() + (elemento.id ? '#' + elemento.id : '') + (elemento.className ? '.' + String(elemento.className).split(' ').slice(0, 3).join('.') : '');
+
+        // Quem segura o transbordo muda o veredito: contêiner que rola deixa o
+        // conteúdo alcançável, e é o padrão que o design system pede para
+        // tabela larga. Contêiner que esconde corta e a criança não chega lá.
+        contencao = 'nenhuma';
+        for (let pai = elemento.parentElement; pai; pai = pai.parentElement) {
+          const transbordo = getComputedStyle(pai).overflowX;
+          if (transbordo === 'visible') continue;
+          contencao = transbordo === 'hidden' ? 'escondido' : 'rolavel';
+          break;
         }
       }
       return {
@@ -311,6 +335,7 @@ async function medirRolagemEstreita(aba, endereco) {
         pagina: maior,
         janela: window.innerWidth,
         culpado,
+        contencao,
         caminho: location.pathname,
       };
     })())`,
@@ -332,7 +357,7 @@ async function medirRolagemEstreita(aba, endereco) {
 }
 
 async function principal() {
-  const cookieDeSessao = await entrarComOJogador();
+  const cookieDeSessao = await entrar(CONTA_DO_JOGADOR);
   const caminhoDaCelula = await descobrirCaminhoDaCelula(cookieDeSessao);
 
   await mkdir(PASTA_DE_SAIDA, { recursive: true });
@@ -347,6 +372,8 @@ async function principal() {
   const estouraram = [];
 
   async function capturar(tela) {
+    if (SOMENTE_ROLAGEM) return;
+
     const caminho = tela.caminho ?? caminhoDaCelula;
     if (!caminho) {
       console.log(`  ${tela.arquivo}: sem célula na trilha, pulada`);
@@ -366,11 +393,11 @@ async function principal() {
     }
   }
 
-  async function ligarSessao() {
+  async function ligarSessao(cookie) {
     const { hostname } = new URL(ENDERECO_DO_SERVIDOR);
     await aba.pedir('Network.setCookie', {
       name: 'beever.sid',
-      value: cookieDeSessao,
+      value: cookie,
       domain: hostname,
       path: '/',
       httpOnly: true,
@@ -382,14 +409,17 @@ async function principal() {
       const caminho = tela.caminho ?? caminhoDaCelula;
       if (!caminho) continue;
 
-      const { rolagem, pagina, janela, culpado } = await medirRolagemEstreita(
+      const { rolagem, pagina, janela, culpado, contencao } = await medirRolagemEstreita(
         aba,
         `${ENDERECO_DO_SERVIDOR}${caminho}`,
       );
 
       // Sem esta conferência o gate mente: se o navegador não aplicar a largura
       // pedida, a página é medida numa janela maior e "cabe" sem ter cabido.
-      if (janela !== LARGURA_ESTREITA) {
+      // Alguns pixels de diferença são arredondamento do navegador; o que
+      // invalida a medida é a janela abrir bem maior que a pedida, como
+      // acontece abaixo de uns 250 px, quando ele ignora a largura.
+      if (Math.abs(janela - LARGURA_ESTREITA) > 4) {
         estouraram.push(`${caminho} (medido em ${janela}px, e não em ${LARGURA_ESTREITA}px)`);
         console.log(`  ${caminho}: NÃO MEDIDO — a janela ficou em ${janela}px`);
         continue;
@@ -403,8 +433,10 @@ async function principal() {
       if (sobra > 0) {
         estouraram.push(`${caminho} (rola ${sobra}px além da janela, por ${culpado})`);
         console.log(`  ${caminho}: ROLA ${sobra}px, por ${culpado}`);
+      } else if (pagina > janela && contencao === 'escondido') {
+        console.log(`  ${caminho}: cabe, mas ${culpado} é cortado e não dá para alcançar`);
       } else if (pagina > janela) {
-        console.log(`  ${caminho}: cabe, mas ${culpado} passa da janela e é aparado`);
+        console.log(`  ${caminho}: cabe (${culpado} rola dentro do próprio contêiner)`);
       } else {
         console.log(`  ${caminho}: cabe`);
       }
@@ -412,6 +444,8 @@ async function principal() {
   }
 
   try {
+    if (SOMENTE_ROLAGEM) console.log('Modo medição: sem prints.');
+
     // As telas públicas vêm primeiro e sem cookie: com a sessão ligada, `/` e
     // `/login` redirecionam para a Colmeia e o print sairia da tela errada.
     await aba.pedir('Network.clearBrowserCookies');
@@ -419,7 +453,7 @@ async function principal() {
       await capturar(tela);
     }
 
-    await ligarSessao();
+    await ligarSessao(cookieDeSessao);
 
     for (const tela of TELAS.filter((tela) => !tela.publica)) {
       await capturar(tela);
@@ -431,8 +465,13 @@ async function principal() {
     // três vezes a mesma página, com três vezes o mesmo veredito.
     await aba.pedir('Network.clearBrowserCookies');
     await medirTodas(TELAS.filter((tela) => tela.publica));
-    await ligarSessao();
+    await ligarSessao(cookieDeSessao);
     await medirTodas(TELAS.filter((tela) => !tela.publica));
+
+    // O painel administrativo é outra sessão, e por isso vem por último.
+    await aba.pedir('Network.clearBrowserCookies');
+    await ligarSessao(await entrar(CONTAS.admin));
+    await medirTodas(TELAS_DO_PAINEL.map((caminho) => ({ caminho })));
   } finally {
     aba.fechar();
     processo.kill();
@@ -451,7 +490,7 @@ async function principal() {
     }
   }
 
-  console.log(`\n${capturadas.length} prints em ${PASTA_DE_SAIDA}/`);
+  if (!SOMENTE_ROLAGEM) console.log(`\n${capturadas.length} prints em ${PASTA_DE_SAIDA}/`);
 
   // Falha de propósito: prova que não passa é evidência que não vale.
   if (estouraram.length > 0) {

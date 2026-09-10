@@ -27,6 +27,7 @@
     "audit": "npm audit --omit=dev --audit-level=high",
     "carga": "node scripts/carga.js",
     "evidencias": "node scripts/evidencias.js",
+    "rolagem": "node scripts/evidencias.js --somente-rolagem",
     "vendor:js": "cp node_modules/lenis/dist/lenis.min.js src/public/js/vendor/lenis.min.js && cp node_modules/lenis/dist/lenis.css src/styles/lenis.css",
     "img:webp": "for f in src/public/img/*.png; do magick \"$f\" -quality 82 -define webp:method=6 \"${f%.png}.webp\"; done"
   },

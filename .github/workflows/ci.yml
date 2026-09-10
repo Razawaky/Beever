@@ -88,6 +88,71 @@ jobs:
       - name: npm run test:db
         run: npm run test:db
 
+  rolagem:
+    name: Rolagem lateral a 320 px
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    # A RNF-20 pede de 320 px a desktop, e largura só existe depois do CSS: a
+    # varredura estática não consegue responder isto. Aqui as dezessete telas
+    # são abertas num Chrome sem janela e o job reprova se alguma rolar.
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: beever_rolagem
+      DB_ROOT_PASSWORD: root
+      SESSION_SECRET: segredo-de-teste-do-ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Criar o banco da medição
+        run: mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS beever_rolagem"
+
+      - name: Schema e dados de exemplo
+        run: |
+          npm run db:migrate
+          npm run db:seed
+
+      # Sem o CSS compilado a página abre sem estilo, e sem estilo tudo cabe:
+      # a medição passaria sempre, provando nada.
+      - name: Compilar o CSS
+        run: npm run css:build
+
+      # Espera com curl em vez de dependência nova só para aguardar uma porta.
+      - name: Subir o servidor
+        run: |
+          npm start &
+          for tentativa in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3000/health > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          echo "O servidor não respondeu em 60 segundos." && exit 1
+
+      - name: Medir as telas a 320 px
+        run: npm run rolagem
+
   cobertura:
     name: Cobertura dos services de cálculo
     runs-on: ubuntu-latest
