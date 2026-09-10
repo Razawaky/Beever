@@ -3,6 +3,7 @@
 #
 #   docker compose up -d                    MySQL e Mailpit
 #   docker compose --profile completo up     MySQL + Mailpit + migrations + aplicação
+#   docker compose --profile jenkins up -d   Jenkins local em http://localhost:8080
 #
 # O perfil existe para não quebrar quem já roda o Node fora do compose, que é
 # como o projeto foi desenvolvido até aqui.
@@ -116,8 +117,35 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  # Jenkins local, ao lado do GitHub Actions: roda o Jenkinsfile a cada commit
+  # novo. Usa o Docker do host pelo socket, o que equivale a root na máquina, então
+  # só escuta em 127.0.0.1 e nunca deve ir para servidor compartilhado.
+  jenkins:
+    build: ./jenkins
+    profiles: ['jenkins']
+    container_name: beever-jenkins
+    restart: unless-stopped
+    environment:
+      # A falta de senha é recusada pelo entrypoint do contêiner, e não aqui.
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-}
+      JAVA_OPTS: >-
+        -Xmx768m
+        -Djenkins.install.runSetupWizard=false
+        -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true
+    # Grupo dono do socket do Docker no host; descubra com: getent group docker
+    group_add:
+      - '${DOCKER_GID:-999}'
+    ports:
+      - '127.0.0.1:8080:8080'
+    volumes:
+      - beever-jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/repo:ro
+
 volumes:
   beever-mysql-data:
+  # Jobs, histórico de builds e workspaces do Jenkins.
+  beever-jenkins:
   # As ilustrações enviadas pelo painel administrativo são conteúdo, não código:
   # sem volume elas somem no próximo deploy.
   beever-uploads:
