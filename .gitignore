@@ -35,6 +35,7 @@ Thumbs.db
 # GitHub Actions nunca lê o portão. Skills, agents e hooks continuam de fora.
 .claude/
 .opencode/
+opencode.json
 .github/*
 !.github/workflows/
 .impeccable/
