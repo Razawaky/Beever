@@ -107,15 +107,18 @@ describe('apagamento definitivo de conta', opcoes, () => {
 
     await usersService.apagarDefinitivamente(conta.id, conta.ator);
 
-    // Sem filtrar por `entity_type`: a auditoria da E16 encontrou o apelido em
-    // linhas de `profile`, que a versão anterior desta consulta não olhava.
-    // Quem faz a linha é o ator, e é por ele que a trilha da conta se acha.
+    // Pelas duas pontas, e não por uma. Filtrar só `entity_type = 'user'`
+    // deixava passar as linhas de perfil; filtrar só `actor_id` deixaria passar
+    // as que outra pessoa escreve sobre esta conta, como um administrador
+    // promovendo ou apagando alguém. A trilha da conta é a união das duas.
     const [linhas] = await banco.conexao.query(
       `SELECT l.action, l.entity_type, l.before_state, l.after_state
          FROM audit_logs l
         WHERE l.actor_id = ?
+           OR (l.entity_type = 'user' AND l.entity_id = ?)
+           OR (l.entity_type = 'profile' AND l.entity_id = ?)
         ORDER BY l.id`,
-      [conta.id],
+      [conta.id, conta.id, conta.idPerfil],
     );
 
     const acoes = linhas.map((linha) => linha.action);
