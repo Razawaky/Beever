@@ -88,6 +88,8 @@ isso ele só escuta em `127.0.0.1` e sobe por um perfil próprio do compose
 (`docker compose --profile jenkins up -d`): serve para desenvolvimento e para a
 demonstração, nunca para um servidor compartilhado.
 
+Acesso, usuário, cada etapa e os problemas comuns estão em `docs/29-JENKINS.md`.
+
 ## O que o teste automático cobre
 
 `test/unit/fluxoDeIntegracao.test.js` é estático e roda em milissegundos, sem

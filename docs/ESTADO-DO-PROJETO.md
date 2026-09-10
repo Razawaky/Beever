@@ -5,7 +5,18 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-10 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** o login com Google, fora do roadmap e pedido pelo usuário.
+**Último commit:** o Jenkins local, fora do roadmap e pedido pelo usuário. Ele
+roda num contêiner da imagem oficial `jenkins/jenkins`, configurado inteiro pelo
+`jenkins/casc.yaml`, e o `Jenkinsfile` da raiz repete as etapas do GitHub Actions
+com cada uma num contêiner do agente e um MySQL próprio. Sobe com
+`docker compose --profile jenkins up -d`, só em `127.0.0.1:8080`, usuário `admin`
+e a senha do `.env`; tudo está em `docs/29-JENKINS.md`. Os primeiros builds com
+checkout limpo acharam dois defeitos anteriores à sessão, que provavelmente
+deixavam o Actions vermelho desde 08/09 e 09/09: o teste dos documentos do TCC
+exigia o CSS compilado no disco, e a medição de 320 px morria no Brave sem tentar
+o Chromium. Os dois foram corrigidos.
+
+**Commit anterior:** o login com Google, fora do roadmap e pedido pelo usuário.
 Login e cadastro ganharam "Entrar com Google", que só aparece com
 `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` configurados. A ida leva `state` e
 PKCE, e o escopo é só `openid email`, então o nome completo nem chega. Quem já
@@ -123,10 +134,10 @@ título na trilha. Laudo em `docs/20-ACESSIBILIDADE-E-RESPONSIVIDADE.md`. Quinze
 1060 no total. **A E14 fecha inteira** — e a auditoria depois dela achou dois bloqueantes,
 corrigidos acima.
 
-**Próximo passo: o Jenkins**, a última das frentes que o usuário pediu antes do
-deploy. Ele entra ao lado do GitHub Actions, com as mesmas etapas, e não no
-lugar dele. Da E17 já estão feitas a T-17.1, a T-17.4 e a T-17.5, e o login com
-Google foi entregue fora do roadmap.
+**Próximo passo: a T-17.2, a implantação em cloud com domínio e TLS**, que fecha
+DT-114, DT-115, DT-116 e DT-119 e é onde o SMTP real de produção passa a ser
+testado. Da E17 já estão feitas a T-17.1, a T-17.4 e a T-17.5; o login com Google
+e o Jenkins foram entregues fora do roadmap.
 
 **Commit anterior:** T-14.6 — o backup rodou pela primeira vez em quatro meses de projeto e,
 na mesma execução, apagou o dump de antes da E01, guardado de propósito e citado duas vezes
@@ -675,6 +686,7 @@ argumento a favor da rede que a T-02.1 montou.
 | O atalho administrativo no painel, em navegador real | O caminho está coberto por teste pelo HTTP: o admin que entra pelo login comum acha o link para `/admin` na Colmeia, e a jogadora comum não. O que **não** foi visto por olho humano é o quarto card na grade de atalhos, que a 320 px e em `lg` quebra a linha de um jeito diferente dos outros três |
 | A recuperação de senha em produção e aos olhos de alguém | O fluxo foi percorrido pelo HTTP com o servidor de pé e o e-mail chegando no Mailpit, nos dois sentidos, e a senha da Ana voltou a `beever123`. Falta um SMTP real (Gmail com senha de app ou Brevo) entregar numa caixa de verdade, sem cair no spam, e alguém olhar as duas telas novas a 320 px com o olho, além da medição automática |
 | O login com Google contra o Google de verdade | Tudo o que vem depois da resposta do Google está coberto pelo HTTP, com `getToken` e `verifyIdToken` trocados por respostas prontas. A troca real do código e a verificação da assinatura nunca rodaram, porque ainda não existe ID do cliente OAuth no Google Cloud Console. Conta de menor de 13 anos depende do Google deixar a conta supervisionada entrar em app de terceiros, o que o Beever não controla |
+| O GitHub Actions depois das duas correções do Jenkins | O Jenkins mostrou que a suíte e a medição de 320 px quebravam em checkout limpo, e isso quase certamente vale para o Actions desde 08/09. As correções estão commitadas, mas nenhum push foi feito e ninguém olhou o Actions: o primeiro push desta branch é que prova |
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | As trinta telas abertas num navegador de verdade (T-14.7) | A varredura conferiu foco de teclado, alvo de 44 px, campo com nome, ordem de títulos, contraste do par escrito no elemento, largura fixa, tabela com rolagem e zoom liberado em todas elas, e as seis faltas que achou foram corrigidas. O que **não** aconteceu é alguém abrir as telas a 320 px e olhar: quebra de layout com fonte carregada e contraste sobre fundo herdado seguem por provar. É a DT-121 |
 | O backup rodando sozinho, na hora marcada (T-14.6) | O comando foi executado de verdade e a restauração foi provada ponta a ponta, mas quem dispara isso todo dia às 3h é o cron do host — e host de implantação ainda não existe. O que está entregue é a rotina documentada, que é o que a RNF-19 pede. É a DT-119 |
@@ -1602,6 +1614,7 @@ Identificadores rastreiam os documentos da E00.
 | DT-80 | A régua de daltonismo, TDAH e autismo entrou na landing e no design system, mas as telas do app — Colmeia, jogos, loja, cofre — nunca foram medidas com ela. O `contraste.test.js` cobre a paleta inteira, então o risco é de uso, não de token: cor sozinha informando, movimento sem porta de saída, texto longo demais | T-11.7 | Passe tela a tela na auditoria da E11 ou no começo da E14 |
 | ~~DT-79~~ | ~~O apagamento definitivo de conta não existe: `DELETE /users/:id` chama `inativar`, só marca `is_active = 0` e deixa o dado guardado~~ | T-11.6 | **Resolvida na T-16.2**: `usersService.apagarDefinitivamente` remove a conta e a cascata leva perfil, carteira, metas, compras e consentimento; a trilha imutável passa a gravar só agregados desde a criação (`conta.criada`, `conta.atualizada`, `consentimento.registrado`), então apagar não deixa cópia de apelido, e-mail ou data. A revisão jurídica da política virou DT-130 |
 | DT-130 | A política de privacidade nunca passou por revisão de alguém de direito; a parte de funcionalidade da DT-79 foi entregue na T-16.2, e falta o olhar jurídico sobre o texto | T-11.6 | Revisão por alguém de direito antes da defesa (mantendo o e-mail de contato do Art. 18 e a ressalva de que a versão é de estudo, sem TLS) |
+| DT-131 | `test/integration/desbloqueioAutomatico.test.js` cronometra o fechamento da partida e reprova acima de 1 s dentro da suíte comum. Numa máquina sem memória livre ele falha sem defeito nenhum: no build #5 do Jenkins levou 2,3 s, e o mesmo commit passou no #6 | Jenkins local | Fazer o teste respeitar o `PULAR_MEDICAO_DE_CARGA`, como a medição de carga já faz, e deixar o teto de 1 s para a medição, que roda em ambiente controlado |
 | DT-78 | O texto das seis seções da landing é rascunho de dev, não de produto. Os três números têm fonte, mas o resto é argumento escrito por quem programou | T-11.4 | Revisão de texto pelo usuário antes da entrega do TCC, junto do passe visual da DT-22 |
 | DT-77 | `test/integration/seguranca.test.js` falhou duas vezes com 403 numa rodada da suíte completa, e passou sozinho e na rodada seguinte. Os limitadores são desligados em teste, então a suspeita é corrida entre arquivos no banco de teste, na sessão que guarda o token de CSRF | T-11.3 | Reproduzir rodando a suíte algumas vezes seguidas e, se confirmar, isolar a sessão por arquivo. Achado fora do escopo da tarefa, não corrigido |
 | ~~DT-76~~ | ~~O parallax do herói depende de `animation-timeline: scroll()`, que o Safari ainda não tem~~ | T-11.3 | **Resolvida na mesma tarefa**: com o Lenis aprovado, o caminho principal virou JavaScript e funciona em qualquer navegador; a linha do tempo de rolagem passou a ser o plano B de quem está sem script |

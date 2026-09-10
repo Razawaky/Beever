@@ -86,7 +86,7 @@ O resto tem padrão e só precisa de atenção quando o ambiente foge do comum:
 | `SMTP_USER` / `SMTP_PASSWORD` | vazio | Login do SMTP de produção (Gmail com senha de app, Brevo); o Mailpit não pede |
 | `MAIL_FROM` | `Beever <nao-responda@beever.local>` | Remetente que aparece no e-mail de troca de senha |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | vazio | Liga o login com Google. Crie um ID do cliente OAuth (aplicativo da Web) no Google Cloud Console com o redirecionamento `APP_URL` + `/sessao/google/retorno`; vazio, o botão não aparece |
-| `JENKINS_ADMIN_PASSWORD` | vazio | Senha do usuário `admin` do Jenkins local; sem ela o contêiner recusa subir |
+| `JENKINS_ADMIN_PASSWORD` | `beever-jenkins` | Senha do usuário `admin` do Jenkins local, que só escuta em 127.0.0.1; sem ela o contêiner recusa subir. Ver `docs/29-JENKINS.md` |
 | `DOCKER_GID` | `999` | Grupo dono do socket do Docker no host, para o Jenkins criar contêineres; veja com `getent group docker` |
 | `UPLOADS_DIR` | `uploads` | Em contêiner precisa ser volume, senão a arte some no deploy |
 | `UPLOAD_MAX_MB` | `8` | Teto do arquivo enviado pelo painel |
@@ -367,7 +367,8 @@ docker compose --profile jenkins up -d --build
 
 Entre em `http://localhost:8080` com o usuário `admin`. O job `beever` lê os
 commits desta máquina e roda o `Jenkinsfile` de cada branch que o tenha, sozinho,
-de cinco em cinco minutos; "Varrer agora" no job adianta a espera.
+de cinco em cinco minutos. O passo a passo, o acesso e cada etapa estão em
+`docs/29-JENKINS.md`.
 
 Comentários em `docs/18-INTEGRACAO-CONTINUA.md`.
 
