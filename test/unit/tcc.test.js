@@ -21,6 +21,13 @@ const CODIGO = /\b(RF-[A-Z]{3}-\d{2}|RNF-\d{2}|RN-\d{3})\b/g;
 const PASTAS = '(?:src|test|scripts|migrations|docs|\\.github)';
 const CAMINHO = new RegExp('`(' + PASTAS + '/[A-Za-z0-9_\\-./]+\\.(?:js|ejs|sql|md|css|json|yml))`', 'g');
 
+// Saem do build e ficam fora do git: num checkout limpo, como o do CI, ainda não existem.
+const GERADOS_PELO_BUILD = new Set(['src/public/css/app.css']);
+
+function existeNoProjeto(caminho) {
+  return GERADOS_PELO_BUILD.has(caminho) || existsSync(path.join(raiz, caminho));
+}
+
 function ler(arquivo) {
   return readFileSync(path.join(raiz, arquivo), 'utf8');
 }
@@ -133,7 +140,7 @@ describe('T-15.2 — diagramas do TCC', () => {
   it('toda referência de arquivo citada existe no disco', () => {
     const sumidos = [];
     for (const [, caminho] of ler(DOC).matchAll(CAMINHO)) {
-      if (!existsSync(path.join(raiz, caminho))) sumidos.push(caminho);
+      if (!existeNoProjeto(caminho)) sumidos.push(caminho);
     }
     assert.deepEqual([...new Set(sumidos)].sort(), [], 'arquivo citado que não existe');
   });
@@ -166,7 +173,7 @@ describe('T-15.3 — documento de arquitetura', () => {
   it('toda referência de arquivo citada existe no disco', () => {
     const sumidos = [];
     for (const [, caminho] of ler(DOC).matchAll(CAMINHO)) {
-      if (!existsSync(path.join(raiz, caminho))) sumidos.push(caminho);
+      if (!existeNoProjeto(caminho)) sumidos.push(caminho);
     }
     assert.deepEqual([...new Set(sumidos)].sort(), [], 'arquivo citado que não existe');
   });
@@ -218,7 +225,7 @@ describe('T-15.4 — manual de instalação e execução', () => {
     for (const [, caminho] of ler(DOC).matchAll(CAMINHO)) {
       // Padrões tipo NNN_descricao são placeholders, não arquivos reais.
       if (/NNN|AAAA|MMDD/.test(caminho)) continue;
-      if (!existsSync(path.join(raiz, caminho))) sumidos.push(caminho);
+      if (!existeNoProjeto(caminho)) sumidos.push(caminho);
     }
     assert.deepEqual([...new Set(sumidos)].sort(), [], 'arquivo citado que não existe');
   });
