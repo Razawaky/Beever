@@ -142,6 +142,32 @@ describe('acesso à área administrativa', opcoes, () => {
     assert.doesNotMatch(pagina.text, /password_hash|\$2[aby]\$/);
   });
 
+  it('o administrador que entra pelo login comum acha o atalho no painel', async () => {
+    const agente = request.agent(app);
+    const csrf = await tokenDe(agente, '/login');
+    await agente
+      .post('/sessao/login')
+      .set('Accept', 'application/json')
+      .send({ ...ADMIN, _csrf: csrf })
+      .expect(200);
+
+    const painel = await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    assert.match(painel.text, /href="\/admin"/);
+  });
+
+  it('a jogadora comum não vê o atalho administrativo no painel', async () => {
+    const agente = request.agent(app);
+    const csrf = await tokenDe(agente, '/login');
+    await agente
+      .post('/sessao/login')
+      .set('Accept', 'application/json')
+      .send({ ...JOGADORA, _csrf: csrf })
+      .expect(200);
+
+    const painel = await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    assert.doesNotMatch(painel.text, /href="\/admin"/);
+  });
+
   it('a listagem de contas não responde mais no endereço antigo', async () => {
     const { agente } = await entrarPeloAdmin(ADMIN);
     await agente.get('/users').set('Accept', 'application/json').expect(404);

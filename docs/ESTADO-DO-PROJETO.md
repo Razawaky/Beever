@@ -3,9 +3,17 @@
 Verdade operacional do Beever. Substitui a versão de 2026-08-12, escrita antes
 dos documentos de escopo `docs/01` a `docs/04` existirem.
 
-**Atualizado em:** 2026-09-09 · **Branch:** `refactor/arquitetura-em-camadas` ·
+**Atualizado em:** 2026-09-10 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** T-16.2 — o apagamento definitivo de conta (RN-053). A conta
+**Último commit:** o atalho da área administrativa no painel do jogador, fora do
+roadmap. Até aqui o admin que entrava pelo login comum caía em `/painel` e só
+chegava a `/admin` digitando o endereço. Agora a Colmeia mostra um quarto card,
+"Área administrativa", só quando a sessão tem `ehAdmin`; a landing e o login
+público continuam sem link para a porta administrativa. Dois testes novos em
+`test/integration/adminAcesso.test.js`, e a rastreabilidade passou a nomear cada
+rota de `/admin` na linha do requisito que ela atende.
+
+**Commit anterior:** T-16.2 — o apagamento definitivo de conta (RN-053). A conta
 que pediu exclusão some de verdade: o `DELETE` na linha de `users` leva junto,
 pela cascata das foreign keys, perfil, carteira, metas, compras e o
 consentimento do responsável — o que a política de privacidade promete e que,
@@ -643,6 +651,7 @@ argumento a favor da rede que a T-02.1 montou.
 
 | Item | Por que está aqui |
 |---|---|
+| O atalho administrativo no painel, em navegador real | O caminho está coberto por teste pelo HTTP: o admin que entra pelo login comum acha o link para `/admin` na Colmeia, e a jogadora comum não. O que **não** foi visto por olho humano é o quarto card na grade de atalhos, que a 320 px e em `lg` quebra a linha de um jeito diferente dos outros três |
 | Consentimento do responsável no registro (RNF-34) | Não existe; o registro atual não pede |
 | As trinta telas abertas num navegador de verdade (T-14.7) | A varredura conferiu foco de teclado, alvo de 44 px, campo com nome, ordem de títulos, contraste do par escrito no elemento, largura fixa, tabela com rolagem e zoom liberado em todas elas, e as seis faltas que achou foram corrigidas. O que **não** aconteceu é alguém abrir as telas a 320 px e olhar: quebra de layout com fonte carregada e contraste sobre fundo herdado seguem por provar. É a DT-121 |
 | O backup rodando sozinho, na hora marcada (T-14.6) | O comando foi executado de verdade e a restauração foi provada ponta a ponta, mas quem dispara isso todo dia às 3h é o cron do host — e host de implantação ainda não existe. O que está entregue é a rotina documentada, que é o que a RNF-19 pede. É a DT-119 |

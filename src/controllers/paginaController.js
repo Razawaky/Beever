@@ -93,6 +93,9 @@ export const painel = assincrono(async (req, res) => {
     // celular, para o botão "Continuar" não tapar o fim da página.
     classeBody: 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10',
     colmeia,
+    // O admin que entra pelo login comum cai aqui, e sem este atalho a área
+    // administrativa só abria digitando o endereço.
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
   });
 });
 
