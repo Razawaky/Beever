@@ -28,7 +28,6 @@ logs/
 test/
 docs/
 venv/
-beever.sql
 
 # Instruções de agentes e ferramentas de desenvolvimento.
 .claude/

@@ -201,7 +201,7 @@ CREATE TABLE `nivel` (
 
 -- Linhas de dados de `nivel` removidas: o dump trazia contas reais de
 -- teste (e-mail e hash de senha). Este arquivo é insumo de schema da
--- E01; os dados originais seguem em docs/legacy/beever.sql.
+-- E01; os dados originais não ficam no repositório.
 -- (2 linhas omitidas)
 
 -- --------------------------------------------------------
@@ -229,7 +229,7 @@ CREATE TABLE `perfil` (
 
 -- Linhas de dados de `perfil` removidas: o dump trazia contas reais de
 -- teste (e-mail e hash de senha). Este arquivo é insumo de schema da
--- E01; os dados originais seguem em docs/legacy/beever.sql.
+-- E01; os dados originais não ficam no repositório.
 -- (2 linhas omitidas)
 
 -- --------------------------------------------------------
@@ -256,7 +256,7 @@ CREATE TABLE `sessao` (
 
 -- Linhas de dados de `sessao` removidas: o dump trazia contas reais de
 -- teste (e-mail e hash de senha). Este arquivo é insumo de schema da
--- E01; os dados originais seguem em docs/legacy/beever.sql.
+-- E01; os dados originais não ficam no repositório.
 -- (37 linhas omitidas)
 
 -- --------------------------------------------------------
@@ -315,7 +315,7 @@ CREATE TABLE `usuario` (
 
 -- Linhas de dados de `usuario` removidas: o dump trazia contas reais de
 -- teste (e-mail e hash de senha). Este arquivo é insumo de schema da
--- E01; os dados originais seguem em docs/legacy/beever.sql.
+-- E01; os dados originais não ficam no repositório.
 -- (3 linhas omitidas)
 
 --

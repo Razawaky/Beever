@@ -47,8 +47,9 @@ são o schema anterior, **arquivado e não aplicado**. O runner ignora
 subdiretórios. Não apague: é a referência das decisões de integridade que foram
 aproveitadas e o histórico de como o banco chegou até aqui.
 
-O dump do banco original está em `../beever.sql` (só estrutura) e
-`../docs/legacy/beever.sql` (estrutura e dados).
+Os dumps do banco original estão em `../docs/legacy/`, só com a estrutura:
+`beever-schema-2026-08-11.sql`, que foi a base da E01, e `beever.sql`, o
+dump de janeiro, que teve os dados de contas reais de teste removidos.
 
 ## Aplicar
 
