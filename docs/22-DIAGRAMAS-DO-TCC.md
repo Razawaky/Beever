@@ -3,6 +3,8 @@
 Os quatro diagramas pedidos na T-15.2 do roadmap: **ER**, **casos de uso**,
 **classes** e **sequência do fluxo de recompensa**. Todos são Mermaid e
 renderizam direto no GitHub — é só abrir este arquivo lá para ver as figuras.
+O quinto, o **BPMN** do ciclo principal, veio depois e é BPMN 2.0 de verdade,
+em `docs/diagramas/`, porque o Mermaid não desenha essa notação.
 
 O ponto de partida é a rastreabilidade: cada figura tem a referência do
 requisito que representa (`docs/01-REQUISITOS-E-REGRAS.md`), o arquivo de
@@ -486,6 +488,42 @@ O que este fluxo prova, e que a figura deixa explícito:
 
 ---
 
+## 5. Diagrama BPMN do ciclo principal
+
+O ciclo que define o Beever, jogar e depois gastar, desenhado como processo de
+negócio em duas figuras: a partida, que termina com o mel no saldo, e a compra,
+que começa dele. As raias separam o que o jogador faz no navegador do que o
+servidor decide, e é essa separação que o diagrama existe para mostrar: o
+navegador só escolhe, joga e envia respostas, e toda conta acontece do lado de
+baixo (RN-007).
+
+Os arquivos `.bpmn` são a fonte e abrem para edição no [bpmn.io](https://demo.bpmn.io)
+ou no Camunda Modeler; os `.svg` ao lado foram desenhados a partir deles pelo
+próprio bpmn-js. Quem mudar o processo edita o `.bpmn` e exporta o SVG de novo.
+
+![BPMN da partida](diagramas/bpmn-partida.svg)
+
+Na partida, o primeiro gateway barra célula travada antes de qualquer gravação,
+e abrir uma célula que já tem partida aberta devolve a mesma (RF-JOG-07). O
+segundo gateway é a idempotência: token já fechado devolve o resultado gravado
+sem pagar de novo (RN-009, RNF-16). O crédito aparece como subprocesso de
+transação, a borda dupla da notação, porque XP, pólen, mel e o bônus de nível
+caem juntos ou não caem (RNF-15); a auditoria, a sequência e as conquistas
+ficam fora dele de propósito, como na seção 4.
+
+![BPMN da compra](diagramas/bpmn-compra.svg)
+
+Na compra, a chave vem do formulário da loja, uma por renderização, então o
+duplo clique compra uma vez só (RNF-16). Saldo e requisitos são conferidos
+dentro da transação que debita, grava a compra pelo preço daquele momento e
+entrega a unidade ao inventário (RF-LOJ-04), e a linha de auditoria guarda o
+saldo antes e depois (RN-010).
+
+Código: `src/services/gameSessionService.js` (`abrir`, `fechar`) e
+`src/services/purchasesService.js` (`comprar`).
+
+---
+
 ## Como as figuras se provam
 
 | Diagrama | Fonte da verdade | Requisitos | Teste que sustenta |
@@ -494,3 +532,4 @@ O que este fluxo prova, e que a figura deixa explícito:
 | Casos de uso | `src/routes/` + `docs/01-...` | RF-AUT a RF-LAN | `test/integration/*` (rotas reais por HTTP) |
 | Classes | `src/services/`, `src/repositories/` | RNF-27 | `npm run test:cobertura` (100% linha nos services de cálculo) |
 | Sequência | `src/services/gameSessionService.js` | RN-007/009/010, RNF-15/16/17 | `sessaoDeJogo.test.js`, `idempotencia.test.js` |
+| BPMN | `gameSessionService.js` e `purchasesService.js` | RN-007/009/010, RNF-15/16, RF-JOG-07, RF-LOJ-04 | `sessaoDeJogo.test.js`, `idempotencia.test.js`, `loja.test.js` |
