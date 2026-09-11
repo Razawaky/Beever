@@ -5,7 +5,23 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-10 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
-**Último commit:** o Jenkins local, fora do roadmap e pedido pelo usuário. Ele
+**Último commit:** o diagrama BPMN do ciclo principal, a última entrega da sessão
+de 2026-09-10 que acompanhou os builds do Jenkins. O build #7 caiu porque a
+máquina reiniciou no meio, e o #8 achou um defeito real de teste: o
+`fluxoAutenticado` montava a agenda com `getDay()`, no fuso da máquina, e o
+contêiner em UTC já via o dia seguinte depois das 21h, então nenhuma tarefa era
+gerada. O teste passou a usar `dataDoDia` no fuso do jogador, e o #9 e o #10
+saíram verdes de ponta a ponta. O dump do banco legado saiu da raiz para
+`docs/legacy/beever-schema-2026-08-11.sql`, e o `docs/legacy/beever.sql` perdeu
+os `INSERT` com nome, e-mail e hash de senha de contas reais de teste, que
+continuam só no histórico do git. Entraram quatro documentos: o histórico dos
+193 commits da branch (`docs/30`), as opções de deploy com prioridade para as
+gratuitas (`docs/31`), o passo a passo para conferir suítes e builds (`docs/32`)
+e a seção 5 do `docs/22`, com o BPMN da partida e da compra em BPMN 2.0 de
+verdade, fonte `.bpmn` e figura `.svg` em `docs/diagramas/`. O deploy (T-17.2)
+fica para outra sessão; as opções estão no `docs/31`.
+
+**Commit anterior:** o Jenkins local, fora do roadmap e pedido pelo usuário. Ele
 roda num contêiner da imagem oficial `jenkins/jenkins`, configurado inteiro pelo
 `jenkins/casc.yaml`, e o `Jenkinsfile` da raiz repete as etapas do GitHub Actions
 com cada uma num contêiner do agente e um MySQL próprio. Sobe com
@@ -1728,6 +1744,11 @@ Não reabrir sem motivo novo.
   diretório falha com "Cannot find module".
 - `src/public/css/app.css` é **gerado** e está no `.gitignore`. Sem
   `npm run css:build`, as páginas vêm sem estilo.
+- **Teste que depende do dia calcula o dia no fuso do jogador**, com
+  `dataDoDia` de `src/utils/diaDoJogador.js`, nunca com `getDay()` ou
+  `toISOString()`. O Jenkins e o Actions rodam em UTC, e das 21h à meia-noite o
+  dia deles já é o seguinte; foi o que derrubou o build #8. Para reproduzir,
+  rode a suíte com `TZ=UTC`.
 - **Nunca interrompa a suíte de banco com `kill -9`.** Aconteceu na T-04.2: o
   `node --test` foi morto no meio de um `CREATE DATABASE`, e o MySQL ficou com
   seis diretórios de schema em `/var/lib/mysql/beever_teste_*` sem registro no
