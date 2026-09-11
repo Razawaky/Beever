@@ -13,6 +13,7 @@ import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as coinsService from '../../src/services/coinsService.js';
 import * as vaultService from '../../src/services/vaultService.js';
+import { dataDoDia, diaDaSemana, FUSO_PADRAO } from '../../src/utils/diaDoJogador.js';
 
 /**
  * O caminho que o jogador percorre, do cadastro à compra, contra o banco real.
@@ -48,7 +49,9 @@ const AMANHA = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
  * roda. O passo 2 garante dias distintos: 7 é ímpar, então 0, 2 e 4 nunca se
  * repetem ao voltar pelo módulo.
  */
-const HOJE = new Date().getDay();
+// Hoje no fuso do jogador, igual ao tasksService. O getDay() usava o fuso da
+// máquina, e no contêiner em UTC o dia virava três horas antes do jogador.
+const HOJE = diaDaSemana(dataDoDia(new Date(), FUSO_PADRAO));
 const DIAS_DA_AGENDA = [HOJE, (HOJE + 2) % 7, (HOJE + 4) % 7].map(String);
 
 describe('fluxo autenticado', opcoes, () => {
