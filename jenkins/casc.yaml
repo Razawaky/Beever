@@ -1,0 +1,51 @@
+# Configuração inteira do Jenkins local (Configuration as Code): usuário admin,
+# permissões e o job do Beever. Mudou aqui, recria o contêiner.
+
+jenkins:
+  systemMessage: "Portão local do Beever, espelho do GitHub Actions (.github/workflows/ci.yml)."
+  # Uma execução por vez: a máquina de desenvolvimento não aguenta duas suítes com MySQL juntas.
+  numExecutors: 1
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: ${JENKINS_ADMIN_PASSWORD}
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: http://localhost:8080/
+
+# Um job por branch que tenha Jenkinsfile, lendo o repositório desta máquina
+# montado em /repo. A varredura de 5 em 5 minutos dispara o build do commit novo.
+jobs:
+  - script: >
+      multibranchPipelineJob('beever') {
+        displayName('Beever')
+        branchSources {
+          branchSource {
+            source {
+              git {
+                id('beever-local')
+                remote('file:///repo')
+                traits {
+                  gitBranchDiscovery()
+                }
+              }
+            }
+          }
+        }
+        triggers {
+          periodicFolderTrigger {
+            interval('5m')
+          }
+        }
+        orphanedItemStrategy {
+          discardOldItems {
+            numToKeep(5)
+          }
+        }
+      }

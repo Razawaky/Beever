@@ -1,0 +1,32 @@
+<%#
+  O elemento-assinatura da landing (docs/04 §6.1): uma coluna de favos na borda
+  que vai enchendo de mel conforme a pessoa desce. É indicador de progresso e é
+  a metáfora do produto — progresso que se acumula — no mesmo desenho.
+
+  O desenho é decoração e o leitor de tela o ignora; quem lê a página por voz
+  recebe o mesmo dado pelo `progressbar` escondido, que o `landing.js` atualiza.
+
+  Some abaixo de `sm`: numa tela de 320 px a coluna roubaria largura de leitura.
+-%>
+<div
+  <%# Quem decide se ela aparece é o CSS: só com script ligado e a partir de
+      640 px. -%>
+  class="coluna-de-mel pointer-events-none fixed left-4 top-1/2 z-20 -translate-y-1/2"
+  aria-hidden="true"
+>
+  <div class="coluna-de-mel-trilho">
+    <%# O mel é uma única forma que cresce de baixo para cima, recortada pela
+        máscara dos hexágonos: anima só `transform`, e o resto é a GPU. -%>
+    <div class="coluna-de-mel-preenchimento"></div>
+  </div>
+</div>
+
+<div
+  id="progresso-da-landing"
+  class="sr-only"
+  role="progressbar"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  aria-valuenow="0"
+  aria-label="Quanto da página você já leu"
+></div>

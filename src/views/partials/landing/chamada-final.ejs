@@ -1,0 +1,32 @@
+<%#
+  Seção 10: a última chance de responder "e agora?". A Beenie aponta para o
+  botão — é a única imagem da seção, e ela existe para levar o olho até lá.
+-%>
+<section id="comecar" class="relative isolate overflow-hidden border-t border-white/10 bg-breu py-20 sm:py-28">
+  <div class="camada-de-favos camada-meio favos-de-fundo" data-parallax="0.12" aria-hidden="true"></div>
+
+  <div class="relative mx-auto flex max-w-4xl flex-col items-center gap-8 px-6 text-center">
+    <%- include('../ui/mascote', {
+      pose: 'chamando',
+      decorativa: true,
+      classe: 'revela h-40 w-auto sm:h-48',
+    }) %>
+
+    <h2 class="revela font-display text-3xl text-cera sm:text-4xl lg:text-5xl">
+      Comece hoje, com os dias que você tem
+    </h2>
+
+    <p class="revela revela-atrasada max-w-xl text-lg text-cera/80">
+      São poucos minutos por dia. O primeiro favo abre assim que a conta é criada.
+    </p>
+
+    <div class="revela flex flex-col gap-3 sm:flex-row">
+      <%- include('../ui/botao', { texto: 'Criar minha conta', href: '/cadastro' }) %>
+      <%- include('../ui/botao', { texto: 'Já tenho conta', href: '/login', variante: 'contorno' }) %>
+    </div>
+
+    <p class="revela text-sm text-cera/60">
+      O mel é dinheiro de brincadeira, e o cadastro de menor pede autorização do responsável.
+    </p>
+  </div>
+</section>

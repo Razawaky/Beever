@@ -1,0 +1,77 @@
+  <div class="flex min-h-screen flex-col md:flex-row">
+    <div class="relative hidden flex-1 flex-col items-center justify-center bg-mel p-8 md:flex">
+      <%- include('../partials/ui/mascote', { pose: 'entrando', decorativa: true, classe: 'h-auto w-3/4 max-w-md' }) %>
+      <img
+        src="/img/beever_logo_black.webp"
+        alt="Beever"
+        width="1028"
+        height="326"
+        class="absolute bottom-12 h-8 w-auto"
+      />
+    </div>
+
+    <div class="flex flex-1 items-center justify-center p-8">
+      <div class="w-full max-w-sm">
+        <a href="/login" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar para entrar</a>
+
+        <h1 class="mt-6 text-3xl font-bold">Escolha uma senha nova</h1>
+
+        <% if (!linkValido) { %>
+          <p role="status" class="mt-6 rounded-favo border border-linha bg-cera p-4 text-sm">
+            Este link venceu ou já foi usado. Peça um novo e use o link do e-mail mais recente.
+          </p>
+          <%- include('../partials/ui/botao', { texto: 'Pedir link novo', href: '/recuperar-senha', classe: 'mt-6 w-full' }) %>
+        <% } else { %>
+          <form method="POST" action="/sessao/redefinir-senha" class="mt-8 space-y-4">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <input type="hidden" name="token" value="<%= token %>" />
+
+            <div>
+              <label for="senha" class="mb-1 block text-sm font-medium">Senha nova</label>
+              <input
+                id="senha"
+                name="senha"
+                type="password"
+                required
+                minlength="8"
+                autocomplete="new-password"
+                placeholder="Ao menos 8 caracteres, com letras e números"
+                class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+              />
+            </div>
+
+            <div>
+              <label for="confirmarSenha" class="mb-1 block text-sm font-medium">Confirmar senha nova</label>
+              <input
+                id="confirmarSenha"
+                name="confirmarSenha"
+                type="password"
+                required
+                minlength="8"
+                autocomplete="new-password"
+                placeholder="Repita a senha"
+                class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+              />
+            </div>
+
+            <label class="flex cursor-pointer gap-3 rounded-favo border border-linha bg-cera p-4 text-sm">
+              <input
+                type="checkbox"
+                id="desconectarTodos"
+                name="desconectarTodos"
+                class="mt-0.5 h-5 w-5 shrink-0 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+              />
+              <span>
+                Sair da conta em todos os aparelhos
+                <span class="mt-1 block text-tinta-suave">
+                  Marque se acha que outra pessoa está usando a sua conta. Quem estiver dentro sai na hora.
+                </span>
+              </span>
+            </label>
+
+            <%- include('../partials/ui/botao', { texto: 'Salvar senha nova', tipo: 'submit', classe: 'w-full' }) %>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </div>

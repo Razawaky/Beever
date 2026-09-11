@@ -1,0 +1,242 @@
+/* Estilos exclusivos da landing (seção 6 do docs/04). A superfície é escura de
+   propósito: entrar no app, que é claro, deve parecer acender a luz.
+
+   Regra da seção 6.3 que vale para tudo aqui: só `transform` e `opacity` são
+   animados. Nada de `top`, `height` ou `box-shadow` em movimento. */
+
+/* Folha do Lenis, copiada de `node_modules` pelo `npm run vendor:js`. Ela ajusta
+   a altura do documento e impede que iframe e área com rolagem própria briguem
+   com a rolagem suave. */
+@import './lenis.css';
+
+/* O padrão de favo do fundo é SVG embutido, e não imagem: some do orçamento de
+   rede e escala sem borrar. O tom é mel com pouca opacidade, para ser textura e
+   nunca ruído por cima do texto. */
+.favos-de-fundo {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='96' viewBox='0 0 56 96'%3E%3Cpath d='M28 0l24 14v28L28 56 4 42V14z' fill='none' stroke='%23FFC200' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M28 48l24 14v28L28 104 4 90V62z' fill='none' stroke='%23FFC200' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* As três camadas do parallax. Cada uma é só um plano de fundo com opacidade e
+   escala diferentes; quem as move é a linha do tempo de rolagem, abaixo. */
+.camada-de-favos {
+  position: absolute;
+  inset: -10% -10% -20%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.camada-fundo {
+  opacity: 0.06;
+  background-size: 56px 96px;
+}
+
+.camada-meio {
+  opacity: 0.1;
+  background-size: 84px 144px;
+}
+
+.camada-frente {
+  opacity: 0.14;
+  background-size: 120px 206px;
+}
+
+/* Parallax sem uma linha de JavaScript: `animation-timeline: scroll()` amarra a
+   animação à rolagem da página, e o navegador a roda fora da thread principal.
+   Onde não houver suporte, as camadas ficam paradas — o herói continua inteiro,
+   que é o que importa (RNF-26 e o mesmo princípio da rolagem sem movimento). */
+@keyframes subir-devagar {
+  to {
+    transform: translate3d(0, -6%, 0);
+  }
+}
+
+@keyframes subir-medio {
+  to {
+    transform: translate3d(0, -14%, 0);
+  }
+}
+
+@keyframes subir-rapido {
+  to {
+    transform: translate3d(0, -24%, 0);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .camada-fundo,
+  .camada-meio,
+  .camada-frente {
+    animation-timing-function: linear;
+    animation-timeline: scroll();
+    animation-duration: auto;
+  }
+
+  .camada-fundo {
+    animation-name: subir-devagar;
+  }
+
+  .camada-meio {
+    animation-name: subir-medio;
+  }
+
+  .camada-frente {
+    animation-name: subir-rapido;
+  }
+}
+
+/* Com JavaScript ligado, quem move as camadas é o `landing.js`, alimentado pelo
+   Lenis. A linha do tempo de rolagem sai de cena para as camadas não andarem
+   duas vezes; ela continua sendo o caminho de quem está sem JavaScript. */
+.landing-com-movimento .camada-fundo,
+.landing-com-movimento .camada-meio,
+.landing-com-movimento .camada-frente {
+  animation: none;
+}
+
+/* Revelação das seções: o elemento nasce um pouco abaixo e transparente, e o
+   `IntersectionObserver` só acrescenta a classe que o traz ao lugar.
+
+   O estado de partida vive dentro de `.landing-com-movimento`, que só existe
+   quando o script rodou. Sem JavaScript nada fica escondido esperando um
+   observador que não vai chegar. */
+.landing-com-movimento .revela {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-com-movimento .revela-atrasada {
+  transition-delay: 140ms;
+}
+
+.landing-com-movimento .revelado {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* A coluna de mel: o trilho desenha os hexágonos vazios, e o preenchimento é uma
+   faixa sólida que cresce de baixo para cima, recortada pela máscara das mesmas
+   formas. A altura vem de `--mel`, que o `landing.js` escreve a cada quadro. */
+.coluna-de-mel-trilho {
+  position: relative;
+  width: 28px;
+  height: 60vh;
+  overflow: hidden;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='none' stroke='%23FFC200' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='none' stroke='%23FFC200' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: repeat-y;
+  background-size: 28px 48px;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='%23000'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: repeat-y;
+  -webkit-mask-size: 28px 48px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='%23000'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='%23000'/%3E%3C/svg%3E");
+  mask-repeat: repeat-y;
+  mask-size: 28px 48px;
+}
+
+.coluna-de-mel-preenchimento {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--color-mel), var(--color-nectar));
+  transform-origin: bottom center;
+  transform: scaleY(var(--mel, 0));
+  will-change: transform;
+}
+
+/* A coluna só existe quando há movimento: sem script ela nunca encheria, e barra
+   parada em zero mente sobre o estado da página. Abaixo de 640 px ela também
+   não entra, porque roubaria largura de leitura. */
+.coluna-de-mel {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .landing-com-movimento .coluna-de-mel {
+    display: block;
+  }
+}
+
+/* Cascata: os filhos entram um depois do outro, sem que ninguém escreva atraso
+   na marcação. Seis é o maior grupo que a landing tem hoje. */
+.landing-com-movimento .cascata > *:nth-child(1) {
+  transition-delay: 0ms;
+}
+.landing-com-movimento .cascata > *:nth-child(2) {
+  transition-delay: 90ms;
+}
+.landing-com-movimento .cascata > *:nth-child(3) {
+  transition-delay: 180ms;
+}
+.landing-com-movimento .cascata > *:nth-child(4) {
+  transition-delay: 270ms;
+}
+.landing-com-movimento .cascata > *:nth-child(5) {
+  transition-delay: 360ms;
+}
+.landing-com-movimento .cascata > *:nth-child(6) {
+  transition-delay: 450ms;
+}
+
+/* O favo da trilha acende quando a seção entra: começa apagado, em cinza, e
+   recebe o mel. A cor é do próprio elemento, então `opacity` dá conta. */
+.landing-com-movimento .favo-acende {
+  opacity: 0.25;
+  transition: opacity 500ms ease-out;
+}
+
+.landing-com-movimento .favo-acende.aceso {
+  opacity: 1;
+}
+
+/* L-9 do laudo da E11: o acordeão das perguntas prometia abrir com altura
+   animada, e abria seco. A resposta entra deslizando de cima, animando só
+   `opacity` e `transform`; a altura em si continua sendo trabalho do `details`,
+   que é o que faz ele funcionar sem JavaScript. */
+@keyframes resposta-abre {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.landing-com-movimento details[open] > p {
+  animation: resposta-abre 260ms ease-out both;
+}
+
+/* A Beenie entra voando uma vez e depois só flutua (a flutuação em loop é a
+   `.animate-float` do trilha.css, que já é a idle oficial). */
+@keyframes beenie-chega {
+  from {
+    opacity: 0;
+    transform: translate3d(-8%, 12%, 0) rotate(-6deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
+}
+
+.beenie-chega {
+  animation: beenie-chega 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Quem pede menos movimento recebe o herói pronto e parado: as camadas não
+   sobem, a Beenie não voa nem flutua, e nada de conteúdo se perde (RNF-26). */
+@media (prefers-reduced-motion: reduce) {
+  .camada-fundo,
+  .camada-meio,
+  .camada-frente {
+    animation: none;
+    transform: none;
+  }
+
+  .beenie-chega {
+    animation: none;
+  }
+}
