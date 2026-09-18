@@ -13,9 +13,7 @@
   <%# `data-parallax` é a velocidade de cada camada, lida pelo `landing.js`: 0.08
       anda devagar e fica ao fundo, 0.32 anda rápido e vem à frente. Sem
       JavaScript, quem as move é a linha do tempo de rolagem do CSS. -%>
-  <div class="camada-de-favos camada-fundo favos-de-fundo" data-parallax="0.08" aria-hidden="true"></div>
   <div class="camada-de-favos camada-meio favos-de-fundo" data-parallax="0.18" aria-hidden="true"></div>
-  <div class="camada-de-favos camada-frente favos-de-fundo" data-parallax="0.32" aria-hidden="true"></div>
 
   <div
     class="relative mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 sm:py-24 md:grid-cols-2 md:gap-6"
@@ -49,16 +47,16 @@
           revelação e parallax escrevem no mesmo `transform` e uma apagaria a
           outra. -%>
       <div
-        class="favo-hexagono absolute inset-x-8 top-8 aspect-square bg-mel/90 sm:inset-x-16"
+        class="favo-hexagono absolute inset-x-8 top-8 aspect-square bg-mel sm:inset-x-16"
         data-parallax="-0.06"
         aria-hidden="true"
       ></div>
 
       <%- include('../ui/mascote', {
-        pose: 'acolhendo',
+        pose: 'chamando',
         decorativa: true,
         prioritaria: true,
-        classe: 'beenie-chega animate-float relative h-64 w-auto sm:h-80 lg:h-96',
+        classe: 'beenie-chega animate-float relative h-64 w-auto sm:h-80 lg:h-96 mascote-stroke',
       }) %>
     </div>
   </div>

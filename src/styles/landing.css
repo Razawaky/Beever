@@ -13,7 +13,8 @@
    rede e escala sem borrar. O tom é mel com pouca opacidade, para ser textura e
    nunca ruído por cima do texto. */
 .favos-de-fundo {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='96' viewBox='0 0 56 96'%3E%3Cpath d='M28 0l24 14v28L28 56 4 42V14z' fill='none' stroke='%23FFC200' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M28 48l24 14v28L28 104 4 90V62z' fill='none' stroke='%23FFC200' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  /* Célula unitária de colmeia contínua (56x96 com encaixes perfeitos) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='96' viewBox='0 0 56 96'%3E%3Cpath fill='none' stroke='%23FFC200' stroke-width='6' stroke-linejoin='round' stroke-linecap='round' d='M28 0L56 16V48L28 64L0 48V16Z M0 48L-28 64V96L0 112L28 96V64 M56 48L84 64V96L56 112L28 96'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
 

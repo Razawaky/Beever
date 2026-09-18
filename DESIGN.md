@@ -4,7 +4,7 @@ description: A honeycomb lit by honey — a cartoon-warm, hexagon-structured web
 colors:
   mel: "#FFC200"
   nectar: "#FFDE00"
-  ambar: "#F4B73E"
+  ambar: "#FFD280"
   cera: "#FFFDF7"
   branco: "#FFFFFF"
   breu: "#111111"

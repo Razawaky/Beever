@@ -35,6 +35,14 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .mascote-stroke {
+    filter: 
+      drop-shadow(2px 0 0 var(--color-cera, #FFFDF7))
+      drop-shadow(-2px 0 0 var(--color-cera, #FFFDF7))
+      drop-shadow(0 2px 0 var(--color-cera, #FFFDF7))
+      drop-shadow(0 -2px 0 var(--color-cera, #FFFDF7));
+  }
 }
 
 @keyframes float-up {

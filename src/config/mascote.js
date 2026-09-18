@@ -21,14 +21,20 @@ export const MASCOTES = {
     altura: 812,
   },
   chamando: {
-    arquivo: '/img/beenie_vem.webp',
+    arquivo: '/img/beenie_sentado_sexy.webp',
     alt: 'Beenie chamando para começar',
     largura: 482,
     altura: 746,
   },
   entrando: {
-    arquivo: '/img/beenie_login_render.webp',
+    arquivo: '/img/beenie_vem.webp',
     alt: 'Beenie na porta do Beever',
+    largura: 1000,
+    altura: 1017,
+  },
+  come_here: {
+    arquivo: '/img/beenie_login_render.webp',
+    alt: 'Beenie acenando',
     largura: 1000,
     altura: 1017,
   },

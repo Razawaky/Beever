@@ -142,6 +142,19 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/repo:ro
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: beever-phpmyadmin
+    restart: always
+    ports:
+      - '3001:80'
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - mysql
+
+
 volumes:
   beever-mysql-data:
   # Jobs, histórico de builds e workspaces do Jenkins.
