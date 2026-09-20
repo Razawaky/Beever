@@ -34,7 +34,13 @@ export const MASCOTES = {
   },
   come_here: {
     arquivo: '/img/beenie_login_render.webp',
-    alt: 'Beenie acenando',
+    alt: 'Beenie na grama',
+    largura: 1000,
+    altura: 1017,
+  },
+  coolpose: {
+    arquivo: '/img/beenie_coolpose.webp',
+    alt: 'Beenie com pose daora',
     largura: 1000,
     altura: 1017,
   },
