@@ -16,14 +16,16 @@
   
   <%# Conteúdo principal %>
   <main class="flex-1 p-4 lg:p-8">
-
+    
+    <!--
     <div class="fixed top-4 left-1/2 z-[100] -translate-x-1/2 pointer-events-none lg:left-[calc(50%+8rem)]">
       <div class="pointer-events-auto w-fit rounded-full border border-tinta/10 bg-white/95 px-6 py-2.5 shadow-xl backdrop-blur transition-all">
         <%- include('../partials/ui/chama-sequencia', { sequencia: colmeia.sequencia, href: '/metas' }) %>
-      </div>
-    </div>
+      </div> 
+    </div>  
+    -->
 
-    <div class="mx-auto max-w-5xl overflow-hidden rounded-favo bg-white shadow-xl lg:max-w-7xl">
+    <div class="mx-auto w-full max-w-5xl overflow-hidden rounded-favo bg-white shadow-xl">
 
       <% if (colmeia.conquistas.length > 0) { %>
         <div class="px-8 pt-8">
@@ -40,8 +42,7 @@
         </div>
       <% } %>
 
-      <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
-        <div>
+        <div class="pb-8">
           <div class="px-8 pt-8">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <h2 class="font-display text-xl">Minha trilha</h2>
@@ -71,8 +72,8 @@
           </div>
         </div>
         
-      </div>
 
+      <!--
       <%# INVENTÁRIO %>
       <div class="grid gap-6 p-8 lg:grid-cols-2">
         <section class="rounded-favo bg-cera p-6">
@@ -148,6 +149,8 @@
         <% } %>
       </div>
 
+      -->
+
       <div class="border-t border-linha px-8 py-6">
         <form method="POST" action="/sessao/logout">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
@@ -159,4 +162,7 @@
       </div>
     </div>
   </main>
+
+  <%- include('../partials/ui/sidebar-direita') %>
+
 </div>

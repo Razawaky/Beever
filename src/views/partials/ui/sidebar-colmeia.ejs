@@ -2,9 +2,8 @@
   A lateral da Colmeia (RF-HOM-01 a 03). Fica fixa no canto esquerdo da tela
   para que o saldo e o perfil do jogador estejam sempre visíveis.
 -%>
-<aside class="fixed inset-y-0 left-0 z-20 flex w-72 flex-col h-full overflow-hidden bg-mel p-6 shadow-xl">
+<aside class="fixed inset-y-0 left-0 z-20 flex w-72 flex-col justify-between h-full overflow-hidden bg-mel p-6 shadow-xl">
   <div class="flex flex-col gap-6">
-    
     <%# Perfil do Jogador %>
     <div class="flex items-center gap-3 border-b border-tinta/10 pb-6">
       <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-pilula bg-white/40 text-xl font-bold">
@@ -53,17 +52,40 @@
     <nav class="mt-2 flex flex-col gap-2">
       <a
         href="/loja"
-        class="flex items-center gap-3 rounded-favo bg-white/30 px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        class="flex items-center gap-3 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         <span class="text-xl">🛒</span>
         <span>Ir para a loja</span>
       </a>
+      <a
+        href="/cofre"
+        class="flex items-center gap-2 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <span>🏦</span>
+        <span>Meu cofre</span>
+      </a>
+      <a
+        href="/conquistas"
+        class="flex items-center gap-2 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <span>🏆</span>
+        <span>Minhas conquistas</span>
+      </a>
+      <% if (mostrarAtalhoAdmin) { %>
+        <a
+          href="/admin"
+          class="flex items-center gap-2 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        >
+          <span>⚙️</span>
+          <span>Área administrativa</span>
+        </a>
+      <% } %>
     </nav>
 
   </div>
 
   <%# Chama Sequência na parte inferior da sidebar %>
-  <div class="mt-6 border-t border-tinta/10 pt-6">
+  <div class="mt-auto border-t border-tinta/10 pt-6">
     <%- include('chama-sequencia', { sequencia, href: '/metas' }) %>
   </div>
 </aside>
