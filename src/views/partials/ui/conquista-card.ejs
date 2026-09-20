@@ -1,0 +1,36 @@
+<%#
+  Um degrau da escada de conquistas. Recebe `conquista` (já pronta do
+  `conquistasDoJogador`) e `icone`.
+
+  A travada aparece com alvo e progresso, e não como silhueta: ver o que falta é
+  o que traz a criança de volta. Travado e destravado se distinguem por cadeado e
+  palavra, nunca só por cor (RNF-21).
+-%>
+<%
+  const percentual = conquista.alvo === 0 ? 100 : Math.min(100, Math.floor((conquista.valorAtual * 100) / conquista.alvo));
+%>
+<li class="rounded-favo border border-linha bg-white p-4 <%= conquista.desbloqueada ? '' : 'opacity-90' %>">
+  <div class="flex items-start gap-3">
+    <span class="text-2xl" aria-hidden="true"><%= conquista.desbloqueada ? icone : '🔒' %></span>
+    <div class="min-w-0 flex-1">
+      <h3 class="font-bold"><%= conquista.nome %></h3>
+      <p class="mt-0.5 text-sm text-tinta-suave"><%= conquista.descricao %></p>
+
+      <% if (conquista.desbloqueada) { %>
+        <p class="mt-2 text-sm font-semibold text-acerto-texto">Conquistada · 🍯 <%= conquista.mel %> de bônus</p>
+      <% } else { %>
+        <p class="mt-2 text-sm tabular-nums text-tinta-suave">
+          <%= conquista.valorAtual %> de <%= conquista.alvo %> · vale 🍯 <%= conquista.mel %>
+        </p>
+        <div class="mt-2">
+          <%- include('barra-progresso', {
+            percentual,
+            rotuloAcessivel: `Progresso da conquista ${conquista.nome}`,
+            classeDoTrilho: 'bg-cera',
+            classeDoPreenchimento: 'bg-mel',
+          }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</li>

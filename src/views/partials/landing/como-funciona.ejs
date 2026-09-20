@@ -1,0 +1,46 @@
+<%#
+  Seção 3: três passos, e aqui a numeração faz sentido porque é sequência de
+  verdade — sem escolher os dias, não há trilha; sem jogar, não há mel.
+-%>
+<section id="como-funciona" class="border-t border-white/10 bg-breu py-16 sm:py-24">
+  <div class="mx-auto max-w-5xl px-6">
+    <h2 class="revela font-display text-3xl text-cera sm:text-4xl">Como funciona</h2>
+
+    <ol class="cascata mt-12 grid gap-6 md:grid-cols-3">
+      <%
+        const PASSOS = [
+          {
+            titulo: 'Escolha seus dias',
+            texto: 'Você diz quais dias da semana tem tempo. As metas são montadas em cima disso, e não do contrário.',
+          },
+          {
+            titulo: 'Jogue e ganhe mel',
+            texto: 'Cada atividade rende XP, pólen e mel. São partidas curtas, feitas para caber num intervalo.',
+          },
+          {
+            titulo: 'Construa seu patrimônio',
+            texto: 'O mel vira compra, cofre e bens. É aqui que o jogo ensina o que a vida cobra depois.',
+          },
+        ];
+      %>
+      <% PASSOS.forEach((passo, indice) => { %>
+        <li class="revela rounded-favo border border-white/10 bg-white/5 p-6">
+          <span
+            class="favo-hexagono inline-flex h-12 w-12 items-center justify-center bg-mel font-display text-xl text-tinta"
+            aria-hidden="true"
+            ><%= indice + 1 %></span
+          >
+          <h3 class="mt-4 font-display text-xl text-cera">
+            <span class="sr-only">Passo <%= indice + 1 %>: </span><%= passo.titulo %>
+          </h3>
+          <p class="mt-2 text-cera/70"><%= passo.texto %></p>
+        </li>
+      <% }); %>
+    </ol>
+
+    <%# RF-LAN-02: o caminho para o registro se repete a cada argumento fechado. -%>
+    <div class="revela mt-10 flex justify-center md:justify-start">
+      <%- include('../ui/botao', { texto: 'Criar minha conta', href: '/cadastro' }) %>
+    </div>
+  </div>
+</section>

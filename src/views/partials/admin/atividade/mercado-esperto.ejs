@@ -1,0 +1,28 @@
+<%#
+  Mercado Esperto: até quatro rodadas, e as opções de cada uma escritas como
+  "nome | preço | quantidade", uma por linha. O gabarito não é digitado — o
+  validador calcula qual embalagem sai mais barata por unidade.
+-%>
+<% const rodadas = corpo?.rodadas ?? []; %>
+<p class="text-sm text-tinta-suave">
+  A resposta certa é calculada pelo preço por unidade. Empate é recusado: não existiria resposta única.
+</p>
+
+<% for (let indice = 0; indice < 4; indice += 1) {
+     const rodada = rodadas[indice] ?? {}; %>
+  <fieldset class="mt-4 rounded-favo border border-linha p-4">
+    <legend class="px-2 text-sm font-semibold">Rodada <%= indice + 1 %></legend>
+    <div class="space-y-3">
+      <%- include('campos', { nome: 'rodadaEnunciado', rotulo: 'Enunciado', valor: rodada.enunciado, id: `rodada-${indice}` }) %>
+      <%- include('campos', { nome: 'rodadaUnidade', rotulo: 'Unidade', valor: rodada.unidade ?? 'unidade', id: `rodada-unidade-${indice}` }) %>
+      <%- include('campos', {
+        nome: 'rodadaOpcoes',
+        rotulo: 'Opções, uma por linha',
+        valor: (rodada.opcoes || []).map((opcao) => `${opcao.texto} | ${opcao.preco} | ${opcao.quantidade}`).join('\n'),
+        linhas: 4,
+        dica: 'Escreva assim: pacote grande | 12 | 6',
+        id: `rodada-opcoes-${indice}`,
+      }) %>
+    </div>
+  </fieldset>
+<% } %>

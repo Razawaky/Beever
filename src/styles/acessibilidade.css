@@ -1,0 +1,93 @@
+/* Ajustes de acessibilidade que a pessoa liga por conta própria.
+
+   O modo normal é o padrão e não muda nada: cor, imagem, animação, navegação e
+   tamanho de texto continuam exatamente como foram desenhados. Tudo aqui só
+   vale quando a classe correspondente está no `<html>`, e quem a coloca é o
+   `acessibilidade.js`, a partir da escolha guardada no navegador.
+
+   As quatro frentes atendem públicos diferentes: movimento para TDAH e autismo,
+   contraste para baixa visão, texto maior para leitura, e menos distração para
+   quem se perde com ilustração e fundo animado competindo com o conteúdo. */
+
+/* ---------------------------------------------------------------------------
+   Movimento reduzido — mesma regra do `prefers-reduced-motion`, mas ligada à mão
+   --------------------------------------------------------------------------- */
+:root.a11y-movimento-reduzido *,
+:root.a11y-movimento-reduzido *::before,
+:root.a11y-movimento-reduzido *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* As camadas de parallax param onde estão, em vez de pularem para o topo. */
+:root.a11y-movimento-reduzido .camada-de-favos {
+  animation: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Contraste reforçado — texto de apoio vira texto de verdade
+   --------------------------------------------------------------------------- */
+:root.a11y-contraste .text-tinta-suave {
+  color: var(--color-tinta);
+}
+
+:root.a11y-contraste .border-linha {
+  border-color: var(--color-tinta-suave);
+}
+
+/* Na landing, que é escura, o caminho é o inverso: o texto rebaixado por
+   opacidade volta ao branco cheio. */
+:root.a11y-contraste .text-cera\/80,
+:root.a11y-contraste .text-cera\/70,
+:root.a11y-contraste .text-cera\/60,
+:root.a11y-contraste .text-cera\/50 {
+  color: var(--color-cera);
+}
+
+:root.a11y-contraste .border-white\/10,
+:root.a11y-contraste .border-white\/20,
+:root.a11y-contraste .border-white\/30 {
+  border-color: var(--color-cera);
+}
+
+/* Foco mais grosso: quem precisa de contraste também precisa achar o cursor. */
+:root.a11y-contraste *:focus-visible {
+  outline: 4px solid var(--color-ambar) !important;
+  outline-offset: 3px !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Texto maior — a escala inteira é em rem, então mexer na raiz basta
+   --------------------------------------------------------------------------- */
+:root.a11y-texto-maior {
+  font-size: 118%;
+}
+
+/* ---------------------------------------------------------------------------
+   Menos distração — some o que é enfeite, fica o que informa
+   --------------------------------------------------------------------------- */
+:root.a11y-sem-distracao .camada-de-favos,
+:root.a11y-sem-distracao .favos-de-fundo,
+:root.a11y-sem-distracao .coluna-de-mel {
+  display: none !important;
+}
+
+:root.a11y-sem-distracao img[alt=''] {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   O painel em si
+   --------------------------------------------------------------------------- */
+
+/* Nasce escondido: sem JavaScript não há preferência para guardar, e um painel
+   que não faz nada é pior que painel nenhum. */
+#acessibilidade {
+  display: none;
+}
+
+.a11y-pronto #acessibilidade {
+  display: block;
+}

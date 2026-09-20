@@ -1,0 +1,46 @@
+<%#
+  Mel e patrimônio sempre visíveis (RF-LOJ-01), com a composição desenhada ao
+  lado (RF-INV-04). O gráfico é um `canvas` montado por `/js/graficos.js`; a
+  lista ao lado é o mesmo dado em texto, para quem usa leitor de tela e para
+  quem abre a página antes de o script rodar.
+%>
+<section class="rounded-favo bg-mel px-6 py-5">
+  <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+    <%- include('badge-recurso', {
+      icone: '🏠',
+      rotulo: 'Seu patrimônio',
+      valor: patrimonio.total,
+      grande: true,
+      detalhe: `Na carteira agora: ${patrimonio.carteira} de mel`,
+    }) %>
+
+    <div class="flex items-center gap-4">
+      <canvas
+        class="grafico-rosca"
+        width="112"
+        height="112"
+        role="img"
+        aria-label="Composição do patrimônio: <%= patrimonio.carteira %> na carteira, <%= patrimonio.cofre %> no cofre e <%= patrimonio.bens %> em bens"
+        data-grafico="composicao"
+        data-carteira="<%= patrimonio.carteira %>"
+        data-cofre="<%= patrimonio.cofre %>"
+        data-bens="<%= patrimonio.bens %>"
+      ></canvas>
+
+      <ul class="grid gap-1 text-sm tabular-nums">
+        <li class="flex items-center gap-2">
+          <span class="h-3 w-3 rounded-pilula bg-breu" aria-hidden="true"></span>
+          Carteira: <strong><%= patrimonio.carteira %></strong>
+        </li>
+        <li class="flex items-center gap-2">
+          <span class="h-3 w-3 rounded-pilula bg-ambar" aria-hidden="true"></span>
+          Cofre: <strong><%= patrimonio.cofre %></strong>
+        </li>
+        <li class="flex items-center gap-2">
+          <span class="h-3 w-3 rounded-pilula bg-nectar" aria-hidden="true"></span>
+          Bens: <strong><%= patrimonio.bens %></strong>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
