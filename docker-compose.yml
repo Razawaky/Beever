@@ -145,6 +145,27 @@ services:
       # mas não tem onde ler. Na prova é o GitHub por SSH (a deploy key
       # montada em /var/jenkins_home/ssh-github); no dia a dia, file:///repo.
       BEEVER_SCM_URL: ${BEEVER_SCM_URL:-file:///repo}
+      # Como o git fala com o GitHub por SSH dentro do contêiner. Fica no ambiente
+      # do serviço, e não como propriedade global de nó do casc.yaml, por um motivo
+      # que só apareceu quando o job passou a ler o GitHub de verdade: a varredura
+      # multibranch roda no controlador, não em nó, e não enxerga a propriedade de
+      # nó. O sintoma era silencioso — a varredura morria com "Host key
+      # verification failed", o índice ficava velho e o build seguinte clonava de
+      # `file:///repo`, ou seja, o código de um commit atrasado. Por isso a chave e
+      # o `known_hosts` vêm por aqui, e não pelo plugin.
+      #
+      # `StrictHostKeyChecking=yes` com o `known_hosts` montado é a verificação de
+      # host que o casc.yaml já descreve: o GitHub é confersido contra as três
+      # chaves públicas dele, e um servidor diferente faz o build falhar em vez de
+      # ser acreditado. `BatchMode=yes` impede que uma senha esperando prompt
+      # trave o build em silêncio.
+      GIT_SSH_COMMAND: >-
+        ssh -i /var/jenkins_home/ssh-github/id_ed25519
+        -o IdentitiesOnly=yes
+        -o BatchMode=yes
+        -o StrictHostKeyChecking=yes
+        -o UserKnownHostsFile=/var/jenkins_home/ssh-github/known_hosts
+      GIT_SSH_VARIANT: ssh
       JAVA_OPTS: >-
         -Xmx768m
         -Djenkins.install.runSetupWizard=false
@@ -165,15 +186,22 @@ services:
       # em texto no repositório.
       - ${JENKINS_SSH_DIR:-~/.ssh/beever-jenkins}:/var/jenkins_home/ssh-github:ro
 
+  # phpMyAdmin, para olhar o banco na mão durante o desenvolvimento. Mesmo
+  # tratamento do Jenkins e do SonarQube: fica preso em 127.0.0.1 e só sobe
+  # quando alguém pede, porque é uma tela de administração do banco com a senha
+  # do root na mão — o lugar errado para isso é todas as interfaces da rede em
+  # que a máquina estiver conectada.
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: beever-phpmyadmin
-    restart: always
+    profiles: ['phpmyadmin']
+    restart: unless-stopped
     ports:
-      - '3001:80'
+      - '127.0.0.1:3001:80'
     environment:
       PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: root
+      # A senha do root fica no .env, que o Git ignora, em vez de escrita aqui.
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
     depends_on:
       - mysql
 

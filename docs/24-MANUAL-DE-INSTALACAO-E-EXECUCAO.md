@@ -88,6 +88,11 @@ O resto tem padrão e só precisa de atenção quando o ambiente foge do comum:
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | vazio | Liga o login com Google. Crie um ID do cliente OAuth (aplicativo da Web) no Google Cloud Console com o redirecionamento `APP_URL` + `/sessao/google/retorno`; vazio, o botão não aparece |
 | `JENKINS_ADMIN_PASSWORD` | `beever-jenkins` | Senha do usuário `admin` do Jenkins local, que só escuta em 127.0.0.1; sem ela o contêiner recusa subir. Ver `docs/29-JENKINS.md` |
 | `DOCKER_GID` | `999` | Grupo dono do socket do Docker no host, para o Jenkins criar contêineres; veja com `getent group docker` |
+| `JENKINS_SSH_DIR` | `~/.ssh/beever-jenkins` | Pasta com `id_ed25519` e `known_hosts` para o Jenkins clonar o GitHub por SSH. Montada somente leitura. |
+| `BEEVER_SCM_URL` | `git@github.com:Razawaky/Beever.git` | Repositório que o job multibranch lê. Na prova, GitHub por SSH; em desenvolvimento local, `file:///repo`. |
+| `SONAR_URL` | `http://sonar:9000` | Endereço do SonarQube dentro da rede do compose (o painel está preso em 127.0.0.1 no host). |
+| `SONAR_TOKEN` | vazio | Token de automação do SonarQube (gerado em *My Account → Security → Generate Tokens*). Nunca vai para o repositório. |
+| `SONAR_JAVA__OPTS` | `-Xmx512m -Xms512m` | Heap do SonarQube; em 5,7 GB foi reduzido para não disputar memória com Jenkins/MySQL. |
 | `UPLOADS_DIR` | `uploads` | Em contêiner precisa ser volume, senão a arte some no deploy |
 | `UPLOAD_MAX_MB` | `8` | Teto do arquivo enviado pelo painel |
 | `BACKUP_CONTAINER` | `mysql` | Nome do contêiner de onde o backup chama o `mysqldump` |

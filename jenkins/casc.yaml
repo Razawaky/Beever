@@ -20,17 +20,31 @@ jenkins:
     loggedInUsersCanDoAnything:
       allowAnonymousRead: false
 
-  # A chave de leitura do GitHub entra pelo próprio arquivo, não por uma
+# A chave de leitura do GitHub entra pelo próprio arquivo, não por uma
   # credencial em texto. O motivo é o mesmo da senha: o segredo não é copiado
   # para dentro do Jenkins nem para dentro de um arquivo versionado — o
   # contêiner só enxerga o `id_ed25519` em somente leitura, num diretório que
   # existe só para isto. `IdentitiesOnly` impede que o Git ofereça outra chave
   # qualquer do contêiner.
+  #
+  # A MESMA variável também está no `environment:` do serviço, no
+  # `docker-compose.yml`, e as duas precisam existir porque o Jenkins tem dois
+  # jeitos diferentes de disparar um `git fetch`: a varredura multibranch roda no
+  # controlador como processo comum e herda o ambiente do contêiner, enquanto o
+  # `checkout` do build roda dentro do Jenkins e só enxerga o que está
+  # declarado aqui. Com a variável num lugar só, uma das duas metades falha — e
+  # a falha é silenciosa: a varredura morre com "Host key verification failed",
+  # o índice fica velho e o build clona do commit errado sem avisar ninguém.
   globalNodeProperties:
     - envVars:
         env:
           - key: GIT_SSH_COMMAND
-            value: 'ssh -i /var/jenkins_home/ssh-github/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes'
+            value: >-
+              ssh -i /var/jenkins_home/ssh-github/id_ed25519
+              -o IdentitiesOnly=yes
+              -o BatchMode=yes
+              -o StrictHostKeyChecking=yes
+              -o UserKnownHostsFile=/var/jenkins_home/ssh-github/known_hosts
           - key: GIT_SSH_VARIANT
             value: ssh
 
