@@ -24,5 +24,6 @@ RUN curl -fsSL -o /tmp/sonar.zip \
     "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip" \
   && echo "${SONAR_SCANNER_SHA256}  /tmp/sonar.zip" | sha256sum -c - \
   && unzip -q /tmp/sonar.zip -d /opt \
-  && ln -s "/opt/sonar-scanner-${SONAR_SCANNER_VERSION}/bin/sonar-scanner" /usr/local/bin/sonar-scanner \
-  && rm -f /tmp/sonar.zip
+  && ln -s "/opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux/bin/sonar-scanner" /usr/local/bin/sonar-scanner \
+  && rm -f /tmp/sonar.zip \
+  && sonar-scanner --version
