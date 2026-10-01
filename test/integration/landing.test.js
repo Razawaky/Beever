@@ -8,6 +8,7 @@ import request from 'supertest';
 import '../helpers/ambiente.js';
 import { motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
+import { mascote } from '../../src/config/mascote.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 
@@ -51,22 +52,34 @@ describe('landing — herói', opcoes, () => {
   });
 
   it('o mascote reserva o próprio espaço, para a página não saltar', () => {
-    // A arte virou WebP na T-11.7: 119 KB de PNG viraram 33 KB, e o catálogo é
-    // o único lugar que sabe disso.
-    const imagem = /<img[^>]*src="\/img\/beenie_howdy\.webp"[^>]*>/.exec(html);
+    // A pose do herói mudou e a arte é WebP, mas a regra é a mesma da sempre:
+    // as dimensões vêm do catálogo (`src/config/mascote.js`) e precisam chegar
+    // à marcação. Sem `width` e `height` o navegador não reserva o espaço e a
+    // primeira dobra salta quando a imagem chega. Ler o valor esperado do
+    // catálogo, em vez de escrevê-lo aqui, evita o teste virar uma segunda
+    // fonte de verdade que envelhece junto com a arte.
+    const arte = mascote('coolpose');
+    const imagem = new RegExp(`<img[^>]*${arte.arquivo.replace('.', '\\.')}[^>]*>`).exec(html);
 
     assert.ok(imagem, 'a Beenie está no herói');
-    assert.match(imagem[0], /width="612"/);
-    assert.match(imagem[0], /height="812"/);
+    assert.match(imagem[0], new RegExp(`width="${arte.largura}"`), 'a largura do catálogo não foi para a marcação');
+    assert.match(imagem[0], new RegExp(`height="${arte.altura}"`), 'a altura do catálogo não foi para a marcação');
     // No herói ela é a maior imagem da primeira dobra, então carrega na frente.
     assert.match(imagem[0], /loading="eager"/);
+    assert.match(imagem[0], /fetchpriority="high"/);
   });
 
   it('as três camadas de favos são decoração, e o leitor de tela as ignora', () => {
-    for (const camada of ['camada-fundo', 'camada-meio', 'camada-frente']) {
-      const achada = new RegExp(`<div[^>]*${camada}[^>]*>`).exec(html);
-      assert.ok(achada, `a camada ${camada} está na página`);
-      assert.match(achada[0], /aria-hidden="true"/);
+    // A regra original: as três camadas de favos do parallax são decoração pura,
+    // então o leitor de tela tem de pulá-las. O que mudou foi a nomeação — as
+    // três layers compartilham a classe `camada-de-favos` e se distinguem pela
+    // `data-parallax`. Então o teste deixa de caçar três nomes e passa a
+    // percorrer as camadas de verdade, o que também pega uma quarta.
+    const camadas = html.match(/<div[^>]*camada-de-favos[^>]*>/g) ?? [];
+
+    assert.equal(camadas.length, 3, 'a landing tem três camadas de favos');
+    for (const camada of camadas) {
+      assert.match(camada, /aria-hidden="true"/, `uma camada de favos anuncia texto: ${camada}`);
     }
   });
 
@@ -157,8 +170,23 @@ describe('landing — herói', opcoes, () => {
   });
 
   it('as camadas dizem a própria velocidade de parallax', () => {
-    for (const velocidade of ['0.08', '0.18', '0.32']) {
-      assert.match(html, new RegExp(`data-parallax="${velocidade}"`));
-    }
+    // A regra é que cada camada se mova no seu próprio ritmo: sem velocidades
+    // diferentes não há parallax, é só um fundo que desliza junto com a página.
+    // Os números mudam conforme o design ajusta a arte — o herói já foi de 0.08
+    // para 0.18 —, então o teste cobra a propriedade em vez de cravar valores
+    // que envelhecem junto com o design.
+    const camadas = html.match(/<div[^>]*camada-de-favos[^>]*data-parallax="(-?[\d.]+)"[^>]*>/g) ?? [];
+    const velocidades = camadas.map((camada) => Number(/data-parallax="(-?[\d.]+)"/.exec(camada)[1]));
+
+    assert.equal(velocidades.length, 3, 'as três camadas precisam declarar a própria velocidade');
+    assert.ok(
+      velocidades.every((velocidade) => velocidade !== 0),
+      'uma camada parada não participa do parallax',
+    );
+    assert.equal(
+      new Set(velocidades).size,
+      3,
+      `as camadas precisam de ritmos diferentes, e estes são: ${velocidades.join(', ')}`,
+    );
   });
 });

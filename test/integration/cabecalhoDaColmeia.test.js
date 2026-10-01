@@ -6,6 +6,7 @@ import request from 'supertest';
 // `ambiente.js` aponta o pool da aplicação para o banco de teste e precisa ser
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
+import { semComentariosDeHtml } from '../helpers/acessibilidade.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
@@ -112,18 +113,26 @@ describe('cabeçalho da Colmeia', opcoes, () => {
 
   it('o topo fica grudado e fora do cartão que corta a rolagem', async () => {
     // `overflow-hidden` em qualquer ancestral desliga o `position: sticky`, e o
-    // cartão branco da Colmeia tem um. O cabeçalho precisa vir antes dele.
-    assert.match(html, /<header class="sticky top-0/);
-    assert.ok(
-      html.indexOf('<header class="sticky top-0') < html.indexOf('overflow-hidden rounded-favo'),
-      'o cabeçalho grudado não pode morar dentro do cartão',
-    );
+    // cartão branco da Colmeia tem um. O topo da tela mora na barra lateral,
+    // fora do cartão — e a barra, que corta o próprio conteúdo, não pode
+    // carregar `sticky`: ela seria o ancestral que desliga o grudado de tudo
+    // que está dentro dela.
+    const cartao = html.indexOf('overflow-hidden rounded-favo');
+    assert.ok(cartao > -1, 'o cartão branco da Colmeia ainda corta a rolagem');
+
+    const barraLateral = /<aside class="([^"]*)"/.exec(html);
+    assert.ok(barraLateral, 'a barra lateral da Colmeia está na página');
+    assert.match(barraLateral[1], /overflow-hidden/, 'a barra lateral corta o próprio conteúdo');
+    assert.doesNotMatch(barraLateral[1], /\bsticky\b/, 'a barra que corta a rolagem não pode ser grudada');
+    assert.ok(html.indexOf('<h1') < cartao, 'o topo não pode morar dentro do cartão');
   });
 
   it('a semana da sequência é desenhada uma vez só', async () => {
     // O calendário do topo é o mesmo partial de /metas: dois desenhos do mesmo
-    // dado divergem no primeiro ajuste.
-    const calendarios = html.match(/grid grid-cols-7/g) ?? [];
+    // dado divergem no primeiro ajuste. A contagem olha só o que o navegador
+    // mostra, porque foi o desenho dentro de `<!-- -->` que duplicou a semana
+    // sem nunca aparecer na tela.
+    const calendarios = semComentariosDeHtml(html).match(/grid grid-cols-7/g) ?? [];
 
     assert.equal(calendarios.length, 1);
   });

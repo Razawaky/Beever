@@ -209,6 +209,20 @@ export function paresDeCorNoMesmoElemento(html) {
 }
 
 /**
+ * Devolve o HTML do que o navegador **realmente mostra**.
+ *
+ * Tudo que está dentro de `<!-- -->` é comentário: o navegador não desenha, não
+ * conta para o leitor de tela e não ocupa espaço. Mas ele continua no texto que
+ * o teste recebe, e por isso uma busca por marcação conta duas vezes o mesmo
+ * desenho — foi assim que a semana da sequência apareceu duplicada na Colmeia
+ * e como um `include` do EJS "funcionou" dentro de um comentário. Qualquer
+ * contagem de tag passa por aqui antes de virar asserção.
+ */
+export function semComentariosDeHtml(html) {
+  return html.replace(/<!--[\s\S]*?-->/g, '');
+}
+
+/**
  * Larguras fixas maiores que a tela de 320 px da RNF-20. Tabela larga é o caso
  * legítimo, e por isso a conferência dela é separada.
  */

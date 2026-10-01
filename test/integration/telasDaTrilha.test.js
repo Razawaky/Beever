@@ -8,6 +8,7 @@ import request from 'supertest';
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
+import { mascote } from '../../src/config/mascote.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
@@ -197,7 +198,18 @@ describe('telas da trilha', opcoes, () => {
     await banco.conexao.query('UPDATE profiles SET age_band_id = NULL WHERE user_id = ?', [idUsuario]);
 
     const pagina = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
-    assert.match(pagina.text, /ainda está sendo montada/);
-    assert.match(pagina.text, /beenie_vem\.webp/, 'estado vazio tem mascote e ação, nunca só "nada aqui"');
+
+    // A regra do RF-HOM: estado vazio tem mascote e ação, nunca só "nada aqui".
+    // A pose mudou de `vem` para `chamando` com o redesenho da arte, então o
+    // teste pergunta ao catálogo qual arquivo é o da pose em vez de cravar um
+    // nome de arquivo — o que estava travado aqui era o teste, não a tela.
+    const estadoVazio = /<section class="[^"]*text-center[^"]*">[\s\S]*?<\/section>/.exec(pagina.text);
+    assert.ok(estadoVazio, 'sem faixa etária, a trilha precisa do cartão de estado vazio');
+
+    assert.match(estadoVazio[0], /ainda está sendo montada/);
+    assert.match(estadoVazio[0], new RegExp(mascote('chamando').arquivo.replace('.', '\\.')));
+    // O partial do botão emite o `<a` com quebra de linha antes dos atributos,
+    // então o espaço literal não aparece: é `\b`, e não um espaço fixo.
+    assert.match(estadoVazio[0], /<a\b[^>]*href="\/painel"/, 'o estado vazio precisa oferecer para onde ir');
   });
 });
