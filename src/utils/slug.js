@@ -12,6 +12,6 @@ export function slugDeTexto(texto, tamanhoMaximo = 60) {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/^(?:-+)|(?:-+)$/g, '')
     .slice(0, tamanhoMaximo);
 }
