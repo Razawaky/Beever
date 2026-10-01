@@ -12,6 +12,13 @@
 # Isto não é receita de produção: falta proxy reverso com TLS e a imagem é
 # construída na hora, em vez de vir de um registro. Ver docs/17.
 
+# O nome do projeto fica escrito aqui, e não deduzido do nome da pasta. Ele dá
+# nome à rede padrão (`beever_default`), e o stage do SonarQube no Jenkinsfile
+# precisa entrar nela para alcançar `sonar:9000`. Deduzido, o nome da rede
+# mudaria junto com o nome da pasta de quem clonou, e o build quebraria por
+# causa do diretório.
+name: beever
+
 # Bloco comum aos serviços que rodam a imagem da aplicação. O `migrate` e o
 # `app` só diferem no comando.
 x-aplicacao: &aplicacao

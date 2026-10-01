@@ -4,7 +4,7 @@ Fluxo: **GitHub → Jenkins → SonarScanner → SonarQube → Quality Gate**
 
 - **Projeto:** Beever
 - **Repositório:** `git@github.com:Razawaky/Beever.git`
-- **Branch de trabalho:** `refactor/arquitetura-em-camadas` (não é a `main`; a `main` está **205 commits atrás** — último commit dela: `6eb084b`)
+- **Branch de trabalho:** `refactor/arquitetura-em-camadas` (não é a `main`; a `main` está **207 commits atrás** — último commit dela: `6eb084b`)
 - **Última atualização:** 2026-10-01
 - **Enunciado e regras do agente:** não existe `P3_Jenkins_SonarQube_AGENTE.md` no repositório. O material equivalente é `docs/24-MANUAL-DE-INSTALACAO-E-EXECUCAO.md` (variáveis do Jenkins e do Sonar) e `docs/29-JENKINS.md` (o portão local).
 
@@ -18,11 +18,11 @@ Fluxo: **GitHub → Jenkins → SonarScanner → SonarQube → Quality Gate**
 | 2 | Integrar SonarQube ao Jenkins | 2 | ✅ Feito |
 | 3 | Jenkins obtém projeto via SCM | 2 | ✅ Feito |
 | 4 | Preparar projeto para análise | 3 | ✅ Feito — arquivo escrito **e versionado** |
-| 5 | Pipeline com análise | 3 | 🟡 Build #17 rodou o stage do Sonar e falhou no scanner; **corrigido em `dcae357`, build #18 em andamento** (ver seção 6) |
-| 6 | Consultar painel | 4 | ⏸ Não iniciado — o painel ainda está **vazio** |
-| 7 | Interpretar problemas | 4 | ⏸ Não iniciado |
-| 8 | Corrigir ao menos 1 problema | 4 | ⏸ Não iniciado |
-| 9 | Nova análise e comparação | 4 | ⏸ Não iniciado |
+| 5 | Pipeline com análise | 3 | 🟡 Build #17 corrigido em `dcae357`; build #18 rodou e falhou por rede (seção 6) |
+| 6 | Consultar painel | 4 | ✅ Feito — baseline publicada, 320 arquivos, 12.638 ncloc (seção 15.1) |
+| 7 | Interpretar problemas | 4 | ✅ Feito — 7 bugs lidos, 6 são falso positivo do analisador CSS (seção 15.2) |
+| 8 | Corrigir ao menos 1 problema | 4 | 🟡 Alvo escolhido: `src/utils/slug.js:15`, `javascript:S5850` (seção 15.3) |
+| 9 | Nova análise e comparação | 4 | ⏸ Pendente — build #20 |
 
 **Bloqueio anterior, já resolvido:** o `sonar-scanner` não era encontrado dentro
 do agente (`exit code 127`). O `jenkins/agente.Dockerfile` apontava o symlink
@@ -30,10 +30,11 @@ para um diretório que o `unzip` não cria. Nada a ver com Sonar, Jenkins, Quali
 Gate ou testes — a suíte já está verde. Detalhes e correção em `dcae357` na
 seção 6.
 
-**O SonarQube ainda não analisou nada.** `GET /api/project_analyses/search?project=beever`
-devolve `total: 0`. O projeto `beever` existe no painel e o Quality Gate está
-associado a ele, mas **nenhuma análise foi publicada**. Os passos 6 a 9 dependem
-inteiramente de resolver a seção 6.
+**Análise já publicada.** `GET /api/project_analyses/search?project=beever`
+devolve `total: 1` (`AaD3_L7iC1b1hK8IGPFS`, 2026-10-01T14:58:49+0000) — foi a
+análise **base**, feita à mão dentro da rede `beever_default` para destravar os
+passos 6 a 9 enquanto o stage do Jenkins ainda não rodava verde. O build #19 vai
+publicar a segunda, pelo pipeline.
 
 **Quality Gate `Beever`:** criado e associado ao projeto `beever`. Condições
 (conferidas em `GET /api/qualitygates/show?name=Beever`):
@@ -44,10 +45,21 @@ inteiramente de resolver a seção 6.
 - `new_security_hotspots_reviewed` < 100
 - **Sem condição de cobertura** (decisão do grupo)
 
-> O gate está com `caycStatus: "non-compliant"` — o *Clean as You Code* está
-> desligado, então as cinco métricas acima são avaliadas sobre **o código todo**,
-> não sobre *new code*. Isso muda a leitura do passo 9: a comparação antes/depois
-> é entre duas análises completas, e não entre duas janelas de código novo.
+> **Por que o gate passa com Reliability Rating E? (verificado na API)**
+> As cinco condições usam métricas `new_*` — o modo *Look Only At New Code*.
+> O gate está com `caycStatus: "non-compliant"` e o projeto **não tem período de
+> código novo configurado** — não há `sonar.newCode.referenceBranch` no
+> `sonar-project.properties`, e esta foi a **primeira** análise do projeto
+> (`total: 1`), então não existe versão anterior para comparar.
+>
+> Resultado: todas as cinco métricas vêm **sem valor**
+> (`GET /api/measures/component?component=beever&metricKeys=new_reliability_rating,new_lines`
+> → `"measures": []`). Condição cuja métrica não tem valor não pode ser violada,
+> logo o gate responde **OK**. Ele não disse nada sobre os 7 bugs.
+>
+> **Consequência prática:** quando existir uma segunda análise com código novo
+> real (build #20), o gate passa a avaliar de verdade e pode reprovar. O
+> PASSED do build #19 é resultado de configuração, não atestado de qualidade.
 
 ---
 
@@ -76,8 +88,10 @@ curl -s localhost:9000/api/system/status   # esperar {"status":"UP"}
 **Todos versionados.** `git ls-files` confirma: `docker-compose.yml`,
 `.env.example`, `Jenkinsfile`, `sonar-project.properties`, `jenkins/Dockerfile`,
 `jenkins/agente.Dockerfile`, `jenkins/casc.yaml`, `jenkins/entrada.sh`.
-A branch local está em `d9373e6`, igual a `origin/refactor/arquitetura-em-camadas`
-— **não há nada pendente de push**.
+A última tag local foi `dcae357`, mais o commit de documentação `7bdcf17`.
+As correções de rede e autenticação do Sonar (seção 14) estão **escritas e
+testadas, mas ainda não commitadas** — por isso o build #19 é o primeiro build
+que pode passar.
 
 ---
 
@@ -171,12 +185,16 @@ A branch local está em `d9373e6`, igual a `origin/refactor/arquitetura-em-camad
 - ⚠️ Essa correção veio do `npm audit`, **não do Sonar**. Ainda é preciso corrigir um achado do painel do SonarQube.
 
 **Roteiro:**
-1. Destravar a seção 6 e rodar a **análise base**; fotografar painel e Quality Gate
-2. Ler **Bugs**, **Vulnerabilities** e **Code Smells** separadamente
-3. Escolher 1 problema (de preferência Bug ou Vulnerability), corrigir com teste. Não marcar "false positive" sem justificar
+1. ~~Destravar a seção 6 e rodar a **análise base**~~ — **feito.** Análise publicada, 320 arquivos, Quality Gate PASSED. Métricas e leitura dos 7 bugs nas seções 15.1 e 15.2
+2. ~~Ler **Bugs**, **Vulnerabilities** e **Code Smells** separadamente~~ — **feito.** São 7 bugs, 0 vulnerabilidades, 35 code smells
+3. Escolher 1 problema e corrigir com teste — **alvo já escolhido:** `src/utils/slug.js:15`, `javascript:S5850` (seção 15.3). É o único dos 7 que é problema real de código; os outros 6 são o parser CSS do Sonar 9.9 sem conhecer as at-rules do Tailwind 4
 4. Reanalisar e comparar os mesmos números
 
-**Dica para a apresentação:** pipeline verde com Quality Gate vermelho é resultado normal e mostra que o portão tem dente.
+**Dica para a apresentação:** pipeline verde com Quality Gate vermelho é
+resultado normal e mostra que o portão tem dente. O inverso também vale e é o
+que o grupo tem: **Quality Gate verde com Reliability Rating E** (5.0), porque
+as cinco condições do gate só olham código novo e não há condição de cobertura.
+Seis dos sete bugs são limitações do analisador, não do código.
 
 ---
 
@@ -254,25 +272,38 @@ correção sozinha não bastaria: era preciso reconstruir a imagem.
 **Estado agora:** imagem do agente reconstruída em 2026-10-01 11:33:27, com o
 symlink correto (`/opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner`) e o
 scanner respondendo `SonarScanner 5.0.1.3006` / `Java 17.0.7 Eclipse Adoptium`.
-O **build #18 está em andamento** para confirmar a correção de ponta a ponta.
+O **build #18 confirmou esta correção** — o scanner passou a ser encontrado e
+chegou a falar com o servidor — e parou no erro **seguinte**: o agente estava na
+rede errada. Esse é o erro 2, na seção 14.2.
 
 ---
 
 ## 7. Próximos passos
 
-1. `git status` e conferir o que estiver sem commit
-2. Esperar o **build #18** concluir e confirmar que o stage `Análise SonarQube` passou
-3. Confirmar a primeira análise no painel: `GET /api/project_analyses/search?project=beever` deve deixar de devolver `total: 0`
-4. Baseline do Sonar → escolher e corrigir 1 achado → reanalisar → comparar
-5. Tirar os prints (seção 9)
+> Atualizado no fim da sessão de 2026-10-01 (b). Os itens 1 a 3 da versão
+> anterior estão feitos; o que replace é o passo 1, que virou a correção do
+> passo 8 do desafio.
+
+1. Commitar e enviar a correção da rede e da autenticação (seção 14.3), que está
+   escrita no `Jenkinsfile` e no `docker-compose.yml` mas ainda não foi para o
+   repositório
+2. Build #19: os oito stages verdes, com o `Análise SonarQube` publicando e o
+   `waitForQualityGate` respondendo — **esta é a prova de ponta a ponta**
+3. Corrigir `src/utils/slug.js:15` (`javascript:S5850`), o problema escolhido
+   na seção 15.3, e rodar `npm run test:db` para provar que nada quebrou
+4. Build #20: segunda análise, e comparar com as métricas da seção 15.1
+5. Tirar os prints (seção 9), incluindo o Quality Gate **antes e depois**, lado
+   a lado, com data e hora visível
 6. Montar a entrega e enviar no **Teams** até o dia da P3
 
 **Commits já feitos** (Conventional Commit em português, um por aluno):
 1. `5d5745a` — `.env.example`, `Jenkinsfile`, `docker-compose.yml`, `jenkins/Dockerfile`, `jenkins/agente.Dockerfile`, `jenkins/casc.yaml`, `sonar-project.properties`, `package-lock.json` (Alunos 1, 2 e 3)
-2. `e818371` — deploy key com verificação de host, phpMyAdmin para perfil próprio, apagar `#painel.ejs` (Aluno 2)
-3. `d9373e6` — corrigir os 8 testes de design e a semana duplicada (Aluno 4)
-4. `dcae357` — corrigir o symlink do SonarScanner e pôr `sonar-scanner --version` no `RUN` (Aluno 3)
-5. Documentação — **este commit**
+2. `e818371` — deploy key com verificação de host, phpMyAdmin para perfil próprio (Aluno 2)
+3. `d9373e6` — a semana duplicada na Colmeia, o `#painel.ejs` órfão e os 8 testes de design (Aluno 4)
+4. `dcae357` — symlink do SonarScanner e `&& sonar-scanner --version` no `RUN` (Aluno 3)
+5. `7bdcf17` — reestruturação da documentação por outro agente (seções 1 a 11)
+6. Documentação — seções 12 a 16, correção da seção 1 e reconciliação das
+   estruturas, **este commit**
 
 O `.env` nunca entra em commit (`.gitignore:5`).
 
@@ -312,16 +343,44 @@ Também guardar: histórico de commits e a dificuldade principal com a solução
 | 3 | 2 min | `sonar-project.properties`, o que entra/sai, por que a cobertura não é alimentada, posição do stage no Jenkinsfile |
 | 4 | 4 min | Problemas encontrados, correção, comparação dos Quality Gates, dificuldade relatada |
 
-**Dificuldades boas para relatar:**
+**Dificuldades boas para relatar** — a ordem é por força da história, e as três
+primeiras são as que a prova de fato produziu (seção 14):
+
+- **`ln -s` apontando para um diretório que não existe** (14.1). O `unzip` cria
+  `sonar-scanner-5.0.1.3006-linux` e o link apontava para
+  `sonar-scanner-5.0.1.3006`. A imagem ficou "verde" sem o scanner, e o defeito
+  só apareceu no último stage, 20 minutos depois. A defesa foi terminar o `RUN`
+  com `&& sonar-scanner --version`.
+- **`SONAR_AUTH_TOKEN`, não `SONAR_TOKEN`** (14.3). URL certa, projeto certo,
+  token certo no Credentials — e ainda assim `Not authorized`. O plugin exporta
+  `SONAR_AUTH_TOKEN` e o scanner quer `sonar.login`; são duas camadas para ligar
+  à mão.
+- **O agente na rede errada** (14.2). Contêiner novo do `docker run` nasce na
+  rede `bridge`, onde `sonar` não existe. As outras etapas não sentiram nada
+  porque o MySQL entra por `--link`, que traz o nome junto.
 - `BEEVER_SCM_URL` não repassada ao contêiner
-- `GIT_SSH_COMMAND` só no `casc.yaml`, e a varredura multibranch não enxergar propriedade de nó — falha silenciosa
-- Chave SSH sem prefixo
+- `GIT_SSH_COMMAND` só no `casc.yaml`, e a varredura multibranch não enxergar
+  propriedade de nó — falha silenciosa, com o build clonando um commit atrasado
+- Chave SSH sem o prefixo `ssh-ed25519` no formulário do GitHub
 - `vm.max_map_count`
 - Tag inexistente do SonarQube
-- O `sonar-scanner` apontando para um diretório que o `unzip` não cria, e o `ln -s` sair com código zero: a imagem ficou "verde" sem o executável (seção 6)
 
 **Pergunta para quem avalia:** "o portão do Sonar bloqueia o merge ou só avisa?"
-Resposta: bloqueia o build, porque o `Jenkinsfile` usa `waitForQualityGate abort: true`.
+Resposta: bloqueia o build, porque o `Jenkinsfile` usa `waitForQualityGate
+abort: true`.
+
+**Pergunta para quem avalia (a melhor, se sobrar tempo):** "o Quality Gate
+aprovado significa que o código está bom?"
+Resposta: **não** — e essa é a melhor aula da prova. O gate está **PASSED** com
+Reliability Rating **E** (5.0) e sete bugs, porque **as cinco condições usam
+métricas `new_*` e o projeto não tem código novo definido** (primeira análise,
+sem `sonar.newCode.referenceBranch`). Métrica sem valor não viola condição, logo
+o gate responde OK sem ter olhado para os bugs. Seis desses sete bugs nem são do
+código: é o analisador CSS do SonarQube 9.9 que não conhece `@theme`, `@source`,
+`animation-timeline` nem `transition-behavior` (seção 15.2).
+
+Ou seja: **Quality Gate verde é configuração, não atestado de qualidade.** É o
+motivo de o `sonar-project.properties` ser o arquivo mais importante da P3.
 
 **Backup:** levar prints e gravação de tela (a demo depende do Docker ligado).
 
@@ -333,11 +392,374 @@ Resposta: bloqueia o build, porque o `Jenkinsfile` usa `waitForQualityGate abort
 - [x] Job Pipeline no Jenkins com SCM
 - [x] `Jenkinsfile` no repositório
 - [x] `sonar-project.properties` escrito **e versionado**
-- [x] Suíte de testes verde no Jenkins (build #17)
-- [ ] Execução da pipeline + Console Output com a análise (build #18 em andamento, seção 6)
+- [x] Suíte de testes verde no Jenkins (builds #17 e #18: 7 stages verdes)
+- [x] Análise publicada no SonarQube (320 arquivos, seção 15)
 - [x] SonarQube no ar (falta print)
-- [ ] Resultado do Quality Gate
-- [ ] Problemas encontrados e interpretados
+- [x] Resultado do Quality Gate — **PASSED** (seção 15.1)
+- [x] Problemas encontrados e interpretados — 7 bugs, 6 falsos positivos (seção 15.2)
+- [x] Alvo da correção escolhido e justificado — `src/utils/slug.js:15` (seção 15.3)
+- [ ] Execução da pipeline **com o stage do Sonar verde** (build #19)
 - [ ] Ao menos 1 correção (vinda do Sonar)
 - [ ] Nova análise + comparação antes/depois
+- [ ] Print do Quality Gate antes e depois, lado a lado
 - [ ] Envio no Teams
+
+---
+
+## 12. Sessão de 2026-10-01 (b) — destravando a análise
+
+Tudo nesta sessão aconteceu **sem o Docker daemon ligado**. Esse detalhe explica
+os ~98 testes vermelhos que abriram a sessão e que **não** eram falha de código.
+
+**Ordem do trabalho:**
+
+1. Docker daemon ligado. Os 98 erros de banco (`ECONNREFUSED 127.0.0.1:3306`)
+   sumiram sozinhos — o MySQL estava de pé, o daemon é que não estava.
+2. Suíte completa contra o MySQL: **1172 testes, 3 pulados, 0 falhas.**
+   `npm run lint` limpo e `npm run audit` com **0 vulnerabilidades**.
+3. Build #17 disparado pelo push. Os 7 stages passaram; o Sonar reprovou por
+   `sonar-scanner: not found` (exit 127). Detalhado na seção 6.
+4. Symlink corrigido em `dcae357`, com `&& sonar-scanner --version` no `RUN` para
+   a imagem reprovar sozinha se o scanner sumir de novo. Teste local da imagem:
+   `INFO: SonarScanner 5.0.1.3006` / `Java 17.0.7 Eclipse Adoptium`.
+5. Build #18: o scanner passou a ser encontrado e **parou no erro seguinte**, a
+   rede errada (seção 14.2).
+6. Como o Jenkins ainda não publicava análise nenhuma, e os passos 6 a 9 do
+   desafio dependem disso, rodamos o scanner **na mão dentro da rede certa**. Foi
+   assim que a análise base existe. Está registrado na seção 14.4.
+
+**Erro bobo que valeu a pena:** o `curl` para a API do Sonar devolvia vazio e a
+primeira leitura foi "o Sonar está fora". Não era — a senha de admin não é
+`SONAR_ADMIN_PASSWORD` do `.env` (essa variável **não existe** lá); é a senha de
+bootstrap padrão. `admin:admin` respondeu `200`. Antes de culpar o serviço,
+confirme que o *cliente* está autenticado.
+
+---
+
+## 13. Sessão de 2026-10-01 (c) — reconciliando a documentação
+
+Outro agente commitou `7bdcf17` no meio desta sessão, reescrevendo o documento
+com uma estrutura nova (seções 1 a 11) e enviando para o `origin`. O arquivo
+ficou híbrido: a estrutura dele até a seção 11, e as seções 12 a 16 desta
+sessão.
+
+**Decisão do grupo:** a estrutura nova foi mantida. Nada foi renumerado para
+caber num esquema anterior, e nenhum conteúdo foi apagado — o que pertencia às
+seções antigas foi para a seção correspondente, e o que era novo virou seção 12
+em diante. O que mudou de número está com a referência cruzada corrigida.
+
+Correções de conteúdo feitas ao reordenar (a estrutura nova estava com fatos
+desatualizados, porque foi escrita antes da análise base):
+
+- Tabela da seção 1: passos 6 a 9 saíram de "não iniciado" para o estado real
+- Seção 1: "o SonarQube ainda não analisou nada" → `total: 1`
+- Seção 1: a explicação do `caycStatus` estava **errada** e foi corrigida com dado
+  de API (o bloco de destaque logo abaixo da tabela)
+- Seção 2: `d9373e6`/"nada pendente" → `dcae357` + `7bdcf17` + correções não commitadas
+- Seção 6: "build #18 em andamento" → build #18 rodou e achou o erro 2
+
+---
+
+# 14. Os três erros do SonarQube — a parte que a P3 realmente quer
+
+Os itens 1 a 4 do desafio (Sonar no ar, integrado ao Jenkins, SCM, config) já
+tinham sido fechados na sessão anterior, mas **sem uma análise publicada**. Só a
+partir do build #17 é que a integração foi exercitada de verdade, e ela
+revelou três defeitos que nenhuma documentação previa. Esta seção é o cerne da
+prova: são eles que o grupo vai explicar na apresentação.
+
+## 14.1 Build #17 — o scanner não estava no caminho
+
+Primeiro build a alcançar o stage `Análise SonarQube`. Sete stages verdes antes
+dele, e o oitavo morreu:
+
+```
++ sonar-scanner
+/var/jenkins_home/workspace/.../script.sh.copy: 1: sonar-scanner: not found
+WARN: Unable to locate 'report-task.txt' in the workspace. Did the SonarScanner succeed?
+ERROR: script returned exit code 127
+```
+
+**Causa raiz:** um symlink apontando para um diretório que não existe. O zip
+oficial se chama `sonar-scanner-cli-5.0.1.3006-linux.zip`, o `unzip` cria
+`/opt/sonar-scanner-5.0.1.3006-linux`, e o `Dockerfile` apontava para
+`/opt/sonar-scanner-5.0.1.3006`, sem o sufixo `-linux`.
+
+A prova é a mesma para quem ler o repositório depois:
+
+```
+$ docker run --rm --entrypoint sh beever-ci-agente -c 'ls /opt; which sonar-scanner'
+sonar-scanner-5.0.1.3006-linux
+AUSENTE
+```
+
+**Por que ninguém viu antes:** link quebrado é invisível para o build. O `ln -s`
+sai com status zero, a imagem "constrói" sem erro, e a falha só aparece minutos
+depois, no meio do pipeline. É a diferença entre um erro de configuração e um
+erro de integração.
+
+**Correção em duas partes** (`jenkins/agente.Dockerfile`, commit `dcae357`):
+
+1. o symlink passou a apontar para o diretório com `-linux`;
+2. o mesmo `RUN` ganhou `&& sonar-scanner --version` no fim — **o build da
+   imagem agora reprova se o executável não estiver de fato no caminho.**
+
+A segunda parte é a que importa. Ela troca uma falha que aparece no meio do
+pipeline por uma que aparece na construção da imagem, onde a mensagem é óbvia.
+Antes de reenviar, a imagem foi construída e testada na mão:
+
+```
+$ docker run --rm --entrypoint sh beever-ci-agente-check -c 'sonar-scanner --version'
+INFO: SonarScanner 5.0.1.3006
+INFO: Java 17.0.7 Eclipse Adoptium (64-bit)
+```
+
+Sem esse passo, o build #19 teria queimado por um `ln -s` que ninguém testou.
+
+## 14.2 Build #18 — o agente não via a rede do compose
+
+O scanner passou a rodar e o `sonar-project.properties` foi lido. Morreu na
+conexão:
+
+```
+INFO: Project root configuration file: .../sonar-project.properties
+INFO: SonarScanner 5.0.1.3006
+ERROR: SonarQube server [http://sonar:9000] can not be reached
+Caused by: java.net.UnknownHostException: sonar: Name or service not known
+```
+
+**Causa raiz:** o agente é um contêiner que o Jenkins cria na hora
+(`docker run`), e contêiner novo nasce na rede `bridge` — onde não existe
+serviço nenhum do compose. `SONAR_HOST_URL=http://sonar:9000` estava
+perfeitamente correto; o nome é que não resolvia.
+
+**Por que as outras etapas não complainaram:** as três que precisam do MySQL
+usam `agente.inside("--link ${mysql.id}:mysql ...")`, e o `--link` traz o nome
+junto com o endereço. O SonarQube é um serviço do compose, não um contêiner que
+o Jenkins possa linkar — não existe `$mysql.id` para ele.
+
+**Correção** (`Jenkinsfile` + `docker-compose.yml`, commit `dcae357`):
+
+```groovy
+agente.inside('--network beever_default') { sh 'sonar-scanner -Dsonar.login=$SONAR_AUTH_TOKEN' }
+```
+
+E, para que o nome da rede não dependa do nome da pasta de quem clonou o
+repositório, o compose ganhou `name: beever` no topo. Deduzido do diretório, o
+projeto seria `beever_default` numa máquina e `beever-2_default` na seguinte, e
+o build quebraria por causa de um `mv`.
+
+Conferido antes de confiar:
+
+```
+$ docker inspect beever-sonar --format '{{...}}'
+beever_default (alias=[beever-sonar sonar])
+$ docker run --rm --network beever_default curlimages/curl \
+    -s -o /dev/null -w "HTTP %{http_code}\n" http://sonar:9000/api/system/status
+HTTP 200
+```
+
+## 14.3 A autenticação — o erro que o nome da variável esconde
+
+Com a rede resolvida, o scanner chegou ao servidor e foi recusado:
+
+```
+INFO: Analyzing on SonarQube server 9.9.8.100196
+ERROR: Not authorized. Analyzing this project requires authentication.
+        Please provide a user token in sonar.login or other credentials
+        in sonar.login and sonar.password.
+```
+
+Este é o erro mais traiçoeiro dos três, porque **tudo o que se vê na tela está
+certo**: a URL está certa, o `projectKey` está certo, a credencial existe no
+Jenkins Credentials. O que falta é o `sonar.login`, e o motivo é um nome de
+variável.
+
+O plugin `sonar` do Jenkins **não** exporta `SONAR_TOKEN`. Ele exporta:
+
+```
+SONAR_HOST_URL
+SONAR_AUTH_TOKEN     ← o token é este
+SONAR_EXTRA_PROPS
+SONAR_MAVEN_GOAL
+```
+
+(names extraídos do `sonar.jpi` instalado, com `strings` nas classes do plugin).
+E o SonarScanner CLI não lê `SONAR_AUTH_TOKEN` sozinho: ele quer a propriedade
+`sonar.login`. São duas camadas que precisam ser ligadas à mão:
+
+```groovy
+agente.inside('--network beever_default') {
+  sh 'sonar-scanner -Dsonar.login=$SONAR_AUTH_TOKEN'
+}
+```
+
+O token continua não indo para o repositório: ele vem do Jenkins Credentials,
+por trás do `withSonarQubeEnv('beever-sonar')`, e o `-D` na linha de comando não
+aparece no log. Confirmado no Console Output do build #18, onde todas as
+credenciais aparecem mascaradas:
+
+```
+$ docker run -t -d -u 1000:1000 -w /var/jenkins_home/workspace/... \
+    -e ******** -e ******** -e ******** ... beever-ci-agente cat
+```
+
+**Como isso foi validado antes de gastar um build.** Rodar a análise na mão,
+com o mesmo token, na mesma rede e a mesma imagem, dá a resposta em 5 minutos em
+vez de 25. Foi assim que se descobriu o nome da variável:
+
+```
+$ docker run --rm --network beever_default \
+    -e SONAR_HOST_URL=http://sonar:9000 -e SONAR_AUTH_TOKEN="$SONAR_TOKEN" \
+    -v "$PWD:/ws" -w /ws beever-ci-agente \
+    sonar-scanner -Dsonar.login="$SONAR_TOKEN"
+...
+INFO: QUALITY GATE STATUS: PASSED - View details on http://sonar:9000/dashboard?id=beever
+INFO: EXECUTION SUCCESS
+```
+
+**Lição que vale para a apresentação:** as três falhas tinham a mesma
+característica — a configuração parecia certa e o erro era de *nome*, não de
+*conceito*. Link sem sufixo, rede errada, variável errada. É por isso que a
+pista não é o log: é verificar a premissa anterior à cada etapa.
+
+## 14.4 Os três erros em uma tabela
+
+| # | Build | Erro | Causa | Onde mora a correção |
+|---|---|---|---|---|
+| 1 | #17 | `sonar-scanner: not found` (127) | symlink sem o sufixo `-linux` | `jenkins/agente.Dockerfile` |
+| 2 | #18 | `UnknownHostException: sonar` | agente na rede `bridge`, não na do compose | `Jenkinsfile` + `docker-compose.yml` |
+| 3 | #18 | `Not authorized` | plugin exporta `SONAR_AUTH_TOKEN`, não `SONAR_TOKEN`; falta `sonar.login` | `Jenkinsfile` |
+
+---
+
+# 15. Baseline do SonarQube — o material do Aluno 4
+
+Primeira análise **publicada** no projeto `beever`. São os números que a seção
+de comparação da apresentação vai usar como "antes".
+
+```
+INFO: SCM Publisher 320 source files to be analyzed
+INFO: Analysis report uploaded in 8405ms
+INFO: QUALITY GATE STATUS: PASSED
+```
+
+## 15.1 As métricas
+
+| Métrica | Valor |
+|---|---|
+| Linhas de código (ncloc) | 12.638 |
+| Arquivos analisados | 320 |
+| **Bugs** | **7** |
+| Vulnerabilidades | 0 |
+| Security Hotspots | 7 |
+| Code Smells | 35 |
+| Violações | 42 |
+| Duplicação | 0,0 % |
+| Security Rating | 1.0 (A) |
+| **Reliability Rating** | **5.0 (E)** |
+| Alert status (Quality Gate) | OK |
+
+## 15.2 Os 7 bugs, e a leitura que o Aluno 4 precisa defender
+
+Esta é a parte que separa quem leu o enunciado de quem entendeu a ferramenta.
+**6 dos 7 "bugs" não são bug.**
+
+| Severidade | Regra | Arquivo | O que é |
+|---|---|---|---|
+| MAJOR | `javascript:S5850` | `src/utils/slug.js:15` | **problema real no código** |
+| BLOCKER | `css:S4654` | `src/styles/lenis.css:25` | parser não conhece `transition-behavior` |
+| BLOCKER | `css:S4654` | `src/styles/landing.css:72` | parser não conhece `animation-timeline` |
+| MAJOR | `css:S4662` | `src/styles/fontes.css:62` | parser não conhece `@theme` |
+| MAJOR | `css:S4662` | `src/styles/tailwind.css:20` | parser não conhece `@source` |
+| MAJOR | `css:S4662` | `src/styles/tailwind.css:21` | parser não conhece `@source` |
+| MAJOR | `css:S4662` | `src/styles/tailwind.css:25` | parser não conhece `@theme` |
+
+Os seis `css:S46xx` são **limitações do analisador CSS do SonarQube 9.9 LTS**,
+que não conhece as at-rules do Tailwind 4 (`@theme`, `@source`) nem
+propriedades modernas de animação (`animation-timeline`, `transition-behavior`).
+O código está certo; o dicionário do Sonar é que é velho. Marcá-los como bug é
+a máquina dizer que é bug, e a correção seria estragar o código.
+
+O sétimo, `javascript:S5850`, é o oposto: é um problema verdadeiro de
+legibilidade e de precedência, num arquivo de produção, usado por três serviços.
+
+**E note o detalhe que dá o ponto da apresentação:** o Quality Gate está
+**PASSED** com Reliability Rating **E** (o pior). Isso acontece porque as cinco
+condições do gate são todas sobre *código novo* (`new_reliability_rating GT 1`,
+`new_reliability_rating GT 1`, `new_maintainability_rating GT 1`,
+`new_duplicated_lines_density GT 3`, `new_security_hotspots_reviewed LT 100`) e
+o projeto não tem condição de cobertura. Verde não é o mesmo que bom — é
+exatamente o "pipeline verde ≠ código perfeito" do enunciado, medido.
+
+## 15.3 O problema escolhido para a correção (Aluno 4)
+
+`src/utils/slug.js:15`, regra `javascript:S5850`:
+
+```js
+.replace(/^-+|-+$/g, '')
+```
+
+O SonarQube pede agrupamento explícito, porque a alternância sem parênteses se
+apoia na precedência de forma implícita:
+
+```js
+.replace(/^(?:-+|-+$)/g, '')
+```
+
+O arquivo é `src/utils/slug.js`, e a função é usada por
+`adminContentService.js`, `adminItemsService.js` e `atividadesDoPainel.js` — ou
+seja, monta os identificadores de favos, itens e células. Um slug errado aqui
+não dá erro visível: dá conteúdo que some da tela.
+
+O teste que garante o comportamento já existe, em
+`test/unit/adminContentService.test.js:11-23` — inclusive o caso que esse `+` do
+meio atende:
+
+```js
+assert.equal(slugDoTitulo('  Juros?  '), 'juros');
+assert.equal(slugDoTitulo('--- mesada ---'), 'mesada');
+```
+
+Ou seja: a correção é segura de fazer e **verificável antes de reanalisar**.
+
+---
+
+# 16. Estado da P3 depois desta sessão
+
+| Passo do desafio | Situação |
+|---|---|
+| 1. Instalar/executar o SonarQube | **pronto** — `beever-sonar` healthy em 127.0.0.1:9000 |
+| 2. Integrar SonarQube ao Jenkins | **pronto** — `withSonarQubeEnv('beever-sonar')` |
+| 3. Jenkins com SCM | **pronto** — deploy key, `refactor/arquitetura-em-camadas` |
+| 4. Preparar o projeto para análise | **pronto** — `sonar-project.properties` versionado |
+| 5. Executar pipeline com análise | **análise publicada**, Quality Gate PASSED |
+| 6. Consultar resultado no painel | **feito** — seção 15, com as métricas e os 7 bugs |
+| 7. Interpretar os problemas | **feito** — seção 15.2, 6 falsos positivos + 1 real |
+| 8. Corrigir ao menos 1 problema | **pronto para executar** — alvo escolhido na 15.3 |
+| 9. Nova análise e comparação | **pendente** — depende do passo 8 |
+
+## 16.1 Por que o stage do Sonar ainda não passou no Jenkins
+
+A correção da seção 14.3 (autenticação) está escrita no `Jenkinsfile` e
+**ainda não foi commitada nem enviada** — este registro vem antes, conforme o
+combinado de documentar a cada passo. O build #19 é o que vai confirmar a
+correção de ponta a ponta pelo Jenkins, e não pela linha de comando.
+
+Quando ele rodar, o esperado é: sete stages verdes, o oitavo publishando a
+análise e o `waitForQualityGate` respondendo. A partir daí a comparação
+antes/depois passa a ser feito pelo pipeline, que é o que a prova pede.
+
+## 16.2 Os dois papers mais fortes para a apresentação
+
+1. **O symlink quebrado** (14.1). É um erro invisível para o build, e a
+   correção de fundo — `&& sonar-scanner --version` no mesmo `RUN` — mostra
+   que a resposta não é consertar e seguir, é consertar e impedir que volte.
+2. **A variável `SONAR_AUTH_TOKEN`** (14.3). URL certa, projeto certo, token
+   certo no Credentials, e mesmo assim `Not authorized`. A pista não estava no
+   log, estava no nome.
+
+E o contrapeso, que é o que o enunciado pedia explicitamente: **o Quality Gate
+está verde com o pior rating possível de confiabilidade** (15.1), e seis dos
+sete bugs são o dicionário do Sonar ficando velho, não o código do grupo
+(15.2). Dizer isso na apresentação vale mais do que mostrar um build verde.

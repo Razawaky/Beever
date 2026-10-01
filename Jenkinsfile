@@ -112,7 +112,26 @@ pipeline {
             // O scanner roda dentro do mesmo agente descartável das outras
             // etapas, e ele já vem no jenkins/agente.Dockerfile com o JRE
             // junto. Nenhum scanner é instalado no controlador.
-            agente.inside { sh 'sonar-scanner' }
+            //
+            // A `--network` não é enfeite. O agente é um contêiner novo, e
+            // contêiner novo nasce na rede `bridge`, onde não existe nenhum
+            // serviço do compose. Sem isto, o scanner morre com
+            // `UnknownHostException: sonar` mesmo com a URL certa no ambiente.
+            // As outras etapas não precisam disto porque o MySQL entra por
+            // `--link`, que traz o nome junto; o SonarQube não tem contêiner
+            // visível para o Jenkins linkar.
+            //
+            // `beever_default` é o nome da rede padrão do compose, e ele é
+            // fixado pelo `name: beever` lá no topo do docker-compose.yml.
+            //
+            // O `-Dsonar.login` é o token, e ele vem de `SONAR_AUTH_TOKEN`. O
+            // nome da variável é do plugin, e é fácil errar: o plugin exporta
+            // `SONAR_AUTH_TOKEN` e não `SONAR_TOKEN`, então confiar no nome
+            // errado produz `Not authorized` com a URL, o projeto e a
+            // credencial todos perfeitos. O token não é escrito aqui — ele vem
+            // do Jenkins Credentials, por trás do `withSonarQubeEnv`, e o `-D`
+            // na linha de comando do `sh` não aparece no log.
+            agente.inside('--network beever_default') { sh 'sonar-scanner -Dsonar.login=$SONAR_AUTH_TOKEN' }
           }
 
           // O Quality Gate decide o build. Sem esta espera a etapa terminaria

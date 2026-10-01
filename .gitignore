@@ -21,6 +21,11 @@ backups/
 coverage/
 .nyc_output/
 
+# Artefato do SonarScanner. Qualquer `sonar-scanner` rodado na raiz — inclusive
+# o local, fora do Jenkins — deixa `.scannerwork/` aqui, com `report-task.txt`
+# e o `.sonar_lock`. Não é código do Beever e não deve subir.
+.scannerwork/
+
 # Sistema operacional e editores
 .DS_Store
 Thumbs.db
