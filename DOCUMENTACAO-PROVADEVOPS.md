@@ -18,7 +18,7 @@ Fluxo: **GitHub → Jenkins → SonarScanner → SonarQube → Quality Gate**
 | 2 | Integrar SonarQube ao Jenkins | 2 | ✅ Feito |
 | 3 | Jenkins obtém projeto via SCM | 2 | ✅ Feito |
 | 4 | Preparar projeto para análise | 3 | ✅ Feito — arquivo escrito **e versionado** |
-| 5 | Pipeline com análise | 3 | 🟡 Correções de rede e token em `6bf40c9`; primeiro build com elas é o #21 (seção 14) |
+| 5 | Pipeline com análise | 3 | ✅ **Build #21 SUCCESS** — 8 stages verdes, gate OK (seção 18) |
 | 6 | Consultar painel | 4 | ✅ Feito — baseline publicada, 320 arquivos, 12.638 ncloc (seção 15.1) |
 | 7 | Interpretar problemas | 4 | ✅ Feito — 7 bugs lidos, 6 são falso positivo do analisador CSS (seção 15.2) |
 | 8 | Corrigir ao menos 1 problema | 4 | 🟡 Alvo escolhido: `src/utils/slug.js:15`, `javascript:S5850` (seção 15.3) |
@@ -393,16 +393,17 @@ motivo de o `sonar-project.properties` ser o arquivo mais importante da P3.
 - [x] Job Pipeline no Jenkins com SCM
 - [x] `Jenkinsfile` no repositório
 - [x] `sonar-project.properties` escrito **e versionado**
-- [x] Suíte de testes verde no Jenkins (builds #17 e #18: 7 stages verdes)
-- [x] Análise publicada no SonarQube (320 arquivos, seção 15)
+- [x] Suíte de testes verde no Jenkins (build #21: 1167 + 1172 testes, 0 falhas)
+- [x] Análise publicada no SonarQube pelo **pipeline** — 2 no total (seção 18)
 - [x] SonarQube no ar (falta print)
-- [x] Resultado do Quality Gate — **PASSED** (seção 15.1)
+- [x] Resultado do Quality Gate — **PASSED** (seções 15.1 e 18)
 - [x] Problemas encontrados e interpretados — 7 bugs, 6 falsos positivos (seção 15.2)
 - [x] Alvo da correção escolhido e justificado — `src/utils/slug.js:15` (seção 15.3)
-- [ ] Execução da pipeline **com o stage do Sonar verde** (build #19)
-- [ ] Ao menos 1 correção (vinda do Sonar)
-- [ ] Nova análise + comparação antes/depois
+- [x] **Execução da pipeline com o stage do Sonar verde** — build #21 SUCCESS (seção 18)
+- [ ] Ao menos 1 correção (vinda do Sonar) — `src/utils/slug.js:15`, regex pronta na 17.2
+- [ ] Nova análise + comparação antes/depois — depende da correção acima
 - [ ] Print do Quality Gate antes e depois, lado a lado
+- [ ] Investigar o `abort` que o plugin não reconhece (seção 18.2)
 - [ ] Envio no Teams
 
 ---
@@ -944,3 +945,151 @@ Copiar as duas colunas lado a lado para a apresentação.
   41 segundos.
 - **Build #20 não é uma falha do Sonar**: `Failed to load program` é
   desserialização do Jenkins.
+
+---
+
+# 18. Build #21 — o pipeline completo, verde
+
+**Este é o build que fecha o passo 5 do desafio.** Até aqui, os itens 1 a 4
+estavam prontos mas **sem prova de ponta a ponta**: o Sonar estava integrado,
+porém nenhuma análise tinha sido publicada pelo Jenkins.
+
+## 18.1 O resultado
+
+```
+Build #21   SUCCESS   1538s (25 min)
+Finished: SUCCESS
+```
+
+Console Output, na ordem dos oito stages:
+
+| # | Stage | Resultado |
+|---|---|---|
+| 1 | Declarative: Checkout SCM | ✅ `6bf40c9` |
+| 2 | Dependências | ✅ imagem do agente reconstruída |
+| 3 | Lint e auditoria | ✅ |
+| 4 | Suíte contra MySQL | ✅ **1167 / 1167**, 0 falhas |
+| 5 | Cobertura | ✅ **1172 / 1169**, 0 falhas, 3 pulados |
+| 6 | Rolagem a 320 px | ✅ |
+| 7 | Imagem Docker | ✅ |
+| 8 | Análise SonarQube | ✅ **gate OK** |
+
+**As linhas que provam que a integração funciona:**
+
+```
+INFO: 320 source files to be analyzed
+INFO: QUALITY GATE STATUS: PASSED - View details on http://sonar:9000/dashboard?id=beever
+INFO: EXECUTION SUCCESS
+```
+
+O `313` que também aparece no log é o sensor JavaScript isolado; os `320` são o
+total publicado pelo SCM Publisher, e é o número que bate com a análise base.
+
+E a espera pelo portão, que é a parte que o SonarQube avalia:
+
+```
+[Pipeline] waitForQualityGate
+Checking status of SonarQube task 'AaD4MEfZDTIyIm_pPiRL' on server 'beever-sonar'
+SonarQube task 'AaD4MEfZDTIyIm_pPiRL' status is 'SUCCESS'
+SonarQube task 'AaD4MEfZDTIyIm_pPiRL' completed. Quality gate is 'OK'
+```
+
+**O Sonar tem 2 análises agora:**
+
+| Análise | Horário | Origem |
+|---|---|---|
+| `AaD3_L7iC1b1hK8IGPFS` | 2026-10-01 14:58:49 +0000 | base, rodada à mão (seção 14.4) |
+| `AaD4MFVeC1b1hK8IGQrY` | 2026-10-01 15:57:02 +0000 | **build #21, pelo pipeline** |
+
+A segunda é a que interessa: saiu do Jenkins, lendo o GitHub, dentro do agente
+descartável, e o `waitForQualityGate` esperou o veredito.
+
+**Duas correções que o #21 provou** (ambas em `6bf40c9`, seções 14.2 e 14.3):
+
+- `--network beever_default` — sem isso, `UnknownHostException: sonar`
+- `-Dsonar.login=$SONAR_AUTH_TOKEN` — sem isso, `Not authorized`
+
+Sem elas o build morre em ~1 s, como nos #19.
+
+## 18.2 Um aviso que ficou no log
+
+```
+WARNING: Unknown parameter(s) found for class type
+  'org.sonarsource.scanner.jenkins.pipeline.WaitForQualityGateStep': abort
+```
+
+O `abort: true` no `Jenkinsfile` **não está sendo honrado** — o parâmetro não
+existe nessa versão do plugin. Não quebrou nada aqui, porque o gate passou. Mas
+se um dia o gate reprovar, **o build vai terminar com `SUCCESS` mesmo assim**,
+avisando no log em vez de barrar o merge.
+
+Isso importa para a apresentação, porque a resposta padrão seria "o portão
+bloqueia o merge, porque o `Jenkinsfile` usa `abort: true`". Hoje essa resposta
+está **errada**: o portão **avisa**, não bloqueia. Duas formas de consertar:
+
+- atualizar o plugin `sonar` para uma versão que suporte `abort`, ou
+- ler o status do gate por API no `post { }` e chamar `error()` quando reprovar.
+
+Não é bloqueante para a entrega, mas é a diferença entre um portão de verdade e
+um enfeite — e o avaliador pode perguntar exatamente isso.
+
+## 18.3 O que ainda falta
+
+Três itens, nesta ordem. O primeiro é o único que exige código.
+
+### 1. A correção que o Sonar pediu (Aluno 4)
+
+`src/utils/slug.js:15`, `javascript:S5850`. A regex **certa** está na 17.2:
+
+```js
+.replace(/^(?:-+)|(?:-+)$/g, '')
+```
+
+Não a variante `^(?:-+|-+$)`, que fecha o achado no painel e quebra o slug.
+Rodar `npm run test:db` antes de enviar: `test/unit/adminContentService.test.js:11-23`
+cobre `'--- mesada ---'` e pega a regressão na hora.
+
+Depois: conferir se o painel caiu de **7 para 6 bugs**.
+
+### 2. A comparação antes/depois
+
+Só existe depois do item 1. A tabela da 17.3 já tem o esperado; o número real
+vem do build que publicar a correção.
+
+### 3. Os prints (seção 9)
+
+São os que **só humano com navegador tira**. O mais importante é o Quality Gate
+**antes e depois, lado a lado**, com data e hora visíveis — é a prova visual da
+comparação do item 2.
+
+Vale capturar agora, enquanto o #21 está na tela:
+
+- Console Output do #21 com os oito stages verdes
+- Painel do Sonar com os 7 bugs e o `slug.js` em vermelho
+- `http://localhost:8080/manage/sonar` e a tela de Credentials
+
+## 18.4 Retomar
+
+O build #22 foi disparado pelo commit `4ef5241` (só documentação), então ele
+**não** traz a correção. Para publishar a correção:
+
+```bash
+# 1. aplicar a regex da 17.2 em src/utils/slug.js:15
+# 2. provar que nada quebrou
+TESTES_DE_BANCO=1 PULAR_MEDICAO_DE_CARGA=1 npm run test:db
+# 3. commitar e enviar
+git add src/utils/slug.js && git commit -m "..."
+git push origin refactor/arquitetura-em-camadas
+```
+
+Para acompanhar o build depois:
+
+```bash
+J=$(grep -m1 '^JENKINS_ADMIN_PASSWORD=' .env | cut -d= -f2-)
+curl -s --globoff -u "admin:$J" \
+  --data-urlencode 'tree=jobs[name,builds[number,building,result,duration]{0,2}]' \
+  http://localhost:8080/job/beever/api/json
+```
+
+`--globoff` é obrigatório: sem ele o `curl` interpreta o `[` do `tree` como
+intervalo e falha com `bad range`.
