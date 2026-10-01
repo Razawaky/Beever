@@ -18,11 +18,11 @@ Fluxo: **GitHub → Jenkins → SonarScanner → SonarQube → Quality Gate**
 | 2 | Integrar SonarQube ao Jenkins | 2 | ✅ Feito |
 | 3 | Jenkins obtém projeto via SCM | 2 | ✅ Feito |
 | 4 | Preparar projeto para análise | 3 | ✅ Feito — arquivo escrito **e versionado** |
-| 5 | Pipeline com análise | 3 | 🟡 Build #17 corrigido em `dcae357`; build #18 rodou e falhou por rede (seção 6) |
+| 5 | Pipeline com análise | 3 | 🟡 Correções de rede e token em `6bf40c9`; primeiro build com elas é o #21 (seção 14) |
 | 6 | Consultar painel | 4 | ✅ Feito — baseline publicada, 320 arquivos, 12.638 ncloc (seção 15.1) |
 | 7 | Interpretar problemas | 4 | ✅ Feito — 7 bugs lidos, 6 são falso positivo do analisador CSS (seção 15.2) |
 | 8 | Corrigir ao menos 1 problema | 4 | 🟡 Alvo escolhido: `src/utils/slug.js:15`, `javascript:S5850` (seção 15.3) |
-| 9 | Nova análise e comparação | 4 | ⏸ Pendente — build #20 |
+| 9 | Nova análise e comparação | 4 | ⏸ Pendente — build #21 publica o "depois" (seção 17) |
 
 **Bloqueio anterior, já resolvido:** o `sonar-scanner` não era encontrado dentro
 do agente (`exit code 127`). O `jenkins/agente.Dockerfile` apontava o symlink
@@ -33,8 +33,8 @@ seção 6.
 **Análise já publicada.** `GET /api/project_analyses/search?project=beever`
 devolve `total: 1` (`AaD3_L7iC1b1hK8IGPFS`, 2026-10-01T14:58:49+0000) — foi a
 análise **base**, feita à mão dentro da rede `beever_default` para destravar os
-passos 6 a 9 enquanto o stage do Jenkins ainda não rodava verde. O build #19 vai
-publicar a segunda, pelo pipeline.
+passos 6 a 9 enquanto o stage do Jenkins ainda não rodava verde. O build #21 é o
+primeiro a publicar uma segunda análise pelo pipeline.
 
 **Quality Gate `Beever`:** criado e associado ao projeto `beever`. Condições
 (conferidas em `GET /api/qualitygates/show?name=Beever`):
@@ -58,8 +58,8 @@ publicar a segunda, pelo pipeline.
 > logo o gate responde **OK**. Ele não disse nada sobre os 7 bugs.
 >
 > **Consequência prática:** quando existir uma segunda análise com código novo
-> real (build #20), o gate passa a avaliar de verdade e pode reprovar. O
-> PASSED do build #19 é resultado de configuração, não atestado de qualidade.
+> real (build #21), o gate passa a avaliar de verdade e pode reprovar. O
+> PASSED de hoje é resultado de configuração, não atestado de qualidade.
 
 ---
 
@@ -88,10 +88,11 @@ curl -s localhost:9000/api/system/status   # esperar {"status":"UP"}
 **Todos versionados.** `git ls-files` confirma: `docker-compose.yml`,
 `.env.example`, `Jenkinsfile`, `sonar-project.properties`, `jenkins/Dockerfile`,
 `jenkins/agente.Dockerfile`, `jenkins/casc.yaml`, `jenkins/entrada.sh`.
-A última tag local foi `dcae357`, mais o commit de documentação `7bdcf17`.
-As correções de rede e autenticação do Sonar (seção 14) estão **escritas e
-testadas, mas ainda não commitadas** — por isso o build #19 é o primeiro build
-que pode passar.
+A última tag local é `6bf40c9` (rede do agente + `sonar.login`), sobre
+`7bdcf17` (documentação) e `dcae357` (symlink do scanner). A correção de rede e
+autenticação **está commitada e enviada**; o que faltava era o controlador do
+Jenkins ainda estar com o token revogado (seção 14.5), resolvido com
+`--force-recreate`.
 
 ---
 
@@ -538,7 +539,8 @@ usam `agente.inside("--link ${mysql.id}:mysql ...")`, e o `--link` traz o nome
 junto com o endereço. O SonarQube é um serviço do compose, não um contêiner que
 o Jenkins possa linkar — não existe `$mysql.id` para ele.
 
-**Correção** (`Jenkinsfile` + `docker-compose.yml`, commit `dcae357`):
+**Correção** (`Jenkinsfile` + `docker-compose.yml`, commit `6bf40c9` — e não
+`dcae357`, que é o commit do symlink da 14.1):
 
 ```groovy
 agente.inside('--network beever_default') { sh 'sonar-scanner -Dsonar.login=$SONAR_AUTH_TOKEN' }
@@ -623,13 +625,67 @@ característica — a configuração parecia certa e o erro era de *nome*, não 
 *conceito*. Link sem sufixo, rede errada, variável errada. É por isso que a
 pista não é o log: é verificar a premissa anterior à cada etapa.
 
-## 14.4 Os três erros em uma tabela
+## 14.4 Os quatro erros em uma tabela
 
 | # | Build | Erro | Causa | Onde mora a correção |
 |---|---|---|---|---|
 | 1 | #17 | `sonar-scanner: not found` (127) | symlink sem o sufixo `-linux` | `jenkins/agente.Dockerfile` |
-| 2 | #18 | `UnknownHostException: sonar` | agente na rede `bridge`, não na do compose | `Jenkinsfile` + `docker-compose.yml` |
+| 2 | #18 e #19 | `UnknownHostException: sonar` | agente na rede `bridge`, não na do compose | `Jenkinsfile` + `docker-compose.yml` |
 | 3 | #18 | `Not authorized` | plugin exporta `SONAR_AUTH_TOKEN`, não `SONAR_TOKEN`; falta `sonar.login` | `Jenkinsfile` |
+| 4 | — | build verde de verdade, mas `Not authorized` na hora de publicar | token do `.env` **revogado** e o controlador ainda com o antigo | `docker compose --profile jenkins up -d --force-recreate jenkins` |
+
+## 14.5 O quarto erro — o token revogado, e o endpoint que mente
+
+Com as três correções no `Jenkinsfile`, o `6bf40c9` foi enviado. Antes de gastar
+os ~25 minutos de um build, o token foi conferido de novo — e o do controlador
+estava **revogado**. Não importava: ele vinha do `.env` de uma sessão anterior,
+e aquele token já não existia mais no SonarQube.
+
+Este é o erro mais caro dos quatro, porque **ninguém olha para ele**. O token
+não está no repositório, não está no log, não está no `Jenkinsfile`, e a
+credencial aparece lá no Jenkins Credentials com o ID certo e a descrição certa.
+O controlador só vai ler o valor novo quando for recriado:
+
+```bash
+docker compose --profile jenkins up -d --force-recreate jenkins
+```
+
+Sem isso, o build passa todas as sete etapas, roda o scanner, chega no Sonar e
+morre em `Not authorized` — e a conclusão errada que se toma é "a correção de
+autenticação está errada", sendo que ela está certa e o segredo é velho.
+
+**E o detalhe que quase fez o diagnóstico sair errado duas vezes:** o endpoint
+que parece serve para checar token mente.
+
+```
+$ curl -s -o /dev/null -w "%{http_code}\n" -u "$TOKEN:" \
+    http://localhost:9000/api/authentication/validate
+200        # com token válido
+200        # com token INVÁLIDO
+200        # sem credencial nenhuma
+```
+
+`/api/authentication/validate` responde **200 sempre** — inclusive para
+anônimo. Dando 200 nele, dá-se o token por bom e perde-se tempo consertando a
+coisa certa. O endpoint que separa os três casos é
+`/api/users/current`, que exige autenticação de verdade:
+
+| Credencial | `validate` | `users/current` |
+|---|---|---|
+| token válido | 200 | **200** |
+| token revogado | 200 | **401** |
+| token inventado | 200 | **401** |
+| sem credencial | 200 | **401** |
+
+Confirmado na prática: antes da recriação, `users/current` devolvia **401** para
+o token do controlador e **200** para o token do `.env`; depois do
+`--force-recreate`, o controlador passou a devolver **200**.
+
+**A regra geral:** token revogado é invisível na tela e o endpoint de
+validação padrão não denuncia. O sintoma aparece longe da causa — no último
+stage, 25 minutos depois, com um erro que aponta para a configuração e não para
+o segredo. Conferir o segredo contra a API antes de mexer em pipeline é o que
+economiza o build.
 
 ---
 
@@ -700,12 +756,41 @@ exatamente o "pipeline verde ≠ código perfeito" do enunciado, medido.
 .replace(/^-+|-+$/g, '')
 ```
 
-O SonarQube pede agrupamento explícito, porque a alternância sem parênteses se
-apoia na precedência de forma implícita:
+A regra S5850 ("Alternatives in regular expressions should be grouped when used
+with anchors") pede agrupamento explícito, porque a alternância sem parênteses
+se apoia na precedência de forma implícita. A própria regra oferece duas saídas,
+e aqui só uma delas serve.
+
+**A correção certa** é ancorar cada alternativa separadamente — é o que a regra
+chama de "âncoras que se aplicam a uma alternativa cada":
 
 ```js
-.replace(/^(?:-+|-+$)/g, '')
+.replace(/^(?:-+)|(?:-+)$/g, '')
 ```
+
+**A correção errada**, que parece a óbvia, é esta:
+
+```js
+.replace(/^(?:-+|-+$)/g, '')   // ❌ NÃO FAÇA ISSO
+```
+
+Ela põe o `^` fora do grupo, então o `^` passa a valer para as duas
+alternativas: o `-+$` só casa se os hífens estiverem **também** no começo da
+string. Na prática os hífens do fim deixam de ser removidos. Medido em Node, com
+a mesma função de `slugDeTexto`:
+
+| Entrada | Hoje | `^(?:-+|-+$)` ❌ | `^(?:-+)\|(?:-+)$` ✅ |
+|---|---|---|---|
+| `'  Juros?  '` | `juros` | `juros-` | `juros` |
+| `'--- mesada ---'` | `mesada` | `mesada-` | `mesada` |
+| `'-a-'` | `a` | `a-` | `a` |
+| `'acentuação ---  '` | `acentuacao` | `acentuacao-` | `acentuacao` |
+
+Quatro de seis casos quebram. **Este é o tipo de erro que o SonarQube não
+acha**: a regra continua fechada, o build fica verde, o Quality Gate segue
+PASSED — e o slug passa a terminar em hífen, que some do link e faz o conteúdo
+não aparecer. Vale como resposta na apresentação: fechar o achado não é o
+mesmo que manter o comportamento.
 
 O arquivo é `src/utils/slug.js`, e a função é usada por
 `adminContentService.js`, `adminItemsService.js` e `atividadesDoPainel.js` — ou
@@ -739,16 +824,30 @@ Ou seja: a correção é segura de fazer e **verificável antes de reanalisar**.
 | 8. Corrigir ao menos 1 problema | **pronto para executar** — alvo escolhido na 15.3 |
 | 9. Nova análise e comparação | **pendente** — depende do passo 8 |
 
-## 16.1 Por que o stage do Sonar ainda não passou no Jenkins
+## 16.1 Onde a integração parou, com honestidade
 
-A correção da seção 14.3 (autenticação) está escrita no `Jenkinsfile` e
-**ainda não foi commitada nem enviada** — este registro vem antes, conforme o
-combinado de documentar a cada passo. O build #19 é o que vai confirmar a
-correção de ponta a ponta pelo Jenkins, e não pela linha de comando.
+As quatro correções estão **commitadas e enviadas** (`6bf40c9`), e o controlador
+do Jenkins foi recriado com o token válido (14.5). O que **ainda não existe** é
+um build em que o stage `Análise SonarQube` fique verde: a única análise
+publicada até agora foi feita à mão, e é isso que o passo 5 do desafio pede.
 
-Quando ele rodar, o esperado é: sete stages verdes, o oitavo publishando a
-análise e o `waitForQualityGate` respondendo. A partir daí a comparação
-antes/depois passa a ser feito pelo pipeline, que é o que a prova pede.
+O histórico honesto dos builds, sem arredondar:
+
+| Build | Resultado | Por quê |
+|---|---|---|
+| #17 | FAILURE (41 min) | `sonar-scanner: not found` — symlink sem `-linux` |
+| #18 | FAILURE (23 min) | scanner achado, `UnknownHostException: sonar` — rede errada |
+| #19 | FAILURE (28 min) | o `6bf40c9` ainda não tinha sido enviado; repetiu a rede errada |
+| #20 | FAILURE (41 s) | **não é falha de código**: o controlador foi reiniciado com o build em voo e o `program.dat` sumiu (`Failed to load program`) |
+| #21 | em andamento | primeiro build com rede + `sonar.login` + token válido |
+
+O #20 merece estar na tabela porque é o tipo de coisa que se perde tempo
+investigando: `FAILURE` em 41 segundos, com um stack trace deserialização do
+Jenkins que não tem nada a ver com o pipeline. Build que morre assim é
+infraestrutura, não código.
+
+O esperado do #21 é: sete stages verdes, o oitavo publicando a análise, e o
+`waitForQualityGate abort: true` respondendo.
 
 ## 16.2 Os dois papers mais fortes para a apresentação
 
@@ -763,3 +862,85 @@ E o contrapeso, que é o que o enunciado pedia explicitamente: **o Quality Gate
 está verde com o pior rating possível de confiabilidade** (15.1), e seis dos
 sete bugs são o dicionário do Sonar ficando velho, não o código do grupo
 (15.2). Dizer isso na apresentação vale mais do que mostrar um build verde.
+
+---
+
+# 17. Checkpoint — de onde retomar
+
+Estado em que a sessão foi encerrada: **build #21 em andamento**, com as quatro
+correções commitadas e enviadas, e o controlador do Jenkins com o token válido.
+Abaixo está a ordem de trabalho, do que mais custa nota para o que menos custa.
+
+## 17.1 Bloqueio 1 — confirmar o stage do Sonar verde (o que dá a nota)
+
+O passo 5 do desafio só fecha com um build inteiro verde. Verificar:
+
+```bash
+P=$(grep -m1 '^JENKINS_ADMIN_PASSWORD=' .env | cut -d= -f2-)
+curl -s -u "admin:$P" --get \
+  --data-urlencode 'tree=jobs[name,builds[number,building,result,duration]{0,2}]' \
+  http://localhost:8080/job/beever/api/json | jq -c '.jobs[0].builds[]'
+```
+
+`"result":"SUCCESS"` e `"building":false` é o objetivo. Se o build morrer com
+`Not authorized`, é a 14.5 de novo: refazer o `--force-recreate`. Se morrer com
+`Failed to load program` em menos de um minuto, é o caso do #20 — reiniciar o
+controlador matou o build, não é erro do pipeline; só disparar de novo.
+
+Depois de verde, conferir que a análise subiu pelo pipeline (e não só à mão):
+
+```bash
+T=$(grep -m1 '^SONAR_TOKEN=' .env | cut -d= -f2-)
+curl -s -u "$T:" "http://localhost:9000/api/project_analyses/search?project=beever" \
+  | jq '.paging.total'
+```
+
+Dois é o número esperado: a base manual (14:58) e a do #21.
+
+## 17.2 Bloqueio 2 — a correção que o Sonar pediu
+
+Aplicar a regex **certa** da 15.3 em `src/utils/slug.js:15`:
+
+```js
+.replace(/^(?:-+)|(?:-+)$/g, '')
+```
+
+Não a variante `^(?:-+|-+$)` — ela fecha o achado no painel e quebra o slug em
+4 de 6 casos (tabela na 15.3). Rodar `npm run test:db` antes de enviar: o teste
+em `test/unit/adminContentService.test.js:11-23` cobre `'--- mesada ---'` e
+pega a regressão na hora.
+
+## 17.3 Bloqueio 3 — a comparação antes/depois
+
+Enviar a correção, esperar o build (#22) publicar, e comparar com a 15.1:
+
+| | Antes (base) | Depois (esperado) |
+|---|---|---|
+| Bugs | 7 | **6** |
+| Violações | 42 | 41 |
+| Reliability Rating | 5.0 (E) | ainda 5.0 — as 6 pendências são `css:S46xx` |
+| Quality Gate | OK | OK |
+
+O rating **não** muda, e isso é o argumento, não um problema: os 6 bugs que
+ficam são o analisador CSS do SonarQube 9.9 (15.2). O que muda é a violação
+`javascript:S5850` sumir e o build do pipeline ter produzido a análise sozinho.
+Copiar as duas colunas lado a lado para a apresentação.
+
+## 17.4 Fechamento
+
+1. Print do Quality Gate antes e depois, com data e hora visíveis (seção 9)
+2. Console Output do #21 com os oito stages verdes
+3. Histórico: `git log --oneline`
+4. Envio no **Teams** até o dia da P3
+
+## 17.5 O que não repetir
+
+- **`/api/authentication/validate` mente**: responde 200 para token válido,
+  revogado e para anônimo. Usar `/api/users/current` (401 = token morto).
+- **Token no `.env` não é o token do Jenkins**: o controlador só lê o valor no
+  boot. Trocar o `.env` sem `--force-recreate` deixa o Jenkins com o antigo.
+- **`^(?:-+|-+$)` parece a correção certa e não é** (15.3).
+- **Não reiniciar o Jenkins com build em andamento**: foi o que matou o #20 em
+  41 segundos.
+- **Build #20 não é uma falha do Sonar**: `Failed to load program` é
+  desserialização do Jenkins.
