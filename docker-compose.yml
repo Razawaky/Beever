@@ -4,6 +4,7 @@
 #   docker compose up -d                    MySQL e Mailpit
 #   docker compose --profile completo up     MySQL + Mailpit + migrations + aplicação
 #   docker compose --profile jenkins up -d   Jenkins local em http://localhost:8080
+#   docker compose --profile sonar up -d     SonarQube local em http://localhost:9000
 #
 # O perfil existe para não quebrar quem já roda o Node fora do compose, que é
 # como o projeto foi desenvolvido até aqui.
@@ -128,6 +129,22 @@ services:
     environment:
       # A falta de senha é recusada pelo entrypoint do contêiner, e não aqui.
       JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-}
+      # Endereço do SonarQube visto de dentro da rede do compose. O painel está
+      # preso em 127.0.0.1 no host, então nenhum outro contêiner o alcança: o
+      # Jenkins só chega nele por esta rede, que é o motivo de o painel não
+      # precisar ficar exposto.
+      SONAR_URL: ${SONAR_URL:-http://sonar:9000}
+      # O token do SonarQube chega ao Jenkins pelo ambiente, e nunca pelo
+      # repositório: o valor mora no .env (ignorado pelo Git) e o casc.yaml só o
+      # interpola na hora de montar a credencial do Jenkins Credentials. A
+      # análise usa essa credencial, o Jenkinsfile nunca enxerga o valor.
+      SONAR_TOKEN: ${SONAR_TOKEN:-}
+      # De onde o job multibranch clona. O casc.yaml interpola isto no remote do
+      # GitSCMSource; sem a variável entrar no contêiner, o JCasC não a resolve,
+      # avisa "unresolved variable" e grava o remote vazio — o job até existe,
+      # mas não tem onde ler. Na prova é o GitHub por SSH (a deploy key
+      # montada em /var/jenkins_home/ssh-github); no dia a dia, file:///repo.
+      BEEVER_SCM_URL: ${BEEVER_SCM_URL:-file:///repo}
       JAVA_OPTS: >-
         -Xmx768m
         -Djenkins.install.runSetupWizard=false
@@ -141,6 +158,12 @@ services:
       - beever-jenkins:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/repo:ro
+      # Chave SSH do GitHub e o known_hosts, em somente leitura. Fica numa pasta
+      # própria em vez de montar o ~/.ssh inteiro, para o contêiner não enxergar
+      # as chaves pessoais de quem desenvolve. O arquivo de chave é referenciado
+      # pela credencial do GitHub no jenkins/casc.yaml — a chave nunca é escrita
+      # em texto no repositório.
+      - ${JENKINS_SSH_DIR:-~/.ssh/beever-jenkins}:/var/jenkins_home/ssh-github:ro
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -154,6 +177,58 @@ services:
     depends_on:
       - mysql
 
+  # SonarQube local, o painel que o Jenkins alimenta com a análise de código
+  # (http://localhost:9000). Fica num perfil próprio pelo mesmo motivo do
+  # Jenkins: pesa mais de 1 GB em memória, e quem desenvolve no dia a dia não
+  # deve pagar isso.
+  #
+  # A tag é a Community Build, a versão gratuita. Dentro dela existem duas
+  # linhas: a `lts-community`, que hoje é a 9.9 e é a que a SonarSource mantém
+  # por mais tempo, e a `community`, que já corre para a 26.9 e muda a cada
+  # lançamento. Aqui está a LTS, com a versão escrita por extenso: fixar o
+  # número garante que a demonstração de hoje e a da prova deem o mesmo
+  # resultado, em vez de mudarem sozinhas quando a SonarSource publica.
+  sonar:
+    image: sonarqube:9.9.8-community
+    container_name: beever-sonar
+    profiles: ['sonar']
+    restart: unless-stopped
+    environment:
+      # 512 MB em vez dos 2 GB do padrão: a máquina de desenvolvimento tem
+      # 5,7 GB e SonarQube, Jenkins, MySQL e o Chromium do build disputam o
+      # mesmo resto. Heap maior aqui vira swap, e swap em máquina de build
+      # reprova teste de tempo sem que o código tenha mudado (ver DT-131).
+      SONAR_JAVA__OPTS: ${SONAR_JAVA__OPTS:--Xmx512m -Xms512m}
+      # O Elasticsearch embarcado recusa subir se `vm.max_map_count` do host for
+      # menor que 262144, e o padrão do Linux é 65530. A correção seria
+      # `sudo sysctl -w vm.max_map_count=524288`, que exige root. Desligar a
+      # checagem é a alternativa documentada para ambiente de desenvolvimento —
+      # e não é configuração para servidor.
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: 'true'
+    # Só na própria máquina: o SonarQube novo nasce com admin/admin e publica o
+    # código-fonte indexado. Mesma razão que prende o Jenkins em 127.0.0.1.
+    ports:
+      - '127.0.0.1:9000:9000'
+    volumes:
+      # Banco interno, logs e plugins do SonarQube. Sem volume, derrubar o
+      # contêiner apaga todo o histórico de análises — que é a prova da P3.
+      - beever-sonar:/opt/sonarqube/data
+      - beever-sonar-extensions:/opt/sonarqube/extensions
+      - beever-sonar-logs:/opt/sonarqube/logs
+    healthcheck:
+      # `/api/system/status` responde antes do SonarQube ficar pronto, e análise
+      # nesse intervalo falha com "ServiceUnavailable". Esperar o `UP` evita a
+      # corrida entre o Jenkins subir e o painel aceitar análise.
+      #
+      # É `wget` e não `curl`: a imagem do SonarQube não traz o curl, e um
+      # healthcheck que chama comando inexistente falha para sempre sem dizer
+      # por quê. Foi o que aconteceu na primeira subida.
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:9000/api/system/status | grep -q "UP"']
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 90s
+
 
 volumes:
   beever-mysql-data:
@@ -162,3 +237,7 @@ volumes:
   # As ilustrações enviadas pelo painel administrativo são conteúdo, não código:
   # sem volume elas somem no próximo deploy.
   beever-uploads:
+  # Banco interno, logs e plugins do SonarQube.
+  beever-sonar:
+  beever-sonar-extensions:
+  beever-sonar-logs:

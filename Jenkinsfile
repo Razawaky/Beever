@@ -97,5 +97,32 @@ pipeline {
         sh 'docker build --target runtime -t beever:jenkins .'
       }
     }
+
+    // Última etapa de propósito: ela só precisa do código-fonte, e vir no fim
+    // faz o Console Output ler na ordem "lint → testes → cobertura → imagem →
+    // Sonar". Ver DOCUMENTACAO-PROVADEVOPS.md, seção 3.7.
+    stage('Análise SonarQube') {
+      steps {
+        script {
+          // `withSonarQubeEnv` é o que o plugin do SonarQube dá: ele exporta
+          // SONAR_HOST_URL e a credencial do Jenkins Credentials para o build,
+          // sem o token aparecer nem no Jenkinsfile nem no log. O nome é o da
+          // instalação declarada em jenkins/casc.yaml.
+          withSonarQubeEnv('beever-sonar') {
+            // O scanner roda dentro do mesmo agente descartável das outras
+            // etapas, e ele já vem no jenkins/agente.Dockerfile com o JRE
+            // junto. Nenhum scanner é instalado no controlador.
+            agente.inside { sh 'sonar-scanner' }
+          }
+
+          // O Quality Gate decide o build. Sem esta espera a etapa terminaria
+          // verde só porque a análise foi *publicada*, e não porque a qualidade
+          // foi aprovada — seria uma esteira Mentirosa.
+          timeout(time: 5, unit: 'MINUTES') {
+            waitForQualityGate abort: true
+          }
+        }
+      }
+    }
   }
 }

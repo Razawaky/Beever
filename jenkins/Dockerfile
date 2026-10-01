@@ -10,13 +10,16 @@ FROM jenkins/jenkins:2.568.3-lts-jdk21
 COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker-cli /usr/local/libexec/docker/cli-plugins /usr/local/libexec/docker/cli-plugins
 
+# O `sonar` é o plugin oficial da SonarSource (o id dele é `sonar`, não
+# `sonarqube`, e o download com o id errado devolve 404 sem explicar).
 RUN jenkins-plugin-cli --plugins \
     configuration-as-code \
     job-dsl \
     workflow-aggregator \
     git \
     docker-workflow \
-    pipeline-stage-view
+    pipeline-stage-view \
+    sonar
 
 COPY casc.yaml /etc/jenkins/casc.yaml
 COPY entrada.sh /usr/local/bin/entrada.sh
