@@ -1,0 +1,79 @@
+<%#
+  Seção 8: o tom muda aqui. Quem lê é adulto decidindo se autoriza, então o
+  movimento é mínimo e cada afirmação é verificável no código — nada de promessa
+  que o sistema não cumpre.
+
+  A superfície clareia de propósito: é a única parte da landing que se parece
+  com o app, e essa é a mensagem.
+-%>
+<section id="pais-e-escolas" class="border-t border-white/10 bg-cera py-16 text-tinta sm:py-24">
+  <div class="mx-auto max-w-5xl px-6">
+    <p class="text-sm font-semibold uppercase tracking-widest text-tinta-suave">
+      Para responsáveis e escolas
+    </p>
+
+    <h2 class="mt-3 font-display text-3xl sm:text-4xl">
+      O que a criança aprende, e o que fazemos com os dados dela
+    </h2>
+
+    <div class="mt-10 grid gap-6 md:grid-cols-2">
+      <article class="rounded-favo border border-linha bg-white p-6">
+        <h3 class="font-display text-xl">O que ela aprende</h3>
+        <p class="mt-3 text-tinta-suave">
+          Diferença entre precisar e querer, planejar antes de gastar, guardar com
+          objetivo, e o efeito do tempo sobre o dinheiro. O conteúdo muda por faixa
+          etária: de 6 a 8 anos só existe ganho; de 12 a 15 entram juro, renda e
+          patrimônio.
+        </p>
+      </article>
+
+      <article class="rounded-favo border border-linha bg-white p-6">
+        <h3 class="font-display text-xl">Quais dados pedimos</h3>
+        <p class="mt-3 text-tinta-suave">
+          Apelido, data de nascimento, e-mail e senha. Sem nome completo, sem telefone,
+          sem foto, sem localização. A data de nascimento existe para escolher a faixa
+          do conteúdo, e o apelido é o que aparece na tela.
+        </p>
+      </article>
+
+      <article class="rounded-favo border border-linha bg-white p-6">
+        <h3 class="font-display text-xl">Consentimento de quem responde</h3>
+        <p class="mt-3 text-tinta-suave">
+          O cadastro de menor pede o e-mail do responsável e a confirmação de que ele
+          autoriza, e essa autorização fica registrada com data. É exigência do
+          Art. 14 da LGPD, e está no formulário — não escondida num link.
+        </p>
+      </article>
+
+      <article class="rounded-favo border border-linha bg-white p-6">
+        <h3 class="font-display text-xl">Sem dinheiro real, sem anúncio</h3>
+        <p class="mt-3 text-tinta-suave">
+          O mel é moeda de brincadeira e não pode ser comprado nem trocado por dinheiro.
+          Não existe publicidade, caixa de recompensa paga nem qualquer cobrança dentro
+          do jogo.
+        </p>
+      </article>
+    </div>
+
+    <div class="mt-8 rounded-favo border border-linha bg-white p-6">
+      <h3 class="font-display text-xl">Como os dados ficam guardados</h3>
+      <p class="mt-3 text-tinta-suave">
+        A senha é guardada como hash com bcrypt, nunca em texto. O acesso é por sessão
+        com cookie próprio, e toda mudança de saldo ou compra fica registrada para
+        conferência. O detalhe completo — o que guardamos, por quanto tempo, e como
+        pedir a exclusão — está na
+        <a
+          href="/privacidade"
+          class="font-semibold text-tinta underline decoration-ambar decoration-2 underline-offset-4 hover:decoration-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+          >política de privacidade</a
+        >.
+      </p>
+    </div>
+
+    <p class="mt-8 text-sm text-tinta-suave">
+      Beever é um projeto de conclusão de curso, em desenvolvimento. Escolas que
+      quiserem acompanhar o uso em sala podem falar com a equipe pelo e-mail da
+      política de privacidade.
+    </p>
+  </div>
+</section>

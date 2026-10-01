@@ -1,0 +1,24 @@
+<%#
+  Trilho arredondado com o preenchimento em classe, nunca em atributo `style`:
+  a CSP declara `style-src 'self'` e o navegador descarta estilo escrito na
+  marcação (RNF-11). O rótulo fica fora da barra, porque texto sobre o mel não
+  alcança o contraste da seção 2.2 do design system.
+
+  Recebe `percentual`, `rotuloAcessivel` e, opcionalmente, `legenda` e as
+  classes de cor do trilho e do preenchimento.
+-%>
+<div class="grid gap-1">
+  <div
+    class="h-3 w-full overflow-hidden rounded-pilula <%= locals.classeDoTrilho || 'bg-linha' %>"
+    role="progressbar"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="<%= percentual %>"
+    aria-label="<%= rotuloAcessivel %>"
+  >
+    <div class="h-full rounded-pilula <%= locals.classeDoPreenchimento || 'bg-mel' %> <%= classeDaBarra(percentual) %>"></div>
+  </div>
+  <% if (locals.legenda) { %>
+    <p class="text-xs tabular-nums text-tinta-suave"><%= legenda %></p>
+  <% } %>
+</div>

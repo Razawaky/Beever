@@ -1,0 +1,61 @@
+<%#
+  Painel da administração. Hoje só a contagem de contas e a lista de quem é
+  admin: as métricas agregadas são a T-12.7, e cadastro de conteúdo, item e
+  atividade entra da T-12.2 em diante.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'painel' }) %>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <h1 class="text-3xl font-bold">Painel</h1>
+  <p class="mt-2 text-tinta-suave">Área restrita. Toda ação feita aqui vai para a trilha de auditoria.</p>
+
+  <%- include('../../partials/admin/metricas', { metricas }) %>
+
+  <div class="mt-8 grid gap-4 sm:grid-cols-2">
+    <section class="rounded-favo border border-linha bg-white p-6">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Contas</h2>
+      <p class="mt-2 text-4xl font-bold"><%= resumo.contas %></p>
+      <a href="/admin/usuarios" class="mt-4 inline-block text-sm underline underline-offset-4">Ver todas</a>
+    </section>
+
+    <section class="rounded-favo border border-linha bg-white p-6">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-tinta-suave">Administradores</h2>
+      <p class="mt-2 text-4xl font-bold"><%= resumo.administradores.length %></p>
+      <ul class="mt-4 space-y-1 text-sm text-tinta-suave">
+        <% resumo.administradores.forEach((admin) => { %>
+          <li><%= admin.nickname %> — <%= admin.email %></li>
+        <% }) %>
+      </ul>
+    </section>
+  </div>
+
+  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
+    <h2 class="text-lg font-semibold">Conteúdo da trilha</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Favos, células e o conteúdo de cada atividade. O que for publicado aqui
+      aparece para o jogador sem rodar nenhum script.
+    </p>
+    <%- include('../../partials/ui/botao', {
+      texto: 'Abrir os favos',
+      href: '/admin/favos',
+      tamanho: 'medio',
+      classe: 'mt-4',
+    }) %>
+  </section>
+
+  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
+    <h2 class="text-lg font-semibold">Auditoria</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Quem fez o quê, quando, e o estado antes e depois. A trilha não pode ser
+      alterada nem apagada.
+    </p>
+    <%- include('../../partials/ui/botao', {
+      texto: 'Consultar a trilha',
+      href: '/admin/auditoria',
+      tamanho: 'medio',
+      classe: 'mt-4',
+    }) %>
+  </section>
+
+
+</main>

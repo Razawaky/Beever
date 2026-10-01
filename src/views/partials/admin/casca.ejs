@@ -1,0 +1,49 @@
+<%#
+  Cabeçalho da área administrativa. É casca própria, e não a do jogo: aqui quem
+  usa é adulto trabalhando, então a navegação é uma barra sóbria com o e-mail de
+  quem está logado e a saída. Recebe `emailDoAdmin` e `atual`, o slug da tela.
+-%>
+<header class="border-b border-linha bg-white">
+  <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-6 py-4">
+    <a href="/admin" class="flex items-center gap-2">
+      <img src="/img/beever_logo_black.webp" alt="Beever" width="1028" height="326" class="h-7 w-auto" />
+      <span class="rounded-pilula bg-cera px-2 py-1 text-xs font-semibold uppercase tracking-wide">Administração</span>
+    </a>
+
+    <nav class="flex items-center gap-4 text-sm" aria-label="Seções da administração">
+      <a
+        href="/admin"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'painel' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'painel' ? 'aria-current="page"' : '' %>
+      >Painel</a>
+      <a
+        href="/admin/favos"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'conteudo' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'conteudo' ? 'aria-current="page"' : '' %>
+      >Conteúdo</a>
+      <a
+        href="/admin/itens"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'itens' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'itens' ? 'aria-current="page"' : '' %>
+      >Itens</a>
+      <a
+        href="/admin/auditoria"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'auditoria' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'auditoria' ? 'aria-current="page"' : '' %>
+      >Auditoria</a>
+      <a
+        href="/admin/usuarios"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'usuarios' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'usuarios' ? 'aria-current="page"' : '' %>
+      >Contas</a>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-3 text-sm text-tinta-suave">
+      <span><%= emailDoAdmin %></span>
+      <form method="POST" action="/sessao/logout">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <%- include('../ui/botao', { texto: 'Sair', tipo: 'submit', variante: 'secundario', tamanho: 'medio', formato: 'pilula' }) %>
+      </form>
+    </div>
+  </div>
+</header>

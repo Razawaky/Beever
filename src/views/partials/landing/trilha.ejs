@@ -1,0 +1,60 @@
+<%#
+  Seção 4: a trilha de favos. Os títulos são os mesmos do conteúdo semeado, mas
+  escritos aqui à mão de propósito: a landing é pública e não deve consultar o
+  banco a cada visita. Se o conteúdo mudar, esta lista é o lugar de atualizar.
+-%>
+<section id="trilha" class="border-t border-white/10 bg-breu py-16 sm:py-24">
+  <div class="mx-auto max-w-5xl px-6">
+    <h2 class="revela font-display text-3xl text-cera sm:text-4xl">Uma trilha por idade</h2>
+
+    <p class="revela revela-atrasada mt-5 max-w-2xl text-lg text-cera/80">
+      O conteúdo muda conforme a faixa: quem tem 6 anos aprende de onde vem o dinheiro;
+      quem tem 15 aprende juro, renda e patrimônio.
+    </p>
+
+    <div class="cascata mt-12 grid gap-6 md:grid-cols-3">
+      <%
+        const FAIXAS = [
+          {
+            nome: 'Faixa A',
+            idades: '6 a 8 anos',
+            favos: ['Primeiros passos', 'Guardar e gastar'],
+            resumo: 'De onde vem o dinheiro, e a diferença entre precisar e querer.',
+          },
+          {
+            nome: 'Faixa B',
+            idades: '9 a 11 anos',
+            favos: ['Dinheiro no dia a dia', 'Planejar o mês'],
+            resumo: 'Troco, comparação de preço e a ideia de combinar o que entra com o que sai.',
+          },
+          {
+            nome: 'Faixa C',
+            idades: '12 a 15 anos',
+            favos: ['O tempo e o juro', 'Construir patrimônio'],
+            resumo: 'Por que esperar pode valer dinheiro, e por que dever custa caro.',
+          },
+        ];
+      %>
+      <% FAIXAS.forEach((faixa) => { %>
+        <article class="revela rounded-favo border border-white/10 bg-white/5 p-6">
+          <h3 class="font-display text-xl text-mel"><%= faixa.nome %></h3>
+          <p class="text-sm text-cera/60"><%= faixa.idades %></p>
+          <p class="mt-4 text-cera/70"><%= faixa.resumo %></p>
+
+          <ul class="mt-5 space-y-3">
+            <% faixa.favos.forEach((favo) => { %>
+              <li class="flex items-center gap-3">
+                <span class="favo-acende favo-hexagono h-8 w-8 shrink-0 bg-mel" aria-hidden="true"></span>
+                <span class="text-sm font-semibold text-cera"><%= favo %></span>
+              </li>
+            <% }); %>
+          </ul>
+        </article>
+      <% }); %>
+    </div>
+
+    <p class="revela mt-8 text-sm text-cera/60">
+      Cada favo tem células curtas, e a próxima só abre quando a anterior atinge 80%.
+    </p>
+  </div>
+</section>

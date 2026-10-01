@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+
+/* CSS resgatado do client/ antes da remoção: animações da abelha e o formato
+   hexagonal da trilha de fases. Compilado junto no src/public/css/app.css. */
+@import './tema.css';
+@import './trilha.css';
+
+/* As fontes moram em arquivo próprio porque são o ponto único de troca da
+   tipografia: os `@font-face` e os tokens `--font-*` ficam juntos lá. */
+@import './fontes.css';
+
+/* Só a landing usa: fundo escuro, favos em parallax e a entrada da Beenie. */
+@import './landing.css';
+
+/* Vale em toda tela: os ajustes que a pessoa liga no painel de acessibilidade. */
+@import './acessibilidade.css';
+
+/* Tailwind v4 é configurado por CSS. Declaramos aqui onde procurar classes,
+   já que os templates são EJS renderizados no servidor. */
+@source '../views/**/*.ejs';
+@source '../public/js/**/*.js';
+
+/* Tokens da identidade Beever (DESIGN.md na raiz). Cor fora desta lista está
+   fora da identidade — nunca escrever hex literal em EJS nem em style inline. */
+@theme {
+  /* Mel é luz: superfície de ação, nunca cor de texto sobre fundo claro. */
+  --color-mel: #ffc200;
+  --color-nectar: #ffde00;
+  --color-ambar: #f4b73e;
+
+  /* Cera é a sala: branco quente, porque branco puro vibra ao lado do amarelo. */
+  --color-cera: #fffdf7;
+  --color-breu: #111111;
+  --color-linha: #e8e2d6;
+
+  /* Tinta é a voz. Texto sobre mel é sempre tinta. */
+  --color-tinta: #000000;
+  --color-tinta-suave: #4a4a4a;
+
+  /* Semânticos: sempre acompanhados de ícone + palavra, nunca cor sozinha.
+     Os valores da identidade servem para preenchimento, ícone e borda; como
+     texto pequeno eles reprovam em AA, então cada um tem variante escurecida.
+
+     As três variantes de texto foram recalculadas na T-11.7 para também
+     sobreviverem ao daltonismo: sob deuteranopia, protanopia e tritanopia elas
+     continuam com 4,5:1 sobre cera e separadas entre si em luminância, que é o
+     que resta quando a diferença de matiz some. `test/unit/contraste.test.js`
+     é quem cobra. */
+  --color-acerto: #2e9e4f;
+  --color-acerto-texto: #28824b;
+  --color-atencao: #e07a1f;
+  --color-atencao-texto: #7d550a;
+  --color-erro: #d93a3a;
+  --color-erro-texto: #aa0a23;
+
+  /* Favo é o canto padrão de botão e card; pílula é barra, badge e avatar. */
+  --radius-favo: 20px;
+  --radius-pilula: 999px;
+
+  /* Os quatro degraus de profundidade do DESIGN.md, com nome em vez de
+     shadow-md/lg/xl espalhado pelas views. Sombra confirma a elevação, nunca
+     substitui divisória. */
+  --shadow-repouso: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-elevado: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-painel: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-flutuante: 0 4px 6px rgb(0 0 0 / 0.1);
+}

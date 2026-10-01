@@ -1,0 +1,33 @@
+<%#
+  Quadrinho Interativo: até seis painéis. Painel sem escolhas é narrativa e só
+  avança; painel com escolhas entra na nota. Pelo menos um precisa ter escolha.
+-%>
+<% const paineis = corpo?.paineis ?? []; %>
+<p class="text-sm text-tinta-suave">
+  Deixe as escolhas em branco para o painel ser só história. Pelo menos um painel precisa ter escolhas.
+</p>
+
+<% for (let indice = 0; indice < 6; indice += 1) {
+     const painel = paineis[indice] ?? {}; %>
+  <fieldset class="mt-4 rounded-favo border border-linha p-4">
+    <legend class="px-2 text-sm font-semibold">Painel <%= indice + 1 %></legend>
+    <div class="space-y-3">
+      <%- include('campos', { nome: 'painelTexto', rotulo: 'O que acontece', valor: painel.texto, linhas: 2, id: `painel-${indice}` }) %>
+      <%- include('campos', {
+        nome: 'painelEscolhas',
+        rotulo: 'Escolhas, uma por linha',
+        valor: (painel.escolhas || []).join('\n'),
+        linhas: 3,
+        id: `painel-escolhas-${indice}`,
+      }) %>
+      <%- include('campos', {
+        nome: 'painelCorreta',
+        rotulo: 'Número da escolha certa',
+        valor: painel.correta === undefined ? 1 : painel.correta + 1,
+        tipo: 'number',
+        minimo: 1,
+        id: `painel-correta-${indice}`,
+      }) %>
+    </div>
+  </fieldset>
+<% } %>
