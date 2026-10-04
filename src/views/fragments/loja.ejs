@@ -1,0 +1,44 @@
+<%#
+  Fragmento da Loja (RF-LOJ-01 a 07).
+  Renderizado via HTMX dentro do main do painel.
+%>
+<div class="mx-auto w-full max-w-5xl overflow-hidden rounded-favo bg-white p-6 sm:p-8 shadow-xl">
+  
+  <%# Topo do fragmento com atalhos de navegação interna %>
+  <div class="flex items-center justify-between border-b border-tinta/10 pb-4">
+    <h1 class="font-display text-2xl font-bold text-tinta">Loja</h1>
+    <a href="/inventario" class="text-sm font-semibold text-tinta hover:underline">
+      Meus itens &rarr;
+    </a>
+  </div>
+
+  <div class="mt-6">
+    <%- include('../partials/ui/patrimonio-topo', { patrimonio: vitrine.patrimonio }) %>
+  </div>
+
+  <% if (vitrine.itens.length === 0) { %>
+    <p class="mt-10 text-tinta-suave">Nenhum item disponível no momento.</p>
+  <% } %>
+
+  <%
+    // Agrupamento por categoria (RF-LOJ-02)
+    const porCategoria = new Map();
+    vitrine.itens.forEach((item) => {
+      const lista = porCategoria.get(item.category_name) ?? [];
+      lista.push(item);
+      porCategoria.set(item.category_name, lista);
+    });
+  %>
+
+  <% for (const [categoria, itens] of porCategoria) { %>
+    <section class="mt-8">
+      <h2 class="font-display text-xl text-tinta"><%= categoria %></h2>
+      <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <% itens.forEach((item) => { %>
+          <%- include('../partials/ui/item-card', { item }) %>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+</div>

@@ -1,8 +1,15 @@
 <%#
   Sidebar Direita da Colmeia.
-  Fica fixa no canto direito em telas grandes (lg).
+  Fica fixa no canto direito em telas grandes (lg) para que as tarefas e metas
+  continuem visíveis enquanto o jogador rola a trilha; no celular empilha abaixo
+  do conteúdo, então não rouba espaço da tela.
 -%>
-<aside class="z-20 flex h-full w-72 shrink-0 flex-col gap-6 overflow-y-auto bg-mel p-6 shadow-xl">
+<aside class="z-20 flex h-full w-72 shrink-0 flex-col gap-6 overflow-y-auto bg-mel p-6 shadow-xl lg:fixed lg:inset-y-0 lg:right-0">
+
+  <%# Chama Sequência na parte inferior da sidebar %>
+  <div class="mt-auto border-tinta/10">
+    <%- include('chama-sequencia', { sequencia, href: '/metas' }) %>
+  </div>
 
   <%# Seção: Tarefas de hoje %>
   <section class="flex flex-col gap-3">

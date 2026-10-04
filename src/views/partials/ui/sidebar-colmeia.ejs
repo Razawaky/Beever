@@ -51,7 +51,11 @@
     <%# Menu de Navegação / Atalhos %>
     <nav class="mt-2 flex flex-col gap-2">
       <a
-        href="/loja"
+        href="loja"
+        hx-get="/painel/loja"
+        hx-target="#conteudo-main"
+        hx-swap="innerHTML"
+        hx-push-url="true"
         class="flex items-center gap-3 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         <span class="text-xl">🛒</span>
@@ -59,6 +63,10 @@
       </a>
       <a
         href="/cofre"
+        hx-get="/painel/cofre"
+        hx-target="#conteudo-main"
+        hx-swap="innerHTML"
+        hx-push-url="true"
         class="flex items-center gap-2 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         <span>🏦</span>
@@ -66,6 +74,10 @@
       </a>
       <a
         href="/conquistas"
+        hx-get="/painel/conquistas"
+        hx-target="#conteudo-main"
+        hx-swap="innerHTML"
+        hx-push-url="true"
         class="flex items-center gap-2 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         <span>🏆</span>
@@ -74,6 +86,10 @@
       <% if (mostrarAtalhoAdmin) { %>
         <a
           href="/admin"
+          hx-get="/painel/admin"
+          hx-target="#conteudo-main"
+          hx-swap="innerHTML"
+          hx-push-url="true"
           class="flex items-center gap-2 rounded-favo bg-cera px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
         >
           <span>⚙️</span>
@@ -84,8 +100,14 @@
 
   </div>
 
-  <%# Chama Sequência na parte inferior da sidebar %>
-  <div class="mt-auto border-t border-tinta/10 pt-6">
-    <%- include('chama-sequencia', { sequencia, href: '/metas' }) %>
+  <div class="border-t border-tinta/10 px-8 py-6">
+    <form method="POST" action="/sessao/logout">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <%# `inline-flex` para a altura de 44 px valer sem esticar a linha inteira. -%>
+      <button type="submit" class="inline-flex min-h-11 items-center text-sm font-medium text-tinta-suave hover:text-tinta">
+        Sair da conta
+      </button>
+    </form>
   </div>
+
 </aside>
