@@ -44,7 +44,72 @@ export const MASCOTES = {
     largura: 1000,
     altura: 1017,
   },
+  clicavel: {
+    arquivo: '/img/beenie_click_default.webp',
+    alt: 'Beenie pronta para brincar',
+    largura: 275,
+    altura: 412,
+  },
+  curiosa: {
+    arquivo: '/img/beenie_click_a.webp',
+    alt: 'Beenie curiosa',
+    largura: 275,
+    altura: 412,
+  },
+  oops: {
+    arquivo: '/img/beenie_click_oopsy.webp',
+    alt: 'Beenie fazendo oops',
+    largura: 275,
+    altura: 412,
+  },
+  sorrindo: {
+    arquivo: '/img/beenie_click_smiley.webp',
+    alt: 'Beenie sorrindo',
+    largura: 275,
+    altura: 412,
+  },
+  falando: {
+    arquivo: '/img/beenie_click_speak.webp',
+    alt: 'Beenie falando',
+    largura: 275,
+    altura: 412,
+  },
+  estrelas: {
+    arquivo: '/img/beenie_click_stars.webp',
+    alt: 'Beenie encantada com estrelas',
+    largura: 275,
+    altura: 412,
+  },
+  pensando: {
+    arquivo: '/img/beenie_click_uhhhhh.webp',
+    alt: 'Beenie pensativa',
+    largura: 275,
+    altura: 412,
+  },
+  comemorando: {
+    arquivo: '/img/beenie_click_yeah.webp',
+    alt: 'Beenie comemorando',
+    largura: 275,
+    altura: 412,
+  },
 };
+
+/**
+ * As poses que a Beenie do painel reveza a cada clique. A ordem aqui não
+ * importa — o script sorteia —, mas a lista é a fonte única: a view serializa
+ * estes caminhos e o `/js/painel.js` só troca o `src`. Acrescentar uma reação
+ * nova é acrescentar a pose acima e o nome aqui.
+ */
+export const POSES_DO_CLIQUE = [
+  'clicavel',
+  'curiosa',
+  'oops',
+  'sorrindo',
+  'falando',
+  'estrelas',
+  'pensando',
+  'comemorando',
+];
 
 /**
  * A pose pedida, ou erro se o nome não existe. Errar o nome numa view daria

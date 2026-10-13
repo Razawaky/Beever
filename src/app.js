@@ -7,7 +7,7 @@ import pinoHttp from 'pino-http';
 
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
-import { mascote } from './config/mascote.js';
+import { mascote, POSES_DO_CLIQUE } from './config/mascote.js';
 import { sessaoMiddleware } from './config/session.js';
 import { receberIlustracao } from './config/uploads.js';
 import { csrf } from './middlewares/csrf.js';
@@ -72,8 +72,10 @@ export function criarApp() {
   app.set('views', path.join(diretorioAtual, 'views'));
 
   // O catálogo do mascote fica disponível em toda view: nenhuma tela escreve o
-  // caminho da imagem, todas pedem a pose pelo nome.
+  // caminho da imagem, todas pedem a pose pelo nome. A lista do revezamento no
+  // painel também vem daqui, para a troca de reação ser um só arquivo.
   app.locals.mascote = mascote;
+  app.locals.posesDoClique = POSES_DO_CLIQUE;
   app.use(express.static(path.join(diretorioAtual, 'public'), { maxAge: env.producao ? '7d' : 0 }));
 
   // As ilustrações enviadas pelo painel. Ficam fora de `src/public` porque são

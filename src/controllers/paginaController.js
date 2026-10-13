@@ -120,6 +120,7 @@ export const painel = assincrono(async (req, res) => {
     // O admin que entra pelo login comum cai aqui, e sem este atalho a área
     // administrativa só abria digitando o endereço.
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
   });
 });
 
