@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Protótipo — Segure e Solte | Beever</title>
+    <link rel="stylesheet" href="./demo.css" />
+  </head>
+  <body>
+    <main class="demo">
+      <header class="demo__cabecalho">
+        <p class="demo__selo">Protótipo isolado · não altera o jogo real</p>
+        <h1 class="demo__titulo">Segure e Solte</h1>
+        <p class="demo__resumo">
+          Uma abertura no estilo dos jogos Flash, um minigame de clique e segure e moedas
+          simuladas no fim. Nada aqui conversa com o servidor.
+        </p>
+      </header>
+
+      <section class="demo__palco" aria-label="Protótipo do jogo">
+        <div id="jogo" class="demo__canvas"></div>
+        <p id="status" class="demo__status" role="status" aria-live="polite">
+          Carregando o protótipo…
+        </p>
+        <p id="instrucoes" class="demo__instrucoes">
+          Clique e segure — ou mantenha Espaço — para encher o cofre. Solte dentro da faixa
+          verde.
+        </p>
+      </section>
+
+      <div class="demo__acoes">
+        <button id="reiniciar" class="demo__botao" type="button" hidden>Jogar de novo</button>
+        <a class="demo__link" href="/">Voltar ao Beever</a>
+      </div>
+
+      <footer class="demo__rodape">
+        Demo local: nenhuma partida é aberta, nenhuma moeda de verdade é creditada. A recompensa
+        real do Beever é calculada pelo servidor a partir do desempenho.
+      </footer>
+
+      <noscript>
+        <p class="demo__aviso">Este protótipo precisa de JavaScript para rodar.</p>
+      </noscript>
+    </main>
+
+    <script type="module" src="/js/demo/favo-click.js"></script>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 <%#
-  O elemento-assinatura da landing (docs/04 §6.1): uma coluna de favos na borda
-  que vai enchendo de mel conforme a pessoa desce. É indicador de progresso e é
-  a metáfora do produto — progresso que se acumula — no mesmo desenho.
+  O elemento-assinatura da landing (docs/04 §6.1): uma barra de progresso na
+  borda que vai enchendo de mel conforme a pessoa desce. É indicador de progresso
+  e é a metáfora do produto — progresso que se acumula — no mesmo desenho.
 
   O desenho é decoração e o leitor de tela o ignora; quem lê a página por voz
   recebe o mesmo dado pelo `progressbar` escondido, que o `landing.js` atualiza.
@@ -15,8 +15,8 @@
   aria-hidden="true"
 >
   <div class="coluna-de-mel-trilho">
-    <%# O mel é uma única forma que cresce de baixo para cima, recortada pela
-        máscara dos hexágonos: anima só `transform`, e o resto é a GPU. -%>
+    <%# O mel é uma única forma que cresce de baixo para cima dentro do trilho:
+        anima só `transform`, e o resto é a GPU. -%>
     <div class="coluna-de-mel-preenchimento"></div>
   </div>
 </div>

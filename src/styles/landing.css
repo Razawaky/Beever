@@ -118,28 +118,23 @@
   transform: translate3d(0, 0, 0);
 }
 
-/* A coluna de mel: o trilho desenha os hexágonos vazios, e o preenchimento é uma
-   faixa sólida que cresce de baixo para cima, recortada pela máscara das mesmas
-   formas. A altura vem de `--mel`, que o `landing.js` escreve a cada quadro. */
+/* A coluna de mel: um trilho fino e arredondado, e o preenchimento é a mesma
+   faixa que cresce de baixo para cima. A altura vem de `--mel`, que o
+   `landing.js` escreve a cada quadro. */
 .coluna-de-mel-trilho {
   position: relative;
-  width: 28px;
+  width: 6px;
   height: 60vh;
   overflow: hidden;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='none' stroke='%23FFC200' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='none' stroke='%23FFC200' stroke-opacity='0.35' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: repeat-y;
-  background-size: 28px 48px;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='%23000'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='%23000'/%3E%3C/svg%3E");
-  -webkit-mask-repeat: repeat-y;
-  -webkit-mask-size: 28px 48px;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 1l12 7v14l-12 7-12-7V8z' fill='%23000'/%3E%3Cpath d='M14 25l12 7v14l-12 7-12-7V32z' fill='%23000'/%3E%3C/svg%3E");
-  mask-repeat: repeat-y;
-  mask-size: 28px 48px;
+  border-radius: 999px;
+  background: rgba(255, 194, 0, 0.16);
+  background: color-mix(in srgb, var(--color-mel) 16%, transparent);
 }
 
 .coluna-de-mel-preenchimento {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: linear-gradient(to top, var(--color-mel), var(--color-nectar));
   transform-origin: bottom center;
   transform: scaleY(var(--mel, 0));

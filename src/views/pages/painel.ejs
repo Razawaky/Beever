@@ -15,14 +15,14 @@
   }) %>
   
   <%# Conteúdo principal %>
-  <main id="conteudo-main" class="flex-1 p-4 lg:p-8">
+  <main id="conteudo-main" class="flex-1 p-4 lg:p-8 relative">
 
     <%- include('../fragments/painel-trilha', { 
       colmeia 
     }) %>
 
       
-    <div class="fixed right-4 bottom-4 z-50">
+    <div class="absolute right-4 bottom-4 z-20">
       <button
         type="button"
         id="beenie-clicavel"
@@ -34,7 +34,7 @@
           id: 'beenie-imagem',
           pose: 'clicavel',
           decorativa: true,
-          classe: 'h-64 w-auto object-contain animate-balanceio',
+          classe: 'h-128 w-auto object-contain animate-balanceio',
         }) %>
       </button>
     </div>
