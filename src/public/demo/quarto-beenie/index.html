@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1b1508" />
+    <title>O Quarto do Beenie — Protótipo | Beever</title>
+    <link rel="stylesheet" href="./demo.css" />
+  </head>
+  <body>
+    <main class="demo">
+      <header class="demo__cabecalho">
+        <p class="demo__selo">Protótipo isolado · arquitetura Phaser</p>
+        <h1 class="demo__titulo">O Quarto do Beenie</h1>
+        <p class="demo__resumo">
+          Uma introdução em vídeo, um quarto em quatro ângulos e objetos clicáveis. Ao abrir o
+          cofre, a cena do minigame assume por cima e devolve o resultado ao quarto.
+        </p>
+      </header>
+
+      <section class="demo__palco" aria-label="Protótipo do quarto do Beenie">
+        <div class="demo__midia">
+          <div id="video-camada" class="video-camada">
+            <video
+              id="video-intro"
+              class="video"
+              poster="./poster.png"
+              preload="auto"
+              muted
+              playsinline
+              aria-label="Introdução do Quarto do Beenie"
+            >
+              <source src="./intro.mp4" type="video/mp4" />
+              <source src="./intro.webm" type="video/webm" />
+              Seu navegador não suporta vídeo em HTML5.
+            </video>
+
+            <div class="video__rodape">
+              <p id="video-legenda" class="video__legenda">
+                Beever apresenta: o quarto do Beenie está uma bagunça. Hora de arrumar!
+              </p>
+              <div class="video__acoes">
+                <button id="video-tocar" class="video__botao" type="button" hidden>
+                  Reproduzir introdução
+                </button>
+                <button id="video-pular" class="video__botao video__botao--principal" type="button">
+                  Pular introdução
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="jogo" class="demo__canvas" hidden></div>
+        </div>
+
+        <p id="status" class="demo__status" role="status" aria-live="polite">
+          Carregando o protótipo…
+        </p>
+        <p id="instrucoes" class="demo__instrucoes">
+          A introdução é um vídeo curto, sem áudio. Depois, use as setas para girar o quarto e
+          clique nos objetos.
+        </p>
+      </section>
+
+      <div class="demo__acoes">
+        <button id="rever-intro" class="demo__botao demo__botao--secundario" type="button" hidden>
+          Rever introdução
+        </button>
+        <a class="demo__link" href="/demo/favo-click/">Ver demo anterior: Segure e Solte</a>
+        <a class="demo__link" href="/">Voltar ao Beever</a>
+      </div>
+
+      <section class="arquitetura" aria-labelledby="arquitetura-titulo">
+        <div class="arquitetura__cabecalho">
+          <p class="arquitetura__selo">Como está organizado</p>
+          <h2 id="arquitetura-titulo">Cenas separadas, estado compartilhado</h2>
+        </div>
+
+        <ol class="fluxo">
+          <li class="fluxo__item">
+            <span class="fluxo__numero">1</span>
+            <strong>Intro</strong>
+            <span>Vídeo HTML, poster e botão de pular.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">2</span>
+            <strong>Boot</strong>
+            <span>Carrega o Beenie e as imagens de interface.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">3</span>
+            <strong>Quarto</strong>
+            <span>Quatro paredes, rotação e hotspots clicáveis.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">4</span>
+            <strong>Minigame</strong>
+            <span>Cena do cofre lançada por cima, com pausa do quarto.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">5</span>
+            <strong>Fim</strong>
+            <span>Resumo das tarefas e reinício local.</span>
+          </li>
+        </ol>
+
+        <div class="arquitetura__notas">
+          <p>
+            <code>dadosDoQuarto.js</code> descreve paredes e hotspots. A cena não precisa saber o
+            que é uma cama ou um cofre para desenhá-los.
+          </p>
+          <p>
+            <code>estadoDoJogo.js</code> guarda parede atual, tarefas e mel fictício. O quarto e o
+            minigame conversam por eventos, sem importar um ao outro.
+          </p>
+        </div>
+      </section>
+
+      <footer class="demo__rodape">
+        Demo local: nenhuma partida é aberta, nenhuma moeda de verdade é creditada e nenhuma rota
+        do jogo real foi alterada. O vídeo é um placeholder gerado com a arte existente do Beenie;
+        troque os arquivos <code>intro.mp4</code> e <code>intro.webm</code> quando houver um vídeo
+        definitivo.
+      </footer>
+
+      <noscript>
+        <p class="demo__aviso">Este protótipo precisa de JavaScript para rodar.</p>
+      </noscript>
+    </main>
+
+    <script type="module" src="/js/demo/quarto-beenie/main.js"></script>
+  </body>
+</html>
