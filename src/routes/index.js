@@ -50,6 +50,17 @@ router.get(
 );
 router.get('/onboarding', requireOnboardingPendente, paginaController.onboarding);
 router.get('/painel', requireOnboarding, paginaController.painel);
+router.get('/painel/loja', requireOnboarding, paginaController.painelLoja);
+// A projeção do cofre entra por query também dentro do painel: mesma validação
+// da página inteira, para `?porSemana=abc` não virar uma projeção de NaN.
+router.get(
+  '/painel/cofre',
+  requireOnboarding,
+  query('porSemana').optional({ values: 'falsy' }).isInt({ min: 0, max: 1000000 }),
+  validate,
+  paginaController.painelCofre,
+);
+router.get('/painel/conquistas', requireOnboarding, paginaController.painelConquistas);
 router.get('/loja', somentePagina, requireOnboarding, paginaController.loja);
 router.get(
   '/loja/itens/:idItem/confirmar',

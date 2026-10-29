@@ -1,18 +1,27 @@
 <%#
-  Fragmento da Loja (RF-LOJ-01 a 07).
-  Renderizado via HTMX dentro do main do painel.
-%>
-<div class="mx-auto w-full max-w-5xl overflow-hidden rounded-favo bg-white p-6 sm:p-8 shadow-xl">
-  
-  <%# Topo do fragmento com atalhos de navegação interna %>
-  <div class="flex items-center justify-between border-b border-tinta/10 pb-4">
-    <h1 class="font-display text-2xl font-bold text-tinta">Loja</h1>
-    <a href="/inventario" class="text-sm font-semibold text-tinta hover:underline">
-      Meus itens &rarr;
-    </a>
-  </div>
+  O miolo da Loja (RF-LOJ-01 a 07). A página `/loja` e a seção `/painel/loja`
+  mostram o mesmo conteúdo; o que muda é só a casca em volta.
 
-  <div class="mt-6">
+  `comTitulo` existe porque a página já traz o título no cabeçalho e o painel
+  precisa dele dentro da `<main>`. Quando ele está ligado, o fragmento também
+  se limita a `max-w-5xl`; na página quem manda na largura é o `<main>`.
+-%>
+<%
+  const mostrarTitulo = locals.comTitulo !== false;
+%>
+
+<div class="<%= mostrarTitulo ? 'mx-auto w-full max-w-5xl' : 'w-full' %>">
+  <% if (mostrarTitulo) { %>
+    <%# Topo do fragmento com atalhos de navegação interna %>
+    <div class="flex items-center justify-between border-b border-tinta/10 pb-4">
+      <h2 class="font-display text-2xl font-bold text-tinta">Loja</h2>
+      <a href="/inventario" class="text-sm font-semibold text-tinta hover:underline">
+        Meus itens &rarr;
+      </a>
+    </div>
+  <% } %>
+
+  <div class="<%= mostrarTitulo ? 'mt-6' : '' %>">
     <%- include('../partials/ui/patrimonio-topo', { patrimonio: vitrine.patrimonio }) %>
   </div>
 
@@ -21,7 +30,8 @@
   <% } %>
 
   <%
-    // Agrupamento por categoria (RF-LOJ-02)
+    // Agrupamento por categoria (RF-LOJ-02). É ordem de exibição, não regra:
+    // por isso mora aqui, e não no service.
     const porCategoria = new Map();
     vitrine.itens.forEach((item) => {
       const lista = porCategoria.get(item.category_name) ?? [];
@@ -31,14 +41,13 @@
   %>
 
   <% for (const [categoria, itens] of porCategoria) { %>
-    <section class="mt-8">
-      <h2 class="font-display text-xl text-tinta"><%= categoria %></h2>
-      <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <section class="mt-10">
+      <h2 class="font-display text-xl"><%= categoria %></h2>
+      <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <% itens.forEach((item) => { %>
           <%- include('../partials/ui/item-card', { item }) %>
         <% }) %>
       </div>
     </section>
   <% } %>
-
 </div>

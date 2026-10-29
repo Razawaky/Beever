@@ -1,9 +1,16 @@
-<%#
-  A lateral da Colmeia (RF-HOM-01 a 03). Fica fixa no canto esquerdo da tela
-  para que o saldo e o perfil do jogador estejam sempre visíveis.
--%>
+<%
+  const ativo = typeof secaoAtual === 'string' ? secaoAtual : 'colmeia';
+%>
 <aside class="fixed inset-y-0 left-0 z-20 flex w-72 flex-col justify-between h-full overflow-hidden bg-mel p-6 shadow-xl">
   <div class="flex flex-col gap-6">
+    <a
+      href="/painel"
+      aria-label="Voltar para o painel"
+      class="inline-flex w-fit items-center rounded-favo p-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+    >
+      <img src="/img/beever_logo_black.webp" alt="" width="934" height="398" class="h-10 w-auto" />
+    </a>
+
     <%# Perfil do Jogador %>
     <div class="flex items-center gap-3 border-b border-tinta/10 pb-6">
       <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-pilula bg-white/40 text-xl font-bold">
@@ -51,33 +58,24 @@
     <%# Menu de Navegação / Atalhos %>
     <nav class="mt-2 flex flex-col gap-2">
       <a
-        href="loja"
-        hx-get="/painel/loja"
-        hx-target="#conteudo-main"
-        hx-swap="innerHTML"
-        hx-push-url="true"
+        href="/painel/loja"
+        <% if (ativo === 'loja') { %>aria-current="page"<% } %>
         class="flex items-center gap-3 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         <span class="text-xl">🛒</span>
         <span>Ir para a loja</span>
       </a>
       <a
-        href="/cofre"
-        hx-get="/painel/cofre"
-        hx-target="#conteudo-main"
-        hx-swap="innerHTML"
-        hx-push-url="true"
+        href="/painel/cofre"
+        <% if (ativo === 'cofre') { %>aria-current="page"<% } %>
         class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         <span>🏦</span>
         <span>Meu cofre</span>
       </a>
       <a
-        href="/conquistas"
-        hx-get="/painel/conquistas"
-        hx-target="#conteudo-main"
-        hx-swap="innerHTML"
-        hx-push-url="true"
+        href="/painel/conquistas"
+        <% if (ativo === 'conquistas') { %>aria-current="page"<% } %>
         class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
         <span>🏆</span>
@@ -86,10 +84,6 @@
       <% if (mostrarAtalhoAdmin) { %>
         <a
           href="/admin"
-          hx-get="/painel/admin"
-          hx-target="#conteudo-main"
-          hx-swap="innerHTML"
-          hx-push-url="true"
           class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
         >
           <span>⚙️</span>
@@ -104,10 +98,42 @@
     <form method="POST" action="/sessao/logout">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <%# `inline-flex` para a altura de 44 px valer sem esticar a linha inteira. -%>
-      <button type="submit" class="inline-flex min-h-11 items-center rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:text-tinta hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer">
+      <button
+        type="submit"
+        id="abrir-dialogo-sair"
+        class="inline-flex min-h-11 items-center rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:text-tinta hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+      >
         Sair da conta
       </button>
     </form>
   </div>
+
+  <%# A confirmação é um `dialog` nativo: fica no topo da pilha e prende o foco.
+      Sem JavaScript o botão acima continua enviando o POST direto, como antes. -%>
+  <dialog
+    id="dialogo-sair"
+    aria-labelledby="titulo-dialogo-sair"
+    class="m-auto w-11/12 max-w-md rounded-favo bg-white p-6 text-tinta shadow-painel"
+  >
+    <h2 id="titulo-dialogo-sair" class="font-display text-xl">Sair da conta?</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Você volta para a tela de login. Seu mel, seus itens e suas conquistas ficam guardados.
+    </p>
+
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      <button
+        type="button"
+        data-fechar-dialogo-sair
+        class="inline-flex min-h-11 items-center justify-center rounded-favo border border-linha bg-white px-4 py-2 text-sm font-semibold text-tinta transition hover:bg-cera focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        Continuar aqui
+      </button>
+
+      <form method="POST" action="/sessao/logout">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <%- include('botao', { texto: 'Sair da conta', tipo: 'submit', tamanho: 'medio' }) %>
+      </form>
+    </div>
+  </dialog>
 
 </aside>

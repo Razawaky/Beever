@@ -20,6 +20,12 @@
 @source '../views/**/*.ejs';
 @source '../public/js/**/*.js';
 
+/* O `::backdrop` do `<dialog>` não tem utilitário no Tailwind. O véu escuro
+   separa a confirmação do resto da tela sem apagar o contexto. */
+dialog::backdrop {
+  background-color: rgb(0 0 0 / 0.4);
+}
+
 /* Tokens da identidade Beever (DESIGN.md na raiz). Cor fora desta lista está
    fora da identidade — nunca escrever hex literal em EJS nem em style inline. */
 @theme {

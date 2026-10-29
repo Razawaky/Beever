@@ -32,6 +32,9 @@ import { querJson } from '../utils/resposta.js';
  */
 
 const FUNDO_CERA = 'min-h-screen bg-cera text-tinta antialiased';
+// Sem espaço no topo, porque o cabeçalho é grudado; e folga embaixo no celular,
+// para o botão "Continuar" não tapar o fim da página.
+const FUNDO_COLMEIA = 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10';
 
 function redirecionarLogado(req, res) {
   res.redirect(req.session.onboardingConcluido ? '/painel' : '/onboarding');
@@ -113,12 +116,73 @@ export const painel = assincrono(async (req, res) => {
 
   renderizarPagina(res, 'painel', {
     titulo: `${colmeia.jogador.apelido} — Beever`,
-    // Sem espaço no topo, porque o cabeçalho é grudado; e folga embaixo no
-    // celular, para o botão "Continuar" não tapar o fim da página.
-    classeBody: 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10',
+    classeBody: FUNDO_COLMEIA,
     colmeia,
+    secao: 'colmeia',
     // O admin que entra pelo login comum cai aqui, e sem este atalho a área
     // administrativa só abria digitando o endereço.
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/**
+ * A loja dentro da casca da Colmeia. A lateral continua na tela porque o que
+ * troca é só o miolo da `<main>`: o `fragments/loja` recebe a mesma vitrine da
+ * página `/loja`, e o `painel.ejs` decide entre ele e a trilha.
+ */
+export const painelLoja = assincrono(async (req, res) => {
+  const [colmeia, vitrine] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    shopService.listarVitrine(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Loja — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    vitrine,
+    secao: 'loja',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js', '/js/graficos.js'],
+  });
+});
+
+/** O cofre dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelCofre = assincrono(async (req, res) => {
+  const porSemana = req.query.porSemana ? Number(req.query.porSemana) : 0;
+  const [colmeia, perfil, cofreDoJogador] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    vaultService.obterDoUsuario(req.session.usuarioId, { porSemana }),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Meu cofre — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    perfil,
+    cofre: cofreDoJogador,
+    porSemana,
+    secao: 'cofre',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js', '/js/graficos.js'],
+  });
+});
+
+/** As conquistas dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelConquistas = assincrono(async (req, res) => {
+  const [colmeia, catalogo] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    conquistasDoJogador.catalogoPorFamilia(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Minhas conquistas — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    catalogo,
+    secao: 'conquistas',
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
     scripts: ['/js/painel.js'],
   });
