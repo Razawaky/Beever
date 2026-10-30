@@ -1717,7 +1717,7 @@ Não reabrir sem motivo novo.
 | **E02 reordenada**: vira o realinhamento das camadas ao schema novo, porque o escopo original dela já estava construído. Lista aprovada no checkpoint e registrada em `02-ROADMAP-ETAPAS.md` | checkpoint da E02 |
 | Testes de banco pulam sozinhos sem MySQL, mas `TESTES_DE_BANCO=1` (o `npm run test:db`, comando do CI) faz a ausência do banco virar falha | checkpoint da E02 |
 | `docs/PROMPT-MESTRE.md` prevalece sobre `CLAUDE.md` em caso de conflito | esta sessão |
-| Perfil é 1:1 com usuário; a tela de seleção de perfil estilo Netflix não é recriada | sessão de 2026-08-12 |
+| Conta pode ter vários perfis; cada adicional é uma linha-filha em `users` com `owner_user_id`, e só a conta principal (`owner_user_id IS NULL`) autentica. O perfil ativo é o `user_id` da persona na sessão, então carteira, níveis, metas, agenda, inventário, cofre e progresso continuam isolados sem mudar as tabelas do jogo | sessão de 2026-08-12, atualizada em 2026-10-30 |
 | O limite global conta por sessão na leitura de quem está logado, e por endereço na escrita e para quem não entrou: a sala de aula sai de um IP só, e contá-la como uma pessoa reprovava a RNF-02 | auditoria da E14 |
 | O portão de cobertura mede também quem decide a nota (`validadoresDeJogo`) e quem guarda a conta (`usersService`): service de cálculo é quem produz o número, mesmo quando o número só vira recompensa uma camada depois | auditoria da E14 |
 | A página de privacidade só afirma o que o código faz hoje; promessa que depende de tarefa futura sai do texto e vira dívida com dono | auditoria da E14 |

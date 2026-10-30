@@ -33,12 +33,13 @@ export const retorno = assincrono(async (req, res) => {
   const { usuario } = resultado;
   await iniciarSessaoLogin(req, {
     usuarioId: usuario.id,
+    contaUsuarioId: usuario.contaUsuarioId,
     email: usuario.email,
     ehAdmin: usuario.ehAdmin,
     perfilId: usuario.perfilId,
     onboardingConcluido: usuario.onboardingConcluido,
   });
-  res.redirect(usuario.onboardingConcluido ? '/painel' : '/onboarding');
+  res.redirect(usuario.onboardingConcluido ? '/perfis' : '/onboarding');
 });
 
 export const completarCadastro = assincrono(async (req, res) => {
@@ -55,6 +56,7 @@ export const completarCadastro = assincrono(async (req, res) => {
   // A regeneração da sessão leva junto o cadastro pendente.
   await iniciarSessaoLogin(req, {
     usuarioId: usuario.id,
+    contaUsuarioId: usuario.id,
     email: usuario.email,
     ehAdmin: false,
     perfilId: usuario.idPerfil,

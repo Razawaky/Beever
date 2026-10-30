@@ -6,10 +6,17 @@ import { consultar, consultarEm } from '../config/database.js';
  *
  * A conta não guarda nome completo: a RN-049 proíbe coletar dado pessoal de
  * criança além de apelido e avatar. Por isso `nickname` e nada de `name`.
+ *
+ * `users` guarda duas coisas desde a migration 026: a conta principal
+ * (`owner_user_id IS NULL`) e cada perfil adicional daquela conta
+ * (`owner_user_id` aponta para a principal). As leituras administrativas,
+ * de login e de expurgo filtram a conta principal; as leituras por id e por
+ * perfil continuam aceitando qualquer persona, porque o jogo é indexado por
+ * `user_id`.
  */
 
 const CAMPOS_PUBLICOS =
-  'id, email, nickname, birth_date, is_active, onboarding_completed_at, created_at, last_login_at';
+  'id, owner_user_id, email, nickname, birth_date, is_active, onboarding_completed_at, created_at, last_login_at';
 
 export async function listar() {
   return consultar(
@@ -17,13 +24,14 @@ export async function listar() {
             (a.id IS NOT NULL) AS eh_admin
        FROM users u
        LEFT JOIN admins a ON a.user_id = u.id
+      WHERE u.owner_user_id IS NULL
       ORDER BY u.nickname`,
   );
 }
 
-/** Só o total: o painel administrativo mostra a contagem, não a lista inteira. */
+/** Só o total: o painel administrativo conta contas, não perfis de jogo. */
 export async function contar() {
-  const linhas = await consultar('SELECT COUNT(*) AS total FROM users');
+  const linhas = await consultar('SELECT COUNT(*) AS total FROM users WHERE owner_user_id IS NULL');
   return Number(linhas[0]?.total ?? 0);
 }
 
@@ -39,7 +47,8 @@ export async function buscarPorEmailComSenha(email) {
             (a.id IS NOT NULL) AS eh_admin
        FROM users u
        LEFT JOIN admins a ON a.user_id = u.id
-      WHERE u.email = ?`,
+      WHERE u.email = ?
+        AND u.owner_user_id IS NULL`,
     [email],
   );
   return linhas[0] ?? null;
@@ -52,7 +61,8 @@ export async function buscarPorGoogleSub(googleSub) {
             (a.id IS NOT NULL) AS eh_admin
        FROM users u
        LEFT JOIN admins a ON a.user_id = u.id
-      WHERE u.google_sub = ?`,
+      WHERE u.google_sub = ?
+        AND u.owner_user_id IS NULL`,
     [googleSub],
   );
   return linhas[0] ?? null;
@@ -64,11 +74,17 @@ export async function vincularGoogle(id, googleSub) {
 
 /** Sem o hash da senha: usado pela recuperação de senha, que só precisa saber para quem enviar. */
 export async function buscarPorEmail(email) {
-  const linhas = await consultar('SELECT id, email, nickname, is_active FROM users WHERE email = ?', [email]);
+  const linhas = await consultar(
+    'SELECT id, email, nickname, is_active FROM users WHERE email = ? AND owner_user_id IS NULL',
+    [email],
+  );
   return linhas[0] ?? null;
 }
 
 export async function emailJaUsado(email) {
+  // A UNIQUE de `email` vale para a tabela inteira, então a checagem também:
+  // perfil-filho nasce sem e-mail, mas se algum dia ganhar um, o cadastro não
+  // pode passar aqui para estourar depois como 500.
   const linhas = await consultar('SELECT 1 FROM users WHERE email = ? LIMIT 1', [email]);
   return linhas.length > 0;
 }
@@ -79,6 +95,20 @@ export async function criar({ email, apelido, dataNasc, senhaHash, googleSub = n
     conexao,
     'INSERT INTO users (email, nickname, birth_date, password_hash, google_sub) VALUES (?, ?, ?, ?, ?)',
     [email, apelido, dataNasc, senhaHash, googleSub],
+  );
+  return resultado.insertId;
+}
+
+/**
+ * Cria uma persona de jogo subordinada à conta. Não tem e-mail, não tem senha
+ * e não tem vínculo com o Google: é perfil, não conta de login.
+ */
+export async function criarPerfilDaConta({ idConta, apelido, dataNasc }, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `INSERT INTO users (owner_user_id, email, nickname, birth_date, password_hash, google_sub)
+     VALUES (?, NULL, ?, ?, NULL, NULL)`,
+    [idConta, apelido, dataNasc],
   );
   return resultado.insertId;
 }
@@ -145,6 +175,7 @@ export async function listarInativosParaExpurgo(dias) {
        FROM users u
        LEFT JOIN profiles p ON p.user_id = u.id
       WHERE u.is_active = 0
+        AND u.owner_user_id IS NULL
         AND (u.last_login_at IS NULL OR u.last_login_at <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? DAY))`,
     [dias],
   );

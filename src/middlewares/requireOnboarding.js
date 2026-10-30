@@ -14,17 +14,21 @@ import { querJson } from '../utils/resposta.js';
  * cliente de API precisa de um código para tratar. Redirecionar uma chamada
  * JSON entregaria HTML para quem pediu dado.
  *
- * Estes dois guardas também absorveram o `exigirLoginPagina`, que existia só
- * para mandar a página sem sessão ao login — era a outra metade da dívida
- * DT-07, e virou código morto assim que toda página protegida passou a
- * declarar um destes. Se algum dia existir página que exija login mas não
- * onboarding, ela volta; hoje não existe.
+ * A seleção de perfis (`/perfis`) é a exceção que fez `requireLogin` voltar:
+ * ela precisa exigir sessão, mas não onboarding concluído, porque é justamente
+ * por ali que se escolhe outro perfil quando o atual ainda está em
+ * configuração. O `requireLogin` usa a mesma regra de resposta por cliente.
  *
  * A fonte da verdade é `users.onboarding_completed_at`, lido no login e no
  * fim do onboarding e guardado na sessão. O middleware não vai ao banco: a
  * sessão já carrega a resposta, e o fluxo Controller → Service → Repository
  * continua sendo o único caminho até o MySQL.
  */
+export function requireLogin(req, res, next) {
+  if (req.session?.usuarioId) return next();
+  return querJson(req) ? next(erroNaoAutorizado()) : res.redirect('/login');
+}
+
 export function requireOnboarding(req, res, next) {
   if (!req.session?.usuarioId) {
     return querJson(req) ? next(erroNaoAutorizado()) : res.redirect('/login');

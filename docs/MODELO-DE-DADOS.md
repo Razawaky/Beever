@@ -107,8 +107,8 @@ erDiagram
 
 | Tabela | Existe porque | Regra |
 |---|---|---|
-| `users` | Conta de acesso. **Não guarda nome completo, endereço nem foto** — apelido e avatar bastam | RN-049 |
-| `profiles` | Preferências do jogador, 1:1 com a conta, garantido por `UNIQUE(user_id)` | RN-050 |
+| `users` | Conta de acesso ou persona de jogo. A principal tem `owner_user_id` NULL e é a única que autentica; cada perfil adicional aponta para ela. **Não guarda nome completo, endereço nem foto** — apelido e avatar bastam | RN-049, RN-050 |
+| `profiles` | Preferências do jogador, 1:1 com uma linha de `users`, garantido por `UNIQUE(user_id)` | RN-050 |
 | `admins` | Administrador é tabela e join, **nunca** coluna de papel no usuário | RN-051 |
 | `age_bands` | A faixa decide dificuldade, conteúdo visível e quais mecânicas econômicas ligam. Na faixa A, custo fixo e depreciação ficam desligados | RN-029, RN-038 |
 | `schedules` | Os dias marcados no onboarding decidem quantas metas o planner gera. `UNIQUE(user_id, weekday)` impede o mesmo dia duas vezes | RN-011, RN-014 |

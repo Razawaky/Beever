@@ -171,7 +171,7 @@ A faixa é definida no onboarding e altera: quantidade de texto, dificuldade das
 
 - **RN-048** Registro exige apelido, e-mail (do responsável, quando menor) e senha de no mínimo 8 caracteres com letras e números.
 - **RN-049** Não coletamos nome completo, endereço, telefone, foto real nem localização. Apelido + avatar apenas. (LGPD, dado de criança.)
-- **RN-050** Perfil é 1:1 com usuário e guarda: faixa de idade, avatar, fuso, disponibilidade, preferências de som/animação.
+- **RN-050** Perfil é 1:1 com uma persona (linha de `users`) e guarda: faixa de idade, avatar, fuso, disponibilidade, preferências de som/animação. A conta pode ter vários perfis; o adicional é linha-filha ligada por `owner_user_id` e não autentica sozinho.
 - **RN-051** Admin é identificado por tabela própria via join — **nunca** por coluna `role` no usuário.
 - **RN-052** Admin pode: criar/editar favos, células, itens e preços; ver métricas agregadas; **nunca** alterar saldo de usuário sem registro de auditoria com justificativa.
 - **RN-053** Exclusão de conta remove dados pessoais e mantém apenas registros agregados anonimizados.

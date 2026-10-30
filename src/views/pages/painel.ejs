@@ -25,7 +25,9 @@
   <%# Conteúdo principal %>
   <main id="conteudo-main" class="flex-1 p-4 lg:p-8 relative">
 
-    <% if (secaoAtual === 'loja') { %>
+    <% if (secaoAtual === 'perfil') { %>
+      <%- include('../fragments/perfil', { nivelTitulo: 2 }) %>
+    <% } else if (secaoAtual === 'loja') { %>
       <%- include('../fragments/loja', {
         vitrine
       }) %>
@@ -51,7 +53,7 @@
           id="beenie-clicavel"
           aria-label="Brincar com a Beenie"
           data-beenie-imagens="<%= posesDoClique.map((pose) => mascote(pose).arquivo).join('|') %>"
-          class="cursor-pointer rounded-3xl p-2 transition-transform duration-150 active:scale-95"
+          class="min-h-11 cursor-pointer rounded-3xl p-2 transition-transform duration-150 active:scale-95"
         >
           <%- include('../partials/ui/mascote', {
             id: 'beenie-imagem',

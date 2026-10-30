@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { param, query } from 'express-validator';
+import { body, param, query } from 'express-validator';
 
 import * as healthController from '../controllers/healthController.js';
 import * as homeController from '../controllers/homeController.js';
 import * as paginaController from '../controllers/paginaController.js';
-import { requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
+import { requireLogin, requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { somentePagina } from '../middlewares/somentePagina.js';
 import { validate, validateEnderecoDePagina } from '../middlewares/validate.js';
+import { exigirApelidoPublico } from '../services/apelidoPublico.js';
 import adminRouter from './admin.js';
 import cofreRouter from './cofre.js';
 import lojaRouter from './loja.js';
@@ -19,6 +20,19 @@ import usersRouter from './users.js';
 
 /** Router raiz: cada domínio tem seu próprio arquivo, montado aqui. */
 const router = Router();
+
+// O perfil novo pede o mínimo para a tela de seleção existir: apelido (que é a
+// persona pública) e data de nascimento (que define a faixa etária). Avatar,
+// fuso e rotina ficam para o onboarding, que o perfil recém-criado abre em
+// seguida. O apelido usa a mesma regra da liga, porque é o mesmo campo.
+const regrasNovoPerfil = [
+  body('apelido')
+    .trim()
+    .notEmpty()
+    .withMessage('Informe como este perfil quer ser chamado')
+    .custom(exigirApelidoPublico),
+  body('data_nasc').isISO8601().withMessage('Data de nascimento inválida'),
+];
 
 router.get('/', homeController.mostrar);
 router.get('/health', healthController.mostrar);
@@ -49,7 +63,19 @@ router.get(
   paginaController.redefinirSenha,
 );
 router.get('/onboarding', requireOnboardingPendente, paginaController.onboarding);
+// A seleção exige login, mas não onboarding concluído: é daqui que se troca de
+// perfil quando o atual ainda está em configuração.
+router.get('/perfis', requireLogin, paginaController.perfis);
+router.post('/perfis', requireLogin, regrasNovoPerfil, validate, paginaController.criarPerfil);
+router.post(
+  '/perfis/:id/selecionar',
+  requireLogin,
+  param('id').isInt({ min: 1 }),
+  validateEnderecoDePagina,
+  paginaController.escolherPerfil,
+);
 router.get('/painel', requireOnboarding, paginaController.painel);
+router.get('/painel/perfil', requireOnboarding, paginaController.painelPerfil);
 router.get('/painel/loja', requireOnboarding, paginaController.painelLoja);
 // A projeção do cofre entra por query também dentro do painel: mesma validação
 // da página inteira, para `?porSemana=abc` não virar uma projeção de NaN.

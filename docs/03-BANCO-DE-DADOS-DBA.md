@@ -64,8 +64,8 @@ AUDITORIA DO SCHEMA
 Lista de referência. Você propõe o DDL final no checkpoint; o que **não pode faltar** está marcado com ⚠.
 
 ### 4.1 Conta e perfil
-- **users** — `email` UNIQUE, `nickname`, `password_hash`, `is_active`, `onboarding_completed_at` ⚠
-- **profiles** — 1:1 com users (`user_id` UNIQUE ⚠), `age_band_id`, `avatar_id`, `timezone`, `session_minutes`, `initial_goal_id`, `sound_enabled`, `reduced_motion`
+- **users** — conta principal (`owner_user_id` NULL) ou perfil-filho (`owner_user_id` aponta para a conta), `email` UNIQUE só na principal, `nickname`, `password_hash`, `is_active`, `onboarding_completed_at` ⚠
+- **profiles** — 1:1 com uma persona de users (`user_id` UNIQUE ⚠), `age_band_id`, `avatar_id`, `timezone`, `session_minutes`, `initial_goal_id`, `sound_enabled`, `reduced_motion`
 - **admins** — tabela própria com FK para users; verificação por join ⚠ (nunca coluna `role`)
 - **age_bands** — A/B/C com faixa de idade e flags de mecânica (`economy_enabled`, `upkeep_enabled`)
 - **schedules** — disponibilidade: `user_id` + `weekday` (0–6) + `is_available`; UNIQUE(`user_id`,`weekday`) ⚠

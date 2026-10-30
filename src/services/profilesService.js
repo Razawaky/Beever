@@ -1,6 +1,7 @@
 import { emTransacao } from '../config/database.js';
 import { logger } from '../config/logger.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
+import * as sessionsRepository from '../repositories/sessionsRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
 import { FUSO_PADRAO, fusoValido } from '../utils/diaDoJogador.js';
 import { erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
@@ -10,15 +11,21 @@ import * as goalPlannerService from './goalPlannerService.js';
 import * as goalsService from './goalsService.js';
 import * as levelsService from './levelsService.js';
 import * as schedulesService from './schedulesService.js';
+import * as usersService from './usersService.js';
 
 /**
  * Regra de negócio do perfil do jogador.
  *
- * Perfil é 1:1 com usuário, então não há listagem nem seleção: cada conta tem
- * exatamente um. A divisão entre conta e perfil, no schema novo, é esta: o
- * **apelido mora na conta** (`users.nickname`, junto do e-mail e da data de
- * nascimento), e o perfil guarda como o jogo se apresenta — avatar, faixa
- * etária, objetivo inicial, fuso, duração de sessão e acessibilidade.
+ * Perfil de jogo é 1:1 com uma linha de `users`, mas a conta pode ter várias
+ * personas desde a migration 026: a conta principal (`owner_user_id IS NULL`)
+ * é o primeiro perfil e cada adicional é uma linha-filha que aponta para ela.
+ * O **apelido mora em `users.nickname`**, porque é a persona que aparece na
+ * liga; o perfil guarda como o jogo se apresenta — avatar, faixa etária,
+ * objetivo inicial, fuso, duração de sessão e acessibilidade.
+ *
+ * O `user_id` da persona é o que entra na sessão. Por isso carteira, níveis,
+ * metas, agenda, inventário, cofre e trilha ficam isolados por perfil sem que
+ * nenhuma dessas tabelas precise conhecer o conceito de conta.
  */
 
 /**
@@ -197,6 +204,51 @@ export async function obterDoUsuario(idUsuario) {
 }
 
 /**
+ * Todos os perfis da conta, na ordem em que a tela de seleção mostra: conta
+ * principal primeiro, filhos por ordem de criação.
+ *
+ * O nível já vem da consulta porque a tela mostra todos de uma vez; chamar
+ * `levelsService` por perfil faria N+1 consultas para uma tela que abre antes
+ * de qualquer jogo.
+ */
+export async function listarDaConta(idConta) {
+  const perfis = await profilesRepository.listarDetalhadoDaConta(idConta);
+
+  return perfis.map((perfil) => ({
+    ...perfil,
+    onboardingConcluido: Boolean(perfil.onboarding_completed_at),
+    nivel: { nivel: Number(perfil.nivel ?? 1) },
+  }));
+}
+
+/**
+ * Troca o perfil ativo da sessão depois de conferir que ele pertence à conta.
+ *
+ * Aceita a conta principal ou qualquer filho. A posse é medida pelo dono da
+ * linha (`owner_user_id`, ou o próprio id quando é a principal), nunca pelo id
+ * que veio na URL.
+ */
+export async function selecionar(idPerfil, idConta) {
+  const perfil = await profilesRepository.buscarComContaPorId(idPerfil);
+  if (!perfil) throw erroNaoEncontrado('Perfil não encontrado');
+
+  const dono = perfil.owner_user_id ?? perfil.user_id;
+  if (Number(dono) !== Number(idConta)) throw erroAcessoNegado();
+
+  return {
+    id: perfil.id,
+    usuarioId: Number(perfil.user_id),
+    email: perfil.email,
+    onboardingConcluido: Boolean(perfil.onboarding_completed_at),
+  };
+}
+
+/** Cria uma persona nova na conta; a sessão atual escolhe e configura depois. */
+export async function criarNaConta(idConta, dados) {
+  return usersService.criarPerfilDaConta(idConta, dados);
+}
+
+/**
  * O fuso do jogador, para quem precisa saber quando o dia dele vira (RN-024).
  *
  * Perfil sem fuso gravado cai no padrão: a virada do dia não pode depender de
@@ -325,11 +377,34 @@ export async function atualizarDisponibilidade(idPerfil, idUsuario, dias) {
   };
 }
 
-export async function remover(idPerfil, idUsuario) {
-  await exigirPosse(idPerfil, idUsuario);
-  await profilesRepository.remover(idPerfil);
+/**
+ * Remove um perfil adicional e tudo o que pertence a ele.
+ *
+ * A conta principal não pode ser removida por esta porta: apagá-la é o fluxo
+ * de exclusão de conta (`usersService.apagarDefinitivamente`), com inativação,
+ * auditoria e cascata próprias. Apagar só o `profiles` da persona deixaria
+ * carteira, níveis, metas e progresso órfãos; por isso a remoção é da linha de
+ * `users` filha, e a cascata leva o resto.
+ */
+export async function remover(idPerfil, { contaId, perfilAtualId }) {
+  const perfil = await profilesRepository.buscarComContaPorId(idPerfil);
+  if (!perfil) throw erroNaoEncontrado('Perfil não encontrado');
 
-  await auditService.registrar(auditService.usuario(idUsuario), 'perfil.removido', {
+  const dono = perfil.owner_user_id ?? perfil.user_id;
+  if (Number(dono) !== Number(contaId)) throw erroAcessoNegado();
+  if (!perfil.owner_user_id) throw erroValidacao('A conta principal não pode ser removida por aqui');
+  if (Number(idPerfil) === Number(perfilAtualId)) {
+    throw erroValidacao('Troque de perfil antes de remover o perfil que está em uso');
+  }
+
+  await usersRepository.removerPorId(perfil.user_id);
+
+  // Se outro aparelho estava com este perfil selecionado, a persona acabou de
+  // deixar de existir. Derrubar a sessão evita que a próxima visita tente abrir
+  // carteira, metas e trilha de um `user_id` já apagado.
+  await sessionsRepository.removerDoUsuario(perfil.user_id);
+
+  await auditService.registrar(auditService.usuario(contaId), 'perfil.removido', {
     entidade: 'profile',
     id: idPerfil,
   });

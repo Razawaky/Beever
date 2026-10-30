@@ -9,6 +9,7 @@ export const login = assincrono(async (req, res) => {
 
   await iniciarSessaoLogin(req, {
     usuarioId: usuario.id,
+    contaUsuarioId: usuario.contaUsuarioId,
     email: usuario.email,
     ehAdmin: usuario.ehAdmin,
     perfilId: usuario.perfilId,
@@ -16,7 +17,7 @@ export const login = assincrono(async (req, res) => {
   });
 
   if (querJson(req)) return res.json(usuario);
-  res.redirect(usuario.onboardingConcluido ? '/painel' : '/onboarding');
+  res.redirect(usuario.onboardingConcluido ? '/perfis' : '/onboarding');
 });
 
 export const logout = assincrono(async (req, res) => {
@@ -38,6 +39,7 @@ export const sessaoAtual = (req, res) => {
   res.json({
     autenticado: true,
     usuarioId: req.session.usuarioId,
+    contaUsuarioId: req.session.contaUsuarioId ?? req.session.usuarioId,
     perfilId: req.session.perfilId,
     ehAdmin: Boolean(req.session.ehAdmin),
   });

@@ -143,7 +143,7 @@ describe('login com Google', opcoes, () => {
 
   it('e-mail verificado de conta existente vincula o Google e entra na mesma conta', async () => {
     const volta = await voltarDoGoogle(request.agent(app), { sub: 'google-ana', email: 'ana@beever.dev', email_verified: true });
-    assert.equal(volta.headers.location, '/painel');
+    assert.equal(volta.headers.location, '/perfis');
 
     const conta = await usuarioPorEmail('ana@beever.dev');
     assert.equal(conta.google_sub, 'google-ana');

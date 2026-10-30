@@ -6,33 +6,40 @@
     <a
       href="/painel"
       aria-label="Voltar para o painel"
-      class="inline-flex w-fit items-center rounded-favo p-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      class="inline-flex min-h-11 w-fit items-center rounded-favo p-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
     >
       <img src="/img/beever_logo_black.webp" alt="" width="934" height="398" class="h-10 w-auto" />
     </a>
 
-    <%# Perfil do Jogador %>
-    <div class="flex items-center gap-3 border-b border-tinta/10 pb-6">
-      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-pilula bg-white/40 text-xl font-bold">
-        <%= jogador.apelido.charAt(0).toUpperCase() %>
-      </div>
-      <div class="min-w-0 flex-1">
-        <h1 class="truncate text-lg font-bold text-tinta"><%= jogador.apelido %></h1>
-        <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">
-          Nível <%= jogador.nivel?.nivel ?? 1 %>
-        </p>
-        <div class="mt-2 w-full">
-          <%- include('barra-progresso', {
-            percentual: jogador.nivel?.progressoPercentual ?? 0,
-            rotuloAcessivel: 'Progresso até o próximo nível',
-            classeDoTrilho: 'bg-white/40',
-            classeDoPreenchimento: 'bg-breu',
-            legenda: jogador.nivel?.noTopo
-              ? 'Nível máximo alcançado'
-              : `faltam ${jogador.nivel?.xpParaSubir ?? 0} XP para o nível ${(jogador.nivel?.nivel ?? 1) + 1}`,
-          }) %>
+    <%# Perfil do Jogador: o bloco inteiro abre o perfil dentro da Colmeia. %>
+    <div class="border-b border-tinta/10 pb-6">
+      <a
+        href="/painel/perfil"
+        aria-label="Abrir meu perfil"
+        <% if (ativo === 'perfil') { %>aria-current="page"<% } %>
+        class="flex min-h-11 items-center gap-3 rounded-favo p-2 -m-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-pilula bg-white/40 text-xl font-bold">
+          <%= jogador.apelido.charAt(0).toUpperCase() %>
         </div>
-      </div>
+        <div class="min-w-0 flex-1">
+          <h1 class="truncate text-lg font-bold text-tinta"><%= jogador.apelido %></h1>
+          <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">
+            Nível <%= jogador.nivel?.nivel ?? 1 %>
+          </p>
+          <div class="mt-2 w-full">
+            <%- include('barra-progresso', {
+              percentual: jogador.nivel?.progressoPercentual ?? 0,
+              rotuloAcessivel: 'Progresso até o próximo nível',
+              classeDoTrilho: 'bg-white/40',
+              classeDoPreenchimento: 'bg-breu',
+              legenda: jogador.nivel?.noTopo
+                ? 'Nível máximo alcançado'
+                : `faltam ${jogador.nivel?.xpParaSubir ?? 0} XP para o nível ${(jogador.nivel?.nivel ?? 1) + 1}`,
+            }) %>
+          </div>
+        </div>
+      </a>
     </div>
 
     <%# Recurso: Mel %>
@@ -95,6 +102,12 @@
   </div>
 
   <div class="border-t border-tinta/10 px-8 py-6">
+    <a
+      href="/perfis"
+      class="inline-flex min-h-11 items-center rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:bg-white/50 hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+    >
+      Trocar de perfil
+    </a>
     <form method="POST" action="/sessao/logout">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <%# `inline-flex` para a altura de 44 px valer sem esticar a linha inteira. -%>

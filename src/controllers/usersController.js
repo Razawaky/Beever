@@ -16,6 +16,7 @@ export const criar = assincrono(async (req, res) => {
   // um segundo formulário de login.
   await iniciarSessaoLogin(req, {
     usuarioId: usuario.id,
+    contaUsuarioId: usuario.id,
     email: usuario.email,
     ehAdmin: false,
     perfilId: usuario.idPerfil,

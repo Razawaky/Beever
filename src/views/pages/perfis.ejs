@@ -1,0 +1,141 @@
+<%
+  const atual = (id) => Number(id) === Number(perfilAtualId);
+  const temVarios = perfis.length > 1;
+%>
+<main class="flex min-h-screen items-center justify-center px-4 py-10">
+  <section class="w-full max-w-xl rounded-favo bg-white p-6 shadow-painel sm:p-10">
+    <div class="text-center">
+      <a
+        href="/painel"
+        aria-label="Voltar para a Colmeia"
+        class="inline-flex min-h-11 items-center justify-center rounded-favo p-2 transition hover:bg-cera focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <img src="/img/beever_logo_black.webp" alt="" width="934" height="398" class="h-10 w-auto" />
+      </a>
+
+      <h1 class="mt-5 font-display text-3xl text-tinta sm:text-4xl">Quem está jogando?</h1>
+      <p class="mx-auto mt-2 max-w-sm text-tinta-suave">
+        <%= temVarios ? 'Escolha um perfil para entrar na Colmeia.' : 'Este é o perfil desta conta. Escolha para continuar.' %>
+      </p>
+      <% if (conta) { %>
+        <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-tinta-suave">
+          Conta de <%= conta %>
+        </p>
+      <% } %>
+    </div>
+
+    <ul id="lista-perfis" class="mt-8 flex flex-col gap-3" aria-label="Perfis desta conta">
+      <% perfis.forEach((perfil) => { %>
+        <li>
+          <form method="POST" action="/perfis/<%= perfil.id %>/selecionar">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button
+              type="submit"
+              class="group flex min-h-20 w-full items-center gap-4 rounded-favo border-2 border-linha bg-cera p-4 text-left transition hover:border-ambar hover:bg-mel/30 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+            >
+              <span class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-pilula bg-mel text-2xl font-bold text-tinta">
+                <% if (perfil.avatar_imagem) { %>
+                  <img
+                    src="<%= perfil.avatar_imagem %>"
+                    alt=""
+                    width="64"
+                    height="64"
+                    class="h-full w-full object-cover"
+                  />
+                <% } else { %>
+                  <span aria-hidden="true"><%= perfil.apelido.charAt(0).toUpperCase() %></span>
+                <% } %>
+              </span>
+
+              <span class="min-w-0 flex-1">
+                <span class="flex flex-wrap items-center gap-2">
+                  <span class="truncate font-display text-xl text-tinta"><%= perfil.apelido %></span>
+                  <% if (atual(perfil.id)) { %>
+                    <span class="rounded-pilula bg-mel px-2 py-1 text-xs font-bold text-tinta">Perfil atual</span>
+                  <% } %>
+                </span>
+                <span class="mt-1 block text-sm text-tinta-suave">
+                  <% if (perfil.onboardingConcluido) { %>
+                    Nível <%= perfil.nivel?.nivel ?? 1 %><% if (perfil.faixa_etaria_nome) { %> · <%= perfil.faixa_etaria_nome %><% } %>
+                  <% } else { %>
+                    Configuração pendente
+                  <% } %>
+                </span>
+              </span>
+
+              <span aria-hidden="true" class="text-2xl text-tinta-suave transition group-hover:translate-x-1">→</span>
+            </button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+
+    <button
+      type="button"
+      id="btn-criar-perfil"
+      class="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-favo border-2 border-dashed border-linha bg-white px-4 py-3 font-semibold text-tinta transition hover:border-ambar hover:bg-cera focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+    >
+      <span aria-hidden="true" class="text-xl leading-none">+</span>
+      Criar novo perfil
+    </button>
+  </section>
+</main>
+
+<dialog
+  id="dialogo-criar-perfil"
+  aria-labelledby="titulo-criar-perfil"
+  class="m-auto w-11/12 max-w-md rounded-favo bg-white p-6 text-tinta shadow-painel"
+>
+  <h2 id="titulo-criar-perfil" class="font-display text-2xl">Criar novo perfil</h2>
+  <p class="mt-2 text-tinta-suave">
+    Cada perfil tem o próprio mel, nível, metas e progresso. O novo perfil começa a configuração
+    agora e entra na Colmeia quando terminar.
+  </p>
+
+  <form method="POST" action="/perfis" class="mt-6 space-y-4">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div>
+      <label for="perfil-apelido" class="mb-1 block text-sm font-medium">Apelido</label>
+      <input
+        id="perfil-apelido"
+        name="apelido"
+        type="text"
+        required
+        maxlength="20"
+        autocomplete="nickname"
+        placeholder="Como este perfil quer ser chamado"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+      <p class="mt-1 text-xs text-tinta-suave">Use só um apelido, não o nome completo.</p>
+    </div>
+
+    <div>
+      <label for="perfil-data-nasc" class="mb-1 block text-sm font-medium">Data de nascimento</label>
+      <input
+        id="perfil-data-nasc"
+        name="data_nasc"
+        type="date"
+        required
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+      <p class="mt-1 text-xs text-tinta-suave">A idade define a faixa etária e o conteúdo do perfil.</p>
+    </div>
+
+    <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+      <button
+        type="button"
+        id="btn-cancelar-criar-perfil"
+        class="inline-flex min-h-11 items-center justify-center rounded-favo border border-linha bg-white px-5 py-3 font-bold text-tinta-suave transition hover:bg-cera hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="inline-flex min-h-11 items-center justify-center rounded-favo bg-mel px-5 py-3 font-bold text-tinta transition hover:bg-nectar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+      >
+        Criar perfil
+      </button>
+    </div>
+  </form>
+</dialog>

@@ -28,6 +28,7 @@ export const login = assincrono(async (req, res) => {
 
   await iniciarSessaoLogin(req, {
     usuarioId: admin.id,
+    contaUsuarioId: admin.contaUsuarioId,
     email: admin.email,
     ehAdmin: admin.ehAdmin,
     perfilId: admin.perfilId,

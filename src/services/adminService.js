@@ -48,6 +48,12 @@ export async function definirAdministrador(idUsuario, deveSerAdmin, ator) {
 
   const usuario = await usersRepository.buscarPorId(idUsuario);
   if (!usuario) throw erroNaoEncontrado('Conta não encontrada');
+  // Perfil adicional não autentica, então promover um não daria acesso a
+  // ninguém — e deixaria uma linha de admin presa a uma persona que pode ser
+  // removida. Só a conta principal pode receber o papel.
+  if (usuario.owner_user_id) {
+    throw erroValidacao('Perfis adicionais não podem ser administradores');
+  }
 
   const eraAdmin = await adminsRepository.ehAdministrador(idUsuario);
   if (deveSerAdmin) await adminsRepository.promover(idUsuario);

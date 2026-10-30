@@ -10,7 +10,7 @@ import * as profilesRepository from '../../../src/repositories/profilesRepositor
 import * as usersRepository from '../../../src/repositories/usersRepository.js';
 
 /**
- * `profilesRepository` contra banco real — o perfil 1:1 com a conta.
+ * `profilesRepository` contra banco real — o perfil 1:1 com a persona.
  *
  * O ponto que mais importa aqui: faixa etária, avatar e objetivo inicial
  * chegam como slug e são resolvidos dentro do SQL. O que o `CASE` da T-04.3
@@ -56,7 +56,7 @@ describe('profilesRepository', opcoes, () => {
     assert.equal(Number(perfil.user_id), Number(idUsuario));
   });
 
-  it('recusa dois perfis para a mesma conta (1:1)', async () => {
+  it('recusa dois perfis para a mesma persona (1:1)', async () => {
     const idUsuario = await usuarioNovo('duplicado');
     await profilesRepository.criar({ idUsuario });
 

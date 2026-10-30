@@ -25,6 +25,7 @@ const pular = await motivoParaPular();
 const opcoes = pular ? { skip: pular } : {};
 
 const SECOES = [
+  { nome: 'perfil', caminho: '/painel/perfil', conteudo: /Meus dias de jogo/ },
   { nome: 'loja', caminho: '/painel/loja', conteudo: /Ir para a loja/ },
   { nome: 'cofre', caminho: '/painel/cofre', conteudo: /Guardado no cofre/ },
   { nome: 'conquistas', caminho: '/painel/conquistas', conteudo: /conquistas/ },
@@ -112,6 +113,23 @@ describe('seções dentro do painel', opcoes, () => {
     const resposta = await agente.get('/painel').set('Accept', 'text/html').expect(200);
 
     assert.match(resposta.text, /id="beenie-clicavel"/);
+  });
+
+  it('o perfil da lateral abre dentro da Colmeia', async () => {
+    const painel = await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    assert.match(
+      painel.text,
+      /href="\/painel\/perfil"[\s\S]{0,160}aria-label="Abrir meu perfil"/,
+      'o bloco do perfil na lateral precisa ser um link',
+    );
+
+    const resposta = await agente.get('/painel/perfil').set('Accept', 'text/html').expect(200);
+    const html = semComentariosDeHtml(resposta.text);
+
+    assert.match(html, /href="\/painel\/perfil"[\s\S]{0,200}aria-current="page"/, 'o perfil precisa se marcar como atual');
+    assert.match(html, /<main id="conteudo-main"[\s\S]*Meus dias de jogo/, 'o perfil precisa abrir dentro da main');
+    assert.match(html, /data-csrf-token=/, 'o formulário dos dias precisa do token no corpo da página');
+    assert.match(html, /\/js\/perfil\.js/, 'o painel precisa carregar o script que salva os dias');
   });
 
   it('a saída da conta pede confirmação antes de encerrar a sessão', async () => {

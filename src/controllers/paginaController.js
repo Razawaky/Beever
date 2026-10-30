@@ -37,7 +37,7 @@ const FUNDO_CERA = 'min-h-screen bg-cera text-tinta antialiased';
 const FUNDO_COLMEIA = 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10';
 
 function redirecionarLogado(req, res) {
-  res.redirect(req.session.onboardingConcluido ? '/painel' : '/onboarding');
+  res.redirect(req.session.onboardingConcluido ? '/perfis' : '/onboarding');
 }
 
 /** Política de privacidade: pública, e o e-mail de contato vem do ambiente. */
@@ -106,6 +106,75 @@ export const onboarding = assincrono(async (req, res) => {
 });
 
 /**
+ * A porta de entrada depois do login: mostra os perfis da conta e deixa o
+ * jogador escolher qual Colmeia abrir.
+ *
+ * A sessão carrega dois ids desde o multiperfil: `contaUsuarioId` é quem
+ * autenticou (e é o dono de todos os perfis), e `usuarioId` é a persona
+ * escolhida para jogar. A seleção precisa ser acessível mesmo quando a persona
+ * atual ainda não terminou o onboarding — é justamente por aqui que se troca
+ * para outra ou se volta para a conta principal.
+ */
+export const perfis = assincrono(async (req, res) => {
+  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  // Sessões abertas antes da migration 026 não têm `contaUsuarioId`; nelas o
+  // usuário ativo ainda é a conta principal, então ele vira o dono agora e a
+  // lista não perde os irmãos no primeiro clique.
+  req.session.contaUsuarioId = contaId;
+  const lista = await profilesService.listarDaConta(contaId);
+
+  if (querJson(req)) {
+    return res.json({ perfis: lista, perfilAtualId: req.session.perfilId });
+  }
+
+  renderizarPagina(res, 'perfis', {
+    titulo: 'Quem está jogando? — Beever',
+    classeBody: FUNDO_CERA,
+    perfis: lista,
+    perfilAtualId: req.session.perfilId,
+    conta: req.session.email ?? lista.find((perfil) => perfil.email)?.email,
+    scripts: ['/js/perfis.js'],
+  });
+});
+
+/** Troca o perfil ativo da sessão. A posse é conferida dentro do service. */
+export const escolherPerfil = assincrono(async (req, res) => {
+  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  const perfil = await profilesService.selecionar(Number(req.params.id), contaId);
+
+  req.session.contaUsuarioId = contaId;
+  req.session.usuarioId = perfil.usuarioId;
+  req.session.perfilId = perfil.id;
+  req.session.onboardingConcluido = perfil.onboardingConcluido;
+
+  if (querJson(req)) return res.json({ perfilId: perfil.id, usuarioId: perfil.usuarioId });
+  res.redirect(perfil.onboardingConcluido ? '/painel' : '/onboarding');
+});
+
+/**
+ * Cria um perfil novo e já entra nele.
+ *
+ * O perfil nasce sem onboarding concluído, então o destino é o wizard. A conta
+ * dona continua a mesma: `contaUsuarioId` não muda, e é isso que permite
+ * voltar para a seleção e escolher qualquer irmão.
+ */
+export const criarPerfil = assincrono(async (req, res) => {
+  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  const perfil = await profilesService.criarNaConta(contaId, {
+    apelido: req.body.apelido,
+    dataNasc: req.body.data_nasc,
+  });
+
+  req.session.contaUsuarioId = contaId;
+  req.session.usuarioId = perfil.id;
+  req.session.perfilId = perfil.idPerfil;
+  req.session.onboardingConcluido = false;
+
+  if (querJson(req)) return res.status(201).json(perfil);
+  res.redirect('/onboarding');
+});
+
+/**
  * A Colmeia (RF-HOM-01 a 09). O controller não orquestra nada: quem aplica os
  * efeitos da visita e monta os blocos é o `homeService`, e o mesmo endereço
  * responde JSON para quem pedir.
@@ -123,6 +192,33 @@ export const painel = assincrono(async (req, res) => {
     // administrativa só abria digitando o endereço.
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
     scripts: ['/js/painel.js'],
+  });
+});
+
+/**
+ * O perfil dentro da casca da Colmeia. A lateral continua na tela porque o que
+ * troca é só o miolo da `<main>`: o `fragments/perfil` recebe os mesmos dados
+ * da página `/perfil`, e o `painel.ejs` decide entre ele e a trilha.
+ */
+export const painelPerfil = assincrono(async (req, res) => {
+  const [colmeia, dados, semana, metas] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    schedulesService.obterSemana(req.session.usuarioId),
+    goalsService.listarAtivas(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: `${dados.apelido} — Beever`,
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    perfil: dados,
+    semana,
+    metas,
+    secao: 'perfil',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
+    scripts: ['/js/painel.js', '/js/perfil.js'],
   });
 });
 

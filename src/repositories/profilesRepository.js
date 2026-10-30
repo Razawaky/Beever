@@ -1,12 +1,14 @@
 import { consultar, consultarEm } from '../config/database.js';
 
 /**
- * Acesso a dados de `profiles`. Perfil é 1:1 com usuário (RN-050) — sem
- * listagem, sem login próprio, sem seleção estilo Netflix.
+ * Acesso a dados de `profiles`. Perfil de jogo continua 1:1 com uma linha de
+ * `users`, mas uma conta pode ter várias personas: a principal tem
+ * `users.owner_user_id = NULL` e cada perfil adicional aponta para ela. Não há
+ * login próprio por perfil; a seleção troca a persona ativa da sessão.
  *
- * O apelido não mora aqui: subiu para `users.nickname` no schema novo. Aqui
- * ficam as preferências do jogador — faixa etária, avatar, fuso, tempo de
- * sessão e acessibilidade.
+ * O apelido não mora aqui: fica em `users.nickname`, porque é a persona que
+ * aparece na liga. Aqui ficam as preferências do jogador — faixa etária, avatar,
+ * fuso, tempo de sessão e acessibilidade.
  */
 
 const CAMPOS =
@@ -19,6 +21,22 @@ export async function buscarPorUsuario(idUsuario) {
 
 export async function buscarPorId(id) {
   const linhas = await consultar(`SELECT ${CAMPOS} FROM profiles WHERE id = ?`, [id]);
+  return linhas[0] ?? null;
+}
+
+/**
+ * O perfil com o vínculo de conta, para a seleção conferir posse sem fazer
+ * duas consultas e para a remoção saber se apaga uma persona ou a conta.
+ */
+export async function buscarComContaPorId(id) {
+  const linhas = await consultar(
+    `SELECT p.id, p.user_id, u.owner_user_id, u.nickname AS apelido, u.email,
+            u.onboarding_completed_at
+       FROM profiles p
+       JOIN users u ON u.id = p.user_id
+      WHERE p.id = ?`,
+    [id],
+  );
   return linhas[0] ?? null;
 }
 
@@ -109,9 +127,14 @@ export async function remover(id) {
   return resultado.affectedRows;
 }
 
-/** Leitura completa para telas: junta os rótulos das tabelas de domínio. */
-export async function buscarDetalhadoPorUsuario(idUsuario) {
-  const linhas = await consultar(
+/**
+ * Leitura completa para telas: junta os rótulos das tabelas de domínio.
+ *
+ * Continua sendo a leitura de uma persona, usada pelas telas de perfil e pelo
+ * onboarding depois que a sessão já escolheu quem está jogando.
+ */
+export async function listarDetalhadoPorUsuario(idUsuario) {
+  return consultar(
     `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
             a.slug AS avatar, a.image_path AS avatar_imagem,
@@ -120,10 +143,45 @@ export async function buscarDetalhadoPorUsuario(idUsuario) {
        LEFT JOIN age_bands f     ON f.id = p.age_band_id
        LEFT JOIN avatars a       ON a.id = p.avatar_id
        LEFT JOIN initial_goals o ON o.id = p.initial_goal_id
-      WHERE p.user_id = ?`,
+      WHERE p.user_id = ?
+      ORDER BY p.created_at, p.id`,
     [idUsuario],
   );
-  return linhas[0] ?? null;
+}
+
+/**
+ * Todos os perfis de uma conta, com o que a tela de seleção precisa: apelido,
+ * nível, avatar e se a configuração já terminou.
+ *
+ * A conta principal vem primeiro (`owner_user_id IS NULL`), porque ela é o
+ * perfil original e a ordem não pode dançar a cada criação. Os filhos vêm por
+ * ordem de criação. O nível é lido direto de `user_levels` para a tela não
+ * fazer N consultas — a seleção mostra todos de uma vez.
+ */
+export async function listarDetalhadoDaConta(idConta) {
+  return consultar(
+    `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion,
+            u.nickname AS apelido, u.email, u.owner_user_id, u.onboarding_completed_at,
+            ul.level AS nivel,
+            f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
+            a.slug AS avatar, a.image_path AS avatar_imagem,
+            o.slug AS objetivo_inicial, o.label AS objetivo_inicial_rotulo
+       FROM profiles p
+       JOIN users u             ON u.id = p.user_id
+       LEFT JOIN user_levels ul ON ul.user_id = p.user_id
+       LEFT JOIN age_bands f     ON f.id = p.age_band_id
+       LEFT JOIN avatars a       ON a.id = p.avatar_id
+       LEFT JOIN initial_goals o ON o.id = p.initial_goal_id
+      WHERE u.id = ? OR u.owner_user_id = ?
+      ORDER BY (u.owner_user_id IS NULL) DESC, p.created_at, p.id`,
+    [idConta, idConta],
+  );
+}
+
+/** O primeiro perfil da conta: usado pelos fluxos que ainda são 1:1. */
+export async function buscarDetalhadoPorUsuario(idUsuario) {
+  const [perfil] = await listarDetalhadoPorUsuario(idUsuario);
+  return perfil ?? null;
 }
 
 /**

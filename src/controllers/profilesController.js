@@ -56,7 +56,10 @@ export const atualizarDisponibilidade = assincrono(async (req, res) => {
 });
 
 export const remover = assincrono(async (req, res) => {
-  await profilesService.remover(Number(req.params.id), req.session.usuarioId);
+  await profilesService.remover(Number(req.params.id), {
+    contaId: req.session.contaUsuarioId ?? req.session.usuarioId,
+    perfilAtualId: req.session.perfilId,
+  });
   res.json({ mensagem: 'Perfil removido com sucesso' });
 });
 

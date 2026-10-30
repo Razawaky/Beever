@@ -9,6 +9,7 @@ import * as usersRepository from '../repositories/usersRepository.js';
 import * as walletsRepository from '../repositories/walletsRepository.js';
 import { ErroAplicacao, erroAcessoNegado, erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
+import { motivoDeRecusa } from './apelidoPublico.js';
 
 /**
  * Regra de negócio de contas. Zero SQL aqui — tudo passa pelos repositories.
@@ -212,8 +213,82 @@ async function criarConta({ email, dataNasc, apelido, consentimentoResponsavel, 
   };
 }
 
+/**
+ * Cria um perfil de jogo dentro de uma conta existente.
+ *
+ * Perfil adicional não é conta: nasce sem e-mail, sem senha e sem Google, e
+ * não aparece nas consultas de login. Ele existe para separar o progresso de
+ * irmãos que dividem a mesma conta — carteira, níveis, metas, agenda,
+ * inventário, cofre e trilha ficam presos ao `user_id` da persona, como já
+ * ficavam na conta única.
+ *
+ * A faixa etária sai da data de nascimento do perfil, não da conta: dois irmãos
+ * com idades diferentes precisam ver conteúdos e regras econômicas diferentes.
+ * A gravação entra na mesma transação do restante porque perfil sem faixa não
+ * vê conteúdo nenhum.
+ */
+export async function criarPerfilDaConta(idConta, { apelido, dataNasc }) {
+  const conta = await usersRepository.buscarPorId(idConta);
+  if (!conta || conta.owner_user_id) throw erroNaoEncontrado('Conta não encontrada');
+  if (!conta.is_active) {
+    throw new ErroAplicacao('Esta conta está inativa', { status: 403, codigo: 'CONTA_INATIVA' });
+  }
+
+  const apelidoLimpo = String(apelido ?? '').trim();
+  const motivo = motivoDeRecusa(apelidoLimpo);
+  if (motivo) throw erroValidacao(motivo);
+
+  const nascimento = new Date(dataNasc);
+  if (!dataNasc || Number.isNaN(nascimento.getTime())) {
+    throw erroValidacao('Data de nascimento inválida');
+  }
+  if (nascimento > new Date()) throw erroValidacao('A data de nascimento não pode estar no futuro');
+
+  const faixas = await profilesRepository.listarFaixasEtarias();
+  const faixa = faixaParaIdade(faixas, idadeEm(dataNasc));
+
+  const { idUsuario, idPerfil } = await emTransacao(async (conexao) => {
+    const usuario = await usersRepository.criarPerfilDaConta(
+      { idConta: conta.id, apelido: apelidoLimpo, dataNasc },
+      conexao,
+    );
+    const perfil = await profilesRepository.criar({ idUsuario: usuario }, conexao);
+    await walletsRepository.criar(usuario, conexao);
+    await userLevelsRepository.criar(usuario, conexao);
+    await profilesRepository.atualizar(perfil, { faixaEtaria: faixa.code }, conexao);
+
+    return { idUsuario: usuario, idPerfil: perfil };
+  });
+
+  // A trilha não guarda apelido nem data: são dado pessoal (RN-049) e o
+  // histórico é imutável (RNF-17), então precisa sobreviver ao apagamento.
+  await auditService.registrar(auditService.usuario(idConta), 'perfil.criado', {
+    entidade: 'profile',
+    id: idPerfil,
+    depois: { faixaEtaria: faixa.code },
+  });
+
+  return {
+    id: idUsuario,
+    idPerfil,
+    apelido: apelidoLimpo,
+    faixaEtaria: faixa.code,
+  };
+}
+
 export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
   exigirPosse(id, ator);
+
+  // Perfil adicional é persona, não conta: não tem e-mail nem senha. Recusar
+  // aqui evita que uma rota de conta transforme um perfil em credencial
+  // acidental (o login continuaria barrando pelo `owner_user_id`, mas o dado
+  // ficaria no lugar errado).
+  if (!ator?.ehAdmin && (email || senha)) {
+    const alvo = await usersRepository.buscarPorId(id);
+    if (alvo?.owner_user_id) {
+      throw erroValidacao('Perfil adicional não tem e-mail nem senha de login');
+    }
+  }
 
   let senhaHash = null;
   if (senha) {

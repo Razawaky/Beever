@@ -5,7 +5,12 @@ import * as usersRepository from '../repositories/usersRepository.js';
 import { ErroAplicacao } from '../utils/erros.js';
 import * as auditService from './auditService.js';
 
-/** Autenticação de conta. Sem login de perfil separado: com perfil 1:1, não faria sentido. */
+/**
+ * Autenticação de conta. Perfil adicional não tem e-mail nem senha, então não
+ * existe login de perfil separado: quem autentica é sempre a conta principal.
+ * As consultas do repository filtram `owner_user_id IS NULL` para que uma
+ * linha-filha nunca vire porta de entrada.
+ */
 
 const erroCredenciais = () =>
   // Mensagem única para e-mail inexistente e senha errada: dizer qual dos dois
@@ -41,14 +46,17 @@ export async function concluirLogin(usuario, metodo) {
 
   return {
     id: usuario.id,
+    // Quem autenticou é a conta principal e também o perfil inicial. A seleção
+    // em `/perfis` muda `usuarioId` na sessão, nunca este vínculo.
+    contaUsuarioId: usuario.id,
     email: usuario.email,
     apelido: usuario.nickname,
     // O join com `admins` acontece uma única vez, aqui; o resultado vai para a
     // sessão e é o que o middleware requireAdmin consulta depois.
     ehAdmin: Boolean(usuario.eh_admin),
     perfilId: perfil?.id ?? null,
-    // O onboarding é marcado na conta, com data, e não no perfil: guardar
-    // *quando* custa o mesmo que guardar *se* e responde uma pergunta a mais.
+    // Cada persona tem a própria data de onboarding concluído em `users`. O
+    // perfil adicional começa pendente mesmo que a conta principal já jogue.
     onboardingConcluido: Boolean(usuario.onboarding_completed_at),
   };
 }
