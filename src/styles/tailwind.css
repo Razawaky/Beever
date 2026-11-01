@@ -4,6 +4,7 @@
    hexagonal da trilha de fases. Compilado junto no src/public/css/app.css. */
 @import './tema.css';
 @import './trilha.css';
+@import './onboarding.css';
 
 /* As fontes moram em arquivo próprio porque são o ponto único de troca da
    tipografia: os `@font-face` e os tokens `--font-*` ficam juntos lá. */

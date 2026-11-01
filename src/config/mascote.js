@@ -32,6 +32,30 @@ export const MASCOTES = {
     largura: 1000,
     altura: 1017,
   },
+  ensinando: {
+    arquivo: '/img/beenie_ensinando.webp',
+    alt: 'Beenie ensinando',
+    largura: 474,
+    altura: 571,
+  },
+  mostrando: {
+    arquivo: '/img/beenie_show.webp',
+    alt: 'Beenie apresentando a colmeia',
+    largura: 501,
+    altura: 541,
+  },
+  um_real: {
+    arquivo: '/img/beenie_1real.webp',
+    alt: 'Beenie segurando uma moeda de 1 real',
+    largura: 458,
+    altura: 806,
+  },
+  bebe: {
+    arquivo: '/img/babybee.webp',
+    alt: 'Bebê abelha',
+    largura: 255,
+    altura: 338,
+  },
   come_here: {
     arquivo: '/img/beenie_login_render.webp',
     alt: 'Beenie na grama',

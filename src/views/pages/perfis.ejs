@@ -26,12 +26,20 @@
 
     <ul id="lista-perfis" class="mt-8 flex flex-col gap-3" aria-label="Perfis desta conta">
       <% perfis.forEach((perfil) => { %>
-        <li>
+        <%
+          const ehAtual = atual(perfil.id);
+          // Só perfis adicionais podem ser excluídos. A conta principal tem
+          // outro fluxo de encerramento, e o perfil em uso precisa ser trocado
+          // antes: apagar a persona ativa deixaria a sessão sem chão.
+          const podeTerMenu = Boolean(perfil.owner_user_id);
+          const podeExcluir = podeTerMenu && !ehAtual;
+        %>
+        <li class="relative">
           <form method="POST" action="/perfis/<%= perfil.id %>/selecionar">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
             <button
               type="submit"
-              class="group flex min-h-20 w-full items-center gap-4 rounded-favo border-2 border-linha bg-cera p-4 text-left transition hover:border-ambar hover:bg-mel/30 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+              class="group flex min-h-20 w-full items-center gap-4 rounded-favo border-2 border-linha bg-cera p-4 text-left transition hover:border-ambar hover:bg-mel/30 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 <%= podeTerMenu ? 'pr-16' : '' %>"
             >
               <span class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-pilula bg-mel text-2xl font-bold text-tinta">
                 <% if (perfil.avatar_imagem) { %>
@@ -50,7 +58,7 @@
               <span class="min-w-0 flex-1">
                 <span class="flex flex-wrap items-center gap-2">
                   <span class="truncate font-display text-xl text-tinta"><%= perfil.apelido %></span>
-                  <% if (atual(perfil.id)) { %>
+                  <% if (ehAtual) { %>
                     <span class="rounded-pilula bg-mel px-2 py-1 text-xs font-bold text-tinta">Perfil atual</span>
                   <% } %>
                 </span>
@@ -63,9 +71,70 @@
                 </span>
               </span>
 
-              <span aria-hidden="true" class="text-2xl text-tinta-suave transition group-hover:translate-x-1">→</span>
+              <% if (!podeTerMenu) { %>
+                <span aria-hidden="true" class="text-2xl text-tinta-suave transition group-hover:translate-x-1">→</span>
+              <% } %>
             </button>
           </form>
+
+          <% if (podeTerMenu) { %>
+            <div class="absolute right-2 top-1/2 -translate-y-1/2">
+              <button
+                type="button"
+                id="btn-menu-perfil-<%= perfil.id %>"
+                data-menu-perfil
+                aria-label="Opções do perfil <%= perfil.apelido %>"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="menu-perfil-<%= perfil.id %>"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-pilula text-tinta-suave transition hover:bg-white hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
+                  <circle cx="12" cy="5" r="1.8" />
+                  <circle cx="12" cy="12" r="1.8" />
+                  <circle cx="12" cy="19" r="1.8" />
+                </svg>
+              </button>
+
+              <div
+                id="menu-perfil-<%= perfil.id %>"
+                role="menu"
+                aria-labelledby="btn-menu-perfil-<%= perfil.id %>"
+                class="absolute right-0 top-full z-20 mt-2 hidden w-52 rounded-favo border border-linha bg-white p-2 shadow-elevado"
+              >
+                <% if (podeExcluir) { %>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    data-excluir-perfil="<%= perfil.id %>"
+                    data-perfil-nome="<%= perfil.apelido %>"
+                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-erro-texto transition hover:bg-erro/10 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 shrink-0">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
+                    </svg>
+                    Excluir perfil
+                  </button>
+                <% } else { %>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled
+                    aria-disabled="true"
+                    class="flex w-full cursor-not-allowed items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-tinta-suave opacity-60"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 shrink-0">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
+                    </svg>
+                    Excluir perfil
+                  </button>
+                  <p class="px-3 pb-1 pt-1 text-xs leading-snug text-tinta-suave">
+                    Troque para outro perfil antes de excluir este.
+                  </p>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
         </li>
       <% }) %>
     </ul>
@@ -138,4 +207,37 @@
       </button>
     </div>
   </form>
+</dialog>
+
+<dialog
+  id="dialogo-excluir-perfil"
+  aria-labelledby="titulo-excluir-perfil"
+  aria-describedby="texto-excluir-perfil"
+  class="m-auto w-11/12 max-w-md rounded-favo bg-white p-6 text-tinta shadow-painel"
+>
+  <h2 id="titulo-excluir-perfil" class="font-display text-2xl">Tem certeza?</h2>
+  <p id="texto-excluir-perfil" class="mt-2 text-tinta-suave">
+    Concluindo esta ação, todo o progresso será perdido.
+  </p>
+  <p class="mt-3 rounded-favo bg-cera px-4 py-3 text-sm text-tinta-suave">
+    Perfil: <strong id="nome-perfil-excluir" class="font-semibold text-tinta"></strong>
+  </p>
+  <p id="erro-excluir-perfil" role="alert" class="mt-3 hidden text-sm font-semibold text-erro-texto"></p>
+
+  <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+    <button
+      type="button"
+      id="btn-cancelar-excluir-perfil"
+      class="inline-flex min-h-11 items-center justify-center rounded-favo border border-linha bg-white px-5 py-3 font-bold text-tinta-suave transition hover:bg-cera hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      id="btn-confirmar-excluir-perfil"
+      class="inline-flex min-h-11 items-center justify-center rounded-favo bg-erro-texto px-5 py-3 font-bold text-white transition hover:bg-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer disabled:cursor-wait disabled:opacity-70"
+    >
+      Excluir perfil
+    </button>
+  </div>
 </dialog>

@@ -79,6 +79,7 @@ describe('seleção de perfis', opcoes, () => {
     assert.match(html, /id="dialogo-criar-perfil"/, 'o diálogo de criação precisa existir');
     assert.match(html, /\/js\/perfis\.js/, 'a tela precisa carregar o script do diálogo');
     assert.match(html, /perfis@beever\.dev/, 'a tela precisa identificar a conta');
+    assert.doesNotMatch(html, /data-menu-perfil/, 'a conta principal não pode ser excluída por aqui');
 
     // O perfil atual ganha um marcador textual, não só cor.
     assert.match(html, /Perfil atual/);
@@ -179,6 +180,11 @@ describe('seleção de perfis', opcoes, () => {
     assert.match(pagina.text, new RegExp(`action="/perfis/${perfilIrma.idPerfil}/selecionar"`));
     assert.match(pagina.text, /Configuração pendente/);
     assert.match(pagina.text, /Perfil atual/);
+    assert.match(pagina.text, /data-menu-perfil/, 'perfil adicional precisa ter o menu de opções');
+    assert.match(pagina.text, /Troque para outro perfil antes de excluir este\./);
+    assert.match(pagina.text, /id="dialogo-excluir-perfil"/);
+    assert.match(pagina.text, /Tem certeza\?/);
+    assert.match(pagina.text, /Concluindo esta ação, todo o progresso será perdido\./);
 
     const lista = await agente.get('/perfis').set('Accept', 'application/json').expect(200);
     assert.equal(lista.body.perfis.length, 2, 'a conta agora tem a persona principal e a nova');
@@ -220,6 +226,13 @@ describe('seleção de perfis', opcoes, () => {
 
     assert.equal(resposta.headers.location, '/painel');
     await agente.get('/painel').set('Accept', 'text/html').expect(200);
+
+    const pagina = await agente.get('/perfis').set('Accept', 'text/html').expect(200);
+    assert.match(
+      pagina.text,
+      new RegExp(`data-excluir-perfil="${perfilIrma.idPerfil}"`),
+      'o perfil adicional fora de uso precisa oferecer a exclusão',
+    );
   });
 
   it('remove o perfil adicional sem levar a conta junto', async () => {

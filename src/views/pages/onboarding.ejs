@@ -1,6 +1,4 @@
 <main class="w-full max-w-md">
-  <%# A tela não tem título desenhado, de propósito, mas sem h1 o leitor de tela
-      entra numa página sem nome e sem ponto de partida. -%>
   <h1 class="sr-only">Configuração da conta</h1>
 
   <div class="mb-8">
@@ -8,9 +6,7 @@
       <span id="progress-label">Configuração</span>
       <span id="progress-text">0%</span>
     </div>
-    <%# A largura vem das classes `.barra-N`, nunca de atributo `style`: a CSP %>
-    <%# descarta estilo escrito na marcação (RNF-11). O `role` e o `aria-valuenow` %>
-    <%# são o que faz o leitor de tela anunciar o progresso que a RF-ONB-01 promete. %>
+
     <div class="h-3 overflow-hidden rounded-pilula bg-white">
       <div
         id="progress-bar"
@@ -24,12 +20,14 @@
     </div>
   </div>
 
-  <form id="form-onboarding" class="rounded-favo bg-white p-8 shadow-lg">
-    <div id="etapa-conteudo"></div>
+  <form id="form-onboarding" class="relative mt-8 rounded-favo bg-white p-8 shadow-lg">
+    <div id="mascote-onboarding" class="onboarding-mascote" aria-hidden="true"></div>
 
-    <p id="erro-onboarding" class="mt-4 hidden text-sm text-erro-texto"></p>
+    <div id="etapa-conteudo" class="relative z-10"></div>
 
-    <div class="mt-8 flex gap-4">
+    <p id="erro-onboarding" class="relative z-10 mt-4 hidden text-sm text-erro-texto"></p>
+
+    <div class="relative z-10 mt-8 flex gap-4">
       <button
         type="button"
         id="btn-voltar"
@@ -41,7 +39,7 @@
     </div>
   </form>
 
-  <p class="mt-6 text-center">
+  <p class="relative z-10 mt-6 text-center">
     <a href="/perfis" class="text-sm font-semibold text-tinta-suave underline hover:text-tinta">
       Trocar de perfil
     </a>

@@ -16,6 +16,7 @@ import * as tasksService from '../services/tasksService.js';
 import * as vaultService from '../services/vaultService.js';
 import { env } from '../config/env.js';
 import { googleConfigurado } from '../config/google.js';
+import { mascote } from '../config/mascote.js';
 import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
 import { querJson } from '../utils/resposta.js';
@@ -35,6 +36,19 @@ const FUNDO_CERA = 'min-h-screen bg-cera text-tinta antialiased';
 // Sem espaço no topo, porque o cabeçalho é grudado; e folga embaixo no celular,
 // para o botão "Continuar" não tapar o fim da página.
 const FUNDO_COLMEIA = 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10';
+
+// O wizard é montado no navegador, então as poses chegam pelo `dataset` do
+// body. O caminho continua saindo do catálogo: trocar a arte é mexer num lugar
+// só, e não caçar strings em `onboarding.js`.
+const MASCOTES_DO_ONBOARDING = {
+  acolhendo: mascote('acolhendo').arquivo,
+  entrando: mascote('entrando').arquivo,
+  ensinando: mascote('ensinando').arquivo,
+  um_real: mascote('um_real').arquivo,
+  mostrando: mascote('mostrando').arquivo,
+  coolpose: mascote('coolpose').arquivo,
+  bebe: mascote('bebe').arquivo,
+};
 
 function redirecionarLogado(req, res) {
   res.redirect(req.session.onboardingConcluido ? '/perfis' : '/onboarding');
@@ -93,13 +107,15 @@ export const onboarding = assincrono(async (req, res) => {
   renderizarPagina(res, 'onboarding', {
     titulo: 'Configurar perfil — Beever',
     classeBody: 'flex min-h-screen flex-col items-center justify-center bg-cera p-4 text-tinta antialiased',
-    // O wizard é montado em JavaScript e lê estes três do `dataset` do body. O
-    // rascunho viaja como JSON num atributo, que o EJS escapa como qualquer
-    // outro valor — a CSP não permite script embutido na página (RNF-11).
+    // O wizard é montado em JavaScript e lê estes dados do `dataset` do body.
+    // Os JSON viajam em atributos, que o EJS escapa como qualquer outro valor
+    // — a CSP não permite script embutido na página (RNF-11).
     dadosBody: {
       'perfil-id': req.session.perfilId,
       'csrf-token': res.locals.csrfToken,
       onboarding: JSON.stringify(rascunho),
+      mascotes: JSON.stringify(MASCOTES_DO_ONBOARDING),
+      moeda: '/img/1real.gif',
     },
     scripts: ['/js/onboarding.js'],
   });
@@ -130,6 +146,9 @@ export const perfis = assincrono(async (req, res) => {
   renderizarPagina(res, 'perfis', {
     titulo: 'Quem está jogando? — Beever',
     classeBody: FUNDO_CERA,
+    // A remoção usa `DELETE` com o token no cabeçalho, como a edição de
+    // disponibilidade. O token vai no `dataset` do body para o script da tela.
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
     perfis: lista,
     perfilAtualId: req.session.perfilId,
     conta: req.session.email ?? lista.find((perfil) => perfil.email)?.email,
