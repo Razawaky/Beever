@@ -165,6 +165,7 @@ describe('acessibilidade de todas as telas', opcoes, () => {
     await coletar(jogador, 'liga no painel', '/painel/liga');
     await coletar(jogador, 'perfil', '/perfil');
     await coletar(jogador, 'perfil no painel', '/painel/perfil');
+    await coletar(jogador, 'configurações', '/painel/configuracoes');
 
     const admin = request.agent(app);
     csrf = await lerToken(admin, '/admin/login');

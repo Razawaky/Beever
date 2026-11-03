@@ -1,8 +1,13 @@
-// Painel de acessibilidade, em toda tela.
+// Painel de acessibilidade e preferências de jogo, em toda tela.
 //
 // O modo normal é o padrão: enquanto nada é ligado aqui, nenhuma classe entra no
 // `<html>` e a página é exatamente a desenhada. Cada ajuste é uma escolha, fica
 // guardada no navegador e volta na próxima visita.
+//
+// A aba de configurações usa as mesmas chaves com `data-ajuste`, para que som,
+// animação e tema tenham uma fonte de verdade só. O painel flutuante continua
+// cuidando apenas dos quatro ajustes de acessibilidade: "Ativar tudo" não deve
+// ligar modo escuro nem silenciar o jogo por acidente.
 //
 // A preferência de movimento do sistema continua valendo por conta própria: este
 // painel a complementa, para quem não tem como mexer na configuração do aparelho.
@@ -12,15 +17,19 @@ const AJUSTES = {
   contraste: 'a11y-contraste',
   texto: 'a11y-texto-maior',
   distracao: 'a11y-sem-distracao',
+  silenciar: 'a11y-sem-som',
+  escuro: 'a11y-modo-escuro',
 };
+
+const AJUSTES_DO_PAINEL = ['movimento', 'contraste', 'texto', 'distracao'];
 
 const CHAVE_GUARDADA = 'beever-acessibilidade';
 
 const caixa = document.getElementById('acessibilidade');
 const botaoAbrir = document.getElementById('acessibilidade-abrir');
 const painel = document.getElementById('acessibilidade-painel');
-const chaves = Array.from(document.querySelectorAll('.acessibilidade-chave'));
-const aviso = document.getElementById('acessibilidade-aviso');
+const chaves = Array.from(document.querySelectorAll('[data-ajuste]'));
+const avisos = Array.from(document.querySelectorAll('.acessibilidade-aviso'));
 
 /** O que estava ligado na última visita, ou nada. */
 function lerEscolha() {
@@ -51,7 +60,8 @@ function aplicar(escolha) {
     chave.setAttribute('aria-pressed', String(ligado));
     // Marca em forma, e não só em cor: quem não distingue as duas precisa ver
     // a diferença do mesmo jeito.
-    chave.querySelector('.acessibilidade-marca').textContent = ligado ? '☑' : '☐';
+    const marca = chave.querySelector('.acessibilidade-marca');
+    if (marca) marca.textContent = ligado ? '☑' : '☐';
   });
 
   // O CSS dá conta de animação e transição, mas rolagem suave é JavaScript: o
@@ -60,11 +70,15 @@ function aplicar(escolha) {
     new CustomEvent('beever:movimento', { detail: { reduzido: Boolean(escolha.movimento) } }),
   );
 
-  const ligados = Object.keys(AJUSTES).filter((nome) => escolha[nome]).length;
-  aviso.textContent =
-    ligados === 0
-      ? 'Modo normal.'
-      : `${ligados} ${ligados === 1 ? 'ajuste ligado' : 'ajustes ligados'}. A escolha fica guardada neste navegador.`;
+  avisos.forEach((aviso) => {
+    const nomes = aviso.id === 'acessibilidade-aviso' ? AJUSTES_DO_PAINEL : Object.keys(AJUSTES);
+    const ligados = nomes.filter((nome) => escolha[nome]).length;
+
+    aviso.textContent =
+      ligados === 0
+        ? 'Modo normal.'
+        : `${ligados} ${ligados === 1 ? 'ajuste ligado' : 'ajustes ligados'}. A escolha fica guardada neste navegador.`;
+  });
 }
 
 function trocar(escolha) {
@@ -72,25 +86,36 @@ function trocar(escolha) {
   guardarEscolha(escolha);
 }
 
-if (caixa && botaoAbrir && painel && chaves.length > 0) {
-  // A classe libera o painel no CSS: sem script ele não aparece, porque não
-  // teria onde guardar a escolha.
-  document.documentElement.classList.add('a11y-pronto');
+/** Liga ou desliga só os quatro ajustes do painel, preservando o resto. */
+function ajustarPainel(valor) {
+  const escolha = lerEscolha();
+  for (const nome of AJUSTES_DO_PAINEL) escolha[nome] = valor;
+  trocar(escolha);
+}
 
-  botaoAbrir.addEventListener('click', () => {
-    const aberto = botaoAbrir.getAttribute('aria-expanded') === 'true';
-    botaoAbrir.setAttribute('aria-expanded', String(!aberto));
-    painel.classList.toggle('hidden', aberto);
-    if (!aberto) chaves[0].focus();
-  });
+if (chaves.length > 0) {
+  const temPainel = Boolean(caixa && botaoAbrir && painel);
 
-  // Esc fecha e devolve o foco ao botão, que é o que se espera de um painel.
-  painel.addEventListener('keydown', (evento) => {
-    if (evento.key !== 'Escape') return;
-    painel.classList.add('hidden');
-    botaoAbrir.setAttribute('aria-expanded', 'false');
-    botaoAbrir.focus();
-  });
+  if (temPainel) {
+    // A classe libera o painel no CSS: sem script ele não aparece, porque não
+    // teria onde guardar a escolha.
+    document.documentElement.classList.add('a11y-pronto');
+
+    botaoAbrir.addEventListener('click', () => {
+      const aberto = botaoAbrir.getAttribute('aria-expanded') === 'true';
+      botaoAbrir.setAttribute('aria-expanded', String(!aberto));
+      painel.classList.toggle('hidden', aberto);
+      if (!aberto) painel.querySelector('[data-ajuste]')?.focus();
+    });
+
+    // Esc fecha e devolve o foco ao botão, que é o que se espera de um painel.
+    painel.addEventListener('keydown', (evento) => {
+      if (evento.key !== 'Escape') return;
+      painel.classList.add('hidden');
+      botaoAbrir.setAttribute('aria-expanded', 'false');
+      botaoAbrir.focus();
+    });
+  }
 
   chaves.forEach((chave) => {
     chave.addEventListener('click', () => {
@@ -100,13 +125,15 @@ if (caixa && botaoAbrir && painel && chaves.length > 0) {
     });
   });
 
-  document.getElementById('acessibilidade-tudo').addEventListener('click', () => {
-    trocar(Object.fromEntries(Object.keys(AJUSTES).map((nome) => [nome, true])));
-  });
+  if (temPainel) {
+    document.getElementById('acessibilidade-tudo')?.addEventListener('click', () => {
+      ajustarPainel(true);
+    });
 
-  document.getElementById('acessibilidade-normal').addEventListener('click', () => {
-    trocar({});
-  });
+    document.getElementById('acessibilidade-normal')?.addEventListener('click', () => {
+      ajustarPainel(false);
+    });
+  }
 
   aplicar(lerEscolha());
 }

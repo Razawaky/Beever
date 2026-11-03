@@ -279,14 +279,28 @@ export async function criarPerfilDaConta(idConta, { apelido, dataNasc }) {
 export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
   exigirPosse(id, ator);
 
+  const alvo = await usersRepository.buscarPorId(id);
+  if (!alvo) throw erroNaoEncontrado('Usuário não encontrado');
+
   // Perfil adicional é persona, não conta: não tem e-mail nem senha. Recusar
   // aqui evita que uma rota de conta transforme um perfil em credencial
   // acidental (o login continuaria barrando pelo `owner_user_id`, mas o dado
   // ficaria no lugar errado).
-  if (!ator?.ehAdmin && (email || senha)) {
-    const alvo = await usersRepository.buscarPorId(id);
-    if (alvo?.owner_user_id) {
-      throw erroValidacao('Perfil adicional não tem e-mail nem senha de login');
+  if (!ator?.ehAdmin && (email || senha) && alvo.owner_user_id) {
+    throw erroValidacao('Perfil adicional não tem e-mail nem senha de login');
+  }
+
+  // A tela de configurações permite trocar o e-mail, e a UNIQUE da tabela é a
+  // última defesa. Conferir antes transforma o erro do banco em uma mensagem
+  // que a pessoa entende, em vez de um 500.
+  let emailFinal = email;
+  if (email) {
+    emailFinal = String(email).trim().toLowerCase();
+    if (emailFinal !== alvo.email && (await usersRepository.emailJaUsado(emailFinal))) {
+      throw new ErroAplicacao('Este e-mail já está cadastrado', {
+        status: 409,
+        codigo: 'EMAIL_EM_USO',
+      });
     }
   }
 
@@ -296,7 +310,7 @@ export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
     senhaHash = await bcrypt.hash(senha, CUSTO_BCRYPT);
   }
 
-  const afetadas = await usersRepository.atualizar(id, { apelido, email, dataNasc, senhaHash });
+  const afetadas = await usersRepository.atualizar(id, { apelido, email: emailFinal, dataNasc, senhaHash });
   if (afetadas === 0) throw erroNaoEncontrado('Usuário não encontrado');
 
   await auditService.registrar(quemAgiu(ator), 'conta.atualizada', {
@@ -306,7 +320,7 @@ export async function atualizar(id, { apelido, email, dataNasc, senha }, ator) {
     // e-mail e data de nascimento são dado pessoal (RN-049), e apagar a conta
     // um dia (RN-053) não pode deixar cópia deles no histórico imutável.
     depois: {
-      emailAlterado: Boolean(email),
+      emailAlterado: Boolean(emailFinal && emailFinal !== alvo.email),
       apelidoAlterado: Boolean(apelido),
       dataNascAlterada: Boolean(dataNasc),
       senhaAlterada: Boolean(senha),

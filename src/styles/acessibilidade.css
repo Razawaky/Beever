@@ -79,6 +79,90 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Som desligado — a classe é o contrato para qualquer áudio futuro
+   --------------------------------------------------------------------------- */
+/* Não existe áudio no jogo hoje. A classe e a preferência já ficam guardadas
+   para que um efeito novo possa consultar `a11y-sem-som` em vez de inventar
+   outra chave. */
+
+/* ---------------------------------------------------------------------------
+   Modo escuro — a mesma Colmeia com pouca luz
+   --------------------------------------------------------------------------- */
+/* O painel de acessibilidade já tem contraste e texto maior; o tema é uma
+   escolha separada, para quem quer menos claridade sem perder a identidade.
+   O mel continua mel: é cor de ação, e a lateral segue reconhecível. O que
+   troca é a sala (cera/branco) e a tinta. */
+:root.a11y-modo-escuro {
+  color-scheme: dark;
+}
+
+:root.a11y-modo-escuro body {
+  background-color: var(--color-breu);
+  color: var(--color-cera);
+}
+
+:root.a11y-modo-escuro .bg-white {
+  background-color: #1f1f1f;
+}
+
+:root.a11y-modo-escuro .bg-cera {
+  background-color: #171717;
+}
+
+:root.a11y-modo-escuro .text-tinta {
+  color: var(--color-cera);
+}
+
+:root.a11y-modo-escuro .text-tinta-suave {
+  color: #c7c2b6;
+}
+
+:root.a11y-modo-escuro .border-linha {
+  border-color: #444;
+}
+
+/* Superfícies de mel, âmbar e néctar continuam claras e com texto de tinta:
+   inverter o texto nelas destruiria o contraste da própria identidade. */
+:root.a11y-modo-escuro .bg-mel,
+:root.a11y-modo-escuro .bg-nectar,
+:root.a11y-modo-escuro .bg-ambar,
+:root.a11y-modo-escuro .bg-mel .text-tinta,
+:root.a11y-modo-escuro .bg-nectar .text-tinta,
+:root.a11y-modo-escuro .bg-ambar .text-tinta,
+:root.a11y-modo-escuro .bg-mel .text-tinta-suave,
+:root.a11y-modo-escuro .bg-nectar .text-tinta-suave,
+:root.a11y-modo-escuro .bg-ambar .text-tinta-suave {
+  color: var(--color-tinta);
+}
+
+:root.a11y-modo-escuro .bg-mel {
+  background-color: var(--color-mel);
+}
+
+/* O vermelho de texto é escuro demais sobre a sala escura; a variante de
+   preenchimento clareia o suficiente para continuar legível. */
+:root.a11y-modo-escuro .text-erro-texto,
+:root.a11y-modo-escuro .text-acerto-texto,
+:root.a11y-modo-escuro .text-atencao-texto {
+  color: color-mix(in srgb, currentColor 55%, white);
+}
+
+/* Campos e botões precisam de uma borda visível quando o fundo deixa de ser
+   claro, inclusive nos estados de foco e nos cartões internos. */
+:root.a11y-modo-escuro input,
+:root.a11y-modo-escuro textarea,
+:root.a11y-modo-escuro select {
+  background-color: #1f1f1f;
+  color: var(--color-cera);
+  border-color: #555;
+}
+
+:root.a11y-modo-escuro input::placeholder,
+:root.a11y-modo-escuro textarea::placeholder {
+  color: #a9a39a;
+}
+
+/* ---------------------------------------------------------------------------
    O painel em si
    --------------------------------------------------------------------------- */
 

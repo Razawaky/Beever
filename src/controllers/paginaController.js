@@ -92,6 +92,7 @@ export const login = (req, res) => {
   renderizarPagina(res, 'login', {
     titulo: 'Entrar — Beever',
     senhaAlterada: req.query.senha === 'alterada',
+    contaExcluida: req.query.conta === 'excluida',
     googleConfigurado,
   });
 };

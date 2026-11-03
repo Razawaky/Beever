@@ -28,3 +28,17 @@ export function iniciarSessaoLogin(
     });
   });
 }
+
+/**
+ * Encerra a sessão de login. Promissificado de propósito: um throw dentro do
+ * callback do `destroy` ficaria fora da cadeia de promises e nunca chegaria ao
+ * handler global de erros.
+ *
+ * Mora aqui, e não no controller de login, porque a exclusão de conta também
+ * precisa encerrar a sessão depois de desativar a conta.
+ */
+export function encerrarSessao(req) {
+  return new Promise((resolve, reject) => {
+    req.session.destroy((erro) => (erro ? reject(erro) : resolve()));
+  });
+}

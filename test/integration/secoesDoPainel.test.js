@@ -25,6 +25,7 @@ const pular = await motivoParaPular();
 const opcoes = pular ? { skip: pular } : {};
 
 const SECOES = [
+  { nome: 'configurações', caminho: '/painel/configuracoes', conteudo: /Preferências de jogo/ },
   { nome: 'perfil', caminho: '/painel/perfil', conteudo: /Meus dias de jogo/ },
   { nome: 'trilha', caminho: '/painel/trilha', conteudo: /Continuar de onde parei/ },
   { nome: 'metas', caminho: '/painel/metas', conteudo: /Minhas metas/ },

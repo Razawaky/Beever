@@ -111,10 +111,13 @@
 
   <div class="border-t border-tinta/10 px-8 py-6">
     <a
-      href="/perfis"
-      class="inline-flex min-h-11 items-center rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:bg-white/50 hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      href="/painel/configuracoes"
+      aria-label="Abrir configurações"
+      <% if (ativo === 'configuracoes') { %>aria-current="page"<% } %>
+      class="inline-flex min-h-11 items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:bg-white/50 hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
     >
-      Trocar de perfil
+      <span aria-hidden="true">⚙️</span>
+      <span>Configurações</span>
     </a>
     <form method="POST" action="/sessao/logout">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />

@@ -4,6 +4,7 @@ import { body, param, query } from 'express-validator';
 import * as healthController from '../controllers/healthController.js';
 import * as homeController from '../controllers/homeController.js';
 import * as paginaController from '../controllers/paginaController.js';
+import * as settingsController from '../controllers/settingsController.js';
 import { requireLogin, requireOnboarding, requireOnboardingPendente } from '../middlewares/requireOnboarding.js';
 import { somentePagina } from '../middlewares/somentePagina.js';
 import { validate, validateEnderecoDePagina } from '../middlewares/validate.js';
@@ -32,6 +33,26 @@ const regrasNovoPerfil = [
     .withMessage('Informe como este perfil quer ser chamado')
     .custom(exigirApelidoPublico),
   body('data_nasc').isISO8601().withMessage('Data de nascimento inválida'),
+];
+
+// A conta tem um e-mail só. Normalizar aqui evita que `Ana@...` e `ana@...`
+// virem duas contas quando o banco compara a coluna UNIQUE.
+const regrasEmailDaConta = [
+  body('email')
+    .trim()
+    .toLowerCase()
+    .isLength({ max: 190 })
+    .withMessage('E-mail muito longo')
+    .isEmail()
+    .withMessage('E-mail inválido'),
+];
+
+const regrasSenhaDaConta = [
+  body('senha').isLength({ min: 8 }).withMessage('A senha precisa ter ao menos 8 caracteres'),
+  body('confirmarSenha').custom((valor, { req }) => {
+    if (valor !== req.body.senha) throw new Error('As duas senhas precisam ser iguais');
+    return true;
+  }),
 ];
 
 router.get('/', homeController.mostrar);
@@ -75,6 +96,22 @@ router.post(
   paginaController.escolherPerfil,
 );
 router.get('/painel', requireOnboarding, paginaController.painel);
+router.get('/painel/configuracoes', requireOnboarding, settingsController.mostrar);
+router.post(
+  '/painel/configuracoes/email',
+  requireOnboarding,
+  regrasEmailDaConta,
+  validate,
+  settingsController.alterarEmail,
+);
+router.post(
+  '/painel/configuracoes/senha',
+  requireOnboarding,
+  regrasSenhaDaConta,
+  validate,
+  settingsController.alterarSenha,
+);
+router.post('/painel/configuracoes/conta', requireOnboarding, settingsController.excluirConta);
 router.get('/painel/perfil', requireOnboarding, paginaController.painelPerfil);
 router.get('/painel/loja', requireOnboarding, paginaController.painelLoja);
 router.get('/painel/inventario', requireOnboarding, paginaController.painelInventario);

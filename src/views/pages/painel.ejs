@@ -25,7 +25,9 @@
   <%# Conteúdo principal %>
   <main id="conteudo-main" class="flex-1 p-4 lg:p-8 relative">
 
-    <% if (secaoAtual === 'perfil') { %>
+    <% if (secaoAtual === 'configuracoes') { %>
+      <%- include('../fragments/configuracoes', { alterado, erro }) %>
+    <% } else if (secaoAtual === 'perfil') { %>
       <%- include('../fragments/perfil', { nivelTitulo: 2 }) %>
     <% } else if (secaoAtual === 'loja') { %>
       <%- include('../fragments/loja', {

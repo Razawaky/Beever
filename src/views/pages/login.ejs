@@ -23,6 +23,13 @@
           </p>
         <% } %>
 
+        <% if (contaExcluida) { %>
+          <p role="status" class="mt-6 rounded-favo border border-linha bg-cera p-4 text-sm">
+            Sua conta foi desativada e você saiu do jogo. Ela será apagada definitivamente depois de
+            15 dias.
+          </p>
+        <% } %>
+
         <form method="POST" action="/sessao/login" class="mt-8 space-y-4">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 

@@ -1,7 +1,7 @@
 import * as authService from '../services/authService.js';
 import { assincrono } from '../utils/erros.js';
 import { querJson } from '../utils/resposta.js';
-import { iniciarSessaoLogin } from '../utils/sessaoLogin.js';
+import { encerrarSessao, iniciarSessaoLogin } from '../utils/sessaoLogin.js';
 
 export const login = assincrono(async (req, res) => {
   const { email, senha } = req.body;
@@ -24,11 +24,7 @@ export const logout = assincrono(async (req, res) => {
   const { usuarioId, ehAdmin } = req.session;
   await authService.registrarLogout(usuarioId, ehAdmin);
 
-  // Promissificado de propósito: um throw dentro do callback do destroy ficaria
-  // fora da cadeia de promises e nunca chegaria ao handler global de erros.
-  await new Promise((resolve, reject) => {
-    req.session.destroy((erro) => (erro ? reject(erro) : resolve()));
-  });
+  await encerrarSessao(req);
 
   res.clearCookie('beever.sid');
   if (querJson(req)) return res.json({ mensagem: 'Logout realizado com sucesso' });
