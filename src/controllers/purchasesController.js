@@ -1,6 +1,6 @@
 import * as purchasesService from '../services/purchasesService.js';
 import { assincrono } from '../utils/erros.js';
-import { querJson } from '../utils/resposta.js';
+import { paginaDeVolta, querJson } from '../utils/resposta.js';
 
 export const criar = assincrono(async (req, res) => {
   const idItem = Number(req.body.idItem);
@@ -19,7 +19,7 @@ export const criar = assincrono(async (req, res) => {
       repetida,
     });
   }
-  res.redirect('/loja');
+  res.redirect(paginaDeVolta(req.body.voltarPara, '/loja'));
 });
 
 export const meuExtrato = assincrono(async (req, res) => {

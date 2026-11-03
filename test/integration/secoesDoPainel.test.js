@@ -26,7 +26,11 @@ const opcoes = pular ? { skip: pular } : {};
 
 const SECOES = [
   { nome: 'perfil', caminho: '/painel/perfil', conteudo: /Meus dias de jogo/ },
+  { nome: 'trilha', caminho: '/painel/trilha', conteudo: /Continuar de onde parei/ },
+  { nome: 'metas', caminho: '/painel/metas', conteudo: /Minhas metas/ },
+  { nome: 'liga', caminho: '/painel/liga', conteudo: /Sua liga começa assim que você ganhar/ },
   { nome: 'loja', caminho: '/painel/loja', conteudo: /Ir para a loja/ },
+  { nome: 'tela de inventário', caminho: '/painel/inventario', conteudo: /Bens/ },
   { nome: 'cofre', caminho: '/painel/cofre', conteudo: /Guardado no cofre/ },
   { nome: 'conquistas', caminho: '/painel/conquistas', conteudo: /conquistas/ },
 ];
@@ -95,7 +99,7 @@ describe('seções dentro do painel', opcoes, () => {
       assert.match(html, /<main id="conteudo-main"/, `a ${secao.nome} precisa entrar na main existente`);
       assert.match(html, /aria-current="page"/, `o atalho da ${secao.nome} precisa se marcar como atual`);
       assert.match(html, secao.conteudo, `o conteúdo da ${secao.nome} sumiu`);
-      assert.doesNotMatch(html, /Minha trilha/, `a trilha não pode dividir a main com a ${secao.nome}`);
+      assert.doesNotMatch(html, /Ver trilha inteira/, `a Colmeia não pode dividir a main com a ${secao.nome}`);
       assert.match(html, /href="\/painel"[^>]*aria-label="Voltar para o painel"/, 'a marca precisa levar de volta à Colmeia');
       assert.doesNotMatch(html, /beenie-clicavel/, `a Beenie não pode aparecer na ${secao.nome}`);
 
@@ -108,6 +112,21 @@ describe('seções dentro do painel', opcoes, () => {
       }
     });
   }
+
+  it('a loja não oferece atalho para o inventário, que agora mora na lateral', async () => {
+    const painelLoja = await agente.get('/painel/loja').set('Accept', 'text/html').expect(200);
+    const html = semComentariosDeHtml(painelLoja.text);
+
+    assert.doesNotMatch(html, /href="\/inventario"/, 'o atalho solto saiu da loja');
+    assert.match(
+      html,
+      /href="\/painel\/inventario"[^>]*>[\s\S]{0,120}Meus itens/,
+      'o inventário precisa aparecer como opção da lateral',
+    );
+
+    const loja = await agente.get('/loja').set('Accept', 'text/html').expect(200);
+    assert.doesNotMatch(semComentariosDeHtml(loja.text), /href="\/inventario"/, 'a página antiga também perdeu o atalho');
+  });
 
   it('a Beenie clicável continua na Colmeia principal', async () => {
     const resposta = await agente.get('/painel').set('Accept', 'text/html').expect(200);
@@ -156,5 +175,47 @@ describe('seções dentro do painel', opcoes, () => {
       .expect(200);
 
     assert.match(resposta.text, /action="\/painel\/cofre"/, 'o formulário devolve o jogador para a página errada');
+  });
+
+  it('a loja do painel leva a confirmação para dentro da main', async () => {
+    const loja = await agente.get('/painel/loja').set('Accept', 'text/html').expect(200);
+    const link = /href="\/painel\/loja\/itens\/(\d+)\/confirmar"/.exec(loja.text);
+    assert.ok(link, 'o item da loja precisa abrir a confirmação dentro da Colmeia');
+
+    const confirmacao = await agente
+      .get(`/painel/loja/itens/${link[1]}/confirmar`)
+      .set('Accept', 'text/html')
+      .expect(200);
+    const html = semComentariosDeHtml(confirmacao.text);
+
+    assert.match(html, /<main id="conteudo-main"/, 'a confirmação precisa entrar na main existente');
+    assert.equal((html.match(/<aside class="[^"]*\bw-72\b[^"]*"/g) ?? []).length, 2);
+    assert.match(html, /name="voltarPara" value="\/painel\/loja"/, 'comprar precisa devolver para a loja do painel');
+    assert.match(html, /href="\/painel\/loja"[^>]*>\s*Agora não/, 'desistir também volta para a loja do painel');
+  });
+
+  it('o favo aberto na trilha do painel continua dentro da main', async () => {
+    const trilha = await agente.get('/painel/trilha').set('Accept', 'text/html').expect(200);
+    const link = /href="\/painel\/trilha\/(\d+)"/.exec(trilha.text);
+    assert.ok(link, 'a trilha do painel precisa apontar para os favos dentro do painel');
+
+    const favo = await agente.get(`/painel/trilha/${link[1]}`).set('Accept', 'text/html').expect(200);
+    const html = semComentariosDeHtml(favo.text);
+
+    assert.match(html, /<main id="conteudo-main"/, 'o favo precisa entrar na main existente');
+    assert.equal((html.match(/<aside class="[^"]*\bw-72\b[^"]*"/g) ?? []).length, 2);
+    assert.match(html, /href="\/painel\/trilha"[\s\S]{0,320}aria-current="page"[\s\S]{0,320}Minha trilha/, 'a lateral precisa marcar a trilha como atual');
+    assert.match(html, /href="\/painel\/trilha"/, 'o favo precisa voltar para a trilha do painel');
+  });
+
+  it('as ações do cofre voltam para a seção em que o jogador estava', async () => {
+    const csrf = await lerToken('/painel/cofre');
+
+    await agente
+      .post('/cofre/meta')
+      .type('form')
+      .send({ _csrf: csrf, valor: '1', voltarPara: '/painel/cofre' })
+      .expect(302)
+      .expect('Location', '/painel/cofre');
   });
 });

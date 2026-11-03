@@ -2,7 +2,7 @@
   const ativo = typeof secaoAtual === 'string' ? secaoAtual : 'colmeia';
 %>
 <aside class="fixed inset-y-0 left-0 z-20 flex w-72 flex-col justify-between h-full overflow-hidden bg-mel p-6 shadow-xl">
-  <div class="flex flex-col gap-6">
+  <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-x-hidden overflow-y-auto pr-1">
     <a
       href="/painel"
       aria-label="Voltar para o painel"
@@ -71,6 +71,14 @@
       >
         <span class="text-xl">🛒</span>
         <span>Ir para a loja</span>
+      </a>
+      <a
+        href="/painel/inventario"
+        <% if (ativo === 'inventario') { %>aria-current="page"<% } %>
+        class="flex items-center gap-3 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <span>🎒</span>
+        <span>Meus itens</span>
       </a>
       <a
         href="/painel/cofre"

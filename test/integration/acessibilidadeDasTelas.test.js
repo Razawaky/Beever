@@ -145,16 +145,26 @@ describe('acessibilidade de todas as telas', opcoes, () => {
 
     await coletar(jogador, 'colmeia', '/painel');
     await coletar(jogador, 'trilha', '/trilha');
+    await coletar(jogador, 'trilha no painel', '/painel/trilha');
     await coletar(jogador, 'favo', `/trilha/${favo.id}`);
+    await coletar(jogador, 'favo no painel', `/painel/trilha/${favo.id}`);
     await coletar(jogador, 'célula', `/trilha/${favo.id}/celula/${celula.id}`);
     await coletar(jogador, 'loja', '/loja');
+    await coletar(jogador, 'loja no painel', '/painel/loja');
     await coletar(jogador, 'confirmação de compra', `/loja/itens/${item.id}/confirmar`);
+    await coletar(jogador, 'confirmação de compra no painel', `/painel/loja/itens/${item.id}/confirmar`);
     await coletar(jogador, 'inventário', '/inventario');
+    await coletar(jogador, 'inventário no painel', '/painel/inventario');
     await coletar(jogador, 'cofre', '/cofre');
+    await coletar(jogador, 'cofre no painel', '/painel/cofre');
     await coletar(jogador, 'metas', '/metas');
+    await coletar(jogador, 'metas no painel', '/painel/metas');
     await coletar(jogador, 'conquistas', '/conquistas');
+    await coletar(jogador, 'conquistas no painel', '/painel/conquistas');
     await coletar(jogador, 'liga', '/liga');
+    await coletar(jogador, 'liga no painel', '/painel/liga');
     await coletar(jogador, 'perfil', '/perfil');
+    await coletar(jogador, 'perfil no painel', '/painel/perfil');
 
     const admin = request.agent(app);
     csrf = await lerToken(admin, '/admin/login');

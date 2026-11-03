@@ -94,9 +94,9 @@ describe('telas da trilha', opcoes, () => {
     if (banco) await banco.encerrar();
   });
 
-  it('a Colmeia leva para a trilha', async () => {
+  it('a Colmeia leva para a trilha dentro do painel', async () => {
     const painel = await agente.get('/painel').set('Accept', 'text/html').expect(200);
-    assert.match(painel.text, /href="\/trilha"/);
+    assert.match(painel.text, /href="\/painel\/trilha"/);
   });
 
   it('a trilha diz quantas células o favo tem antes de o jogador tocar nele', async () => {

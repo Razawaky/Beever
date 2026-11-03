@@ -12,7 +12,8 @@
 -%>
 <%
   const temCelula = Boolean(proximaCelula);
-  const destino = temCelula ? `/trilha/${proximaCelula.idFavo}/celula/${proximaCelula.id}` : '/trilha';
+  const caminhoTrilha = locals.caminhoTrilha ?? '/trilha';
+  const destino = temCelula ? `/trilha/${proximaCelula.idFavo}/celula/${proximaCelula.id}` : caminhoTrilha;
   const texto = temCelula ? `Continuar: ${proximaCelula.titulo}` : 'Ver minha trilha';
   const posicao = locals.fixo
     ? 'fixed inset-x-4 bottom-4 z-20 shadow-xl sm:static sm:inset-auto sm:shadow-md'

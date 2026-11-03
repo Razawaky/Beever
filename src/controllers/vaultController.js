@@ -1,6 +1,6 @@
 import * as vaultService from '../services/vaultService.js';
 import { assincrono } from '../utils/erros.js';
-import { querJson } from '../utils/resposta.js';
+import { paginaDeVolta, querJson } from '../utils/resposta.js';
 
 /** O cofre do jogador logado: resumo, depósito, saque e meta. */
 
@@ -18,13 +18,13 @@ export const meu = assincrono(async (req, res) => {
 export const depositar = assincrono(async (req, res) => {
   const resultado = await vaultService.depositar(req.session.usuarioId, Number(req.body.valor));
   if (querJson(req)) return res.status(201).json(resultado);
-  res.redirect('/cofre');
+  res.redirect(paginaDeVolta(req.body.voltarPara, '/cofre'));
 });
 
 export const sacar = assincrono(async (req, res) => {
   const resultado = await vaultService.sacar(req.session.usuarioId, Number(req.body.valor));
   if (querJson(req)) return res.status(201).json(resultado);
-  res.redirect('/cofre');
+  res.redirect(paginaDeVolta(req.body.voltarPara, '/cofre'));
 });
 
 export const definirMeta = assincrono(async (req, res) => {
@@ -33,5 +33,5 @@ export const definirMeta = assincrono(async (req, res) => {
     prazo: req.body.prazo ?? null,
   });
   if (querJson(req)) return res.json(resultado);
-  res.redirect('/cofre');
+  res.redirect(paginaDeVolta(req.body.voltarPara, '/cofre'));
 });

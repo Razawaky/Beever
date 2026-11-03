@@ -66,10 +66,11 @@
       <span class="rounded-pilula bg-cera px-4 py-2 text-sm font-medium text-tinta-suave">Ainda não</span>
     <% } else { %>
       <%# O botão leva para a confirmação, nunca direto para a compra: a criança
-          vê o impacto antes de gastar (RF-LOJ-05). %>
+          vê o impacto antes de gastar (RF-LOJ-05). A base do caminho vem da
+          casca para a compra não sair da Colmeia. %>
       <%- include('./botao', {
         texto: 'Quero este',
-        href: `/loja/itens/${item.id}/confirmar`,
+        href: `${locals.confirmacaoBase ?? '/loja/itens'}/${item.id}/confirmar`,
         tamanho: 'medio',
         rotuloAcessivel: `Quero ${item.nome}`,
       }) %>

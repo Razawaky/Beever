@@ -1,6 +1,6 @@
 import * as goalsService from '../services/goalsService.js';
 import { assincrono } from '../utils/erros.js';
-import { querJson } from '../utils/resposta.js';
+import { paginaDeVolta, querJson } from '../utils/resposta.js';
 
 // A página `/metas` é renderizada pelo paginaController, que junta metas,
 // tarefas e catálogo. Aqui é só o contrato JSON.
@@ -13,12 +13,12 @@ export const renovar = assincrono(async (req, res) => {
   const meta = await goalsService.renovar(Number(req.params.id), req.session.usuarioId);
 
   if (querJson(req)) return res.status(201).json(meta);
-  res.redirect('/metas');
+  res.redirect(paginaDeVolta(req.body.voltarPara, '/metas'));
 });
 
 export const concluir = assincrono(async (req, res) => {
   const recompensa = await goalsService.concluir(Number(req.params.id), req.session.usuarioId);
 
   if (querJson(req)) return res.json(recompensa);
-  res.redirect('/metas');
+  res.redirect(paginaDeVolta(req.body.voltarPara, '/metas'));
 });

@@ -8,7 +8,7 @@
 
   <%# Chama Sequência na parte inferior da sidebar %>
   <div class="mt-auto border-tinta/10">
-    <%- include('chama-sequencia', { sequencia, href: '/metas' }) %>
+    <%- include('chama-sequencia', { sequencia, href: '/painel/metas' }) %>
   </div>
 
   <%# Seção: Tarefas de hoje %>
@@ -33,7 +33,7 @@
     <% if (!colmeia.metaEmDestaque) { %>
       <%- include('./estado-vazio', {
         mensagem: 'Suas metas aparecem assim que a colmeia montar seu plano.',
-        acao: { href: '/metas', texto: 'Ver metas e tarefas' },
+        acao: { href: '/painel/metas', texto: 'Ver metas e tarefas' },
       }) %>
     <% } else { %>
       <%- include('./card-meta', { meta: colmeia.metaEmDestaque, destaque: true }) %>
@@ -53,7 +53,7 @@
       <% } %>
 
       <p class="text-right">
-        <a href="/metas" class="text-xs font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver todas as metas &rarr;</a>
+        <a href="/painel/metas" class="text-xs font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver todas as metas &rarr;</a>
       </p>
     <% } %>
   </section>
@@ -62,7 +62,7 @@
   <section class="rounded-favo bg-cera p-6">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-base font-semibold text-tinta">Seus itens</h2>
-      <a href="/inventario" class="text-xs font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver todos &rarr;</a>
+      <a href="/painel/inventario" class="text-xs font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver todos &rarr;</a>
     </div>
     
     <div class="rounded-lg bg-white p-4">
@@ -88,8 +88,8 @@
   <%# Seção: Liga %>
   <section class="rounded-favo bg-cera p-6">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-base font-semibold text-tinta">Sua liga</h2>
-      <a href="/liga" class="text-xs font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver liga &rarr;</a>
+      <h2 class="text-base font-semibold text-tinta">Sua liga da semana</h2>
+      <a href="/painel/liga" class="text-xs font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver liga &rarr;</a>
     </div>
 
     <% if (!colmeia.liga || colmeia.liga.posicao === null) { %>

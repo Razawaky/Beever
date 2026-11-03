@@ -12,12 +12,8 @@
 
 <div class="<%= mostrarTitulo ? 'mx-auto w-full max-w-5xl' : 'w-full' %>">
   <% if (mostrarTitulo) { %>
-    <%# Topo do fragmento com atalhos de navegação interna %>
-    <div class="flex items-center justify-between border-b border-tinta/10 pb-4">
+    <div class="border-b border-tinta/10 pb-4">
       <h2 class="font-display text-2xl font-bold text-tinta">Loja</h2>
-      <a href="/inventario" class="text-sm font-semibold text-tinta hover:underline">
-        Meus itens &rarr;
-      </a>
     </div>
   <% } %>
 
@@ -38,6 +34,9 @@
       lista.push(item);
       porCategoria.set(item.category_name, lista);
     });
+    // A confirmação pode viver na página solta ou dentro da Colmeia. Quem
+    // decide é a casca, que passa a base do caminho.
+    const confirmacaoBase = locals.confirmacaoBase ?? '/loja/itens';
   %>
 
   <% for (const [categoria, itens] of porCategoria) { %>
@@ -45,7 +44,7 @@
       <h2 class="font-display text-xl"><%= categoria %></h2>
       <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <% itens.forEach((item) => { %>
-          <%- include('../partials/ui/item-card', { item }) %>
+          <%- include('../partials/ui/item-card', { item, confirmacaoBase }) %>
         <% }) %>
       </div>
     </section>

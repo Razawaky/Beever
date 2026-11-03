@@ -17,6 +17,8 @@
     abaixo do h1, e na Colmeia já existe um h2 de seção acima dele. -%>
 <% const nivelDoTitulo = locals.nivel ?? 3; %>
 <% const tamanhoDoHexagono = compacto ? 'h-16 w-16' : 'h-24 w-24'; %>
+<%# A lista que abriga o card decide se o favo abre na página solta ou na Colmeia. -%>
+<% const caminhoBase = locals.caminhoBase ?? '/trilha'; %>
 <%
   const preenchimento = concluido ? 'bg-ambar' : aberto ? 'bg-mel' : 'bg-linha';
   const rotuloDeEstado = concluido ? 'concluído' : aberto ? 'disponível' : 'bloqueado';
@@ -25,7 +27,7 @@
 <article class="favo-passo flex items-center gap-4">
   <% if (aberto || concluido) { %>
     <a
-      href="/trilha/<%= favo.id %>"
+      href="<%= caminhoBase %>/<%= favo.id %>"
       class="favo-hexagono <%= preenchimento %> <%= tamanhoDoHexagono %> group relative flex shrink-0 items-center justify-center focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-4"
       aria-label="Abrir favo <%= favo.title %> — <%= rotuloDeEstado %>, <%= favo.percentual %>% concluído"
     >

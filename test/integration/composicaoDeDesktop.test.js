@@ -123,7 +123,7 @@ describe('composição de desktop das telas mais vistas', opcoes, () => {
 
     const barras = html.match(/<aside class="[^"]*\bw-72\b[^"]*"/g) ?? [];
     assert.equal(barras.length, 2, 'a Colmeia precisa das duas barras de largura fixa do desktop');
-    assert.match(html, /<main class="flex-1/, 'o conteúdo precisa ocupar a largura que sobra entre as barras');
+    assert.match(html, /<main[^>]*class="flex-1/, 'o conteúdo precisa ocupar a largura que sobra entre as barras');
   });
 
   it('a loja deixa de ser largura de celular no desktop', async () => {
@@ -146,7 +146,7 @@ describe('composição de desktop das telas mais vistas', opcoes, () => {
     // As duas barras fixas são as colunas; o conteúdo flexível é o meio.
     const barras = html.match(/<aside class="[^"]*\bw-72\b[^"]*"/g) ?? [];
     assert.equal(barras.length, 2, 'sem as duas barras, a trilha e o dia voltam a dividir espaço');
-    assert.match(html, /<main class="flex-1/, 'o conteúdo do dia precisa ser uma coluna própria');
+    assert.match(html, /<main[^>]*class="flex-1/, 'o conteúdo do dia precisa ser uma coluna própria');
 
     // E a ordem do HTML continua a do celular: quem empilha recebe a trilha
     // antes das tarefas do dia.

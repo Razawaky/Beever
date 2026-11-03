@@ -86,7 +86,7 @@ describe('trilha na Colmeia', opcoes, () => {
 
     const hexagonos = html.match(/favo-hexagono/g) ?? [];
     assert.equal(hexagonos.length, trilha.length, 'um hexágono por favo visível');
-    assert.match(html, /href="\/trilha"/, 'a trilha inteira continua a um clique');
+    assert.match(html, /href="\/painel\/trilha"/, 'a trilha inteira continua a um clique dentro da Colmeia');
   });
 
   it('o favo em andamento e o seguinte ficam em foco', async () => {
@@ -111,7 +111,7 @@ describe('trilha na Colmeia', opcoes, () => {
 
     assert.match(html, new RegExp(`Favo ${travado.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} bloqueado`));
     assert.match(html, new RegExp(travado.motivo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.ok(!html.includes(`href="/trilha/${travado.id}"`), 'favo travado não oferece porta');
+    assert.ok(!html.includes(`href="/painel/trilha/${travado.id}"`), 'favo travado não oferece porta');
   });
 
   it('a Colmeia continua sem escrever estilo na marcação', async () => {

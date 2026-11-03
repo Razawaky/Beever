@@ -54,6 +54,31 @@ function redirecionarLogado(req, res) {
   res.redirect(req.session.onboardingConcluido ? '/perfis' : '/onboarding');
 }
 
+/**
+ * O miolo de Metas e tarefas, compartilhado pela página solta e pela seção da
+ * Colmeia. A chegada (`prepararVisita`) fica com quem chama: no painel ela já
+ * aconteceu dentro de `obterColmeia`.
+ */
+async function carregarTelaDeMetas(idUsuario) {
+  const [listaDeMetas, tarefas, semana, conquistas] = await Promise.all([
+    goalsService.listarDoUsuario(idUsuario),
+    tasksService.listarDoUsuario(idUsuario),
+    streakService.resumoDaSemana(idUsuario),
+    achievementsService.listarDoUsuario(idUsuario),
+  ]);
+
+  // A meta chega resumida pelo service, como na Colmeia: percentual, prazo em
+  // palavra e recompensa saem de um lugar só (RF-MET-02).
+  return {
+    metas: listaDeMetas.map((meta) =>
+      goalsService.resumirMeta(meta, { hoje: semana.hoje, fuso: semana.fuso }),
+    ),
+    tarefas: tarefas.map(tasksService.resumirTarefa),
+    semana,
+    conquistas,
+  };
+}
+
 /** Política de privacidade: pública, e o e-mail de contato vem do ambiente. */
 export const privacidade = (req, res) =>
   renderizarPagina(res, 'privacidade', {
@@ -263,6 +288,24 @@ export const painelLoja = assincrono(async (req, res) => {
   });
 });
 
+/** O inventário dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelInventario = assincrono(async (req, res) => {
+  const [colmeia, resumo] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    inventoryService.resumoDoUsuario(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Meus itens — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    resumo,
+    secao: 'inventario',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
 /** O cofre dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
 export const painelCofre = assincrono(async (req, res) => {
   const porSemana = req.query.porSemana ? Number(req.query.porSemana) : 0;
@@ -282,6 +325,102 @@ export const painelCofre = assincrono(async (req, res) => {
     secao: 'cofre',
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
     scripts: ['/js/painel.js', '/js/graficos.js'],
+  });
+});
+
+/** Metas e tarefas dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelMetas = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const dados = await carregarTelaDeMetas(req.session.usuarioId);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Metas — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    ...dados,
+    secao: 'metas',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** A liga da semana dentro da casca da Colmeia. */
+export const painelLiga = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const premios = await leagueService.premiosDoPodio();
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Liga da semana — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    liga: colmeia.liga,
+    periodo: colmeia.liga ? leagueService.periodoDaLiga(colmeia.liga.grupo) : null,
+    premios,
+    idUsuario: Number(req.session.usuarioId),
+    secao: 'liga',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** A trilha completa dentro da casca da Colmeia. */
+export const painelTrilha = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const favoAtual = colmeia.trilha.find((favo) => favo.aberto && !favo.concluido) ?? null;
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Minha trilha — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    trilha: colmeia.trilha,
+    favoAtual,
+    proximaCelula: colmeia.proximaCelula,
+    secao: 'trilha',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** As células de um favo dentro da casca da Colmeia. */
+export const painelFavo = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const dadosDoFavo = await contentService.listarCelulasDoFavo(
+    req.session.usuarioId,
+    Number(req.params.id),
+  );
+
+  renderizarPagina(res, 'painel', {
+    titulo: `${dadosDoFavo.favo.title} — Beever`,
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    ...dadosDoFavo,
+    secao: 'favo',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** A confirmação da compra dentro da casca da Colmeia. */
+export const painelConfirmarCompra = assincrono(async (req, res) => {
+  // A visita é preparada antes da prévia: o ciclo pode ter mexido no saldo, e a
+  // confirmação precisa mostrar o mel de agora.
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const [perfil, previa] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    shopService.previaDaCompra(req.session.usuarioId, Number(req.params.idItem)),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: `Comprar ${previa.item.name} — Beever`,
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    perfil,
+    previa,
+    chaveDeCompra: randomUUID(),
+    secao: 'confirmacao',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
   });
 });
 
@@ -379,26 +518,12 @@ export const metas = assincrono(async (req, res) => {
   // antes das contas da semana.
   await homeService.prepararVisita(req.session.usuarioId);
 
-  const [listaDeMetas, tarefas, semana, conquistas] = await Promise.all([
-    goalsService.listarDoUsuario(req.session.usuarioId),
-    tasksService.listarDoUsuario(req.session.usuarioId),
-    streakService.resumoDaSemana(req.session.usuarioId),
-    achievementsService.listarDoUsuario(req.session.usuarioId),
-  ]);
-
-  // A meta chega resumida pelo service, como na Colmeia: percentual, prazo em
-  // palavra e recompensa saem de um lugar só (RF-MET-02).
-  const metasResumidas = listaDeMetas.map((meta) =>
-    goalsService.resumirMeta(meta, { hoje: semana.hoje, fuso: semana.fuso }),
-  );
+  const dados = await carregarTelaDeMetas(req.session.usuarioId);
 
   renderizarPagina(res, 'metas', {
     titulo: 'Metas — Beever',
     classeBody: FUNDO_CERA,
-    metas: metasResumidas,
-    tarefas: tarefas.map(tasksService.resumirTarefa),
-    semana,
-    conquistas,
+    ...dados,
   });
 });
 

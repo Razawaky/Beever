@@ -19,7 +19,7 @@
     <div class="px-8 pt-8">
         <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="font-display text-xl">Minha trilha</h2>
-        <a href="/trilha" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver trilha inteira &rarr;</a>
+        <a href="/painel/trilha" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Ver trilha inteira &rarr;</a>
         </div>
 
         <% if (colmeia.trilha.length === 0) { %>
@@ -31,7 +31,7 @@
             <% colmeia.trilha.forEach((favo) => { %>
             <li>
                 <div class="<%= favo.emFoco ? 'rounded-favo bg-cera p-4' : 'opacity-80' %>">
-                <%- include('../partials/ui/favo-card', { favo, compacto: !favo.emFoco }) %>
+                <%- include('../partials/ui/favo-card', { favo, compacto: !favo.emFoco, caminhoBase: '/painel/trilha' }) %>
                 </div>
             </li>
             <% }) %>
@@ -41,7 +41,7 @@
 
     <%# Botão pra continuar, quando tela for de celular %>
     <div class="px-8 pt-6">
-        <%- include('../partials/ui/botao-continuar', { proximaCelula: colmeia.proximaCelula, fixo: true }) %>
+        <%- include('../partials/ui/botao-continuar', { proximaCelula: colmeia.proximaCelula, fixo: true, caminhoTrilha: '/painel/trilha' }) %>
     </div>
     </div>
 

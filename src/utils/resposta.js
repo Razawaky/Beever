@@ -31,7 +31,15 @@ export function responder(req, res, { json, html }) {
  * vindo do cliente sem conferência é redirecionamento aberto, que é
  * vulnerabilidade e não conveniência.
  */
-const PAGINAS_DE_VOLTA = ['/painel', '/metas'];
+const PAGINAS_DE_VOLTA = [
+  '/painel',
+  '/metas',
+  '/painel/metas',
+  '/cofre',
+  '/painel/cofre',
+  '/loja',
+  '/painel/loja',
+];
 
 export function paginaDeVolta(destino, padrao = '/metas') {
   return PAGINAS_DE_VOLTA.includes(destino) ? destino : padrao;

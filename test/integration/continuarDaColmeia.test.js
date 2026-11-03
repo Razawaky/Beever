@@ -116,7 +116,7 @@ describe('botão Continuar', opcoes, () => {
     const html = await pagina('/painel');
 
     assert.match(html, /Ver minha trilha/);
-    assert.ok(html.includes('href="/trilha"'));
+    assert.ok(html.includes('href="/painel/trilha"'));
   });
 
   it('a Colmeia continua sem escrever estilo na marcação', async () => {

@@ -13,6 +13,7 @@
 <%
   const mostrarTitulo = locals.comTitulo !== false;
   const acaoDoFiltro = locals.acaoDoFiltro ?? '/cofre';
+  const voltarPara = locals.voltarPara ?? '/cofre';
 %>
 
 <% if (mostrarTitulo) { %>
@@ -35,6 +36,7 @@
       <div class="mt-6 grid gap-6 sm:grid-cols-2">
         <form method="POST" action="/cofre/depositos" class="grid gap-2">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <input type="hidden" name="voltarPara" value="<%= voltarPara %>" />
           <label for="valor-deposito" class="text-sm font-semibold">Guardar mel</label>
           <input
             id="valor-deposito"
@@ -50,6 +52,7 @@
 
         <form method="POST" action="/cofre/saques" class="grid gap-2">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <input type="hidden" name="voltarPara" value="<%= voltarPara %>" />
           <label for="valor-saque" class="text-sm font-semibold">Tirar mel</label>
           <input
             id="valor-saque"
@@ -91,6 +94,7 @@
           de `lg` a seção é meia coluna em qualquer tela, então ficam dois. %>
       <form method="POST" action="/cofre/meta" class="mt-4 grid gap-3 sm:grid-cols-3 sm:items-end lg:grid-cols-2">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="voltarPara" value="<%= voltarPara %>" />
         <div class="grid gap-2">
           <label for="valor-meta" class="text-sm font-semibold">Quero juntar</label>
           <input
