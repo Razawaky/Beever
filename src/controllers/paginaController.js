@@ -48,6 +48,7 @@ const MASCOTES_DO_ONBOARDING = {
   mostrando: mascote('mostrando').arquivo,
   coolpose: mascote('coolpose').arquivo,
   bebe: mascote('bebe').arquivo,
+  musica: mascote('musica').arquivo,
 };
 
 function redirecionarLogado(req, res) {

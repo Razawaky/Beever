@@ -161,9 +161,10 @@
   }
 
   .onboarding-mascote--preferencias {
-    --mascote-height: 16rem;
-    --mascote-right: -8rem;
-    --mascote-bottom: -2.5rem;
+    --mascote-height: 19rem;
+    --mascote-right: -14rem;
+    --mascote-bottom: 2.5rem;
+    left: -55rem
   }
 
   .onboarding-mascote--nivel {

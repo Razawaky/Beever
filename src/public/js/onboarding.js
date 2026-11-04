@@ -53,7 +53,7 @@ const etapas = [
     // Nada marcado é resposta válida aqui: quer dizer sem som e com a animação
     // normal. Por isso este é o único passo que avança sem preencher nada.
     permiteVazio: true,
-    mascote: 'coolpose',
+    mascote: 'musica',
   },
   {
     id: 'nivel',
