@@ -1,11 +1,3 @@
-<%#
-  O perfil do jogador (RF-ONB-09). É aqui que ele edita os dias da semana e vê
-  as metas ativas. A página `/perfil` e a seção `/painel/perfil` usam este mesmo
-  miolo.
-
-  `nivelTitulo` existe porque o painel já tem o apelido como `h1` na lateral;
-  dentro da `<main>` o nome do perfil vira `h2` para não haver dois `h1`.
--%>
 <%
   const TagDoTitulo = locals.nivelTitulo === 2 ? 'h2' : 'h1';
 %>
@@ -14,9 +6,6 @@
   <div class="overflow-hidden rounded-favo bg-white shadow-xl">
     <div class="flex items-center gap-4 bg-mel px-8 py-8">
       <% if (perfil.avatar_imagem) { %>
-        <%# As medidas são as do espaço reservado, e não as do arquivo: o avatar
-            vem do banco e cada um tem um tamanho. O que importa aqui é o
-            navegador não deixar a página pular enquanto a imagem chega. -%>
         <img
           src="<%= perfil.avatar_imagem %>"
           alt=""
@@ -36,23 +25,12 @@
           sessões de <%= perfil.session_minutes %> minutos ·
           <%= perfil.faixa_etaria_nome ?? 'faixa não definida' %>
         </p>
-        <%# A criança precisa saber onde o apelido aparece antes de escolher um
-            que a identifique (RN-049). %>
-        <p class="mt-1 text-sm text-tinta-suave">
-          Seu apelido aparece na liga da semana para as outras crianças do seu grupo. Não use seu nome
-          completo nem telefone.
-        </p>
       </div>
     </div>
 
     <div class="p-8">
       <section class="rounded-favo bg-cera p-6">
         <h2 class="text-lg font-semibold">Meus dias de jogo</h2>
-        <p class="mt-1 text-sm text-tinta-suave">
-          A colmeia só cobra presença nos dias que você escolher, e é isso que decide quantas
-          metas você recebe. Trocar os dias <strong>não apaga</strong> o que você já conquistou:
-          as metas em andamento continuam onde estão.
-        </p>
 
         <form id="form-disponibilidade" class="mt-6" data-perfil-id="<%= perfil.id %>">
           <fieldset class="grid gap-3 sm:grid-cols-2">

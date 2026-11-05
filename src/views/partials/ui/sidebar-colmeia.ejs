@@ -54,7 +54,7 @@
 
       <%# Recurso: Patrimônio %>
       <%- include('badge-recurso', {
-        icone: '🏠',
+        iconeArquivo: '/img/svg/home.svg',
         rotulo: 'Seu patrimônio',
         valor: jogador.patrimonio.total,
         grande: true,
@@ -69,7 +69,12 @@
         <% if (ativo === 'loja') { %>aria-current="page"<% } %>
         class="flex items-center gap-3 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
-        <span class="text-xl">🛒</span>
+        <img
+          src="/img/svg/loja.svg"
+          alt=""
+          aria-hidden="true"
+          class="h-6 w-6 shrink-0 object-contain"
+        />
         <span>Ir para a loja</span>
       </a>
       <a
@@ -101,7 +106,12 @@
           href="/admin"
           class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
         >
-          <span>⚙️</span>
+          <img
+            src="/img/svg/config.svg"
+            alt=""
+            aria-hidden="true"
+            class="h-6 w-6 shrink-0 object-contain"
+          />
           <span>Área administrativa</span>
         </a>
       <% } %>
@@ -116,7 +126,12 @@
       <% if (ativo === 'configuracoes') { %>aria-current="page"<% } %>
       class="inline-flex min-h-11 items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:bg-white/50 hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
     >
-      <span aria-hidden="true">⚙️</span>
+      <img
+        src="/img/svg/config.svg"
+        alt=""
+        aria-hidden="true"
+        class="h-5 w-5 shrink-0 object-contain opacity-70"
+      />
       <span>Configurações</span>
     </a>
     <form method="POST" action="/sessao/logout">

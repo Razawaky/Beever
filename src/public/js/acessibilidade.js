@@ -4,10 +4,10 @@
 // `<html>` e a página é exatamente a desenhada. Cada ajuste é uma escolha, fica
 // guardada no navegador e volta na próxima visita.
 //
-// A aba de configurações usa as mesmas chaves com `data-ajuste`, para que som,
-// animação e tema tenham uma fonte de verdade só. O painel flutuante continua
-// cuidando apenas dos quatro ajustes de acessibilidade: "Ativar tudo" não deve
-// ligar modo escuro nem silenciar o jogo por acidente.
+// A aba de configurações usa as mesmas chaves com `data-ajuste`, para que som e
+// animação tenham uma fonte de verdade só. O painel flutuante continua cuidando
+// apenas dos quatro ajustes de acessibilidade: "Ativar tudo" não deve silenciar
+// o jogo por acidente.
 //
 // A preferência de movimento do sistema continua valendo por conta própria: este
 // painel a complementa, para quem não tem como mexer na configuração do aparelho.
@@ -18,7 +18,6 @@ const AJUSTES = {
   texto: 'a11y-texto-maior',
   distracao: 'a11y-sem-distracao',
   silenciar: 'a11y-sem-som',
-  escuro: 'a11y-modo-escuro',
 };
 
 const AJUSTES_DO_PAINEL = ['movimento', 'contraste', 'texto', 'distracao'];
