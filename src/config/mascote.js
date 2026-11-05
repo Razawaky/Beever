@@ -122,6 +122,18 @@ export const MASCOTES = {
     largura: 395,
     altura: 463,
   },
+  tempo: {
+    arquivo: '/img/beenie_time.webp',
+    alt: 'Beenie mostrando o tempo',
+    largura: 410,
+    altura: 544,
+  },
+  calendario: {
+    arquivo: '/img/beenie_calendario.webp',
+    alt: 'Beenie mostrando o calendário',
+    largura: 570,
+    altura: 739,
+  },
 };
 
 /**

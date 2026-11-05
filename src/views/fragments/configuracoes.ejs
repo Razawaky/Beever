@@ -1,10 +1,11 @@
 <%#
   Configurações da Colmeia: preferências de jogo e conta.
 
-  As preferências de som, animação e tema são escolhas do navegador, como as do
+  As preferências de som e animação são escolhas do navegador, como as do
   painel de acessibilidade: ficam guardadas localmente e valem em todas as
-  telas. Já e-mail, senha, saída e exclusão são ações da conta e passam pelo
-  servidor, com CSRF em cada formulário.
+  telas. O modo escuro segue listado, mas está desativado e não altera a tela.
+  Já e-mail, senha, saída e exclusão são ações da conta e passam pelo servidor,
+  com CSRF em cada formulário.
 
   A troca de perfil saiu da lateral, mas continua aqui: a seleção é uma tela
   própria, e a conta precisa de um caminho de volta até ela.
@@ -81,14 +82,14 @@
       <li>
         <button
           type="button"
-          data-ajuste="escuro"
-          aria-pressed="false"
-          class="flex min-h-14 w-full items-start gap-3 rounded-favo border border-linha bg-cera px-4 py-3 text-left text-tinta transition hover:bg-white focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 aria-pressed:border-mel aria-pressed:bg-mel/10"
+          disabled
+          aria-disabled="true"
+          class="flex min-h-14 w-full cursor-not-allowed items-start gap-3 rounded-favo border border-linha bg-cera px-4 py-3 text-left text-tinta opacity-60"
         >
           <span class="acessibilidade-marca mt-0.5 text-lg" aria-hidden="true">☐</span>
           <span>
             <span class="block font-semibold">Modo escuro</span>
-            <span class="block text-sm text-tinta-suave">Troca o fundo claro por um tema de pouca luz.</span>
+            <span class="block text-sm text-tinta-suave">Opção indisponível no momento.</span>
           </span>
         </button>
       </li>

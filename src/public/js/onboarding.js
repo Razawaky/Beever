@@ -21,14 +21,14 @@ const etapas = [
       { valor: '6', rotulo: 'Sábado' },
       { valor: '0', rotulo: 'Domingo' },
     ],
-    mascote: 'entrando',
+    mascote: 'calendario',
   },
   {
     id: 'tempo',
     pergunta: 'Quanto tempo você quer jogar por vez?',
     subtitulo: 'Dá para mudar depois, no perfil.',
     tipo: 'radio',
-    mascote: 'ensinando',
+    mascote: 'tempo',
   },
   {
     id: 'objetivo',
@@ -37,13 +37,6 @@ const etapas = [
     tipo: 'select',
     mascote: 'um_real',
     moeda: true,
-  },
-  {
-    id: 'avatar',
-    pergunta: 'Escolha sua abelha',
-    subtitulo: 'Dá para trocar depois, no perfil.',
-    tipo: 'radio',
-    mascote: 'mostrando',
   },
   {
     id: 'preferencias',
@@ -108,7 +101,25 @@ function lerRascunho() {
 const rascunho = lerRascunho();
 const catalogo = rascunho.catalogo ?? {};
 const respostas = { ...(rascunho.respostas ?? {}) };
-let etapaAtual = Math.min(Math.max(Number(rascunho.passoAtual) || 0, 0), etapas.length - 1);
+
+// O avatar deixou de ser pergunta, mas continua sendo dado obrigatório do
+// perfil. A primeira opção do catálogo vira o padrão e viaja junto da
+// conclusão, sem o jogador precisar escolher.
+const avatarPadrao = catalogo.avatar?.[0]?.valor;
+if (!respostas.avatar && avatarPadrao) respostas.avatar = avatarPadrao;
+
+// O servidor ainda guarda o passo do avatar na lista, porque é ele quem valida
+// o dado ao concluir. Como a tela não mostra esse passo, um marcador depois
+// dele recua uma casa para cair na etapa certa do wizard.
+const passosDoServidor = Array.isArray(rascunho.passos) ? rascunho.passos : [];
+const indiceDoAvatar = passosDoServidor.indexOf('avatar');
+
+function indiceDaEtapa(passoDoServidor) {
+  const passo = Number(passoDoServidor) || 0;
+  return indiceDoAvatar >= 0 && passo > indiceDoAvatar ? passo - 1 : passo;
+}
+
+let etapaAtual = Math.min(Math.max(indiceDaEtapa(rascunho.passoAtual), 0), etapas.length - 1);
 
 function opcoesDaEtapa(etapa) {
   return etapa.opcoes ?? catalogo[etapa.id] ?? [];
@@ -221,7 +232,7 @@ function montarMascote(etapa) {
   const imagem = document.createElement('img');
   imagem.src = arte;
   imagem.alt = '';
-  imagem.className = 'onboarding-mascote__imagem mascote-stroke';
+  imagem.className = 'onboarding-mascote__imagem mascote-stroke beenie-chega';
 
   const filhos = [imagem];
 
@@ -229,7 +240,7 @@ function montarMascote(etapa) {
     const moedaEl = document.createElement('img');
     moedaEl.src = moeda;
     moedaEl.alt = '';
-    moedaEl.className = 'onboarding-mascote__moeda mascote-stroke';
+    moedaEl.className = 'onboarding-mascote__moeda';
     filhos.push(moedaEl);
   }
 
@@ -238,7 +249,7 @@ function montarMascote(etapa) {
     const bebe = document.createElement('img');
     bebe.src = secundario;
     bebe.alt = '';
-    bebe.className = 'onboarding-mascote__bebe mascote-stroke';
+    bebe.className = 'onboarding-mascote__bebe mascote-stroke beenie-chega';
     filhos.push(bebe);
   }
 
@@ -343,7 +354,10 @@ formulario.addEventListener('submit', async (evento) => {
       resposta: valor,
     });
 
-    etapaAtual = Math.min(Number(atualizado.passoAtual) || etapaAtual + 1, etapas.length - 1);
+    const proximaEtapa = Number.isFinite(Number(atualizado.passoAtual))
+      ? indiceDaEtapa(atualizado.passoAtual)
+      : etapaAtual + 1;
+    etapaAtual = Math.min(proximaEtapa, etapas.length - 1);
     renderizarEtapa();
   } catch (erro) {
     mostrarErro(erro.message);

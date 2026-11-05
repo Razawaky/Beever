@@ -43,12 +43,12 @@ const FUNDO_COLMEIA = 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-1
 const MASCOTES_DO_ONBOARDING = {
   acolhendo: mascote('acolhendo').arquivo,
   entrando: mascote('entrando').arquivo,
-  ensinando: mascote('ensinando').arquivo,
   um_real: mascote('um_real').arquivo,
-  mostrando: mascote('mostrando').arquivo,
+  calendario: mascote('calendario').arquivo,
   coolpose: mascote('coolpose').arquivo,
   bebe: mascote('bebe').arquivo,
   musica: mascote('musica').arquivo,
+  tempo: mascote('tempo').arquivo,
 };
 
 function redirecionarLogado(req, res) {
@@ -133,7 +133,8 @@ export const onboarding = assincrono(async (req, res) => {
 
   renderizarPagina(res, 'onboarding', {
     titulo: 'Configurar perfil — Beever',
-    classeBody: 'flex min-h-screen flex-col items-center justify-center bg-cera p-4 text-tinta antialiased',
+    classeBody:
+      'isolate flex min-h-screen flex-col items-center justify-center bg-cera p-4 text-tinta antialiased',
     // O wizard é montado em JavaScript e lê estes dados do `dataset` do body.
     // Os JSON viajam em atributos, que o EJS escapa como qualquer outro valor
     // — a CSP não permite script embutido na página (RNF-11).

@@ -14,6 +14,16 @@
  * cortada pela faixa opaca do botão. A partir de 48rem ela cresce e sai mais
  * para a direita, ocupando a área vazia da tela em vez de disputar espaço com o
  * formulário. */
+
+/* O fundo de favos da landing reaparece aqui. `fixed` em vez do `absolute` da
+ * landing mantém a textura cobrindo a janela inteira enquanto o wizard rola,
+ * sem alargar a página; a view sobe o conteúdo para `z-index: 10`. */
+.onboarding-favos.camada-de-favos {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
 .onboarding-etapa {
   animation: onboarding-etapa-entra 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -37,7 +47,7 @@
   position: absolute;
   right: var(--mascote-right);
   bottom: var(--mascote-bottom);
-  z-index: 0;
+  z-index: 20;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -69,12 +79,6 @@
   --mascote-height: 7rem;
   --mascote-right: -0.75rem;
   --mascote-bottom: -6rem;
-}
-
-.onboarding-mascote--avatar {
-  --mascote-height: 6.5rem;
-  --mascote-right: -0.5rem;
-  --mascote-bottom: -5.5rem;
 }
 
 .onboarding-mascote--preferencias {
@@ -131,51 +135,46 @@
   }
 
   .onboarding-mascote--apelido {
-    --mascote-height: 19rem;
+    --mascote-height: 21rem;
     --mascote-right: -8rem;
     --mascote-bottom: -0.5rem;
   }
 
   .onboarding-mascote--dias {
-    --mascote-height: 14rem;
-    --mascote-right: -6rem;
-    --mascote-bottom: -1.5rem;
+    --mascote-height: 22rem;
+    --mascote-right: -16rem;
+    --mascote-bottom: 5.5rem;
+    left: -55rem;
   }
 
   .onboarding-mascote--tempo {
-    --mascote-height: 16rem;
-    --mascote-right: -5rem;
-    --mascote-bottom: -3rem;
+    --mascote-height: 21rem;
+    --mascote-right: -10rem;
+    --mascote-bottom: 8rem;
   }
 
   .onboarding-mascote--objetivo {
-    --mascote-height: 19rem;
+    --mascote-height: 21rem;
     --mascote-right: -7.5rem;
     --mascote-bottom: -0.5rem;
   }
 
-  .onboarding-mascote--avatar {
-    --mascote-height: 14rem;
-    --mascote-right: -6.5rem;
-    --mascote-bottom: -3.5rem;
-  }
-
   .onboarding-mascote--preferencias {
-    --mascote-height: 19rem;
+    --mascote-height: 21rem;
     --mascote-right: -14rem;
-    --mascote-bottom: 2.5rem;
-    left: -55rem
+    --mascote-bottom: 2rem;
+    left: -55rem;
   }
 
   .onboarding-mascote--nivel {
-    --mascote-height: 19rem;
+    --mascote-height: 21rem;
     --mascote-right: -11rem;
     --mascote-bottom: 3rem;
   }
 
   .onboarding-mascote__moeda {
     top: 43%;
-    right: 5.5rem;
+    right: 6.3rem;
     width: 2.75rem;
     filter: drop-shadow(0px 0px 4px #fff785) 
             drop-shadow(0px 0px 12px #fff785) 
@@ -185,7 +184,7 @@
   .onboarding-mascote__bebe {
     left: -33rem;
     bottom: 0.5rem;
-    width: 7.5rem;
+    width: 8.5rem;
   }
 }
 
