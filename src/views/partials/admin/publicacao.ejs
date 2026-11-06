@@ -1,0 +1,26 @@
+<%#
+  A escolha de como a atividade entra (T-12.5): substituir aposenta as
+  anteriores, acrescentar deixa todas ativas e a partida sorteia entre elas.
+  Aparece nos dois caminhos de publicação — formulário e JSON colado.
+-%>
+<fieldset class="mt-4 rounded-favo border border-linha p-4">
+  <legend class="px-2 text-sm font-semibold">Como esta atividade entra</legend>
+
+  <div class="space-y-2 text-sm">
+    <label class="flex items-start gap-2">
+      <input type="radio" name="publicacao" value="substituir" checked class="mt-1" />
+      <span>
+        <strong>Substituir</strong> — esta passa a ser a única atividade da célula.
+        As anteriores saem do acervo, mas continuam guardadas.
+      </span>
+    </label>
+
+    <label class="flex items-start gap-2">
+      <input type="radio" name="publicacao" value="acrescentar" class="mt-1" />
+      <span>
+        <strong>Acrescentar ao acervo</strong> — a célula passa a ter
+        <%= acervo.length + 1 %> atividades, e cada partida sorteia uma delas.
+      </span>
+    </label>
+  </div>
+</fieldset>

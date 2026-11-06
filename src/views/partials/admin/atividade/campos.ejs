@@ -1,0 +1,35 @@
+<%#
+  Os campos que os formulários de atividade repetem: linha de texto, número e
+  área de texto. Existe para os oito parciais não copiarem a mesma classe de
+  foco e de borda oito vezes.
+
+  Recebe `nome`, `rotulo`, opcional `valor`, `tipo`, `dica`, `linhas`, `passo`,
+  `minimo`, `maximo` e `obrigatorio`.
+-%>
+<%
+  const classes =
+    'w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta';
+  const identificador = locals.id || `${nome}-${Math.random().toString(36).slice(2, 8)}`;
+%>
+<div>
+  <label for="<%= identificador %>" class="mb-1 block text-sm font-medium"><%= rotulo %></label>
+
+  <% if (locals.linhas) { %>
+    <textarea id="<%= identificador %>" name="<%= nome %>" rows="<%= linhas %>" class="<%= classes %>"
+      <%= locals.obrigatorio ? 'required' : '' %>><%= locals.valor || '' %></textarea>
+  <% } else { %>
+    <input
+      id="<%= identificador %>"
+      name="<%= nome %>"
+      type="<%= locals.tipo || 'text' %>"
+      value="<%= locals.valor === undefined || locals.valor === null ? '' : locals.valor %>"
+      class="<%= classes %>"
+      <%= locals.passo ? `step="${locals.passo}"` : '' %>
+      <%= locals.minimo !== undefined ? `min="${locals.minimo}"` : '' %>
+      <%= locals.maximo !== undefined ? `max="${locals.maximo}"` : '' %>
+      <%= locals.obrigatorio ? 'required' : '' %>
+    />
+  <% } %>
+
+  <% if (locals.dica) { %><p class="mt-1 text-xs text-tinta-suave"><%= dica %></p><% } %>
+</div>

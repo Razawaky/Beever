@@ -1,0 +1,178 @@
+<%
+  const ativo = typeof secaoAtual === 'string' ? secaoAtual : 'colmeia';
+%>
+<aside class="fixed inset-y-0 left-0 z-20 flex w-72 flex-col justify-between h-full overflow-hidden bg-mel p-6 shadow-xl">
+  <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-x-hidden overflow-y-auto pr-1">
+    <a
+      href="/painel"
+      aria-label="Voltar para o painel"
+      class="inline-flex min-h-11 w-fit items-center rounded-favo p-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+    >
+      <img src="/img/beever_logo_black.webp" alt="" width="934" height="398" class="h-10 w-auto" />
+    </a>
+
+    <%# Perfil do Jogador: o bloco inteiro abre o perfil dentro da Colmeia. %>
+    <div class="border-b border-tinta/10 pb-6">
+      <a
+        href="/painel/perfil"
+        aria-label="Abrir meu perfil"
+        <% if (ativo === 'perfil') { %>aria-current="page"<% } %>
+        class="flex min-h-11 items-center gap-3 rounded-favo p-2 -m-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-pilula bg-white/40 text-xl font-bold">
+          <%= jogador.apelido.charAt(0).toUpperCase() %>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h1 class="truncate text-lg font-bold text-tinta"><%= jogador.apelido %></h1>
+          <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">
+            Nível <%= jogador.nivel?.nivel ?? 1 %>
+          </p>
+          <div class="mt-2 w-full">
+            <%- include('barra-progresso', {
+              percentual: jogador.nivel?.progressoPercentual ?? 0,
+              rotuloAcessivel: 'Progresso até o próximo nível',
+              classeDoTrilho: 'bg-white/40',
+              classeDoPreenchimento: 'bg-breu',
+              legenda: jogador.nivel?.noTopo
+                ? 'Nível máximo alcançado'
+                : `faltam ${jogador.nivel?.xpParaSubir ?? 0} XP para o nível ${(jogador.nivel?.nivel ?? 1) + 1}`,
+            }) %>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <%# Recurso: Mel %>
+    <div class="flex flex-col gap-4">
+      <%- include('badge-recurso', {
+        icone: '🍯',
+        rotulo: 'Seu mel',
+        valor: jogador.mel,
+        grande: true,
+        detalhe: `🌼 ${jogador.polen} de pólen`,
+      }) %>
+
+      <%# Recurso: Patrimônio %>
+      <%- include('badge-recurso', {
+        iconeArquivo: '/img/svg/home.svg',
+        rotulo: 'Seu patrimônio',
+        valor: jogador.patrimonio.total,
+        grande: true,
+        detalhe: `carteira ${jogador.patrimonio.carteira} · cofre ${jogador.patrimonio.cofre} · bens ${jogador.patrimonio.bens}`,
+      }) %>
+    </div>
+
+    <%# Menu de Navegação / Atalhos %>
+    <nav class="mt-2 flex flex-col gap-2">
+      <a
+        href="/painel/loja"
+        <% if (ativo === 'loja') { %>aria-current="page"<% } %>
+        class="flex items-center gap-3 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <img
+          src="/img/svg/loja.svg"
+          alt=""
+          aria-hidden="true"
+          class="h-6 w-6 shrink-0 object-contain"
+        />
+        <span>Ir para a loja</span>
+      </a>
+      <a
+        href="/painel/inventario"
+        <% if (ativo === 'inventario') { %>aria-current="page"<% } %>
+        class="flex items-center gap-3 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <span>🎒</span>
+        <span>Meus itens</span>
+      </a>
+      <a
+        href="/painel/cofre"
+        <% if (ativo === 'cofre') { %>aria-current="page"<% } %>
+        class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <span>🏦</span>
+        <span>Meu cofre</span>
+      </a>
+      <a
+        href="/painel/conquistas"
+        <% if (ativo === 'conquistas') { %>aria-current="page"<% } %>
+        class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <span>🏆</span>
+        <span>Minhas conquistas</span>
+      </a>
+      <% if (mostrarAtalhoAdmin) { %>
+        <a
+          href="/admin"
+          class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+        >
+          <img
+            src="/img/svg/config.svg"
+            alt=""
+            aria-hidden="true"
+            class="h-6 w-6 shrink-0 object-contain"
+          />
+          <span>Área administrativa</span>
+        </a>
+      <% } %>
+    </nav>
+
+  </div>
+
+  <div class="border-t border-tinta/10 px-8 py-6">
+    <a
+      href="/painel/configuracoes"
+      aria-label="Abrir configurações"
+      <% if (ativo === 'configuracoes') { %>aria-current="page"<% } %>
+      class="inline-flex min-h-11 items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:bg-white/50 hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+    >
+      <img
+        src="/img/svg/config.svg"
+        alt=""
+        aria-hidden="true"
+        class="h-5 w-5 shrink-0 object-contain opacity-70"
+      />
+      <span>Configurações</span>
+    </a>
+    <form method="POST" action="/sessao/logout">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <%# `inline-flex` para a altura de 44 px valer sem esticar a linha inteira. -%>
+      <button
+        type="submit"
+        id="abrir-dialogo-sair"
+        class="inline-flex min-h-11 items-center rounded-favo px-4 py-3 font-semibold text-tinta-suave transition hover:text-tinta hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+      >
+        Sair da conta
+      </button>
+    </form>
+  </div>
+
+  <%# A confirmação é um `dialog` nativo: fica no topo da pilha e prende o foco.
+      Sem JavaScript o botão acima continua enviando o POST direto, como antes. -%>
+  <dialog
+    id="dialogo-sair"
+    aria-labelledby="titulo-dialogo-sair"
+    class="m-auto w-11/12 max-w-md rounded-favo bg-white p-6 text-tinta shadow-painel"
+  >
+    <h2 id="titulo-dialogo-sair" class="font-display text-xl">Sair da conta?</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Você volta para a tela de login. Seu mel, seus itens e suas conquistas ficam guardados.
+    </p>
+
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      <button
+        type="button"
+        data-fechar-dialogo-sair
+        class="inline-flex min-h-11 items-center justify-center rounded-favo border border-linha bg-white px-4 py-2 text-sm font-semibold text-tinta transition hover:bg-cera focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        Continuar aqui
+      </button>
+
+      <form method="POST" action="/sessao/logout">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <%- include('botao', { texto: 'Sair da conta', tipo: 'submit', tamanho: 'medio' }) %>
+      </form>
+    </div>
+  </dialog>
+
+</aside>

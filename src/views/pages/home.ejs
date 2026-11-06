@@ -1,0 +1,26 @@
+<%#
+  A landing (RF-LAN-01 a RF-LAN-05). Ela não usa o cabeçalho nem o rodapé do
+  app: a superfície aqui é escura, e entrar no app, que é claro, deve parecer
+  acender a luz.
+
+  As dez seções da RF-LAN-03 estão aqui, na ordem: herói, problema, como
+  funciona, trilha, jogos, economia, sequência, pais e escolas, perguntas e
+  chamada final, mais o rodapé.
+-%>
+<%- include('../partials/landing/coluna-de-mel') %>
+<%- include('../partials/landing/cabecalho') %>
+
+<main class="bg-breu">
+  <%- include('../partials/landing/heroi') %>
+  <%- include('../partials/landing/porque') %>
+  <%- include('../partials/landing/como-funciona') %>
+  <%- include('../partials/landing/trilha') %>
+  <%- include('../partials/landing/jogos') %>
+  <%- include('../partials/landing/economia') %>
+  <%- include('../partials/landing/sequencia') %>
+  <%- include('../partials/landing/pais-e-escolas') %>
+  <%- include('../partials/landing/perguntas') %>
+  <%- include('../partials/landing/chamada-final') %>
+</main>
+
+<%- include('../partials/landing/rodape') %>

@@ -1,0 +1,9 @@
+<%#
+  Área das Listas Suspensas (RF-JOG-09): a frase inteira à vista, com uma lista
+  de escolha em cada lacuna. Quem preenche é o `listas.js`.
+-%>
+<h2 id="listas-enunciado" tabindex="-1" class="mt-6 font-display text-xl text-tinta" aria-live="polite"></h2>
+
+<div id="listas-lacunas" class="mt-5 space-y-4"></div>
+
+<%- include('../ui/botao', { texto: 'Confirmar', id: 'listas-confirmar', classe: 'mt-6 w-full', desabilitado: true }) %>

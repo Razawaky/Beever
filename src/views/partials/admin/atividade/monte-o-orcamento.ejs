@@ -1,0 +1,27 @@
+<%#
+  Monte o Orçamento: o total a repartir, o passo dos botões e até seis
+  categorias, cada uma com mínimo, máximo e a dica que explica a regra.
+-%>
+<% const categorias = corpo?.categorias ?? []; %>
+<div class="space-y-3">
+  <%- include('campos', { nome: 'enunciado', rotulo: 'Enunciado', valor: corpo?.enunciado, id: 'enunciado' }) %>
+  <div class="grid gap-3 sm:grid-cols-2">
+    <%- include('campos', { nome: 'total', rotulo: 'Total a repartir', valor: corpo?.total ?? 100, tipo: 'number', minimo: 1, id: 'total' }) %>
+    <%- include('campos', { nome: 'passo', rotulo: 'De quanto em quanto', valor: corpo?.passo ?? 5, tipo: 'number', minimo: 1, id: 'passo' }) %>
+  </div>
+</div>
+
+<% for (let indice = 0; indice < 6; indice += 1) {
+     const categoria = categorias[indice] ?? {}; %>
+  <fieldset class="mt-4 rounded-favo border border-linha p-4">
+    <legend class="px-2 text-sm font-semibold">Categoria <%= indice + 1 %></legend>
+    <div class="space-y-3">
+      <%- include('campos', { nome: 'categoriaNome', rotulo: 'Nome', valor: categoria.nome, id: `categoria-${indice}` }) %>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <%- include('campos', { nome: 'categoriaMinimo', rotulo: 'Mínimo', valor: categoria.minimo ?? 0, tipo: 'number', minimo: 0, id: `categoria-min-${indice}` }) %>
+        <%- include('campos', { nome: 'categoriaMaximo', rotulo: 'Máximo', valor: categoria.maximo ?? 100, tipo: 'number', minimo: 0, id: `categoria-max-${indice}` }) %>
+      </div>
+      <%- include('campos', { nome: 'categoriaDica', rotulo: 'Dica que explica a regra', valor: categoria.dica, id: `categoria-dica-${indice}` }) %>
+    </div>
+  </fieldset>
+<% } %>

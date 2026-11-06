@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Processo_Partida" targetNamespace="https://github.com/Razawaky/Beever">
+  <bpmn:collaboration id="Colaboracao_Processo_Partida">
+    <bpmn:participant id="Pool_Processo_Partida" name="Beever — jogar uma célula" processRef="Processo_Partida" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_Partida" isExecutable="false">
+    <bpmn:laneSet id="Lanes_Processo_Partida">
+      <bpmn:lane id="Lane_Jogador" name="Jogador (navegador)">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EscolheCelula</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Joga</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GwConclui</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>FimAbandonada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EnviaRespostas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>VeResultado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fim</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Servidor" name="Servidor (services e MySQL)">
+        <bpmn:flowNodeRef>GwLiberada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>FimTravada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AbrePartida</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GwFechada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>DevolveGravado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Corrige</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Credita</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Registra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GwJunta</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Jogador abre a trilha">
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="EscolheCelula" name="Escolhe uma célula">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="GwLiberada" name="A célula está liberada?">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>F3</bpmn:outgoing>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="FimTravada" name="Recusa com o motivo do bloqueio">
+      <bpmn:incoming>F3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="AbrePartida" name="Abre a partida, retomando a que estava aberta, e gera o token">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Joga" name="Joga a atividade (quiz ou arrastar)">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:outgoing>F6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="GwConclui" name="Concluiu ou desistiu?">
+      <bpmn:incoming>F6</bpmn:incoming>
+      <bpmn:outgoing>F7</bpmn:outgoing>
+      <bpmn:outgoing>F8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="FimAbandonada" name="Partida abandonada, sem recompensa">
+      <bpmn:incoming>F7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="EnviaRespostas" name="Envia só as respostas">
+      <bpmn:incoming>F8</bpmn:incoming>
+      <bpmn:outgoing>F9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="GwFechada" name="O token já foi fechado?">
+      <bpmn:incoming>F9</bpmn:incoming>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="DevolveGravado" name="Devolve o resultado gravado, sem pagar de novo">
+      <bpmn:incoming>F10</bpmn:incoming>
+      <bpmn:outgoing>F15</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Corrige" name="Corrige as respostas pelo gabarito do banco">
+      <bpmn:incoming>F11</bpmn:incoming>
+      <bpmn:outgoing>F12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:transaction id="Credita" name="Credita XP, pólen e mel numa transação">
+      <bpmn:incoming>F12</bpmn:incoming>
+      <bpmn:outgoing>F13</bpmn:outgoing>
+    </bpmn:transaction>
+    <bpmn:task id="Registra" name="Registra a auditoria, conta o dia e avalia conquistas">
+      <bpmn:incoming>F13</bpmn:incoming>
+      <bpmn:outgoing>F14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="GwJunta" name="">
+      <bpmn:incoming>F14</bpmn:incoming>
+      <bpmn:incoming>F15</bpmn:incoming>
+      <bpmn:outgoing>F16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="VeResultado" name="Vê estrelas, recompensas e conquistas">
+      <bpmn:incoming>F16</bpmn:incoming>
+      <bpmn:outgoing>F17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Fim" name="Mel no saldo e próxima célula liberada">
+      <bpmn:incoming>F17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="F1" sourceRef="Inicio" targetRef="EscolheCelula" />
+    <bpmn:sequenceFlow id="F2" sourceRef="EscolheCelula" targetRef="GwLiberada" />
+    <bpmn:sequenceFlow id="F3" name="não" sourceRef="GwLiberada" targetRef="FimTravada" />
+    <bpmn:sequenceFlow id="F4" name="sim" sourceRef="GwLiberada" targetRef="AbrePartida" />
+    <bpmn:sequenceFlow id="F5" sourceRef="AbrePartida" targetRef="Joga" />
+    <bpmn:sequenceFlow id="F6" sourceRef="Joga" targetRef="GwConclui" />
+    <bpmn:sequenceFlow id="F7" name="desistiu" sourceRef="GwConclui" targetRef="FimAbandonada" />
+    <bpmn:sequenceFlow id="F8" name="concluiu" sourceRef="GwConclui" targetRef="EnviaRespostas" />
+    <bpmn:sequenceFlow id="F9" sourceRef="EnviaRespostas" targetRef="GwFechada" />
+    <bpmn:sequenceFlow id="F10" name="sim" sourceRef="GwFechada" targetRef="DevolveGravado" />
+    <bpmn:sequenceFlow id="F11" name="não" sourceRef="GwFechada" targetRef="Corrige" />
+    <bpmn:sequenceFlow id="F12" sourceRef="Corrige" targetRef="Credita" />
+    <bpmn:sequenceFlow id="F13" sourceRef="Credita" targetRef="Registra" />
+    <bpmn:sequenceFlow id="F14" sourceRef="Registra" targetRef="GwJunta" />
+    <bpmn:sequenceFlow id="F15" sourceRef="DevolveGravado" targetRef="GwJunta" />
+    <bpmn:sequenceFlow id="F16" sourceRef="GwJunta" targetRef="VeResultado" />
+    <bpmn:sequenceFlow id="F17" sourceRef="VeResultado" targetRef="Fim" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_Processo_Partida">
+    <bpmndi:BPMNPlane id="Plano_Processo_Partida" bpmnElement="Colaboracao_Processo_Partida">
+      <bpmndi:BPMNShape id="Pool_Processo_Partida_di" bpmnElement="Pool_Processo_Partida" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2140" height="470" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Jogador_di" bpmnElement="Lane_Jogador" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="2110" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Servidor_di" bpmnElement="Lane_Servidor" isHorizontal="true">
+        <dc:Bounds x="190" y="320" width="2110" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_di" bpmnElement="Inicio">
+        <dc:Bounds x="292" y="237" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="255" y="279" width="110" height="40" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EscolheCelula_di" bpmnElement="EscolheCelula">
+        <dc:Bounds x="395" y="215" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GwLiberada_di" bpmnElement="GwLiberada" isMarkerVisible="true">
+        <dc:Bounds x="565" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="458" y="325" width="110" height="28" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FimTravada_di" bpmnElement="FimTravada">
+        <dc:Bounds x="712" y="472" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="675" y="514" width="110" height="40" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AbrePartida_di" bpmnElement="AbrePartida">
+        <dc:Bounds x="675" y="340" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Joga_di" bpmnElement="Joga">
+        <dc:Bounds x="815" y="215" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GwConclui_di" bpmnElement="GwConclui" isMarkerVisible="true">
+        <dc:Bounds x="985" y="230" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="878" y="200" width="110" height="28" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FimAbandonada_di" bpmnElement="FimAbandonada">
+        <dc:Bounds x="1132" y="107" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1095" y="149" width="110" height="40" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EnviaRespostas_di" bpmnElement="EnviaRespostas">
+        <dc:Bounds x="1095" y="215" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GwFechada_di" bpmnElement="GwFechada" isMarkerVisible="true">
+        <dc:Bounds x="1265" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1158" y="325" width="110" height="28" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DevolveGravado_di" bpmnElement="DevolveGravado">
+        <dc:Bounds x="1375" y="450" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Corrige_di" bpmnElement="Corrige">
+        <dc:Bounds x="1375" y="340" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Credita_di" bpmnElement="Credita" isExpanded="false">
+        <dc:Bounds x="1510" y="335" width="120" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Registra_di" bpmnElement="Registra">
+        <dc:Bounds x="1655" y="340" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GwJunta_di" bpmnElement="GwJunta" isMarkerVisible="true">
+        <dc:Bounds x="1825" y="355" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VeResultado_di" bpmnElement="VeResultado">
+        <dc:Bounds x="1935" y="215" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_di" bpmnElement="Fim">
+        <dc:Bounds x="2112" y="237" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2075" y="279" width="110" height="40" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
+        <di:waypoint x="328" y="255" />
+        <di:waypoint x="395" y="255" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2">
+        <di:waypoint x="505" y="255" />
+        <di:waypoint x="590" y="255" />
+        <di:waypoint x="590" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3">
+        <di:waypoint x="590" y="405" />
+        <di:waypoint x="590" y="490" />
+        <di:waypoint x="712" y="490" />
+        <bpmndi:BPMNLabel><dc:Bounds x="546" y="440" width="30" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4">
+        <di:waypoint x="615" y="380" />
+        <di:waypoint x="675" y="380" />
+        <bpmndi:BPMNLabel><dc:Bounds x="630" y="384" width="30" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5">
+        <di:waypoint x="785" y="380" />
+        <di:waypoint x="870" y="380" />
+        <di:waypoint x="870" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6">
+        <di:waypoint x="925" y="255" />
+        <di:waypoint x="985" y="255" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7">
+        <di:waypoint x="1010" y="230" />
+        <di:waypoint x="1010" y="125" />
+        <di:waypoint x="1132" y="125" />
+        <bpmndi:BPMNLabel><dc:Bounds x="966" y="170" width="30" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8">
+        <di:waypoint x="1035" y="255" />
+        <di:waypoint x="1095" y="255" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1050" y="259" width="30" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9">
+        <di:waypoint x="1205" y="255" />
+        <di:waypoint x="1290" y="255" />
+        <di:waypoint x="1290" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1290" y="405" />
+        <di:waypoint x="1290" y="490" />
+        <di:waypoint x="1375" y="490" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1246" y="440" width="30" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="1315" y="380" />
+        <di:waypoint x="1375" y="380" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1330" y="384" width="30" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12">
+        <di:waypoint x="1485" y="380" />
+        <di:waypoint x="1510" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F13_di" bpmnElement="F13">
+        <di:waypoint x="1630" y="380" />
+        <di:waypoint x="1655" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F14_di" bpmnElement="F14">
+        <di:waypoint x="1765" y="380" />
+        <di:waypoint x="1825" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F15_di" bpmnElement="F15">
+        <di:waypoint x="1485" y="490" />
+        <di:waypoint x="1850" y="490" />
+        <di:waypoint x="1850" y="405" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F16_di" bpmnElement="F16">
+        <di:waypoint x="1875" y="380" />
+        <di:waypoint x="1990" y="380" />
+        <di:waypoint x="1990" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F17_di" bpmnElement="F17">
+        <di:waypoint x="2045" y="255" />
+        <di:waypoint x="2112" y="255" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

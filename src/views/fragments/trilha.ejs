@@ -1,0 +1,82 @@
+<%#
+  O miolo da trilha: os favos que o jogador pode ver, em hexágonos
+  serpenteantes. A página `/trilha` e a seção `/painel/trilha` usam este mesmo
+  conteúdo; a casca decide se o título já está no cabeçalho.
+
+  `caminhoBase` aponta para a lista em que o jogador está. Dentro da Colmeia
+  ele é `/painel/trilha`, e os links dos favos continuam ali em vez de abrir
+  uma página solta.
+-%>
+<%
+  const mostrarTitulo = locals.comTitulo !== false;
+  const caminhoBase = locals.caminhoBase ?? '/trilha';
+  const caminhoTrilha = locals.caminhoTrilha ?? caminhoBase;
+%>
+
+<div class="mx-auto w-full max-w-5xl">
+  <% if (mostrarTitulo) { %>
+    <h2 class="font-display text-2xl text-tinta sm:text-3xl">Minha trilha</h2>
+  <% } %>
+
+  <div class="<%= mostrarTitulo ? 'mt-6' : '' %>">
+    <% if (trilha.length === 0) { %>
+      <section class="mx-auto max-w-md rounded-favo bg-cera p-8 text-center">
+        <%- include('../partials/ui/mascote', { pose: 'chamando', decorativa: true, classe: 'mx-auto h-32 w-auto' }) %>
+        <h2 class="mt-4 font-display text-xl">Sua trilha ainda está sendo montada</h2>
+        <p class="mt-2 text-sm text-tinta-suave">
+          Assim que houver conteúdo para a sua idade, ele aparece aqui — e a Beenie te avisa.
+        </p>
+        <%- include('../partials/ui/botao', { texto: 'Voltar à Colmeia', href: '/painel', classe: 'mt-6' }) %>
+      </section>
+    <% } else { %>
+      <div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_20rem] md:items-start">
+        <ol class="favo-trilha space-y-8">
+          <% trilha.forEach((favo) => { %>
+            <li><%- include('../partials/ui/favo-card', { favo, nivel: 2, caminhoBase }) %></li>
+          <% }) %>
+        </ol>
+
+        <%# Painel do desktop: acima de `md` a trilha ganha companhia em vez de
+            ficar sozinha no meio de uma tela larga. %>
+        <aside class="hidden md:block md:sticky md:top-8">
+          <div class="rounded-favo bg-cera p-6 shadow-md">
+            <% if (favoAtual) { %>
+              <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">Continuar de onde parei</p>
+              <h2 class="mt-1 font-display text-2xl"><%= favoAtual.title %></h2>
+              <div
+                class="mt-4 h-3 overflow-hidden rounded-pilula bg-white"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="<%= favoAtual.percentual %>"
+                aria-label="Progresso do favo <%= favoAtual.title %>"
+              >
+                <div class="h-full rounded-pilula bg-mel <%= classeDaBarra(favoAtual.percentual) %>"></div>
+              </div>
+              <p class="mt-2 text-sm text-tinta-suave">
+                <%= favoAtual.celulasConcluidas %> de <%= favoAtual.celulasTotais || '?' %> células ·
+                <%= favoAtual.percentual %>%
+              </p>
+              <div class="mt-6">
+                <%- include('../partials/ui/botao-continuar', { proximaCelula, caminhoTrilha }) %>
+              </div>
+            <% } else { %>
+              <h2 class="font-display text-xl">Trilha completa!</h2>
+              <p class="mt-2 text-sm text-tinta-suave">
+                Você fechou todos os favos disponíveis para a sua idade. Conteúdo novo aparece aqui.
+              </p>
+            <% } %>
+
+            <%- include('../partials/ui/mascote', { pose: 'acolhendo', decorativa: true, classe: 'mt-6 h-28 w-auto animate-float' }) %>
+          </div>
+        </aside>
+      </div>
+
+      <%# No celular o "continuar" não fica escondido no fim da rolagem. Acima de
+          `md` quem manda é o botão do painel lateral. %>
+      <div class="md:hidden">
+        <%- include('../partials/ui/botao-continuar', { proximaCelula, fixo: true, caminhoTrilha }) %>
+      </div>
+    <% } %>
+  </div>
+</div>

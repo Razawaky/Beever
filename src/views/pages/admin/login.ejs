@@ -1,0 +1,43 @@
+<%#
+  Login administrativo (RF-ADM-01). Porta separada da do jogador, com a mesma
+  senha e a mesma sessão — o que muda é a exigência de ser admin, conferida no
+  service. Sem mascote e sem cor de jogo: esta tela não é para criança.
+-%>
+<main class="flex min-h-screen items-center justify-center p-8">
+  <div class="w-full max-w-sm">
+    <a href="/" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar ao site</a>
+
+    <h1 class="mt-6 text-3xl font-bold">Administração</h1>
+    <p class="mt-2 text-tinta-suave">Entre com uma conta de administrador.</p>
+
+    <form method="POST" action="/admin/login" class="mt-8 space-y-4">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+      <div>
+        <label for="email" class="mb-1 block text-sm font-medium">E-mail</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autocomplete="email"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+        />
+      </div>
+
+      <div>
+        <label for="senha" class="mb-1 block text-sm font-medium">Senha</label>
+        <input
+          id="senha"
+          name="senha"
+          type="password"
+          required
+          autocomplete="current-password"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+        />
+      </div>
+
+      <%- include('../../partials/ui/botao', { texto: 'Entrar', tipo: 'submit', classe: 'w-full' }) %>
+    </form>
+  </div>
+</main>

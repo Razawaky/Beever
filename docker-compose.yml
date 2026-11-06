@@ -1,0 +1,278 @@
+# Ambiente de desenvolvimento local: banco sozinho por padrão, aplicação
+# inteira sob demanda.
+#
+#   docker compose up -d                    MySQL e Mailpit
+#   docker compose --profile completo up     MySQL + Mailpit + migrations + aplicação
+#   docker compose --profile jenkins up -d   Jenkins local em http://localhost:8080
+#   docker compose --profile sonar up -d     SonarQube local em http://localhost:9000
+#
+# O perfil existe para não quebrar quem já roda o Node fora do compose, que é
+# como o projeto foi desenvolvido até aqui.
+#
+# Isto não é receita de produção: falta proxy reverso com TLS e a imagem é
+# construída na hora, em vez de vir de um registro. Ver docs/17.
+
+# O nome do projeto fica escrito aqui, e não deduzido do nome da pasta. Ele dá
+# nome à rede padrão (`beever_default`), e o stage do SonarQube no Jenkinsfile
+# precisa entrar nela para alcançar `sonar:9000`. Deduzido, o nome da rede
+# mudaria junto com o nome da pasta de quem clonou, e o build quebraria por
+# causa do diretório.
+name: beever
+
+# Bloco comum aos serviços que rodam a imagem da aplicação. O `migrate` e o
+# `app` só diferem no comando.
+x-aplicacao: &aplicacao
+  build:
+    context: .
+    target: runtime
+  environment:
+    # Desenvolvimento por padrão, porque é isso que este arquivo é. Em
+    # `production` o `env.js` recusa segredo e e-mail de contato de exemplo — e
+    # é justo que recuse: quem for para produção precisa preencher os dois.
+    NODE_ENV: ${NODE_ENV:-development}
+    # Dentro do compose o banco atende pelo nome do serviço. O `.env` da máquina
+    # aponta para `localhost`, que aqui seria o próprio contêiner.
+    DB_HOST: mysql
+    DB_PORT: 3306
+    DB_USER: ${DB_USER:-beever}
+    DB_PASSWORD: ${DB_PASSWORD:-beever}
+    DB_NAME: ${DB_NAME:-beever}
+    DB_POOL_LIMIT: ${DB_POOL_LIMIT:-20}
+    # Sem valor padrão de propósito: o compose recusa subir e explica, em vez de
+    # a aplicação nascer com um segredo de sessão que qualquer um adivinha.
+    SESSION_SECRET: ${SESSION_SECRET:?defina SESSION_SECRET no .env — gere com openssl rand -base64 48}
+    SESSION_MAX_AGE_MINUTES: ${SESSION_MAX_AGE_MINUTES:-20}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+    CONTACT_EMAIL: ${CONTACT_EMAIL:-contato@beever.local}
+    APP_URL: ${APP_URL:-http://localhost:3000}
+    # Dentro do compose o Mailpit atende pelo nome do serviço, como o banco.
+    SMTP_HOST: mailpit
+    SMTP_PORT: 1025
+    MAIL_FROM: ${MAIL_FROM:-Beever <nao-responda@beever.local>}
+    GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    UPLOADS_DIR: /app/uploads
+    UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-8}
+  volumes:
+    - beever-uploads:/app/uploads
+  depends_on:
+    mysql:
+      condition: service_healthy
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: beever-mysql
+    restart: unless-stopped
+    # A migration 008 cria os gatilhos que tornam audit_logs append-only
+    # (RNF-17). Com log binário ligado, criar gatilho exige SUPER — que o
+    # usuário da aplicação não tem e não deve ter. Esta variável permite que o
+    # dono do banco crie os seus próprios gatilhos sem virar superusuário.
+    #
+    # O fuso é fixado em UTC porque a aplicação grava e lê tudo em UTC (o driver
+    # usa `timezone: 'Z'`), enquanto `NOW()` seguiria o relógio do sistema. Num
+    # host em fuso local os dois lados discordariam e a virada do dia da RN-024
+    # sairia errada, sem nenhum teste acusar.
+    command: ['--log-bin-trust-function-creators=1', '--default-time-zone=+00:00']
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-beever}
+      MYSQL_USER: ${DB_USER:-beever}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-beever}
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    volumes:
+      - beever-mysql-data:/var/lib/mysql
+    healthcheck:
+      # A senha é a mesma do `MYSQL_ROOT_PASSWORD` acima. Antes esta linha lia
+      # uma variável que não existe em lugar nenhum e caía sempre no padrão:
+      # quem trocasse a senha de root ficava com o banco eternamente unhealthy.
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-p${DB_ROOT_PASSWORD:-root}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Caixa de correio falsa de desenvolvimento: recebe todo e-mail que a aplicação
+  # manda e mostra em http://localhost:8025, sem entregar nada a ninguém.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: beever-mailpit
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+  # Roda as migrations e sai. A aplicação espera este serviço terminar bem, em
+  # vez de migrar no próprio boot: com mais de uma réplica, todas tentariam
+  # aplicar o mesmo arquivo ao mesmo tempo.
+  migrate:
+    <<: *aplicacao
+    profiles: ['completo']
+    container_name: beever-migrate
+    restart: 'no'
+    command: ['node', 'scripts/migrate.js']
+
+  app:
+    <<: *aplicacao
+    profiles: ['completo']
+    container_name: beever-app
+    restart: unless-stopped
+    ports:
+      - '${PORT:-3000}:3000'
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # Jenkins local, ao lado do GitHub Actions: roda o Jenkinsfile a cada commit
+  # novo. Usa o Docker do host pelo socket, o que equivale a root na máquina, então
+  # só escuta em 127.0.0.1 e nunca deve ir para servidor compartilhado.
+  jenkins:
+    build: ./jenkins
+    profiles: ['jenkins']
+    container_name: beever-jenkins
+    restart: unless-stopped
+    environment:
+      # A falta de senha é recusada pelo entrypoint do contêiner, e não aqui.
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-}
+      # Endereço do SonarQube visto de dentro da rede do compose. O painel está
+      # preso em 127.0.0.1 no host, então nenhum outro contêiner o alcança: o
+      # Jenkins só chega nele por esta rede, que é o motivo de o painel não
+      # precisar ficar exposto.
+      SONAR_URL: ${SONAR_URL:-http://sonar:9000}
+      # O token do SonarQube chega ao Jenkins pelo ambiente, e nunca pelo
+      # repositório: o valor mora no .env (ignorado pelo Git) e o casc.yaml só o
+      # interpola na hora de montar a credencial do Jenkins Credentials. A
+      # análise usa essa credencial, o Jenkinsfile nunca enxerga o valor.
+      SONAR_TOKEN: ${SONAR_TOKEN:-}
+      # De onde o job multibranch clona. O casc.yaml interpola isto no remote do
+      # GitSCMSource; sem a variável entrar no contêiner, o JCasC não a resolve,
+      # avisa "unresolved variable" e grava o remote vazio — o job até existe,
+      # mas não tem onde ler. Na prova é o GitHub por SSH (a deploy key
+      # montada em /var/jenkins_home/ssh-github); no dia a dia, file:///repo.
+      BEEVER_SCM_URL: ${BEEVER_SCM_URL:-file:///repo}
+      # Como o git fala com o GitHub por SSH dentro do contêiner. Fica no ambiente
+      # do serviço, e não como propriedade global de nó do casc.yaml, por um motivo
+      # que só apareceu quando o job passou a ler o GitHub de verdade: a varredura
+      # multibranch roda no controlador, não em nó, e não enxerga a propriedade de
+      # nó. O sintoma era silencioso — a varredura morria com "Host key
+      # verification failed", o índice ficava velho e o build seguinte clonava de
+      # `file:///repo`, ou seja, o código de um commit atrasado. Por isso a chave e
+      # o `known_hosts` vêm por aqui, e não pelo plugin.
+      #
+      # `StrictHostKeyChecking=yes` com o `known_hosts` montado é a verificação de
+      # host que o casc.yaml já descreve: o GitHub é confersido contra as três
+      # chaves públicas dele, e um servidor diferente faz o build falhar em vez de
+      # ser acreditado. `BatchMode=yes` impede que uma senha esperando prompt
+      # trave o build em silêncio.
+      GIT_SSH_COMMAND: >-
+        ssh -i /var/jenkins_home/ssh-github/id_ed25519
+        -o IdentitiesOnly=yes
+        -o BatchMode=yes
+        -o StrictHostKeyChecking=yes
+        -o UserKnownHostsFile=/var/jenkins_home/ssh-github/known_hosts
+      GIT_SSH_VARIANT: ssh
+      JAVA_OPTS: >-
+        -Xmx768m
+        -Djenkins.install.runSetupWizard=false
+        -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true
+    # Grupo dono do socket do Docker no host; descubra com: getent group docker
+    group_add:
+      - '${DOCKER_GID:-999}'
+    ports:
+      - '127.0.0.1:8080:8080'
+    volumes:
+      - beever-jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/repo:ro
+      # Chave SSH do GitHub e o known_hosts, em somente leitura. Fica numa pasta
+      # própria em vez de montar o ~/.ssh inteiro, para o contêiner não enxergar
+      # as chaves pessoais de quem desenvolve. O arquivo de chave é referenciado
+      # pela credencial do GitHub no jenkins/casc.yaml — a chave nunca é escrita
+      # em texto no repositório.
+      - ${JENKINS_SSH_DIR:-~/.ssh/beever-jenkins}:/var/jenkins_home/ssh-github:ro
+
+  # phpMyAdmin, para olhar o banco na mão durante o desenvolvimento. Mesmo
+  # tratamento do Jenkins e do SonarQube: fica preso em 127.0.0.1 e só sobe
+  # quando alguém pede, porque é uma tela de administração do banco com a senha
+  # do root na mão — o lugar errado para isso é todas as interfaces da rede em
+  # que a máquina estiver conectada.
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: beever-phpmyadmin
+    profiles: ['phpmyadmin']
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3001:80'
+    environment:
+      PMA_HOST: mysql
+      # A senha do root fica no .env, que o Git ignora, em vez de escrita aqui.
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    depends_on:
+      - mysql
+
+  # SonarQube local, o painel que o Jenkins alimenta com a análise de código
+  # (http://localhost:9000). Fica num perfil próprio pelo mesmo motivo do
+  # Jenkins: pesa mais de 1 GB em memória, e quem desenvolve no dia a dia não
+  # deve pagar isso.
+  #
+  # A tag é a Community Build, a versão gratuita. Dentro dela existem duas
+  # linhas: a `lts-community`, que hoje é a 9.9 e é a que a SonarSource mantém
+  # por mais tempo, e a `community`, que já corre para a 26.9 e muda a cada
+  # lançamento. Aqui está a LTS, com a versão escrita por extenso: fixar o
+  # número garante que a demonstração de hoje e a da prova deem o mesmo
+  # resultado, em vez de mudarem sozinhas quando a SonarSource publica.
+  sonar:
+    image: sonarqube:9.9.8-community
+    container_name: beever-sonar
+    profiles: ['sonar']
+    restart: unless-stopped
+    environment:
+      # 512 MB em vez dos 2 GB do padrão: a máquina de desenvolvimento tem
+      # 5,7 GB e SonarQube, Jenkins, MySQL e o Chromium do build disputam o
+      # mesmo resto. Heap maior aqui vira swap, e swap em máquina de build
+      # reprova teste de tempo sem que o código tenha mudado (ver DT-131).
+      SONAR_JAVA__OPTS: ${SONAR_JAVA__OPTS:--Xmx512m -Xms512m}
+      # O Elasticsearch embarcado recusa subir se `vm.max_map_count` do host for
+      # menor que 262144, e o padrão do Linux é 65530. A correção seria
+      # `sudo sysctl -w vm.max_map_count=524288`, que exige root. Desligar a
+      # checagem é a alternativa documentada para ambiente de desenvolvimento —
+      # e não é configuração para servidor.
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: 'true'
+    # Só na própria máquina: o SonarQube novo nasce com admin/admin e publica o
+    # código-fonte indexado. Mesma razão que prende o Jenkins em 127.0.0.1.
+    ports:
+      - '127.0.0.1:9000:9000'
+    volumes:
+      # Banco interno, logs e plugins do SonarQube. Sem volume, derrubar o
+      # contêiner apaga todo o histórico de análises — que é a prova da P3.
+      - beever-sonar:/opt/sonarqube/data
+      - beever-sonar-extensions:/opt/sonarqube/extensions
+      - beever-sonar-logs:/opt/sonarqube/logs
+    healthcheck:
+      # `/api/system/status` responde antes do SonarQube ficar pronto, e análise
+      # nesse intervalo falha com "ServiceUnavailable". Esperar o `UP` evita a
+      # corrida entre o Jenkins subir e o painel aceitar análise.
+      #
+      # É `wget` e não `curl`: a imagem do SonarQube não traz o curl, e um
+      # healthcheck que chama comando inexistente falha para sempre sem dizer
+      # por quê. Foi o que aconteceu na primeira subida.
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:9000/api/system/status | grep -q "UP"']
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 90s
+
+
+volumes:
+  beever-mysql-data:
+  # Jobs, histórico de builds e workspaces do Jenkins.
+  beever-jenkins:
+  # As ilustrações enviadas pelo painel administrativo são conteúdo, não código:
+  # sem volume elas somem no próximo deploy.
+  beever-uploads:
+  # Banco interno, logs e plugins do SonarQube.
+  beever-sonar:
+  beever-sonar-extensions:
+  beever-sonar-logs:

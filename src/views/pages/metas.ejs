@@ -1,0 +1,15 @@
+<%#
+  Metas e tarefas. O miolo mora em `fragments/metas` porque a mesma tela
+  aparece dentro da Colmeia; aqui só ficam o cabeçalho e a largura da página.
+%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-3xl items-center justify-between">
+    <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+    <h1 class="text-2xl font-bold">Metas e tarefas</h1>
+    <span></span>
+  </div>
+</header>
+
+<main class="mx-auto max-w-3xl px-6 py-10">
+  <%- include('../fragments/metas', { comTitulo: false, voltarPara: '/metas' }) %>
+</main>

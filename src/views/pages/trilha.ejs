@@ -1,0 +1,24 @@
+<%#
+  A trilha: os favos que o jogador pode ver, em hexágonos serpenteantes.
+
+  O miolo mora em `fragments/trilha` porque a mesma tela aparece dentro da
+  Colmeia; aqui só ficam o cabeçalho e a largura da página.
+-%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+    <a
+      href="/painel"
+      class="font-semibold text-tinta underline decoration-tinta/30 decoration-2 underline-offset-4 hover:decoration-tinta focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+      >&larr; Colmeia</a
+    >
+    <h1 class="font-display text-2xl text-tinta sm:text-3xl">Minha trilha</h1>
+    <span class="w-20" aria-hidden="true"></span>
+  </div>
+</header>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <%- include('../fragments/trilha', {
+    comTitulo: false,
+    caminhoBase: '/trilha',
+  }) %>
+</main>

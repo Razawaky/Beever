@@ -1,0 +1,24 @@
+<%#
+  As células de um favo, em ordem. O miolo mora em `fragments/favo` porque a
+  mesma tela aparece dentro da Colmeia.
+-%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto max-w-3xl">
+    <a
+      href="/trilha"
+      class="text-sm font-semibold text-tinta underline decoration-tinta/30 decoration-2 underline-offset-4 hover:decoration-tinta focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+      >&larr; Trilha</a
+    >
+    <h1 class="mt-2 font-display text-2xl text-tinta sm:text-3xl"><%= favo.title %></h1>
+    <% if (favo.description) { %>
+      <p class="mt-1 text-sm text-tinta-suave"><%= favo.description %></p>
+    <% } %>
+  </div>
+</header>
+
+<main class="mx-auto max-w-3xl px-6 py-10">
+  <%- include('../fragments/favo', {
+    comTitulo: false,
+    caminhoTrilha: '/trilha',
+  }) %>
+</main>

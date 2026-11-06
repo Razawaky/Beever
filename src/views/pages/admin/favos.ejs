@@ -1,0 +1,58 @@
+<%#
+  Lista de favos do painel. Mostra também o que está desativado, porque é daqui
+  que o administrador reativa — a trilha do jogador é que esconde o inativo.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'conteudo' }) %>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <div class="flex flex-wrap items-center gap-4">
+    <h1 class="text-3xl font-bold">Favos</h1>
+    <%- include('../../partials/ui/botao', { texto: 'Novo favo', href: '/admin/favos/novo', tamanho: 'medio', classe: 'ml-auto' }) %>
+  </div>
+  <p class="mt-2 text-tinta-suave">Os módulos da trilha, na ordem em que a criança percorre.</p>
+
+  <div class="mt-8 overflow-x-auto rounded-favo border border-linha bg-white">
+    <table class="w-full text-left text-sm">
+      <caption class="sr-only">Favos cadastrados</caption>
+      <thead class="border-b border-linha text-tinta-suave">
+        <tr>
+          <th scope="col" class="px-4 py-3 font-semibold">Ordem</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Título</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Faixa</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Células</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Situação</th>
+          <th scope="col" class="px-4 py-3 font-semibold">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% favos.forEach((favo) => { %>
+          <tr class="border-b border-linha last:border-0">
+            <td class="px-4 py-3"><%= favo.order_index %></td>
+            <td class="px-4 py-3 font-medium">
+              <a href="/admin/favos/<%= favo.id %>" class="inline-flex min-h-11 items-center underline underline-offset-4"><%= favo.title %></a>
+            </td>
+            <td class="px-4 py-3"><%= favo.age_band_code %></td>
+            <td class="px-4 py-3"><%= favo.total_celulas %></td>
+            <td class="px-4 py-3"><%= favo.is_active ? 'Ativo' : 'Desativado' %></td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <a href="/admin/favos/<%= favo.id %>/editar" class="inline-flex min-h-11 items-center underline underline-offset-4">Editar</a>
+                <form method="POST" action="/admin/favos/<%= favo.id %>/ativo">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <input type="hidden" name="ativo" value="<%= favo.is_active ? 'false' : 'true' %>" />
+                  <%- include('../../partials/ui/botao', {
+                    texto: favo.is_active ? 'Desativar' : 'Reativar',
+                    tipo: 'submit',
+                    variante: 'secundario',
+                    tamanho: 'medio',
+                    formato: 'pilula',
+                  }) %>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
