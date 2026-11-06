@@ -16,6 +16,9 @@
 /* O login mantém o painel âmbar, mas troca o mel dos favos por cera. */
 @import './login.css';
 
+/* O fundo de favos do miolo do painel. */
+@import './painel.css';
+
 /* Vale em toda tela: os ajustes que a pessoa liga no painel de acessibilidade. */
 @import './acessibilidade.css';
 

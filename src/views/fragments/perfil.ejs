@@ -1,9 +1,12 @@
 <%
   const TagDoTitulo = locals.nivelTitulo === 2 ? 'h2' : 'h1';
+  // Dentro da Colmeia o perfil já chega embrulhado pelo bloco branco da seção.
+  // Sem esta saída, o cartão branco do perfil viraria um cartão dentro de outro.
+  const emBloco = locals.emBloco === true;
 %>
 
 <div class="mx-auto max-w-3xl">
-  <div class="overflow-hidden rounded-favo bg-white shadow-xl">
+  <div class="overflow-hidden rounded-favo <%= emBloco ? '' : 'bg-white shadow-xl' %>">
     <div class="flex items-center gap-4 bg-mel px-8 py-8">
       <% if (perfil.avatar_imagem) { %>
         <img

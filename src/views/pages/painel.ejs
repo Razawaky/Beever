@@ -24,11 +24,22 @@
   
   <%# Conteúdo principal %>
   <main id="conteudo-main" class="flex-1 p-4 lg:p-8 relative">
+    <%# O fundo de favos do onboarding fica na `<main>`, atrás dos blocos
+        brancos. Os blocos usam `z-10` para ficarem acima da textura. -%>
+    <div class="main-favos favos-de-fundo" aria-hidden="true"></div>
+
+    <%# Fora da Colmeia, cada seção veste o mesmo bloco branco da trilha. O
+        `overflow-hidden` fica de fora de propósito: a trilha tem uma coluna
+        `sticky`, e um ancestral que recorta o eixo desliga esse comportamento.
+        A Colmeia já traz o próprio bloco em `fragments/painel-trilha`. -%>
+    <% if (secaoAtual !== 'colmeia') { %>
+      <div class="relative z-10 mx-auto w-full max-w-5xl rounded-favo bg-white p-4 shadow-xl sm:p-6">
+    <% } %>
 
     <% if (secaoAtual === 'configuracoes') { %>
       <%- include('../fragments/configuracoes', { alterado, erro }) %>
     <% } else if (secaoAtual === 'perfil') { %>
-      <%- include('../fragments/perfil', { nivelTitulo: 2 }) %>
+      <%- include('../fragments/perfil', { nivelTitulo: 2, emBloco: true }) %>
     <% } else if (secaoAtual === 'loja') { %>
       <%- include('../fragments/loja', {
         vitrine,
@@ -87,7 +98,10 @@
       }) %>
     <% } %>
 
-      
+    <% if (secaoAtual !== 'colmeia') { %>
+      </div>
+    <% } %>
+
     <%# A Beenie só mora na Colmeia: nas outras seções ela taparia a loja, o
         cofre e as conquistas, que ocupam a largura toda da `<main>`. -%>
     <% if (secaoAtual === 'colmeia') { %>
