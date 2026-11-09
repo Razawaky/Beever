@@ -19,6 +19,7 @@ já aplicou em `schema_migrations`. Nunca renumere um arquivo já aplicado.
 | `005_economy_items_inventory.sql` | Itens, comportamento econômico, requisitos, compras, inventário, cofre, ciclos econômicos, patrimônio |
 | `006_audit_operational.sql` | Auditoria append-only |
 | `007_gamification.sql` | Conquistas e liga (P1, aplicável depois sem tocar no resto) |
+| `027_log_blockchain.sql` | Log em cadeia de hashes SHA-256 (detecta adulteração) |
 
 ## Convenções
 

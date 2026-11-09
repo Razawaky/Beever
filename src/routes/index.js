@@ -18,6 +18,7 @@ import perfilRouter from './perfil.js';
 import sessaoRouter from './sessao.js';
 import tarefasRouter from './tarefas.js';
 import usersRouter from './users.js';
+import blockchainRouter from './blockchain.js';
 
 /** Router raiz: cada domínio tem seu próprio arquivo, montado aqui. */
 const router = Router();
@@ -57,6 +58,7 @@ const regrasSenhaDaConta = [
 
 router.get('/', homeController.mostrar);
 router.get('/health', healthController.mostrar);
+router.use('/blockchain', blockchainRouter);
 
 /**
  * Páginas EJS. Login e cadastro em si (POST) moram em `sessao.js` e `users.js`;

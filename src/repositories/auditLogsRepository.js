@@ -1,5 +1,6 @@
 import { consultar } from '../config/database.js';
 import { deslocamentoSeguro, limiteSeguro } from '../utils/limite.js';
+import { registrar as registrarNaCadeia } from '../services/logBlockchainService.js';
 
 /**
  * Trilha de auditoria (RN-010): quem fez, o quê, em qual entidade, e o estado
@@ -48,6 +49,12 @@ export async function registrar({
   if (resultado.affectedRows === 0) {
     throw new Error(`Tipo de ator desconhecido na auditoria: "${atorTipo}". Nada foi registrado.`);
   }
+    // Cadeia de hashes (detecta adulteração). Só id e nome da ação: sem
+  // estado antes/depois, que pode conter dado pessoal (RN-053). Nunca lança erro.
+  await registrarNaCadeia(
+    atorId ?? atorTipo,
+    `${acao}:${entidade}${entidadeId ? `#${entidadeId}` : ''}`,
+  );
 }
 
 /**
