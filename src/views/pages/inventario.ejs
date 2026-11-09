@@ -1,0 +1,19 @@
+<%#
+  O inventário (RF-INV-01 a 04). Bens e enfeites ficam em blocos separados
+  porque a diferença é a lição: um vira patrimônio, o outro é consumo (RN-041).
+  A variação de cada item é a diferença entre o que foi pago e o que vale hoje.
+
+  O miolo mora em `fragments/inventario` porque a mesma tela aparece dentro da
+  Colmeia; aqui só ficam o cabeçalho e a largura da página inteira.
+%>
+<header class="bg-mel px-6 py-6">
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4">
+    <a href="/painel" class="font-semibold text-tinta hover:underline">&larr; Painel</a>
+    <h1 class="text-2xl font-bold">Meus itens</h1>
+    <a href="/painel/loja" class="font-semibold text-tinta hover:underline">Loja &rarr;</a>
+  </div>
+</header>
+
+<main class="mx-auto max-w-5xl px-6 py-10">
+  <%- include('../fragments/inventario', { comTitulo: false }) %>
+</main>

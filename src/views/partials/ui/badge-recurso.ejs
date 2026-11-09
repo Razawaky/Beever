@@ -1,0 +1,31 @@
+<%#
+  Um número do jogador com ícone e palavra (regra 5 da seção 4 do design
+  system): só ícone é ilegível para quem tem 6 anos, só palavra é apagado
+  demais para quem tem 15. O valor é tabular para não dançar quando muda.
+
+  Recebe `icone` (emoji) ou `iconeArquivo` (SVG em `/img/svg`), `rotulo` e
+  `valor`; `grande` para os números que a tela quer maiores (saldo, patrimônio)
+  e `detalhe` para a linha pequena embaixo.
+-%>
+<div class="grid gap-0.5">
+  <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave"><%= rotulo %></p>
+  <%# O ícone fica ao lado do número, e não como elemento separado: o rótulo
+      acima já diz a palavra, e separar os dois quebraria o par "🍯 300" que a
+      tela inteira usa. %>
+  <% if (locals.iconeArquivo) { %>
+    <p class="<%= locals.grande ? 'text-3xl' : 'text-lg' %> flex items-center gap-2 font-bold tabular-nums text-tinta">
+      <img
+        src="<%= iconeArquivo %>"
+        alt=""
+        aria-hidden="true"
+        class="<%= locals.grande ? 'h-8 w-8' : 'h-5 w-5' %> shrink-0 object-contain"
+      />
+      <span><%= valor %></span>
+    </p>
+  <% } else { %>
+    <p class="<%= locals.grande ? 'text-3xl' : 'text-lg' %> font-bold tabular-nums text-tinta"><%= icone %> <%= valor %></p>
+  <% } %>
+  <% if (locals.detalhe) { %>
+    <p class="text-xs tabular-nums text-tinta-suave"><%= detalhe %></p>
+  <% } %>
+</div>

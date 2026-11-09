@@ -1,0 +1,15 @@
+<%#
+  Tela vazia é convite, não recado seco (seção 4 do design system): mascote, uma
+  frase e, quando houver, uma ação. Recebe `mensagem` e, opcional, `acao` com
+  `href` e `texto`.
+
+  A imagem vem do catálogo do mascote, que é o único ponto de troca da arte.
+-%>
+<div class="rounded-favo bg-white p-6 text-center">
+  <%- include('./mascote', { pose: 'acolhendo', decorativa: true, classe: 'mx-auto h-24 w-auto' }) %>
+  <p class="mt-3 text-sm text-tinta-suave"><%= mensagem %></p>
+
+  <% if (locals.acao) { %>
+    <%- include('./botao', { texto: acao.texto, href: acao.href, tamanho: 'medio', classe: 'mt-4' }) %>
+  <% } %>
+</div>

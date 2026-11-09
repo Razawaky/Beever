@@ -1,0 +1,50 @@
+<%#
+  Seção 9: as quatro perguntas do docs/04 §6.2.
+
+  O acordeão é `<details>` nativo: abre sem JavaScript, já vem com teclado e
+  leitor de tela prontos, e não gasta nada do orçamento de 30 KB da §6.4.
+-%>
+<section id="perguntas" class="border-t border-white/10 bg-breu py-16 sm:py-24">
+  <div class="mx-auto max-w-3xl px-6">
+    <h2 class="revela font-display text-3xl text-cera sm:text-4xl">Perguntas</h2>
+
+    <div class="cascata mt-10 space-y-3">
+      <%
+        const PERGUNTAS = [
+          {
+            pergunta: 'É grátis?',
+            resposta:
+              'É. O Beever é um projeto de conclusão de curso e não cobra nada — não há assinatura, item pago nem versão premium.',
+          },
+          {
+            pergunta: 'Tem dinheiro real envolvido?',
+            resposta:
+              'Não. A moeda do jogo é o mel, que serve para treinar decisão. Ele não pode ser comprado, vendido nem trocado por dinheiro de verdade.',
+          },
+          {
+            pergunta: 'Para qual idade é?',
+            resposta:
+              'De 6 a 15 anos, em três faixas. O conteúdo e as regras da economia mudam conforme a idade: quem tem 6 anos não vê depreciação nem custo fixo; quem tem 12 ou mais vê.',
+          },
+          {
+            pergunta: 'Preciso instalar alguma coisa?',
+            resposta:
+              'Não. O Beever roda no navegador, no celular ou no computador. Basta criar a conta e começar.',
+          },
+        ];
+      %>
+      <% PERGUNTAS.forEach((item) => { %>
+        <details class="revela group rounded-favo border border-white/10 bg-white/5 open:border-mel/40">
+          <summary
+            class="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-5 py-4 font-semibold text-cera focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+          >
+            <%= item.pergunta %>
+            <%# Ícone e não só cor: o sinal muda de forma ao abrir (RNF-25). -%>
+            <span class="text-mel transition group-open:rotate-45" aria-hidden="true">+</span>
+          </summary>
+          <p class="px-5 pb-5 text-cera/70"><%= item.resposta %></p>
+        </details>
+      <% }); %>
+    </div>
+  </div>
+</section>

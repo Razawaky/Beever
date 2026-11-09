@@ -1,0 +1,196 @@
+/* Mascote do wizard de onboarding.
+ *
+ * A arte vem do catálogo (`src/config/mascote.js`) pelo `dataset` do body. O
+ * posicionamento fica aqui, e não em atributo `style` no JavaScript, porque a
+ * CSP do projeto só aceita folha de estilo própria (RNF-11).
+ *
+ * O desenho fica ancorado no canto inferior direito do cartão, como no
+ * onboarding antigo, e cada passo tem seu próprio deslocamento. O casco do
+ * mascote é irmão do conteúdo e fica em `z-index: 0`; o conteúdo sobe para
+ * `z-index: 10` (na view). Assim a Beenie aparece ao lado/atrás do cartão sem
+ * cobrir texto, opções ou botões.
+ *
+ * No celular a figura fica abaixo do rodapé do cartão, inteira, em vez de ser
+ * cortada pela faixa opaca do botão. A partir de 48rem ela cresce e sai mais
+ * para a direita, ocupando a área vazia da tela em vez de disputar espaço com o
+ * formulário. */
+
+/* O fundo de favos da landing reaparece aqui. `fixed` em vez do `absolute` da
+ * landing mantém a textura cobrindo a janela inteira enquanto o wizard rola,
+ * sem alargar a página; a view sobe o conteúdo para `z-index: 10`. */
+.onboarding-favos.camada-de-favos {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.onboarding-etapa {
+  animation: onboarding-etapa-entra 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes onboarding-etapa-entra {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-mascote {
+  --mascote-height: 7rem;
+  --mascote-right: -0.5rem;
+  --mascote-bottom: -6rem;
+
+  position: absolute;
+  right: var(--mascote-right);
+  bottom: var(--mascote-bottom);
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: var(--mascote-height);
+  pointer-events: none;
+}
+
+/* A posição de cada passo repete a variação do onboarding antigo: apelido mais
+ * central, objetivo mais à direita e nível mais afastado, com a abelha bebê. */
+.onboarding-mascote--apelido {
+  --mascote-height: 7rem;
+  --mascote-right: -0.5rem;
+  --mascote-bottom: -6rem;
+}
+
+.onboarding-mascote--dias {
+  --mascote-height: 6.5rem;
+  --mascote-right: -0.75rem;
+  --mascote-bottom: -5.5rem;
+}
+
+.onboarding-mascote--tempo {
+  --mascote-height: 7.5rem;
+  --mascote-right: -0.5rem;
+  --mascote-bottom: -6.5rem;
+}
+
+.onboarding-mascote--objetivo {
+  --mascote-height: 7rem;
+  --mascote-right: -0.75rem;
+  --mascote-bottom: -6rem;
+}
+
+.onboarding-mascote--preferencias {
+  --mascote-height: 7.5rem;
+  --mascote-right: -0.75rem;
+  --mascote-bottom: -6.5rem;
+}
+
+.onboarding-mascote--nivel {
+  --mascote-height: 7rem;
+  --mascote-right: -0.5rem;
+  --mascote-bottom: -6rem;
+}
+
+.onboarding-mascote__imagem {
+  display: block;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+}
+
+.onboarding-mascote__moeda {
+  position: absolute;
+  top: 42%;
+  right: 0;
+  width: 2rem;
+  height: auto;
+  animation: onboarding-moeda-pula 1.6s ease-in-out infinite;
+}
+
+.onboarding-mascote__bebe {
+  position: absolute;
+  bottom: 0;
+  left: -2.25rem;
+  width: 3.25rem;
+  height: auto;
+}
+
+@keyframes onboarding-moeda-pula {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.4rem);
+  }
+}
+
+@media (min-width: 48rem) {
+  .onboarding-mascote {
+    --mascote-height: 16rem;
+    --mascote-right: -7rem;
+    --mascote-bottom: -2.5rem;
+  }
+
+  .onboarding-mascote--apelido {
+    --mascote-height: 21rem;
+    --mascote-right: -8rem;
+    --mascote-bottom: -0.5rem;
+  }
+
+  .onboarding-mascote--dias {
+    --mascote-height: 22rem;
+    --mascote-right: -16rem;
+    --mascote-bottom: 5.5rem;
+    left: -55rem;
+  }
+
+  .onboarding-mascote--tempo {
+    --mascote-height: 21rem;
+    --mascote-right: -10rem;
+    --mascote-bottom: 8rem;
+  }
+
+  .onboarding-mascote--objetivo {
+    --mascote-height: 21rem;
+    --mascote-right: -7.5rem;
+    --mascote-bottom: -0.5rem;
+  }
+
+  .onboarding-mascote--preferencias {
+    --mascote-height: 21rem;
+    --mascote-right: -14rem;
+    --mascote-bottom: 2rem;
+    left: -55rem;
+  }
+
+  .onboarding-mascote--nivel {
+    --mascote-height: 21rem;
+    --mascote-right: -11rem;
+    --mascote-bottom: 3rem;
+  }
+
+  .onboarding-mascote__moeda {
+    top: 43%;
+    right: 6.3rem;
+    width: 2.75rem;
+    filter: drop-shadow(0px 0px 4px #fff785) 
+            drop-shadow(0px 0px 12px #fff785) 
+            drop-shadow(0px 0px 25px #ffa41b) 
+  }
+
+  .onboarding-mascote__bebe {
+    left: -33rem;
+    bottom: 0.5rem;
+    width: 8.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-etapa,
+  .onboarding-mascote__moeda {
+    animation: none;
+  }
+}

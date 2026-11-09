@@ -1,0 +1,54 @@
+<%#
+  O topo da Colmeia (RF-HOM-01 a 03). Fica grudado ao rolar porque é a resposta
+  de "onde eu estou": o saldo precisa estar à vista justamente quando a criança
+  decide gastar. Todos os números já chegam prontos do `homeService`.
+-%>
+<header class="sticky top-0 z-10 bg-mel px-6 py-4 shadow-md">
+  <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-8 gap-y-4">
+    <div class="flex items-center gap-3">
+      <div class="flex h-12 w-12 items-center justify-center rounded-pilula bg-white/40 text-xl font-bold">
+        <%= jogador.apelido.charAt(0).toUpperCase() %>
+      </div>
+      <div class="min-w-[9rem]">
+        <%# O apelido é o título da página: sem `h1` a tela mais visitada do jogo
+            começa a hierarquia em `h2`, e quem navega por cabeçalhos se perde. %>
+        <h1 class="text-lg font-bold text-tinta"><%= jogador.apelido %></h1>
+        <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">
+          Nível <%= jogador.nivel?.nivel ?? 1 %>
+        </p>
+        <div class="mt-1 w-40">
+          <%- include('barra-progresso', {
+            percentual: jogador.nivel?.progressoPercentual ?? 0,
+            rotuloAcessivel: 'Progresso até o próximo nível',
+            classeDoTrilho: 'bg-white/40',
+            classeDoPreenchimento: 'bg-breu',
+            legenda: jogador.nivel?.noTopo
+              ? 'Nível máximo alcançado'
+              : `faltam ${jogador.nivel?.xpParaSubir ?? 0} XP para o nível ${(jogador.nivel?.nivel ?? 1) + 1}`,
+          }) %>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-start gap-x-8 gap-y-4">
+      <%- include('badge-recurso', {
+        icone: '🍯',
+        rotulo: 'Seu mel',
+        valor: jogador.mel,
+        grande: true,
+        detalhe: `🌼 ${jogador.polen} de pólen`,
+      }) %>
+
+      <%- include('badge-recurso', {
+        icone: '🏠',
+        rotulo: 'Seu patrimônio',
+        valor: jogador.patrimonio.total,
+        grande: true,
+        detalhe: `carteira ${jogador.patrimonio.carteira} · cofre ${jogador.patrimonio.cofre} · bens ${jogador.patrimonio.bens}`,
+      }) %>
+    </div>
+
+    <%# A sequência leva ao calendário completo em /metas. %>
+    <%- include('chama-sequencia', { sequencia, href: '/metas' }) %>
+  </div>
+</header>

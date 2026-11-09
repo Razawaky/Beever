@@ -1,0 +1,41 @@
+<%#
+  Card da meta (RF-HOM-04 e RF-MET-02). Recebe a meta já resumida pelo
+  `goalsService`: percentual, prazo em palavra e recompensa chegam prontos.
+
+  A ação fica de fora, logo abaixo do include, porque ela muda de tela para
+  tela: a Colmeia leva para /metas, e /metas conclui, retoma ou não oferece nada.
+  `destaque` deixa o card maior, para a meta que vence primeiro.
+-%>
+<article class="rounded-favo bg-white p-6 shadow-md">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h3 class="<%= locals.destaque ? 'font-display text-xl' : 'text-lg font-bold' %> <%= meta.status === 'concluida' ? 'text-tinta-suave line-through' : '' %>">
+        <%= meta.titulo %>
+      </h3>
+      <p class="mt-1 text-sm tabular-nums text-tinta-suave"><%= meta.atual %> de <%= meta.alvo %></p>
+      <% if (locals.mostrarDetalhes) { %>
+        <p class="mt-1 text-xs text-tinta-suave">
+          <%= meta.status %> · dificuldade <%= meta.dificuldade %>
+        </p>
+      <% } %>
+    </div>
+
+    <%# Ícone e palavra juntos: cor sozinha não anuncia urgência (RNF-25). %>
+    <p class="text-sm font-semibold tabular-nums <%= meta.urgencia.nivel === 'hoje' ? 'text-erro-texto' : 'text-tinta' %>">
+      <%= meta.urgencia.icone %> <%= meta.urgencia.frase %>
+    </p>
+  </div>
+
+  <div class="mt-4">
+    <%- include('barra-progresso', {
+      percentual: meta.percentual,
+      rotuloAcessivel: `Progresso da meta ${meta.titulo}`,
+      legenda: `${meta.percentual}% concluído`,
+    }) %>
+  </div>
+
+  <%# Recompensa zerada não é escrita: "e 🌼 0 de pólen" só ocupa espaço. %>
+  <p class="mt-3 text-sm tabular-nums">
+    Rende 🍯 <%= meta.melDaRecompensa %> de mel<% if (meta.polenDaRecompensa > 0) { %> e 🌼 <%= meta.polenDaRecompensa %> de pólen<% } %>
+  </p>
+</article>
