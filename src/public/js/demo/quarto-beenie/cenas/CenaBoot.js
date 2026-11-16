@@ -1,7 +1,8 @@
 // Cena de carregamento: acontece depois do vídeo e antes do quarto.
-// As imagens são as mesmas do Beever e ficam em /img.
+// Carrega os retratos do Beenie, a moeda e as imagens do quarto em /img.
 
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
+import { IMAGENS_DO_QUARTO } from '../dadosDoQuarto.js';
 import { CORES, FONTES, LARGURA, criarFundoEscuro } from '../desenho.js';
 import { anunciar, definirInstrucoes } from '../interface.js';
 
@@ -22,7 +23,7 @@ export class CenaBoot extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(LARGURA / 2, 292, 'Carregando o Beenie e os objetos', {
+      .text(LARGURA / 2, 292, 'Carregando o Beenie e o quarto', {
         fontFamily: FONTES.texto,
         fontSize: '16px',
         color: '#bfae87',
@@ -30,21 +31,25 @@ export class CenaBoot extends Phaser.Scene {
       .setOrigin(0.5);
 
     const barra = this.add.graphics();
-    barra.fillStyle(0x3a2f16, 1).fillRoundedRect(260, 330, 440, 12, 6);
+    barra.fillStyle(0x3a2f16, 1).fillRoundedRect(130, 330, 340, 12, 6);
     const preenchimento = this.add.graphics();
 
     this.load.on('progress', (progresso) => {
       preenchimento.clear();
       preenchimento
         .fillStyle(CORES.mel, 1)
-        .fillRoundedRect(260, 330, Math.max(12, 440 * progresso), 12, 6);
+        .fillRoundedRect(130, 330, Math.max(12, 340 * progresso), 12, 6);
     });
 
-    this.load.image('beenie-default', '/img/beenie_click_default.webp');
-    this.load.image('beenie-feliz', '/img/beenie_click_yeah.webp');
-    this.load.image('beenie-uou', '/img/beenie_click_uhhhhh.webp');
-    this.load.image('beenie-estrelas', '/img/beenie_click_stars.webp');
+    this.load.image('beenie-default', '/img/clicks/beenie_click_default.webp');
+    this.load.image('beenie-feliz', '/img/clicks/beenie_click_yeah.webp');
+    this.load.image('beenie-uou', '/img/clicks/beenie_click_uhhhhh.webp');
+    this.load.image('beenie-estrelas', '/img/clicks/beenie_click_stars.webp');
     this.load.image('moeda', '/img/mel-moeda-virtual.png');
+
+    IMAGENS_DO_QUARTO.forEach((imagem) => {
+      this.load.image(imagem.chave, imagem.caminho);
+    });
 
     anunciar('Carregando o quarto do Beenie…');
     definirInstrucoes('O vídeo terminou. O quarto está sendo preparado.');

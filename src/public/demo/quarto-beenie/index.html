@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#1b1508" />
     <title>O Quarto do Beenie — Protótipo | Beever</title>
+    <link rel="icon" href="/img/beever-icon.png" />
     <link rel="stylesheet" href="./demo.css" />
   </head>
   <body>
@@ -14,12 +15,46 @@
         <p class="demo__selo">Protótipo isolado · arquitetura Phaser</p>
         <h1 class="demo__titulo">O Quarto do Beenie</h1>
         <p class="demo__resumo">
-          Uma introdução em vídeo, um quarto em quatro ângulos e objetos clicáveis. Ao abrir o
-          cofre, a cena do minigame assume por cima e devolve o resultado ao quarto.
+          Uma introdução em vídeo, um quarto em quatro ângulos e seis atividades. Pegue um item
+          por vez e clique no móvel certo para guardar: brinquedos no baú, roupas no armário,
+          travesseiro e coberta na cama, livro na mesa. A porta está sempre aberta: saia quando
+          quiser e receba o mel conforme o que arrumou.
         </p>
       </header>
 
       <section class="demo__palco" aria-label="Protótipo do quarto do Beenie">
+        <div class="demo__hud" role="group" aria-label="Painel do Quarto do Beenie" hidden>
+          <div class="demo__hud-identidade">
+            <p class="demo__hud-titulo">Quarto do Beenie</p>
+            <p class="demo__hud-subtitulo">protótipo · 4 ângulos</p>
+          </div>
+
+          <div class="demo__hud-dados">
+            <p id="hud-parede" class="demo__hud-parede">1/4 · Frente</p>
+            <p class="demo__hud-mel">
+              <img
+                class="demo__hud-moeda"
+                src="/img/mel-moeda-virtual.png"
+                alt=""
+                width="18"
+                height="18"
+              />
+              <span id="hud-mel">0 mel (demo)</span>
+            </p>
+            <p id="hud-tarefas" class="demo__hud-tarefas">Tarefas 0/6</p>
+            <p id="hud-mao" class="demo__hud-mao"></p>
+          </div>
+
+          <div class="demo__hud-progresso" aria-hidden="true">
+            <span class="demo__hud-favo" data-tarefa="bau"></span>
+            <span class="demo__hud-favo" data-tarefa="armario"></span>
+            <span class="demo__hud-favo" data-tarefa="cama"></span>
+            <span class="demo__hud-favo" data-tarefa="quadro"></span>
+            <span class="demo__hud-favo" data-tarefa="mesa"></span>
+            <span class="demo__hud-favo" data-tarefa="janela"></span>
+          </div>
+        </div>
+
         <div class="demo__midia">
           <div id="video-camada" class="video-camada">
             <video
@@ -38,7 +73,7 @@
 
             <div class="video__rodape">
               <p id="video-legenda" class="video__legenda">
-                Beever apresenta: o quarto do Beenie está uma bagunça. Hora de arrumar!
+                Beever apresenta: o quarto do Beenie está pronto para ser explorado!
               </p>
               <div class="video__acoes">
                 <button id="video-tocar" class="video__botao" type="button" hidden>
@@ -58,8 +93,9 @@
           Carregando o protótipo…
         </p>
         <p id="instrucoes" class="demo__instrucoes">
-          A introdução é um vídeo curto, sem áudio. Depois, use as setas para girar o quarto e
-          clique nos objetos.
+          A introdução é um vídeo curto, sem áudio. Depois, use as setas para girar o quarto,
+          pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando
+          quiser.
         </p>
       </section>
 
@@ -86,7 +122,7 @@
           <li class="fluxo__item">
             <span class="fluxo__numero">2</span>
             <strong>Boot</strong>
-            <span>Carrega o Beenie e as imagens de interface.</span>
+            <span>Carrega o Beenie, as quatro paredes e os itens.</span>
           </li>
           <li class="fluxo__item">
             <span class="fluxo__numero">3</span>
@@ -95,24 +131,25 @@
           </li>
           <li class="fluxo__item">
             <span class="fluxo__numero">4</span>
-            <strong>Minigame</strong>
-            <span>Cena do cofre lançada por cima, com pausa do quarto.</span>
+            <strong>Atividades</strong>
+            <span>Seis tarefas de pegar e guardar, com um item por vez.</span>
           </li>
           <li class="fluxo__item">
             <span class="fluxo__numero">5</span>
             <strong>Fim</strong>
-            <span>Resumo das tarefas e reinício local.</span>
+            <span>Resumo do que foi arrumado, mel proporcional e reinício local.</span>
           </li>
         </ol>
 
         <div class="arquitetura__notas">
           <p>
-            <code>dadosDoQuarto.js</code> descreve paredes e hotspots. A cena não precisa saber o
-            que é uma cama ou um cofre para desenhá-los.
+            <code>dadosDoQuarto.js</code> descreve paredes, imagens e hotspots. A cena não precisa
+            saber o que é uma cama ou um baú para desenhá-los.
           </p>
           <p>
-            <code>estadoDoJogo.js</code> guarda parede atual, tarefas e mel fictício. O quarto e o
-            minigame conversam por eventos, sem importar um ao outro.
+            <code>estadoDoJogo.js</code> guarda parede atual, atividades, itens guardados, o item
+            na mão e o mel fictício. A mochila do Beenie tem um espaço só: pegar outro item antes
+            de guardar o primeiro é recusado com uma explicação.
           </p>
         </div>
       </section>

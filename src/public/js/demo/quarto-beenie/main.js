@@ -7,7 +7,6 @@
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
 import { CenaBoot } from './cenas/CenaBoot.js';
 import { CenaFim } from './cenas/CenaFim.js';
-import { CenaMinigame } from './cenas/CenaMinigame.js';
 import { CenaQuarto } from './cenas/CenaQuarto.js';
 import { ALTURA, LARGURA } from './desenho.js';
 import { estado } from './estadoDoJogo.js';
@@ -19,6 +18,7 @@ const botaoTocar = document.getElementById('video-tocar');
 const botaoPular = document.getElementById('video-pular');
 const palco = document.getElementById('jogo');
 const botaoRever = document.getElementById('rever-intro');
+const hud = document.querySelector('.demo__hud');
 
 let jogo = null;
 let iniciando = false;
@@ -52,6 +52,7 @@ async function iniciarJogo() {
 
   if (!palco) return;
   palco.hidden = false;
+  if (hud) hud.hidden = false;
   if (botaoRever) botaoRever.hidden = false;
 
   if (document.fonts?.ready) {
@@ -72,6 +73,12 @@ async function iniciarJogo() {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
+    // O loader padrão do Phaser baixa a imagem via XHR e entrega um `blob:` para
+    // a tag <img>. Como a CSP do app aceita apenas `'self'` e `data:` em
+    // `img-src`, pedimos o carregamento direto no elemento <img>.
+    loader: {
+      imageLoadType: 'HTMLImageElement',
+    },
     render: {
       antialias: true,
       roundPixels: true,
@@ -81,13 +88,13 @@ async function iniciarJogo() {
         instancia.canvas.setAttribute('aria-describedby', 'instrucoes status');
         instancia.canvas.setAttribute(
           'aria-label',
-          'Quarto do Beenie: use as setas para girar e clique nos objetos',
+          'Quarto do Beenie: use as setas para girar, pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando quiser',
         );
         instancia.canvas.setAttribute('role', 'application');
         instancia.canvas.setAttribute('tabindex', '0');
       },
     },
-    scene: [CenaBoot, CenaQuarto, CenaMinigame, CenaFim],
+    scene: [CenaBoot, CenaQuarto, CenaFim],
   });
 
   if (new URLSearchParams(window.location.search).has('teste')) {
@@ -153,5 +160,5 @@ botaoRever?.addEventListener('click', () => {
 
 anunciar('Introdução do Quarto do Beenie. O vídeo tem 6 segundos e pode ser pulado.');
 definirInstrucoes(
-  'A introdução é um vídeo curto, sem áudio. Depois, use as setas para girar o quarto e clique nos objetos.',
+  'A introdução é um vídeo curto, sem áudio. Depois, use as setas para girar o quarto, pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando quiser.',
 );

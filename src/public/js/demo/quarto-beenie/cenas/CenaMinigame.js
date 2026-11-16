@@ -1,6 +1,6 @@
-// Minigame do cofre: uma cena separada, lançada por cima do quarto.
-// Quando termina, devolve o resultado pelo event bus do jogo e o quarto
-// decide quanto mel fictício somar.
+// Cena legada do protótipo anterior: o baú era um minigame de três rodadas.
+// Agora o baú é uma atividade de pegar os brinquedos e guardar, resolvida em
+// CenaQuarto.js. Esta cena não é registrada em main.js.
 
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
 import {
@@ -20,10 +20,10 @@ const METAS = [
   { min: 0.7, max: 0.86 },
 ];
 
-const X_DO_MEDIDOR = 292;
-const Y_DO_MEDIDOR = 158;
-const LARGURA_DO_MEDIDOR = 160;
-const ALTURA_DO_MEDIDOR = 274;
+const X_DO_MEDIDOR = 196;
+const Y_DO_MEDIDOR = 162;
+const LARGURA_DO_MEDIDOR = 154;
+const ALTURA_DO_MEDIDOR = 258;
 
 export class CenaMinigame extends Phaser.Scene {
   constructor() {
@@ -58,32 +58,32 @@ export class CenaMinigame extends Phaser.Scene {
 
   criarPainel() {
     const painel = this.add.graphics().setDepth(2);
-    painel.fillStyle(CORES.painel, 0.98).fillRoundedRect(170, 56, 620, 488, 26);
-    painel.lineStyle(3, CORES.mel, 0.72).strokeRoundedRect(170, 56, 620, 488, 26);
-    painel.lineStyle(2, CORES.nectar, 0.28).strokeRoundedRect(182, 68, 596, 464, 20);
+    painel.fillStyle(CORES.painel, 0.98).fillRoundedRect(24, 56, 552, 488, 26);
+    painel.lineStyle(3, CORES.mel, 0.72).strokeRoundedRect(24, 56, 552, 488, 26);
+    painel.lineStyle(2, CORES.nectar, 0.28).strokeRoundedRect(36, 68, 528, 464, 20);
 
     this.add
-      .text(LARGURA / 2, 84, 'Cofre do Beenie', {
+      .text(LARGURA / 2, 78, 'Baú do Beenie', {
         fontFamily: FONTES.display,
-        fontSize: '38px',
+        fontSize: '32px',
         color: '#ffc200',
       })
       .setOrigin(0.5, 0)
       .setDepth(3);
 
     this.add
-      .text(LARGURA / 2, 127, '3 rodadas · solte o mel dentro da faixa verde', {
+      .text(LARGURA / 2, 118, '3 rodadas · solte o mel dentro da faixa verde', {
         fontFamily: FONTES.texto,
-        fontSize: '15px',
+        fontSize: '14px',
         color: '#bfae87',
       })
       .setOrigin(0.5, 0)
       .setDepth(3);
 
     this.textoMoedas = this.add
-      .text(748, 90, 'Mel (demo): 0', {
+      .text(552, 86, 'Mel (demo): 0', {
         fontFamily: FONTES.texto,
-        fontSize: '13px',
+        fontSize: '12px',
         color: '#f5e8c8',
         fontStyle: 'bold',
       })
@@ -92,38 +92,38 @@ export class CenaMinigame extends Phaser.Scene {
 
     this.graficoMedidor = this.add.graphics().setDepth(3);
     this.textoPorcentagem = this.add
-      .text(548, 176, '0%', {
+      .text(392, 178, '0%', {
         fontFamily: FONTES.display,
-        fontSize: '58px',
+        fontSize: '52px',
         color: '#f5e8c8',
       })
       .setOrigin(0, 0)
       .setDepth(3);
     this.textoMeta = this.add
-      .text(548, 244, '', {
+      .text(392, 248, '', {
         fontFamily: FONTES.texto,
-        fontSize: '16px',
+        fontSize: '15px',
         color: '#bfae87',
       })
       .setOrigin(0, 0)
       .setDepth(3);
     this.textoRodada = this.add
-      .text(548, 280, '', {
+      .text(392, 280, '', {
         fontFamily: FONTES.texto,
-        fontSize: '18px',
+        fontSize: '17px',
         color: '#ffc200',
         fontStyle: 'bold',
       })
       .setOrigin(0, 0)
       .setDepth(3);
     this.textoFeedback = this.add
-      .text(LARGURA / 2, 438, '', {
+      .text(LARGURA / 2, 436, '', {
         fontFamily: FONTES.texto,
-        fontSize: '19px',
+        fontSize: '18px',
         color: '#f5e8c8',
         fontStyle: 'bold',
         align: 'center',
-        wordWrap: { width: 520 },
+        wordWrap: { width: 480 },
       })
       .setOrigin(0.5)
       .setDepth(3);
@@ -131,7 +131,7 @@ export class CenaMinigame extends Phaser.Scene {
     this.add
       .text(LARGURA / 2, 494, 'Clique/toque e segure · ou mantenha Espaço', {
         fontFamily: FONTES.texto,
-        fontSize: '13px',
+        fontSize: '12px',
         color: '#8f7d58',
       })
       .setOrigin(0.5)
@@ -183,7 +183,7 @@ export class CenaMinigame extends Phaser.Scene {
 
     this.corFeedback = '#f5e8c8';
     this.corPorcentagem = '#f5e8c8';
-    this.textoFeedback.setText('Segure para encher o cofre');
+    this.textoFeedback.setText('Segure para encher o baú');
     this.textoRodada.setText(`Rodada ${this.rodada + 1} de ${TOTAL_DE_RODADAS}`);
     this.textoMeta.setText(
       `Meta: ${Math.round(this.meta.min * 100)}% a ${Math.round(this.meta.max * 100)}%`,
@@ -192,7 +192,7 @@ export class CenaMinigame extends Phaser.Scene {
     this.atualizarVisual();
 
     anunciar(
-      `Cofre, rodada ${this.rodada + 1} de ${TOTAL_DE_RODADAS}. ` +
+      `Baú, rodada ${this.rodada + 1} de ${TOTAL_DE_RODADAS}. ` +
         `Solte entre ${Math.round(this.meta.min * 100)}% e ${Math.round(this.meta.max * 100)}%.`,
     );
   }
@@ -384,11 +384,11 @@ export class CenaMinigame extends Phaser.Scene {
     bloqueio.on('pointerdown', () => this.tentarFechar());
 
     const cartao = this.add.graphics().setDepth(51);
-    cartao.fillStyle(CORES.painel, 1).fillRoundedRect(280, 148, 400, 304, 24);
-    cartao.lineStyle(3, CORES.mel, 0.82).strokeRoundedRect(280, 148, 400, 304, 24);
+    cartao.fillStyle(CORES.painel, 1).fillRoundedRect(100, 148, 400, 304, 24);
+    cartao.lineStyle(3, CORES.mel, 0.82).strokeRoundedRect(100, 148, 400, 304, 24);
 
     this.add
-      .text(LARGURA / 2, 180, 'Cofre aberto!', {
+      .text(LARGURA / 2, 180, 'Baú aberto!', {
         fontFamily: FONTES.display,
         fontSize: '42px',
         color: '#ffc200',
@@ -471,7 +471,7 @@ export class CenaMinigame extends Phaser.Scene {
     });
 
     anunciar(
-      `Cofre aberto com ${this.acertos} de ${TOTAL_DE_RODADAS} acertos e ${this.moedas} de mel de demonstração.`,
+      `Baú aberto com ${this.acertos} de ${TOTAL_DE_RODADAS} acertos e ${this.moedas} de mel de demonstração.`,
     );
     definirInstrucoes('Clique em “Voltar ao quarto” ou aperte Enter para continuar.');
   }
