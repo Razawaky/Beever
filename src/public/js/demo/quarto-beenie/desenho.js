@@ -124,7 +124,7 @@ function criarCanvasDeContorno(origem) {
   return contorno;
 }
 
-function garantirTexturaDeContorno(cena, chave) {
+export function garantirTexturaDeContorno(cena, chave) {
   const chaveDoContorno = `${chave}--contorno`;
   if (cena.textures.exists(chaveDoContorno)) return chaveDoContorno;
 

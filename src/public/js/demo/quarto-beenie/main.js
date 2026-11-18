@@ -1,8 +1,8 @@
 // Entrada da demo: primeiro o vídeo, depois o Phaser.
 //
-// O vídeo é HTML de propósito: autoplay, poster e legendas são mais
-// previsíveis fora do canvas. Quando ele termina (ou é pulado), a camada é
-// removida e o Phaser é criado já na cena do quarto.
+// O vídeo é HTML de propósito: poster e controles são mais previsíveis fora
+// do canvas. Ele começa pausado; o play central inicia a reprodução, o botão
+// no canto superior direito alterna o som e “Pular vídeo” abre o quarto.
 
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
 import { CenaBoot } from './cenas/CenaBoot.js';
@@ -15,6 +15,7 @@ import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from './interface.js';
 const camadaDoVideo = document.getElementById('video-camada');
 const video = document.getElementById('video-intro');
 const botaoTocar = document.getElementById('video-tocar');
+const botaoSom = document.getElementById('video-som');
 const botaoPular = document.getElementById('video-pular');
 const palco = document.getElementById('jogo');
 const botaoRever = document.getElementById('rever-intro');
@@ -102,6 +103,25 @@ async function iniciarJogo() {
   }
 }
 
+function atualizarBotaoSom() {
+  if (!botaoSom || !video) return;
+
+  const comSom = !video.muted && video.volume > 0;
+  const rotulo = comSom ? 'Mutar som' : 'Ativar som';
+  botaoSom.setAttribute('aria-pressed', String(comSom));
+  botaoSom.setAttribute('aria-label', rotulo);
+  botaoSom.title = rotulo;
+}
+
+function alternarSom() {
+  if (!video || iniciando) return;
+
+  video.muted = !video.muted;
+  if (!video.muted && video.volume === 0) video.volume = 1;
+  atualizarBotaoSom();
+  anunciar(video.muted ? 'Som desligado.' : 'Som ligado.');
+}
+
 function liberarVideo() {
   if (!video) {
     iniciarJogo();
@@ -109,45 +129,37 @@ function liberarVideo() {
   }
   if (iniciando) return;
 
-  // O vídeo definitivo tem áudio. Sem o `muted`, o autoplay pode ser bloqueado;
-  // nesse caso o botão "Reproduzir com áudio" faz a mesma chamada após o clique.
-  video.muted = false;
-  video.volume = 1;
-
-  video.play().then(
-    () => {
-      if (iniciando) return;
-      if (botaoTocar) botaoTocar.hidden = true;
-    },
-    () => {
-      if (iniciando) return;
-      if (botaoTocar) botaoTocar.hidden = false;
-      anunciar(
-        'O navegador bloqueou o autoplay com áudio. Use “Reproduzir com áudio” ou pule a introdução.',
-      );
-    },
-  );
+  // O clique no play central autoriza o áudio. Se a pessoa já mutou pelo canto
+  // superior direito, o estado dela é respeitado.
+  const promessa = video.play();
+  promessa?.catch(() => {
+    if (iniciando) return;
+    anunciar('Não foi possível reproduzir o vídeo. Use “Pular vídeo” para entrar no quarto.');
+  });
 }
 
 if (video) {
+  video.muted = false;
+  video.volume = 1;
+  atualizarBotaoSom();
+
   video.addEventListener('ended', iniciarJogo, { once: true });
   video.addEventListener('playing', () => {
     if (botaoTocar) botaoTocar.hidden = true;
   });
+  video.addEventListener('pause', () => {
+    if (!iniciando && !video.ended && botaoTocar) botaoTocar.hidden = false;
+  });
+  video.addEventListener('volumechange', atualizarBotaoSom);
   video.addEventListener('error', () => {
     // Remover as fontes do vídeo no handoff pode disparar um erro tardio.
     // Depois que o jogo começou, esse erro não deve sobrescrever o status.
     if (iniciando) return;
-    if (botaoTocar) botaoTocar.hidden = true;
-    anunciar('Vídeo indisponível neste navegador. Use “Pular introdução” para jogar.');
+    if (botaoTocar) botaoTocar.hidden = false;
+    anunciar('Vídeo indisponível neste navegador. Use “Pular vídeo” para jogar.');
   });
 
-  if (SEM_MOVIMENTO) {
-    if (botaoTocar) botaoTocar.hidden = false;
-    anunciar('Introdução pronta. Reproduza o vídeo ou pule para o quarto.');
-  } else {
-    liberarVideo();
-  }
+  if (botaoTocar) botaoTocar.hidden = false;
 } else {
   iniciarJogo();
 }
@@ -160,6 +172,8 @@ botaoTocar?.addEventListener('click', () => {
   liberarVideo();
 });
 
+botaoSom?.addEventListener('click', alternarSom);
+
 botaoPular?.addEventListener('click', () => {
   iniciarJogo();
 });
@@ -168,7 +182,9 @@ botaoRever?.addEventListener('click', () => {
   window.location.reload();
 });
 
-anunciar('Introdução do Quarto do Beenie. O vídeo tem áudio, dura 6 segundos e pode ser pulado.');
+anunciar(
+  'Introdução do Quarto do Beenie. Use o play central para assistir, o botão no canto superior direito para ligar ou desligar o som e “Pular vídeo” para ir ao quarto.',
+);
 definirInstrucoes(
-  'A introdução é um vídeo curto, com áudio. Depois, use as setas para girar o quarto, pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando quiser.',
+  'Use o play central para assistir à introdução, o botão no canto superior direito para mutar e “Pular vídeo” para começar.',
 );

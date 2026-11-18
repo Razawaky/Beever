@@ -14,6 +14,15 @@ function rotularTarefas(ids) {
   return ids.map((id) => ROTULOS_DAS_TAREFAS[id] ?? id).join(', ');
 }
 
+const TAMANHO_DA_NOTA = Object.freeze({ largura: 198, altura: 234 });
+
+function notaPorTarefas(concluidas, total) {
+  if (concluidas >= total) return { chave: 'score-otimo', rotulo: 'ótimo' };
+  if (concluidas >= total - 2) return { chave: 'score-muito-bom', rotulo: 'muito bom' };
+  if (concluidas >= 2) return { chave: 'score-meh', rotulo: 'meeh' };
+  return { chave: 'score-ruim', rotulo: 'ruim' };
+}
+
 export class CenaFim extends Phaser.Scene {
   constructor() {
     super('fim');
@@ -40,7 +49,7 @@ export class CenaFim extends Phaser.Scene {
         ? 'Você saiu sem concluir atividades. O mel é proporcional ao que foi feito.'
         : 'Você saiu antes de terminar. O mel é proporcional ao que foi feito.';
 
-    const emocao = tudoPronto ? 'beenie-estrelas' : nadaFeito ? 'beenie-default' : 'beenie-feliz';
+    const nota = notaPorTarefas(concluidas.length, total);
     const textoConcluidas = concluidas.length
       ? `Concluídas: ${rotularTarefas(concluidas)}`
       : 'Concluídas: nenhuma';
@@ -71,8 +80,10 @@ export class CenaFim extends Phaser.Scene {
       })
       .setOrigin(0.5, 0);
 
-    const beenie = this.add.image(LARGURA / 2, 232, emocao);
-    beenie.setDisplaySize(104, 156);
+    const imagemDaNota = this.add
+      .image(LARGURA / 2, 232, nota.chave)
+      .setDisplaySize(TAMANHO_DA_NOTA.largura, TAMANHO_DA_NOTA.altura)
+      .setDepth(10);
 
     const textoMoedas = this.add
       .text(LARGURA / 2, 320, `${estado.moedas} mel (demo)`, {
@@ -140,7 +151,7 @@ export class CenaFim extends Phaser.Scene {
 
     if (!SEM_MOVIMENTO) {
       this.tweens.add({
-        targets: beenie,
+        targets: imagemDaNota,
         y: '+=5',
         duration: 1500,
         yoyo: true,
@@ -164,7 +175,7 @@ export class CenaFim extends Phaser.Scene {
 
     this.cameras.main.fadeIn(SEM_MOVIMENTO ? 0 : 300, 27, 21, 8);
     anunciar(
-      `Fim da demo: ${concluidas.length} de ${total} atividades e ${estado.moedas} de mel de demonstração.`,
+      `Fim da demo: ${concluidas.length} de ${total} atividades e ${estado.moedas} de mel de demonstração. Resultado: ${nota.rotulo}.`,
     );
     definirInstrucoes('Clique em “Jogar de novo” ou aperte Enter para voltar ao quarto.');
   }

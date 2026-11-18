@@ -1,6 +1,6 @@
 // Cena de carregamento: acontece depois do vídeo e antes do quarto.
-// Carrega os retratos do Beenie, a moeda, as imagens do quarto em /img
-// e os ícones do hexágono de item na mão.
+// Carrega os retratos do Beenie, as notas do resultado, a moeda, as imagens
+// do quarto em /img e os ícones do hexágono de item na mão.
 
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
 import { ICONES_DOS_ITENS, IMAGENS_DO_QUARTO } from '../dadosDoQuarto.js';
@@ -42,10 +42,15 @@ export class CenaBoot extends Phaser.Scene {
         .fillRoundedRect(130, 330, Math.max(12, 340 * progresso), 12, 6);
     });
 
-    this.load.image('beenie-default', '/img/clicks/beenie_click_default.webp');
-    this.load.image('beenie-feliz', '/img/clicks/beenie_click_yeah.webp');
-    this.load.image('beenie-uou', '/img/clicks/beenie_click_uhhhhh.webp');
-    this.load.image('beenie-estrelas', '/img/clicks/beenie_click_stars.webp');
+    this.load.image('beenie-default', '/img/jogo/beenie/beenie_neutral_happy.webp');
+    this.load.image('beenie-feliz', '/img/jogo/beenie/beenie_neutral_happy_talk.webp');
+    this.load.image('beenie-uou', '/img/jogo/beenie/beenie_neutral_annoyed_talk.webp');
+    this.load.image('beenie-estrelas', '/img/jogo/beenie/beenie_yeah.webp');
+    this.load.image('beenie-annoyed', '/img/jogo/beenie/beenie_neutral_annoyed.webp');
+    this.load.image('score-otimo', '/img/score/beenie_score_verygood.webp');
+    this.load.image('score-muito-bom', '/img/score/beenie_score_good.webp');
+    this.load.image('score-meh', '/img/score/beenie_score_meh.webp');
+    this.load.image('score-ruim', '/img/score/beenie_score_bad.webp');
     this.load.image('moeda', '/img/mel-moeda-virtual.png');
 
     IMAGENS_DO_QUARTO.forEach((imagem) => {

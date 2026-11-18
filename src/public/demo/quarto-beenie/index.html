@@ -8,6 +8,7 @@
     <title>O Quarto do Beenie — Protótipo | Beever</title>
     <link rel="icon" href="/img/beever-icon.png" />
     <link rel="stylesheet" href="./demo.css" />
+    <link rel="stylesheet" href="/css/cursor.css" />
   </head>
   <body>
     <main class="demo">
@@ -43,19 +44,37 @@
               Seu navegador não suporta vídeo em HTML5.
             </video>
 
-            <div class="video__rodape">
-              <p id="video-legenda" class="video__legenda">
-                Beever apresenta: o quarto do Beenie está pronto para ser explorado!
-              </p>
-              <div class="video__acoes">
-                <button id="video-tocar" class="video__botao" type="button" hidden>
-                  Reproduzir com áudio
-                </button>
-                <button id="video-pular" class="video__botao video__botao--principal" type="button">
-                  Pular introdução
-                </button>
-              </div>
-            </div>
+            <button
+              id="video-tocar"
+              class="video__play"
+              type="button"
+              aria-label="Reproduzir introdução com áudio"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M8 5.5v13l11-6.5L8 5.5Z" fill="currentColor" stroke="none" />
+              </svg>
+            </button>
+
+            <button
+              id="video-som"
+              class="video__som"
+              type="button"
+              aria-label="Ativar som"
+              aria-pressed="false"
+              title="Ativar som"
+            >
+              <svg class="icone-som icone-som--mudo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 9h4l5-4v14l-5-4H4z" />
+                <path d="m17 9 5 6m0-6-5 6" />
+              </svg>
+              <svg class="icone-som icone-som--ligado" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 9h4l5-4v14l-5-4H4z" />
+                <path d="M16 9a4 4 0 0 1 0 6" />
+                <path d="M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+              </svg>
+            </button>
+
+            <button id="video-pular" class="video__pular" type="button">Pular vídeo</button>
           </div>
 
           <div id="jogo" class="demo__canvas" hidden></div>
