@@ -24,7 +24,7 @@
   <div>
     <section class="rounded-favo bg-white p-6 shadow-md">
       <%- include('../partials/ui/badge-recurso', {
-        icone: '🍯',
+        icone: 'mel',
         rotulo: 'Guardado no cofre',
         valor: cofre.saldo,
         grande: true,
@@ -78,7 +78,7 @@
 
       <% if (cofre.meta) { %>
         <p class="mt-2 text-sm">
-          Você quer juntar <strong>🍯 <%= cofre.meta.valor %></strong><% if (cofre.meta.prazo) { %>
+          Você quer juntar <strong class="inline-flex items-center gap-1.5"><%- svgIcone('mel', 'h-4 w-4') %><span><%= cofre.meta.valor %></span></strong><% if (cofre.meta.prazo) { %>
             até <%= new Date(cofre.meta.prazo).toLocaleDateString('pt-BR') %><% } %>.
         </p>
         <% if (cofre.semanasParaAMeta !== null) { %>
@@ -150,7 +150,8 @@
       %>
       <p class="mt-4 text-sm">
         Guardando <strong><%= porSemana %></strong> de mel por semana, em
-        <strong><%= projecao.length %></strong> semanas você terá <strong>🍯 <%= ultima ? ultima.total : cofre.saldo %></strong>.
+        <strong><%= projecao.length %></strong> semanas você terá
+        <strong class="inline-flex items-center gap-1.5"><%- svgIcone('mel', 'h-4 w-4') %><span><%= ultima ? ultima.total : cofre.saldo %></span></strong>.
       </p>
 
       <canvas
@@ -170,7 +171,7 @@
         <% projecao.forEach((linha) => { %>
           <li class="flex justify-between border-b border-linha py-1">
             <span class="text-tinta-suave">Semana <%= linha.semana %></span>
-            <span class="font-medium">🍯 <%= linha.total %></span>
+            <span class="inline-flex items-center gap-1.5 font-medium"><%- svgIcone('mel', 'h-4 w-4') %><span><%= linha.total %></span></span>
           </li>
         <% }) %>
       </ol>

@@ -1,5 +1,7 @@
 import { iconeDaConquista } from '../config/conquistas.js';
+import { svgIcone } from '../public/js/icones.js';
 import { classeDaBarra } from './barraDeProgresso.js';
+import { preferenciasDaSessao } from './preferenciasDeAcessibilidade.js';
 
 /**
  * Renderiza uma página dentro do layout base.
@@ -25,6 +27,25 @@ export function renderizarPagina(res, pagina, dados = {}) {
     ...conteudo
   } = dados;
 
+  const preferencias = preferenciasDaSessao(res.req);
+  const classesAcessibilidade = [
+    preferencias.animacaoReduzida ? 'a11y-movimento-reduzido' : null,
+    !preferencias.somAtivo ? 'a11y-sem-som' : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  // O token CSRF passa a valer para o script do painel também: quando a
+  // preferência é da conta, o clique precisa avisar o servidor. Quem já passa
+  // `dadosBody` continua mandando no próprio valor.
+  const dadosDoCorpo = {
+    ...(res.locals?.csrfToken ? { 'csrf-token': res.locals.csrfToken } : {}),
+    ...dadosBody,
+  };
+  if (preferencias.logado) {
+    dadosDoCorpo['preferencias-perfil'] = preferencias.chavesGerenciadas.join(' ');
+  }
+
   return res.render('layout', {
     pagina: `pages/${pagina}`,
     // Disponível em toda página: barra de progresso aparece no painel e nas
@@ -33,11 +54,15 @@ export function renderizarPagina(res, pagina, dados = {}) {
     // Também global: a conquista aparece na Colmeia e na tela dela, e o ícone
     // tem um lugar só de troca (DT-103).
     iconeDaConquista,
+    // Os SVGs são montados aqui, e não só em `app.locals`, para que até a tela
+    // de erro — renderizada por um app mínimo nos testes — encontre o helper.
+    svgIcone,
     classeBody,
+    classesAcessibilidade,
     comCabecalho,
     comRodape,
     comAcessibilidade,
-    dadosBody,
+    dadosBody: dadosDoCorpo,
     scripts,
     ...conteudo,
   });

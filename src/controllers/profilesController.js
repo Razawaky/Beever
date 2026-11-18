@@ -1,5 +1,6 @@
 import * as profilesService from '../services/profilesService.js';
 import { assincrono } from '../utils/erros.js';
+import { sincronizarPreferenciasDaSessao } from '../utils/preferenciasDeAcessibilidade.js';
 import { querJson } from '../utils/resposta.js';
 
 export const meu = assincrono(async (req, res) => {
@@ -35,6 +36,12 @@ export const atualizar = assincrono(async (req, res) => {
     somAtivo: booleano(somAtivo),
     animacaoReduzida: booleano(animacaoReduzida),
   });
+
+  // A tela de perfil mexe nas mesmas colunas. Se for a persona ativa, a sessão
+  // precisa acompanhar para a próxima página já servir a classe certa.
+  if (Number(req.params.id) === Number(req.session.perfilId)) {
+    sincronizarPreferenciasDaSessao(req, perfil);
+  }
   res.json(perfil);
 });
 
@@ -73,6 +80,11 @@ export const salvarPassoDoOnboarding = assincrono(async (req, res) => {
     passo: req.body.passo,
     resposta: req.body.resposta,
   });
+
+  if (req.body.passo === 'preferencias') {
+    const perfil = await profilesService.obterDoUsuario(req.session.usuarioId);
+    sincronizarPreferenciasDaSessao(req, perfil);
+  }
   res.json(rascunho);
 });
 
@@ -97,6 +109,10 @@ export const salvarOnboarding = assincrono(async (req, res) => {
     preferencias,
   });
   req.session.onboardingConcluido = true;
+  // Quem veio passo a passo já gravou as preferências; quem mandou tudo de uma
+  // vez acabou de gravar aqui. Os dois caminhos precisam atualizar a sessão.
+  const perfil = await profilesService.obterDoUsuario(req.session.usuarioId);
+  sincronizarPreferenciasDaSessao(req, perfil);
 
   if (querJson(req)) return res.json({ mensagem: 'Onboarding salvo com sucesso', ...resultado });
   res.redirect('/painel');

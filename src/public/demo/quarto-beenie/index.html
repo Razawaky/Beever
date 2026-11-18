@@ -17,42 +17,15 @@
         <p class="demo__resumo">
           Uma introdução em vídeo, um quarto em quatro ângulos e seis atividades. Pegue um item
           por vez e clique no móvel certo para guardar: brinquedos no baú, roupas no armário,
-          travesseiro e coberta na cama, livro na mesa. A porta está sempre aberta: saia quando
-          quiser e receba o mel conforme o que arrumou.
+          travesseiro e coberta na cama, livro na mesa. O item carregado aparece no hexágono escuro
+          no canto superior esquerdo. A porta está sempre aberta: saia quando quiser e receba o mel
+          conforme o que arrumou.
         </p>
       </header>
 
       <section class="demo__palco" aria-label="Protótipo do quarto do Beenie">
-        <div class="demo__hud" role="group" aria-label="Painel do Quarto do Beenie" hidden>
-          <div class="demo__hud-identidade">
-            <p class="demo__hud-titulo">Quarto do Beenie</p>
-            <p class="demo__hud-subtitulo">protótipo · 4 ângulos</p>
-          </div>
-
-          <div class="demo__hud-dados">
-            <p id="hud-parede" class="demo__hud-parede">1/4 · Frente</p>
-            <p class="demo__hud-mel">
-              <img
-                class="demo__hud-moeda"
-                src="/img/mel-moeda-virtual.png"
-                alt=""
-                width="18"
-                height="18"
-              />
-              <span id="hud-mel">0 mel (demo)</span>
-            </p>
-            <p id="hud-tarefas" class="demo__hud-tarefas">Tarefas 0/6</p>
-            <p id="hud-mao" class="demo__hud-mao"></p>
-          </div>
-
-          <div class="demo__hud-progresso" aria-hidden="true">
-            <span class="demo__hud-favo" data-tarefa="bau"></span>
-            <span class="demo__hud-favo" data-tarefa="armario"></span>
-            <span class="demo__hud-favo" data-tarefa="cama"></span>
-            <span class="demo__hud-favo" data-tarefa="quadro"></span>
-            <span class="demo__hud-favo" data-tarefa="mesa"></span>
-            <span class="demo__hud-favo" data-tarefa="janela"></span>
-          </div>
+        <div class="demo__hud" hidden>
+          <p class="demo__hud-titulo">Quarto do Beenie</p>
         </div>
 
         <div class="demo__midia">
@@ -62,7 +35,6 @@
               class="video"
               poster="./poster.png"
               preload="auto"
-              muted
               playsinline
               aria-label="Introdução do Quarto do Beenie"
             >
@@ -77,7 +49,7 @@
               </p>
               <div class="video__acoes">
                 <button id="video-tocar" class="video__botao" type="button" hidden>
-                  Reproduzir introdução
+                  Reproduzir com áudio
                 </button>
                 <button id="video-pular" class="video__botao video__botao--principal" type="button">
                   Pular introdução
@@ -93,7 +65,7 @@
           Carregando o protótipo…
         </p>
         <p id="instrucoes" class="demo__instrucoes">
-          A introdução é um vídeo curto, sem áudio. Depois, use as setas para girar o quarto,
+          A introdução é um vídeo curto, com áudio. Depois, use as setas para girar o quarto,
           pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando
           quiser.
         </p>
@@ -122,12 +94,12 @@
           <li class="fluxo__item">
             <span class="fluxo__numero">2</span>
             <strong>Boot</strong>
-            <span>Carrega o Beenie, as quatro paredes e os itens.</span>
+            <span>Carrega o Beenie, as paredes, os itens e os ícones.</span>
           </li>
           <li class="fluxo__item">
             <span class="fluxo__numero">3</span>
             <strong>Quarto</strong>
-            <span>Quatro paredes, rotação e hotspots clicáveis.</span>
+            <span>Quatro paredes, rotação e hexágono do item na mão.</span>
           </li>
           <li class="fluxo__item">
             <span class="fluxo__numero">4</span>
@@ -143,8 +115,8 @@
 
         <div class="arquitetura__notas">
           <p>
-            <code>dadosDoQuarto.js</code> descreve paredes, imagens e hotspots. A cena não precisa
-            saber o que é uma cama ou um baú para desenhá-los.
+            <code>dadosDoQuarto.js</code> descreve paredes, imagens, ícones e hotspots.
+            A cena não precisa saber o que é uma cama ou um baú para desenhá-los.
           </p>
           <p>
             <code>estadoDoJogo.js</code> guarda parede atual, atividades, itens guardados, o item
@@ -156,9 +128,8 @@
 
       <footer class="demo__rodape">
         Demo local: nenhuma partida é aberta, nenhuma moeda de verdade é creditada e nenhuma rota
-        do jogo real foi alterada. O vídeo é um placeholder gerado com a arte existente do Beenie;
-        troque os arquivos <code>intro.mp4</code> e <code>intro.webm</code> quando houver um vídeo
-        definitivo.
+        do jogo real foi alterada. O vídeo de introdução é local e substituível: basta trocar os
+        arquivos <code>intro.mp4</code> e <code>intro.webm</code>.
       </footer>
 
       <noscript>

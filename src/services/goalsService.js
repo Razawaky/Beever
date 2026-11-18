@@ -29,13 +29,17 @@ const DIAS_DE_PRAZO_APERTADO = 2;
  * Pura, para poder ser testada sem banco.
  */
 export function urgenciaDoPrazo(diasRestantes) {
-  if (diasRestantes === null) return { nivel: 'sem-prazo', icone: '🗓️', frase: 'Sem prazo' };
-  if (diasRestantes <= 0) return { nivel: 'hoje', icone: '⏰', frase: 'Termina hoje' };
+  if (diasRestantes === null) return { nivel: 'sem-prazo', icone: 'calendario', frase: 'Sem prazo' };
+  if (diasRestantes <= 0) return { nivel: 'hoje', icone: 'relogio', frase: 'Termina hoje' };
   if (diasRestantes <= DIAS_DE_PRAZO_APERTADO) {
-    return { nivel: 'apertado', icone: '⏳', frase: `Faltam ${diasRestantes} ${diasRestantes === 1 ? 'dia' : 'dias'}` };
+    return {
+      nivel: 'apertado',
+      icone: 'ampulheta',
+      frase: `Faltam ${diasRestantes} ${diasRestantes === 1 ? 'dia' : 'dias'}`,
+    };
   }
 
-  return { nivel: 'tranquilo', icone: '🗓️', frase: `Faltam ${diasRestantes} dias` };
+  return { nivel: 'tranquilo', icone: 'calendario', frase: `Faltam ${diasRestantes} dias` };
 }
 
 /**

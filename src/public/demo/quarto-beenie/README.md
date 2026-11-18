@@ -11,13 +11,18 @@ do Beever.
 
 ## Fluxo
 
-1. **Vídeo HTML** — `intro.mp4`/`intro.webm` com poster, autoplay silencioso e
-   botão para pular. Em `prefers-reduced-motion`, o vídeo não inicia sozinho.
+1. **Vídeo HTML** — `intro.mp4`/`intro.webm` com poster, áudio e botão para
+   pular. O autoplay com som tenta acontecer sozinho; se o navegador bloquear,
+   o botão “Reproduzir com áudio” faz isso após o clique. Em
+   `prefers-reduced-motion`, o vídeo não inicia sozinho.
 2. **Boot** — o Phaser só é criado depois do vídeo; a cena carrega os retratos do
-   Beenie, a moeda, as quatro paredes e os overlays de itens.
+   Beenie, a moeda, as quatro paredes, os overlays de itens e os ícones de
+   `img/jogo/icones/`.
 3. **Quarto** — quatro paredes, rotação por setas/botões e seis atividades.
-   As paredes são PNGs 600 × 600 que ocupam o palco inteiro. A porta da Frente
-   fica sempre disponível para sair.
+   As paredes são PNGs 600 × 600 que ocupam o palco inteiro. No canto superior
+   esquerdo, um hexágono escuro preso à borda do canvas fica vazio quando a mão
+   está livre e mostra o ícone do item carregado. A porta da Frente fica sempre
+   disponível para sair.
 4. **Atividades** — o jogador carrega **um item por vez**:
    - **Cama (Direita)** — pegue os dois travesseiros (um está na Frente e outro
      na Direita) e a coberta, um de cada vez, e clique na cama após cada item.
@@ -44,13 +49,13 @@ do Beever.
 | `index.html` | Página, camada de vídeo, status acessível e explicação da arquitetura. |
 | `demo.css` | Estilo isolado da demo; não entra no bundle do app. |
 | `main.js` | Handoff vídeo → Phaser, configuração do jogo e botões da página. |
-| `cenas/CenaBoot.js` | Preload dos retratos, moeda, paredes e itens de `IMAGENS_DO_QUARTO`. |
-| `cenas/CenaQuarto.js` | Rotação, HUD, diálogo, hotspots e regras de pegar/guardar. |
+| `cenas/CenaBoot.js` | Preload dos retratos, moeda, paredes, itens e ícones. |
+| `cenas/CenaQuarto.js` | Rotação, diálogo, hotspots, hexágono da mão e regras de pegar/guardar. |
 | `cenas/CenaFim.js` | Resumo das atividades e reinício. |
 | `desenho.js` | Composição das paredes em camadas condicionais (base + itens). |
-| `dadosDoQuarto.js` | Lista de imagens, paredes, visuais, hotspots, recompensas e mensagens. |
+| `dadosDoQuarto.js` | Registros de imagens, ícones, paredes, visuais, hotspots, recompensas e mensagens. |
 | `estadoDoJogo.js` | Estado compartilhado: parede atual, atividades, itens, item na mão e mel fictício. |
-| `interface.js` | Ponte para `#status`, `#instrucoes` e o HUD HTML acima do palco. |
+| `interface.js` | Ponte para `#status` e `#instrucoes`; o cabeçalho acima do palco é só o título. |
 
 As imagens do quarto ficam em `src/public/img/jogo/` e mantêm o prefixo original.
 Depois da inversão dos lados, a arte `D_*` (armário e baú) aparece na parede
@@ -67,6 +72,11 @@ Esquerda, e a arte `E_*` (cama e quadro) aparece na parede Direita.
 - **Esquerda — arte D**: `D_armario_aberto.png`, `D_armario_fechado.png`,
   `D_roupa.png`, `D_bau_aberto.png`, `D_bau_fechado.png`,
   `D_brinquedos.png`, `D_fiapo_bau.png`, `D_fiapo_brinquedos.png`.
+- **Ícones da mão**: `icones/brinquedos_icon.png`, `icones/coberta_icon.png`,
+  `icones/livro_icon.png`, `icones/travesseiro1_icon.png`,
+  `icones/travesseiro2_icon.png`, `icones/F_roupa_icon.png`,
+  `icones/T_roupa_icon.png` e `icones/D_roupa_icon.png`. Quadro e cortina são
+  ações de clique, não itens carregáveis, e não têm ícone.
 
 Os retratos do Beenie ficam em `src/public/img/clicks/` e a moeda em
 `src/public/img/mel-moeda-virtual.png`.
@@ -74,6 +84,12 @@ Os retratos do Beenie ficam em `src/public/img/clicks/` e a moeda em
 ## Decisões
 
 - As imagens têm 600 × 600 e o palco tem 600 × 600. A arte ocupa a tela inteira.
+- O hexágono da mão vive fora das paredes: é um favo escuro com moldura de mel
+  cujo centro fica no canto superior esquerdo. O raio passa das bordas superior
+  e esquerda, então o canvas recorta o desenho e só os lados internos aparecem,
+  como se o favo nascesse da moldura do jogo. O ícone aparece no centro dele só
+  enquanto houver um item carregado; a relação item → ícone está em
+  `ICONES_DOS_ITENS`.
 - `dadosDoQuarto.js` é a fonte da verdade para imagens, posições, camadas e
   textos. A cena não conhece "cama" ou "baú"; ela só interpreta
   `tipo: inspecao | pegar | guardar | tarefa | sair`.
@@ -124,16 +140,20 @@ Para a camada correspondente, adicione um objeto em `visuais` com `id`,
 ### Uma atividade nova
 
 1. Inclua o `id` em `IDS_DAS_TAREFAS` em `estadoDoJogo.js`.
-2. Se a atividade tiver item de cenário, inclua o `id` em `IDS_DOS_ITENS`.
+2. Se a atividade tiver item de cenário, inclua o `id` em `IDS_DOS_ITENS` e o
+   ícone correspondente em `ICONES_DOS_ITENS` em `dadosDoQuarto.js`.
 3. Adicione o hotspot e a camada de conclusão em `dadosDoQuarto.js`.
 4. Escolha entre `tipo: 'tarefa'` (um clique conclui) e `tipo: 'guardar'`
-   (exige um item na mão e pode exigir mais de um).
+   (exige um item na mão e pode exigir mais de um). Atividades de clique puro,
+   como quadro e cortina, não precisam de ícone.
 
 ## Teste manual
 
 1. Abra `/demo/quarto-beenie/`.
 2. Deixe o vídeo terminar ou clique em "Pular introdução".
-3. Gire as quatro paredes com `←`/`→` ou com os botões laterais.
+3. Gire as quatro paredes com `←`/`→` ou com os botões laterais. O hexágono
+   escuro no canto superior esquerdo, preso à borda do canvas, deve começar
+   vazio e continuar no lugar nas quatro paredes.
 4. Na parede Direita, pegue os dois travesseiros (um na Frente e outro na
    Direita) e a coberta, clicando na cama após cada item; clique no quadro para
    endireitar.
@@ -146,8 +166,10 @@ Para a camada correspondente, adicione um objeto em `visuais` com `id`,
 8. Confira os fiapos: o do baú e o da cama permanecem; o dos brinquedos some
    ao pegar os brinquedos e o do travesseiro some ao pegar o travesseiro da
    Direita. Nenhum deles responde ao clique.
-9. Tente pegar um segundo item antes de guardar o primeiro: a demo deve recusar
-   e explicar que só cabe um item por vez.
+9. Ao pegar um item, confira que o ícone dele aparece no hexágono; ao guardar, o
+   hexágono volta a ficar vazio. Tente pegar um segundo item antes de guardar o
+   primeiro: a demo deve recusar, explicar que só cabe um item por vez e manter
+   o ícone do primeiro item.
 10. Clique na porta logo no começo: o resultado deve mostrar "Você saiu do
     quarto", 0 mel e 0/6 atividades.
 11. Use "Jogar de novo", conclua parte das atividades e clique na porta: o
@@ -160,7 +182,7 @@ Para inspecionar o estado no console, abra `?teste=1`. O objeto exposto é
 
 ## Integração futura
 
-- Trocar os placeholders de vídeo mantendo os nomes `intro.mp4` e `intro.webm`.
+- Trocar o vídeo mantendo os nomes `intro.mp4` e `intro.webm` e a faixa de áudio.
 - Substituir a arte PNG mantendo as mesmas dimensões ou atualizando `ARTE` e os
   hotspots em `dadosDoQuarto.js`.
 - Levar a recompensa para o backend e remover o valor local do cliente.

@@ -28,13 +28,13 @@
 
         <dl class="mt-4 grid gap-4 sm:grid-cols-2">
           <%- include('../partials/ui/badge-recurso', {
-            icone: '🏅',
+            icone: 'medalha',
             rotulo: 'Sua posição',
             valor: liga.posicao ?? '—',
             grande: true,
           }) %>
           <%- include('../partials/ui/badge-recurso', {
-            icone: '🌼',
+            icone: 'polen',
             rotulo: 'Seu pólen na semana',
             valor: liga.polen,
             grande: true,
@@ -44,7 +44,7 @@
         <p class="mt-4 rounded-favo bg-cera p-4 text-sm">
           Ninguém desce de liga aqui. Quando a semana fecha, o pólen zera para todo mundo e o pódio ganha mel:
           <% premios.forEach((premio) => { %>
-            <span class="tabular-nums"><%= premio.posicao %>º lugar 🍯 <%= premio.mel %>.</span>
+            <span class="inline-flex items-center gap-1.5 tabular-nums"><%= premio.posicao %>º lugar <%- svgIcone('mel', 'h-4 w-4') %><span><%= premio.mel %>.</span></span>
           <% }) %>
         </p>
       </section>
@@ -64,7 +64,7 @@
                   <%= membro.nickname %><% if (ehVoce) { %> (você)<% } %>
                 </span>
               </span>
-              <span class="shrink-0 tabular-nums">🌼 <%= membro.polen %></span>
+              <span class="inline-flex shrink-0 items-center gap-1.5 tabular-nums"><%- svgIcone('polen', 'h-4 w-4') %><span><%= membro.polen %></span></span>
             </li>
           <% }) %>
         </ol>

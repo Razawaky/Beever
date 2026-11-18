@@ -1,6 +1,6 @@
 # O Quarto do Beenie — como a demo foi feita
 
-**Versão:** protótipo isolado em Phaser · **Atualizado em:** 2026-11-16
+**Versão:** protótipo isolado em Phaser · **Atualizado em:** 2026-11-17
 
 - URL local: `/demo/quarto-beenie/`
 - URL de inspeção: `/demo/quarto-beenie/?teste=1`
@@ -57,14 +57,16 @@ não tem rota própria e não é linkada pelo restante do jogo; ela só existe e
 
 ## 2. O que o jogador vê
 
-1. **Introdução em vídeo** — um vídeo curto, sem áudio, com poster, botão de
+1. **Introdução em vídeo** — um vídeo curto, com áudio, com poster, botão de
    pular e fallback para autoplay bloqueado. Em `prefers-reduced-motion`, o
    vídeo não começa sozinho.
 2. **Boot** — o Phaser só é criado depois do vídeo. A cena de boot carrega os
-   retratos do Beenie, a moeda, as quatro paredes e todos os overlays de itens.
+   retratos do Beenie, a moeda, as quatro paredes, os overlays de itens e os
+   ícones de `img/jogo/icones/`.
 3. **Quarto** — quatro paredes navegáveis: Frente, Direita, Trás e Esquerda.
    Cada parede é um PNG 600 × 600 que ocupa o palco inteiro, com uma dica, um
-   título e hotspots clicáveis.
+   título e hotspots clicáveis. Um hexágono escuro preso ao canto superior
+   esquerdo mostra o ícone do item na mão.
 4. **Atividades** — seis tarefas de pegar e guardar. O baú e o armário começam
    abertos; a cama começa vazia; o quadro, torto; a cortina, fechada; o livro,
    fora da mesa.
@@ -109,16 +111,17 @@ src/public/demo/quarto-beenie/          # o que o navegador baixa
 src/public/js/demo/quarto-beenie/       # lógica da demo
 ├── main.js                             # entrada: vídeo → Phaser
 ├── cenas/
-│   ├── CenaBoot.js                     # retratos, moeda, paredes e itens
-│   ├── CenaQuarto.js                   # rotação, HUD, hotspots e diálogo
+│   ├── CenaBoot.js                     # retratos, moeda, paredes, itens e ícones
+│   ├── CenaQuarto.js                   # rotação, HUD, hotspots e hexágono da mão
 │   ├── CenaFim.js                      # resumo e reinício
 │   └── CenaMinigame.js                 # legado: não é carregada pelo main.js
-├── dadosDoQuarto.js                    # imagens, paredes, camadas, hotspots, textos e recompensas
+├── dadosDoQuarto.js                    # imagens, ícones, paredes, hotspots, textos e recompensas
 ├── desenho.js                          # composição das paredes em camadas
 ├── estadoDoJogo.js                     # estado compartilhado + EventEmitter
 └── interface.js                        # ponte para #status e #instrucoes
 
 src/public/img/jogo/                    # arte do quarto, com prefixo da parede
+src/public/img/jogo/icones/             # ícones do item carregado
 src/public/js/vendor/demo/
 └── phaser.esm.min.js                   # Phaser 3.90 auto-hospedado
 ```
@@ -128,10 +131,10 @@ src/public/js/vendor/demo/
 | [`index.html`](../src/public/demo/quarto-beenie/index.html) | Estrutura da página, camada de vídeo, contêiner do canvas, `#status`, `#instrucoes` e painel que explica a arquitetura. |
 | [`demo.css`](../src/public/demo/quarto-beenie/demo.css) | Estilo da demo. Fica fora do bundle do app e inclui os breakpoints de 760 px e 560 px. |
 | [`main.js`](../src/public/js/demo/quarto-beenie/main.js) | Faz o handoff do vídeo para o Phaser, configura o jogo e liga os botões da página. |
-| [`CenaBoot.js`](../src/public/js/demo/quarto-beenie/cenas/CenaBoot.js) | Preload de `beenie-default`, `beenie-feliz`, `beenie-uou`, `beenie-estrelas`, `moeda` e das imagens de `IMAGENS_DO_QUARTO`. |
-| [`CenaQuarto.js`](../src/public/js/demo/quarto-beenie/cenas/CenaQuarto.js) | Orquestra as paredes, o HUD, os hotspots, o item na mão e o diálogo. Não desenha o cenário sozinha. |
-| [`CenaFim.js`](../src/public/js/demo/quarto-beenie/cenas/CenaFim.js) | Mostra o resumo e reinicia o estado local. |
-| [`dadosDoQuarto.js`](../src/public/js/demo/quarto-beenie/dadosDoQuarto.js) | Fonte da verdade para imagens, paredes, coordenadas, camadas, rótulos, mensagens e moedas. |
+| [`CenaBoot.js`](../src/public/js/demo/quarto-beenie/cenas/CenaBoot.js) | Preload de `beenie-default`, `beenie-feliz`, `beenie-uou`, `beenie-estrelas`, `moeda`, `IMAGENS_DO_QUARTO` e `ICONES_DOS_ITENS`. |
+| [`CenaQuarto.js`](../src/public/js/demo/quarto-beenie/cenas/CenaQuarto.js) | Orquestra as paredes, o HUD, os hotspots, o diálogo e o hexágono do item na mão. Não desenha o cenário sozinha. |
+| [`CenaFim.js`](../src/public/js/demo/quarto-beenie/cenas/CenaFim.js) | Mostra o resumo proporcional e reinicia o estado local. |
+| [`dadosDoQuarto.js`](../src/public/js/demo/quarto-beenie/dadosDoQuarto.js) | Fonte da verdade para imagens, ícones, paredes, coordenadas, camadas, rótulos, mensagens e moedas. |
 | [`desenho.js`](../src/public/js/demo/quarto-beenie/desenho.js) | Compõe a parede PNG 600 × 600 com as camadas condicionais de itens e desenha a moldura. |
 | [`estadoDoJogo.js`](../src/public/js/demo/quarto-beenie/estadoDoJogo.js) | Objeto único com parede atual, atividades, itens guardados, item na mão e mel fictício. |
 | [`interface.js`](../src/public/js/demo/quarto-beenie/interface.js) | Publica mensagens acessíveis na página e detecta `prefers-reduced-motion`. |
@@ -166,6 +169,12 @@ e a arte `E_*` (cama e quadro) aparece na parede Direita.
   `D_armario_fechado.png`, `D_roupa.png`, `D_bau_aberto.png`,
   `D_bau_fechado.png`, `D_brinquedos.png`, `D_fiapo_bau.png`,
   `D_fiapo_brinquedos.png`.
+- **Ícones da mão:** `icones/brinquedos_icon.png`, `icones/coberta_icon.png`,
+  `icones/livro_icon.png`, `icones/travesseiro1_icon.png`,
+  `icones/travesseiro2_icon.png`, `icones/F_roupa_icon.png`,
+  `icones/T_roupa_icon.png` e `icones/D_roupa_icon.png`. O registro
+  `ICONES_DOS_ITENS` associa cada ícone a um `IDS_DOS_ITENS`. Quadro e cortina
+  são atividades de clique, não itens carregáveis, e não têm ícone.
 
 As roupas estão espalhadas por três paredes: `F_roupa.png` na Frente,
 `T_roupa.png` em Trás e `D_roupa.png` na Esquerda. Os travesseiros são dois:
@@ -207,6 +216,12 @@ A separação principal é:
 O vídeo é HTML de propósito. Fora do canvas, autoplay, poster, botão de pular e
 `prefers-reduced-motion` ficam previsíveis. O canvas só é criado quando o vídeo
 termina ou é pulado.
+
+O elemento `<video>` não usa `muted`: os arquivos `intro.mp4`/`intro.webm`
+têm faixa de áudio. `main.js` tenta o autoplay com som e, se o navegador
+bloquear, mostra “Reproduzir com áudio”; o clique do usuário autoriza a mesma
+chamada `play()`. Sem isso, o autoplay silencioso do início do protótipo
+descartava o áudio do vídeo definitivo.
 
 `main.js` remove a camada de vídeo, espera a animação de saída e então cria o
 jogo:
@@ -386,10 +401,10 @@ this.events.once('shutdown', () => {
 });
 ```
 
-O HUD reage a `mudou` sem a cena precisar chamar `atualizarHud()` em cada
-caminho. Quando a última atividade termina, `completo` apenas troca o diálogo
-para avisar que tudo está pronto e que a porta está disponível. A ida para
-`CenaFim` acontece somente quando o jogador clica na porta.
+A cena reage a `mudou` para atualizar só o ícone do item na mão. Quando a última
+atividade termina, `completo` apenas troca o diálogo para avisar que tudo está
+pronto e que a porta está disponível. A ida para `CenaFim` acontece somente
+quando o jogador clica na porta.
 
 **Limite importante:** `estado` é local e o cliente é a autoridade. Em uma
 integração real, o servidor deve calcular e creditar a recompensa; o cliente não
@@ -416,15 +431,26 @@ antes do módulo garante que `-1` continue no intervalo 0–3.
 hotspots, anima a entrada e destrói o container anterior. A troca pode ser
 imediata (`imediato = true`) para o create e os testes.
 
-O HUD fica em HTML, acima do palco, para o PNG 600 × 600 não ser coberto pelo
-título. Ele mostra:
+O cabeçalho fica em HTML, acima do palco, para o PNG 600 × 600 não ser coberto.
+Ele contém apenas o título **Quarto do Beenie**, centralizado: sem direção, sem
+contador de tarefas, sem mel e sem favos de progresso. O diálogo do Beenie fica
+na parte de baixo do canvas, e o item carregado aparece somente no hexágono
+dentro do canvas.
 
-- parede atual e nome (`2/4 · Direita`);
-- mel fictício;
-- `Tarefas x/6`;
-- seis favos estáticos de progresso, sem animação;
-- `Na mão: …` quando há um item carregado;
-- o diálogo do Beenie na parte de baixo do canvas.
+Além do HUD HTML, `CenaQuarto` desenha um elemento persistente no canvas: o
+hexágono da mão com `depth = 60`, acima das paredes (`depth = 10`) e abaixo do
+painel de diálogo (`depth = 100`). O centro fica em `(42, 42)` e o raio `76`
+ultrapassa as bordas superior e esquerda. O canvas recorta o favo, deixando
+visíveis principalmente os lados internos, como se ele nascesse da moldura do
+jogo. O ícone do item carregado fica no centro do hexágono. Ele fica vazio
+quando `estado.carregando` é `null` e recebe o ícone de `ICONES_DOS_ITENS`
+quando um item é pego. Como o elemento não pertence ao container da parede,
+sobrevive à rotação; como não é interativo, não bloqueia os hotspots.
+
+As setas laterais são chevrons desenhados como vetor, com os pontos simétricos
+em torno de `(0, 0)`, dentro do círculo de 48 px. O glifo da fonte foi
+abandonado porque suas larguras laterais diferentes deslocavam a ponta mesmo
+com `setOrigin(0.5)`.
 
 O `#status` publica uma mensagem equivalente à do diálogo em `role="status"`
 com `aria-live="polite"`, para leitores de tela e para quem está jogando no
@@ -436,7 +462,8 @@ aparecem só no hover.
 ## 9. Fluxo de uma atividade
 
 1. O jogador clica em um hotspot `pegar`. A cena chama `estado.pegar(item)`.
-2. Se a mão está livre, o item some do cenário e aparece em `Na mão: …`.
+2. Se a mão está livre, o item some do cenário e seu ícone aparece no hexágono
+   do canto superior esquerdo.
 3. O jogador navega até o móvel e clica no hotspot `guardar`.
 4. A cena chama `estado.guardarEm(aceita)`.
 5. Se o item é aceito, ele é marcado como colocado. Se todos os requisitos de
@@ -455,7 +482,9 @@ aparecem só no hover.
 
 1. Abra `/demo/quarto-beenie/`.
 2. Deixe o vídeo terminar ou clique em “Pular introdução”.
-3. Gire as quatro paredes com `←`/`→` ou com os botões laterais.
+3. Gire as quatro paredes com `←`/`→` ou com os botões laterais. O hexágono
+   escuro preso ao canto superior esquerdo deve começar vazio e continuar no
+   lugar nas quatro paredes.
 4. Na parede Direita, pegue os dois travesseiros (um na Frente e outro na
    Direita) e a coberta, clicando na cama após cada item; clique no quadro para
    endireitar.
@@ -468,8 +497,10 @@ aparecem só no hover.
 8. Confira os fiapos: o do baú e o da cama permanecem; o dos brinquedos some ao
    pegar os brinquedos e o do travesseiro some ao pegar o travesseiro da
    Direita. Nenhum deles responde ao clique.
-9. Tente pegar um segundo item antes de guardar o primeiro: a demo deve recusar
-   e explicar que só cabe um item por vez.
+9. Ao pegar um item, confira que o ícone dele aparece no hexágono; ao guardar, o
+   hexágono volta a ficar vazio. Tente pegar um segundo item antes de guardar o
+   primeiro: a demo deve recusar, explicar que só cabe um item por vez e manter
+   o ícone do primeiro item.
 10. Clique na porta logo no começo: o resultado deve mostrar “Você saiu do
     quarto”, 0 mel e 0/6 atividades.
 11. Use “Jogar de novo”, conclua parte das atividades e clique na porta: o
@@ -485,6 +516,10 @@ Para inspecionar o estado no console, abra `?teste=1`. O objeto exposto é
 ## 11. Decisões e limites
 
 - As imagens têm 600 × 600 e o palco tem 600 × 600. A arte ocupa a tela inteira.
+- O hexágono do item na mão vive fora das paredes e é recortado pelas bordas do
+  canvas, com o ícone no centro. A relação item → ícone fica em
+  `ICONES_DOS_ITENS`; quadro e cortina não têm ícone porque são ações de clique,
+  não itens carregáveis.
 - O cenário é composto por camadas declarativas, não por uma lista de sprites
   mantida à mão. Camadas `decorativo` (fiapos) são desenho puro, sem estado e sem
   hotspot; ficam por cima do objeto correspondente e as condicionais somem com o

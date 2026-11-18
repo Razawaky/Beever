@@ -45,16 +45,16 @@
     <%# Recurso: Mel %>
     <div class="flex flex-col gap-4">
       <%- include('badge-recurso', {
-        icone: '🍯',
+        icone: 'mel',
         rotulo: 'Seu mel',
         valor: jogador.mel,
         grande: true,
-        detalhe: `🌼 ${jogador.polen} de pólen`,
+        detalhe: { icone: 'polen', texto: `${jogador.polen} de pólen` },
       }) %>
 
       <%# Recurso: Patrimônio %>
       <%- include('badge-recurso', {
-        iconeArquivo: '/img/svg/home.svg',
+        icone: 'patrimonio',
         rotulo: 'Seu patrimônio',
         valor: jogador.patrimonio.total,
         grande: true,
@@ -82,7 +82,7 @@
         <% if (ativo === 'inventario') { %>aria-current="page"<% } %>
         class="flex items-center gap-3 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
-        <span>🎒</span>
+        <%- svgIcone('mochila', 'h-6 w-6 shrink-0') %>
         <span>Meus itens</span>
       </a>
       <a
@@ -90,7 +90,7 @@
         <% if (ativo === 'cofre') { %>aria-current="page"<% } %>
         class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
-        <span>🏦</span>
+        <%- svgIcone('cofre', 'h-6 w-6 shrink-0') %>
         <span>Meu cofre</span>
       </a>
       <a
@@ -98,7 +98,7 @@
         <% if (ativo === 'conquistas') { %>aria-current="page"<% } %>
         class="flex items-center gap-2 rounded-favo px-4 py-3 font-semibold text-tinta transition hover:bg-white/50 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
-        <span>🏆</span>
+        <%- svgIcone('trofeu', 'h-6 w-6 shrink-0') %>
         <span>Minhas conquistas</span>
       </a>
       <% if (mostrarAtalhoAdmin) { %>

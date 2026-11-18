@@ -4,6 +4,8 @@ import * as profilesService from '../services/profilesService.js';
 import * as usersService from '../services/usersService.js';
 import { ErroAplicacao, assincrono } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
+import { querJson } from '../utils/resposta.js';
+import { sincronizarPreferenciasDaSessao } from '../utils/preferenciasDeAcessibilidade.js';
 import { encerrarSessao } from '../utils/sessaoLogin.js';
 
 /**
@@ -63,6 +65,38 @@ function montarPagina(req, res, dados, { status = 200, alterado = null, erro = n
 export const mostrar = assincrono(async (req, res) => {
   const dados = await carregarDados(req);
   return montarPagina(req, res, dados, { alterado: req.query.alterado ?? null });
+});
+
+/** Caixa marcada chega como `"on"` no formulário e como `true` no JSON. */
+function booleano(valor) {
+  if (valor === undefined) return undefined;
+  return valor !== false && valor !== 'false' && valor !== 'off' && valor !== '0' && valor !== 0;
+}
+
+/**
+ * Interruptores de som e animação da conta ativa.
+ *
+ * A preferência sai do `localStorage` e passa a morar no perfil da persona: o
+ * mesmo jogador a leva para outro aparelho, e trocar de perfil troca a escolha
+ * junto. A sessão é atualizada na hora para que o `<body>` da próxima página já
+ * venha com a classe certa.
+ */
+export const alterarPreferencias = assincrono(async (req, res) => {
+  const { animacao_reduzida: animacaoReduzida, som_ativo: somAtivo } = req.body;
+
+  const perfil = await profilesService.atualizar(Number(req.session.perfilId), req.session.usuarioId, {
+    animacaoReduzida: booleano(animacaoReduzida),
+    somAtivo: booleano(somAtivo),
+  });
+  sincronizarPreferenciasDaSessao(req, perfil);
+
+  if (querJson(req)) {
+    return res.json({
+      animacaoReduzida: Boolean(perfil.has_reduced_motion),
+      somAtivo: Boolean(perfil.is_sound_enabled),
+    });
+  }
+  return res.redirect('/painel/configuracoes?alterado=preferencias');
 });
 
 async function responderComErro(req, res, erro) {

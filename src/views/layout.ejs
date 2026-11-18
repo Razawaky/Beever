@@ -16,7 +16,7 @@
   <head>
     <%- include('partials/head') %>
   </head>
-  <body class="<%= classeBody %>"<% Object.entries(dadosBody).forEach(([chave, valor]) => { %> data-<%= chave %>="<%= valor %>"<% }) %>>
+  <body class="<%= [classeBody, classesAcessibilidade].filter(Boolean).join(' ') %>"<% Object.entries(dadosBody).forEach(([chave, valor]) => { %> data-<%= chave %>="<%= valor %>"<% }) %>>
     <% if (comCabecalho) { %><%- include('partials/header') %><% } %>
 
     <%- include(pagina) %>

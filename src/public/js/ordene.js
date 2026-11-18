@@ -4,6 +4,7 @@
 // subir e descer. Quem confere é o servidor, que conta os pares fora de ordem
 // (RN-007) — daqui sai só a lista de ids na ordem escolhida.
 import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
+import { elementoIcone } from './icones.js';
 
 const enunciado = document.getElementById('ordene-enunciado');
 const lista = document.getElementById('ordene-itens');
@@ -39,7 +40,7 @@ function criarSeta(posicao, direcao) {
   const paraCima = direcao === 'subir';
 
   botao.type = 'button';
-  botao.textContent = paraCima ? '↑' : '↓';
+  botao.append(elementoIcone(paraCima ? 'setaAcima' : 'setaAbaixo', 'h-5 w-5'));
   botao.className = CLASSES_DA_SETA;
   botao.dataset[direcao] = String(posicao);
   botao.setAttribute('aria-label', `${paraCima ? 'Subir' : 'Descer'} ${itens[posicao].texto}`);

@@ -8,18 +8,19 @@
 -%>
 <%
   const dias = sequencia.diasAtuais;
-  const frase = `🔥 ${dias} ${dias === 1 ? 'dia seguido' : 'dias seguidos'}`;
+  const frase = `${dias} ${dias === 1 ? 'dia seguido' : 'dias seguidos'}`;
   const foco =
     'rounded-favo px-2 py-1 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2';
 %>
+<% const sequenciaComIcone = `<span class="inline-flex items-center gap-1.5">${svgIcone('fogo', 'h-4 w-4')}${frase}</span>`; %>
 <% if (locals.href) { %>
   <a href="<%= href %>" class="<%= foco %>">
-    <p class="text-sm font-semibold tabular-nums text-tinta"><%= frase %></p>
+    <p class="text-sm font-semibold tabular-nums text-tinta"><%- sequenciaComIcone %></p>
     <div class="mt-2"><%- include('calendario-semana', { semana: sequencia, compacto: true }) %></div>
   </a>
 <% } else { %>
   <div class="px-2 py-1">
-    <p class="text-sm font-semibold tabular-nums text-tinta"><%= frase %></p>
+    <p class="text-sm font-semibold tabular-nums text-tinta"><%- sequenciaComIcone %></p>
     <div class="mt-2"><%- include('calendario-semana', { semana: sequencia, compacto: true }) %></div>
   </div>
 <% } %>

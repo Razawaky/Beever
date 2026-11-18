@@ -122,7 +122,7 @@ describe('telas da economia', opcoes, () => {
 
   it('o item que o jogador não pode comprar mostra o que falta, sem botão de compra', async () => {
     const html = await pagina('/loja');
-    const cardBloqueado = html.split('<article').find((pedaco) => pedaco.includes('🔒'));
+    const cardBloqueado = html.split('<article').find((pedaco) => pedaco.includes('data-icone="cadeado"'));
 
     assert.ok(cardBloqueado, 'algum item do catálogo exige nível ou item anterior');
     assert.match(cardBloqueado, /Ainda não/);
@@ -191,7 +191,7 @@ describe('telas da economia', opcoes, () => {
       .expect('Location', '/cofre');
 
     const depois = await pagina('/cofre');
-    assert.match(depois, /Guardado no cofre[\s\S]*?🍯 300/);
+    assert.match(depois, /Guardado no cofre[\s\S]*?data-icone="mel"[\s\S]*?<span>300<\/span>/);
     assert.match(depois, /Depósito/, 'o extrato mostra o movimento');
   });
 

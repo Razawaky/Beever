@@ -18,14 +18,21 @@ ON DUPLICATE KEY UPDATE
   is_economy_enabled = novo.is_economy_enabled, is_upkeep_enabled = novo.is_upkeep_enabled,
   is_depreciation_enabled = novo.is_depreciation_enabled;
 
--- Avatares do mascote, a partir das imagens que já existem em src/public/img.
+-- Avatares do mascote: dez imagens que já existem em src/public/img. O perfil
+-- oferece exatamente este catálogo — não há upload nem arquivo de usuário.
 INSERT INTO avatars (slug, name, image_path) VALUES
-  ('beenie-classico',   'Beenie',            '/img/beenie_howdy.png'),
-  ('beenie-explorador', 'Beenie explorador', '/img/beenie_vem.png'),
-  ('beenie-dourado',    'Beenie dourado',    '/img/beenie_1real.png'),
-  ('babybee',           'Abelhinha',         '/img/babybee.png')
+  ('beenie-classico',   'Beenie acenando',      '/img/beenie_howdy.webp'),
+  ('beenie-explorador', 'Beenie a caminho',     '/img/beenie_vem.webp'),
+  ('beenie-dourado',    'Beenie da moeda',      '/img/beenie_1real.webp'),
+  ('babybee',           'Abelhinha',            '/img/babybee.webp'),
+  ('beenie-sentada',    'Beenie convidando',    '/img/beenie_sentado_sexy.webp'),
+  ('beenie-ensinando',  'Beenie ensinando',     '/img/beenie_ensinando.webp'),
+  ('beenie-show',       'Beenie apresentando',  '/img/beenie_show.webp'),
+  ('beenie-coolpose',   'Beenie estilosa',      '/img/beenie_coolpose.webp'),
+  ('beenie-musica',     'Beenie com música',    '/img/beenie_music.webp'),
+  ('beenie-tempo',      'Beenie do tempo',      '/img/beenie_time.webp')
 AS novo
-ON DUPLICATE KEY UPDATE name = novo.name, image_path = novo.image_path;
+ON DUPLICATE KEY UPDATE name = novo.name, image_path = novo.image_path, is_active = 1;
 
 -- RN-011: o objetivo escolhido no último passo do onboarding.
 INSERT INTO initial_goals (slug, label) VALUES

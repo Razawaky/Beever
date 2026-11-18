@@ -1,9 +1,10 @@
 /* Ajustes de acessibilidade que a pessoa liga por conta própria.
 
    O modo normal é o padrão e não muda nada: cor, imagem, animação, navegação e
-   tamanho de texto continuam exatamente como foram desenhados. Tudo aqui só
-   vale quando a classe correspondente está no `<html>`, e quem a coloca é o
-   `acessibilidade.js`, a partir da escolha guardada no navegador.
+   tamanho de texto continuam exatamente como foram desenhados. Os ajustes do
+   painel flutuante entram no `<html>` pelo `acessibilidade.js`, a partir da
+   escolha guardada no navegador. Som e animação reduzida são da conta logada:
+   o servidor coloca as classes no `<body>` ao renderizar cada página.
 
    As quatro frentes atendem públicos diferentes: movimento para TDAH e autismo,
    contraste para baixa visão, texto maior para leitura, e menos distração para
@@ -14,7 +15,10 @@
    --------------------------------------------------------------------------- */
 :root.a11y-movimento-reduzido *,
 :root.a11y-movimento-reduzido *::before,
-:root.a11y-movimento-reduzido *::after {
+:root.a11y-movimento-reduzido *::after,
+body.a11y-movimento-reduzido *,
+body.a11y-movimento-reduzido *::before,
+body.a11y-movimento-reduzido *::after {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
@@ -22,7 +26,8 @@
 }
 
 /* As camadas de parallax param onde estão, em vez de pularem para o topo. */
-:root.a11y-movimento-reduzido .camada-de-favos {
+:root.a11y-movimento-reduzido .camada-de-favos,
+body.a11y-movimento-reduzido .camada-de-favos {
   animation: none !important;
 }
 

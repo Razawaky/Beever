@@ -109,16 +109,22 @@ function exigirDoCatalogo(opcoes, valor, mensagem) {
  * de propósito: elas não são catálogo, são a curva de XP, e quem as valida é a
  * rota de conclusão junto do `levelsService`.
  */
+/**
+ * O mesmo catálogo do onboarding, reaproveitado pela tela de perfil. Quem troca
+ * de imagem e quem conferiu o slug no cadastro veem a mesma lista do banco.
+ */
+export async function listarAvatares() {
+  const avatares = await profilesRepository.listarAvatares();
+  return avatares.map((avatar) => ({ valor: avatar.slug, rotulo: avatar.name, imagem: avatar.image_path }));
+}
+
 export async function obterCatalogoDoOnboarding() {
-  const [avatares, objetivos] = await Promise.all([
-    profilesRepository.listarAvatares(),
-    profilesRepository.listarObjetivosIniciais(),
-  ]);
+  const [avatares, objetivos] = await Promise.all([listarAvatares(), profilesRepository.listarObjetivosIniciais()]);
 
   return {
     tempo: MINUTOS_POR_SESSAO.map((minutos) => ({ valor: String(minutos), rotulo: `${minutos} minutos` })),
     objetivo: objetivos.map((objetivo) => ({ valor: objetivo.slug, rotulo: objetivo.label })),
-    avatar: avatares.map((avatar) => ({ valor: avatar.slug, rotulo: avatar.name, imagem: avatar.image_path })),
+    avatar: avatares,
     preferencias: PREFERENCIAS,
   };
 }

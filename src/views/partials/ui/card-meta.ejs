@@ -21,8 +21,8 @@
     </div>
 
     <%# Ícone e palavra juntos: cor sozinha não anuncia urgência (RNF-25). %>
-    <p class="text-sm font-semibold tabular-nums <%= meta.urgencia.nivel === 'hoje' ? 'text-erro-texto' : 'text-tinta' %>">
-      <%= meta.urgencia.icone %> <%= meta.urgencia.frase %>
+    <p class="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= meta.urgencia.nivel === 'hoje' ? 'text-erro-texto' : 'text-tinta' %>">
+      <%- svgIcone(meta.urgencia.icone, 'h-4 w-4') %> <%= meta.urgencia.frase %>
     </p>
   </div>
 
@@ -34,8 +34,8 @@
     }) %>
   </div>
 
-  <%# Recompensa zerada não é escrita: "e 🌼 0 de pólen" só ocupa espaço. %>
+  <%# Recompensa zerada não é escrita: "e 0 de pólen" só ocupa espaço. %>
   <p class="mt-3 text-sm tabular-nums">
-    Rende 🍯 <%= meta.melDaRecompensa %> de mel<% if (meta.polenDaRecompensa > 0) { %> e 🌼 <%= meta.polenDaRecompensa %> de pólen<% } %>
+    Rende <%- svgIcone('mel', 'h-4 w-4') %> <%= meta.melDaRecompensa %> de mel<% if (meta.polenDaRecompensa > 0) { %> e <%- svgIcone('polen', 'h-4 w-4') %> <%= meta.polenDaRecompensa %> de pólen<% } %>
   </p>
 </article>

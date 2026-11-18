@@ -91,10 +91,10 @@ describe('cabeçalho da Colmeia', opcoes, () => {
 
   it('mostra os quatro números do topo com ícone e palavra', async () => {
     assert.match(html, /Nível 1/, 'o nível (RF-HOM-01)');
-    assert.match(html, /Seu mel[\s\S]*?🍯 700/, 'o saldo de mel (RF-HOM-02)');
-    assert.match(html, /Seu patrimônio[\s\S]*?🏠 700/, 'o patrimônio (RF-HOM-02)');
-    assert.match(html, /🔥 0 dias seguidos/, 'a sequência (RF-HOM-03)');
-    assert.match(html, /🌼 0 de pólen/);
+    assert.match(html, /Seu mel[\s\S]*?data-icone="mel"[\s\S]*?<span>700<\/span>/, 'o saldo de mel (RF-HOM-02)');
+    assert.match(html, /Seu patrimônio[\s\S]*?data-icone="patrimonio"[\s\S]*?<span>700<\/span>/, 'o patrimônio (RF-HOM-02)');
+    assert.match(html, /data-icone="fogo"[\s\S]*?0 dias seguidos/, 'a sequência (RF-HOM-03)');
+    assert.match(html, /data-icone="polen"[\s\S]*?<span>0 de pólen<\/span>/);
   });
 
   it('a Colmeia tem título de página, como todas as outras telas', async () => {

@@ -2,6 +2,8 @@
 //
 // Nada é calculado aqui: estrelas, XP, pólen, mel, subida de nível e a próxima
 // célula chegam prontos do servidor (RN-007). Este arquivo só apresenta.
+import { elementoIcone } from './icones.js';
+
 const secao = document.getElementById('jogo-resultado');
 const mascote = document.getElementById('jogo-mascote');
 const titulo = document.getElementById('jogo-resultado-titulo');
@@ -85,16 +87,29 @@ function mostrarGanhos(dados) {
 function mostrarConquistas(conquistas = []) {
   if (conquistas.length === 0) return;
 
-  tituloDasConquistas.textContent =
-    conquistas.length === 1 ? '🎉 Conquista desbloqueada!' : `🎉 ${conquistas.length} conquistas desbloqueadas!`;
+  tituloDasConquistas.replaceChildren(
+    elementoIcone('comemoracao', 'h-5 w-5'),
+    document.createTextNode(
+      conquistas.length === 1
+        ? ' Conquista desbloqueada!'
+        : ` ${conquistas.length} conquistas desbloqueadas!`,
+    ),
+  );
 
   listaDeConquistas.replaceChildren();
   for (const conquista of conquistas) {
     const item = document.createElement('li');
     const nome = document.createElement('strong');
+    const bonus = document.createElement('span');
 
     nome.textContent = conquista.nome;
-    item.append(nome, ` — 🍯 ${conquista.melCreditado} de bônus`);
+    bonus.className = 'inline-flex items-center gap-1.5';
+    bonus.append(
+      document.createTextNode(' — '),
+      elementoIcone('mel', 'h-4 w-4'),
+      document.createTextNode(` ${conquista.melCreditado} de bônus`),
+    );
+    item.append(nome, bonus);
     listaDeConquistas.append(item);
   }
 

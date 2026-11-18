@@ -1,17 +1,18 @@
 <%#
   Configurações da Colmeia: preferências de jogo e conta.
 
-  As preferências de som e animação são escolhas do navegador, como as do
-  painel de acessibilidade: ficam guardadas localmente e valem em todas as
-  telas. O modo escuro segue listado, mas está desativado e não altera a tela.
-  Já e-mail, senha, saída e exclusão são ações da conta e passam pelo servidor,
-  com CSRF em cada formulário.
+  As preferências de som e animação pertencem à persona logada: moram no perfil
+  e voltam em qualquer aparelho em que ela entre. O painel flutuante continua
+  cuidando dos ajustes do aparelho (contraste, texto e distração). O modo escuro
+  segue listado, mas está desativado. E-mail, senha, saída e exclusão passam pelo
+  servidor, com CSRF em cada formulário.
 
   A troca de perfil saiu da lateral, mas continua aqui: a seleção é uma tela
   própria, e a conta precisa de um caminho de volta até ela.
 -%>
 <%
   const MENSAGENS_DE_SUCESSO = {
+    preferencias: 'Preferências de jogo atualizadas para este perfil.',
     email: 'E-mail da conta atualizado.',
     senha: 'Senha alterada. Use a senha nova na próxima entrada.',
   };
@@ -23,7 +24,7 @@
     <h2 class="font-display text-2xl text-tinta sm:text-3xl">Configurações</h2>
     <p class="mt-2 text-sm text-tinta-suave">
       Ajuste como o jogo aparece e cuide dos dados da sua conta. As preferências de jogo valem para
-      este navegador; e-mail e senha valem para todos os aparelhos.
+      o perfil em uso; e-mail e senha valem para a conta em todos os aparelhos.
     </p>
   </header>
 
@@ -53,10 +54,10 @@
         <button
           type="button"
           data-ajuste="silenciar"
-          aria-pressed="false"
+          aria-pressed="<%= perfil.is_sound_enabled ? 'false' : 'true' %>"
           class="flex min-h-14 w-full items-start gap-3 rounded-favo border border-linha bg-cera px-4 py-3 text-left text-tinta transition hover:bg-white focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 aria-pressed:border-mel aria-pressed:bg-mel/10"
         >
-          <span class="acessibilidade-marca mt-0.5 text-lg" aria-hidden="true">☐</span>
+          <span class="acessibilidade-marca mt-0.5" aria-hidden="true"><%- svgIcone(perfil.is_sound_enabled ? 'desmarcado' : 'marcado', 'h-5 w-5') %></span>
           <span>
             <span class="block font-semibold">Desligar sons</span>
             <span class="block text-sm text-tinta-suave">Deixa os efeitos sonoros do jogo em silêncio.</span>
@@ -68,10 +69,10 @@
         <button
           type="button"
           data-ajuste="movimento"
-          aria-pressed="false"
+          aria-pressed="<%= perfil.has_reduced_motion ? 'true' : 'false' %>"
           class="flex min-h-14 w-full items-start gap-3 rounded-favo border border-linha bg-cera px-4 py-3 text-left text-tinta transition hover:bg-white focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 aria-pressed:border-mel aria-pressed:bg-mel/10"
         >
-          <span class="acessibilidade-marca mt-0.5 text-lg" aria-hidden="true">☐</span>
+          <span class="acessibilidade-marca mt-0.5" aria-hidden="true"><%- svgIcone(perfil.has_reduced_motion ? 'marcado' : 'desmarcado', 'h-5 w-5') %></span>
           <span>
             <span class="block font-semibold">Reduzir animações</span>
             <span class="block text-sm text-tinta-suave">Para os movimentos, as transições e a rolagem suave.</span>
@@ -86,7 +87,7 @@
           aria-disabled="true"
           class="flex min-h-14 w-full cursor-not-allowed items-start gap-3 rounded-favo border border-linha bg-cera px-4 py-3 text-left text-tinta opacity-60"
         >
-          <span class="acessibilidade-marca mt-0.5 text-lg" aria-hidden="true">☐</span>
+          <span class="acessibilidade-marca mt-0.5" aria-hidden="true"><%- svgIcone('desmarcado', 'h-5 w-5') %></span>
           <span>
             <span class="block font-semibold">Modo escuro</span>
             <span class="block text-sm text-tinta-suave">Opção indisponível no momento.</span>
@@ -100,7 +101,7 @@
       role="status"
       aria-live="polite"
     >
-      Suas escolhas ficam guardadas neste navegador.
+      Som e animação ficam guardados neste perfil; os outros ajustes ficam neste navegador.
     </p>
   </section>
 

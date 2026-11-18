@@ -119,8 +119,11 @@ describe('seções dentro do painel', opcoes, () => {
     const html = semComentariosDeHtml(painelLoja.text);
 
     assert.doesNotMatch(html, /href="\/inventario"/, 'o atalho solto saiu da loja');
+    // O ícone é um SVG com markup próprio; tirá-lo antes de procurar o texto
+    // mantém a asserção curta sem depender do tamanho do desenho.
+    const semIcones = html.replace(/<svg[\s\S]*?<\/svg>/g, '');
     assert.match(
-      html,
+      semIcones,
       /href="\/painel\/inventario"[^>]*>[\s\S]{0,120}Meus itens/,
       'o inventário precisa aparecer como opção da lateral',
     );
@@ -201,7 +204,9 @@ describe('seções dentro do painel', opcoes, () => {
     assert.ok(link, 'a trilha do painel precisa apontar para os favos dentro do painel');
 
     const favo = await agente.get(`/painel/trilha/${link[1]}`).set('Accept', 'text/html').expect(200);
-    const html = semComentariosDeHtml(favo.text);
+    // O ícone da lateral é SVG; tirá-lo deixa a distância entre o link e o
+    // texto curta o suficiente para a asserção continuar legível.
+    const html = semComentariosDeHtml(favo.text).replace(/<svg[\s\S]*?<\/svg>/g, '');
 
     assert.match(html, /<main id="conteudo-main"/, 'o favo precisa entrar na main existente');
     assert.equal((html.match(/<aside class="[^"]*\bw-72\b[^"]*"/g) ?? []).length, 2);

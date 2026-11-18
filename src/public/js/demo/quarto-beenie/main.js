@@ -107,14 +107,24 @@ function liberarVideo() {
     iniciarJogo();
     return;
   }
+  if (iniciando) return;
+
+  // O vídeo definitivo tem áudio. Sem o `muted`, o autoplay pode ser bloqueado;
+  // nesse caso o botão "Reproduzir com áudio" faz a mesma chamada após o clique.
+  video.muted = false;
+  video.volume = 1;
 
   video.play().then(
     () => {
+      if (iniciando) return;
       if (botaoTocar) botaoTocar.hidden = true;
     },
     () => {
+      if (iniciando) return;
       if (botaoTocar) botaoTocar.hidden = false;
-      anunciar('O navegador bloqueou o autoplay. Reproduza ou pule a introdução.');
+      anunciar(
+        'O navegador bloqueou o autoplay com áudio. Use “Reproduzir com áudio” ou pule a introdução.',
+      );
     },
   );
 }
@@ -158,7 +168,7 @@ botaoRever?.addEventListener('click', () => {
   window.location.reload();
 });
 
-anunciar('Introdução do Quarto do Beenie. O vídeo tem 6 segundos e pode ser pulado.');
+anunciar('Introdução do Quarto do Beenie. O vídeo tem áudio, dura 6 segundos e pode ser pulado.');
 definirInstrucoes(
-  'A introdução é um vídeo curto, sem áudio. Depois, use as setas para girar o quarto, pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando quiser.',
+  'A introdução é um vídeo curto, com áudio. Depois, use as setas para girar o quarto, pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando quiser.',
 );

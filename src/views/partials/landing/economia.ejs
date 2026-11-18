@@ -22,17 +22,17 @@
       <%
         const COMPORTAMENTOS = [
           {
-            icone: '🚗',
+            icone: 'carro',
             titulo: 'Perde valor',
             exemplo: 'O carro vale menos a cada semana. Comprar cedo demais custa caro.',
           },
           {
-            icone: '🏠',
+            icone: 'patrimonio',
             titulo: 'Ganha valor',
             exemplo: 'A casa valoriza. Esperar para comprar ela é uma decisão, não uma punição.',
           },
           {
-            icone: '🏪',
+            icone: 'loja',
             titulo: 'Dá renda',
             exemplo: 'O negócio paga toda semana — e cobra manutenção, como na vida.',
           },
@@ -41,7 +41,7 @@
       <% COMPORTAMENTOS.forEach((comportamento) => { %>
         <article class="revela rounded-favo border border-white/10 bg-white/5 p-6">
           <%# Ícone e palavra juntos: cor sozinha não informa (RNF-25). -%>
-          <p class="text-3xl" aria-hidden="true"><%= comportamento.icone %></p>
+          <%- svgIcone(comportamento.icone, 'h-9 w-9 text-mel') %>
           <h3 class="mt-3 font-display text-xl text-mel"><%= comportamento.titulo %></h3>
           <p class="mt-2 text-cera/70"><%= comportamento.exemplo %></p>
         </article>

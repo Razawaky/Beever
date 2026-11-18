@@ -3,6 +3,9 @@
   // Dentro da Colmeia o perfil já chega embrulhado pelo bloco branco da seção.
   // Sem esta saída, o cartão branco do perfil viraria um cartão dentro de outro.
   const emBloco = locals.emBloco === true;
+  // O catálogo vem do banco, igual ao do onboarding: sem upload e sem lista
+  // paralela no JavaScript da tela.
+  const opcoesDeAvatar = locals.avatares ?? [];
 %>
 
 <div class="mx-auto max-w-3xl">
@@ -10,6 +13,8 @@
     <div class="flex items-center gap-4 bg-mel px-8 py-8">
       <% if (perfil.avatar_imagem) { %>
         <img
+          id="avatar-atual"
+          data-avatar-atual
           src="<%= perfil.avatar_imagem %>"
           alt=""
           width="64"
@@ -17,7 +22,11 @@
           class="h-16 w-16 object-contain"
         />
       <% } else { %>
-        <div class="flex h-16 w-16 items-center justify-center rounded-pilula bg-white/40 text-2xl font-bold">
+        <div
+          id="avatar-atual"
+          data-avatar-atual
+          class="flex h-16 w-16 items-center justify-center rounded-pilula bg-white/40 text-2xl font-bold"
+        >
           <%= perfil.apelido.charAt(0).toUpperCase() %>
         </div>
       <% } %>
@@ -33,6 +42,51 @@
 
     <div class="p-8">
       <section class="rounded-favo bg-cera p-6">
+        <h2 class="text-lg font-semibold">Minha imagem</h2>
+        <p class="mt-1 text-sm text-tinta-suave">Escolha uma das abelhas do Beever. Sua escolha é salva na hora.</p>
+
+        <form id="form-avatar" class="mt-4" data-perfil-id="<%= perfil.id %>">
+          <fieldset>
+            <legend class="sr-only">Escolha sua imagem de perfil</legend>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <% opcoesDeAvatar.forEach((opcao) => { %>
+                <label class="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="avatar"
+                    value="<%= opcao.valor %>"
+                    data-imagem="<%= opcao.imagem %>"
+                    class="peer sr-only"
+                    <%= perfil.avatar === opcao.valor ? 'checked' : '' %>
+                  />
+                  <span
+                    class="flex min-h-24 flex-col items-center justify-center gap-1 rounded-favo border-2 border-linha bg-white p-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                  >
+                    <img
+                      src="<%= opcao.imagem %>"
+                      alt=""
+                      width="48"
+                      height="48"
+                      loading="lazy"
+                      class="h-12 w-12 object-contain"
+                    />
+                    <span class="text-xs font-semibold leading-tight text-tinta"><%= opcao.rotulo %></span>
+                  </span>
+                </label>
+              <% }) %>
+            </div>
+          </fieldset>
+
+          <p
+            id="aviso-avatar"
+            role="status"
+            aria-live="polite"
+            class="mt-4 hidden rounded-lg bg-white px-4 py-3 text-sm"
+          ></p>
+        </form>
+      </section>
+
+      <section class="mt-6 rounded-favo bg-cera p-6">
         <h2 class="text-lg font-semibold">Meus dias de jogo</h2>
 
         <form id="form-disponibilidade" class="mt-6" data-perfil-id="<%= perfil.id %>">

@@ -1,8 +1,9 @@
 // Cena de carregamento: acontece depois do vídeo e antes do quarto.
-// Carrega os retratos do Beenie, a moeda e as imagens do quarto em /img.
+// Carrega os retratos do Beenie, a moeda, as imagens do quarto em /img
+// e os ícones do hexágono de item na mão.
 
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
-import { IMAGENS_DO_QUARTO } from '../dadosDoQuarto.js';
+import { ICONES_DOS_ITENS, IMAGENS_DO_QUARTO } from '../dadosDoQuarto.js';
 import { CORES, FONTES, LARGURA, criarFundoEscuro } from '../desenho.js';
 import { anunciar, definirInstrucoes } from '../interface.js';
 
@@ -49,6 +50,10 @@ export class CenaBoot extends Phaser.Scene {
 
     IMAGENS_DO_QUARTO.forEach((imagem) => {
       this.load.image(imagem.chave, imagem.caminho);
+    });
+
+    Object.values(ICONES_DOS_ITENS).forEach((icone) => {
+      this.load.image(icone.chave, icone.caminho);
     });
 
     anunciar('Carregando o quarto do Beenie…');

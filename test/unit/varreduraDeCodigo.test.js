@@ -193,6 +193,11 @@ describe('varredura de validação de entrada (RNF-06)', () => {
 });
 
 describe('varredura de escape em view (RNF-07)', () => {
+  // `svgIcone` só interpola nomes e classes vindos destes arquivos (nenhum dado
+  // da requisição entra no SVG), e `sequenciaComIcone` é montado a partir dele.
+  // São as duas únicas exceções legítimas à regra de escapar com `<%= %>`.
+  const SAIDAS_SEGURAS = /^(include\(|svgIcone\(|sequenciaComIcone$)/;
+
   it('nenhuma view imprime dado sem escapar com `<%- %>`', () => {
     const perigosas = [];
     const pastas = ['src/views/pages', 'src/views/partials'];
@@ -208,9 +213,9 @@ describe('varredura de escape em view (RNF-07)', () => {
 
         const conteudo = readFileSync(path.join(raiz, caminho), 'utf8');
         for (const saida of conteudo.matchAll(/<%-\s*([^%]+?)\s*%>/g)) {
-          // `include` monta template, não imprime dado. Todo o resto que sai sem
-          // escapar é candidato a XSS armazenado.
-          if (!/^include\(/.test(saida[1].trim())) perigosas.push(`${caminho}: <%- ${saida[1].trim()} %>`);
+          // `include` monta template e os ícones vêm de uma lista fixa. Todo o
+          // resto que sai sem escapar é candidato a XSS armazenado.
+          if (!SAIDAS_SEGURAS.test(saida[1].trim())) perigosas.push(`${caminho}: <%- ${saida[1].trim()} %>`);
         }
       }
     };

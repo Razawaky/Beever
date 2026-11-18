@@ -253,8 +253,10 @@ ligarRevelacao();
 ligarContadores();
 ligarFavosDaTrilha();
 
-// O painel de acessibilidade roda antes desta página, então a escolha guardada
-// já está no `<html>` quando chegamos aqui.
-const painelPediuMenosMovimento = document.documentElement.classList.contains('a11y-movimento-reduzido');
+// O painel de acessibilidade roda antes desta página. O ajuste local fica no
+// `<html>`; a preferência da conta logada vem do servidor no `<body>`.
+const painelPediuMenosMovimento =
+  document.documentElement.classList.contains('a11y-movimento-reduzido') ||
+  document.body.classList.contains('a11y-movimento-reduzido');
 
 aplicarMovimento(querMenosMovimento || painelPediuMenosMovimento);

@@ -16,7 +16,7 @@
   <% if (mostrarTitulo) { %>
     <div class="flex items-center justify-between gap-4">
       <h2 class="font-display text-2xl font-bold text-tinta">Confirmar compra</h2>
-      <p class="font-semibold tabular-nums">🍯 <%= previa.saldoAtual %></p>
+      <p class="inline-flex items-center gap-1.5 font-semibold tabular-nums"><%- svgIcone('mel', 'h-5 w-5') %><span><%= previa.saldoAtual %></span></p>
     </div>
   <% } %>
 
@@ -28,7 +28,7 @@
     <dl class="mt-6 grid gap-3 text-sm tabular-nums">
       <div class="flex justify-between border-b border-linha pb-2">
         <dt>Preço</dt>
-        <dd class="font-semibold">🍯 <%= previa.precoDeTabela %></dd>
+        <dd class="inline-flex items-center gap-1.5 font-semibold"><%- svgIcone('mel', 'h-4 w-4') %><span><%= previa.precoDeTabela %></span></dd>
       </div>
       <% if (previa.troca) { %>
         <div class="flex justify-between border-b border-linha pb-2">
@@ -38,30 +38,30 @@
       <% } %>
       <div class="flex justify-between border-b border-linha pb-2">
         <dt>Você vai pagar</dt>
-        <dd class="font-semibold">🍯 <%= previa.precoPago %></dd>
+        <dd class="inline-flex items-center gap-1.5 font-semibold"><%- svgIcone('mel', 'h-4 w-4') %><span><%= previa.precoPago %></span></dd>
       </div>
       <div class="flex justify-between border-b border-linha pb-2">
         <dt>Seu mel depois da compra</dt>
-        <dd class="font-semibold">🍯 <%= previa.saldoDepois %></dd>
+        <dd class="inline-flex items-center gap-1.5 font-semibold"><%- svgIcone('mel', 'h-4 w-4') %><span><%= previa.saldoDepois %></span></dd>
       </div>
       <div class="flex justify-between">
         <dt>Seu patrimônio vai para</dt>
-        <dd class="font-semibold">🍯 <%= previa.patrimonioDepois %></dd>
+        <dd class="inline-flex items-center gap-1.5 font-semibold"><%- svgIcone('mel', 'h-4 w-4') %><span><%= previa.patrimonioDepois %></span></dd>
       </div>
     </dl>
 
     <ul class="mt-6 grid gap-2 text-sm tabular-nums">
       <% if (previa.custoSemanal > 0) { %>
-        <li>💸 Você vai pagar <%= previa.custoSemanal %> de mel por semana para manter.</li>
+        <li class="flex items-center gap-2"><%- svgIcone('gasto', 'h-4 w-4 shrink-0') %><span>Você vai pagar <%= previa.custoSemanal %> de mel por semana para manter.</span></li>
       <% } %>
       <% if (previa.rendaSemanal > 0) { %>
-        <li>🍯 Ele vai render <%= previa.rendaSemanal %> de mel por semana.</li>
+        <li class="flex items-center gap-2"><%- svgIcone('mel', 'h-4 w-4 shrink-0') %><span>Ele vai render <%= previa.rendaSemanal %> de mel por semana.</span></li>
       <% } %>
       <% if (previa.perdeValor) { %>
-        <li>📉 Ele perde valor toda semana.</li>
+        <li class="flex items-center gap-2"><%- svgIcone('tendenciaBaixa', 'h-4 w-4 shrink-0') %><span>Ele perde valor toda semana.</span></li>
       <% } %>
       <% if (!previa.entraNoPatrimonio) { %>
-        <li>✨ É um enfeite: isso não aumenta seu patrimônio.</li>
+        <li class="flex items-center gap-2"><%- svgIcone('brilho', 'h-4 w-4 shrink-0') %><span>É um enfeite: isso não aumenta seu patrimônio.</span></li>
       <% } %>
       <% if (previa.avisoDaFaixa) { %>
         <li class="text-tinta-suave"><%= previa.avisoDaFaixa %></li>
@@ -71,7 +71,7 @@
     <% if (previa.bloqueios.length > 0) { %>
       <ul class="mt-6 grid gap-1 rounded-favo bg-cera p-4 text-sm">
         <% previa.bloqueios.forEach((bloqueio) => { %>
-          <li>🔒 <%= bloqueio.mensagem %></li>
+          <li class="flex items-center gap-2"><%- svgIcone('cadeado', 'h-4 w-4 shrink-0') %><span><%= bloqueio.mensagem %></span></li>
         <% }) %>
       </ul>
     <% } %>

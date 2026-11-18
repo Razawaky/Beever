@@ -225,7 +225,7 @@ export async function buscarFaixaDoUsuario(idUsuario) {
  * não é mexer no front.
  */
 export async function listarAvatares() {
-  return consultar('SELECT slug, name, image_path FROM avatars ORDER BY id');
+  return consultar('SELECT slug, name, image_path FROM avatars WHERE is_active = 1 ORDER BY id');
 }
 
 /** Objetivos iniciais oferecidos no onboarding (RF-ONB-05, RN-011). */

@@ -18,18 +18,18 @@
 
     <ul class="mt-4 grid gap-1 text-sm tabular-nums">
       <% if (item.perdeValor) { %>
-        <li>📉 Perde valor toda semana</li>
+        <li class="flex items-center gap-2"><%- svgIcone('tendenciaBaixa', 'h-4 w-4 shrink-0') %><span>Perde valor toda semana</span></li>
       <% } else if (Number(item.valuation_rate) > 0) { %>
-        <li>📈 Vale mais a cada semana</li>
+        <li class="flex items-center gap-2"><%- svgIcone('tendenciaAlta', 'h-4 w-4 shrink-0') %><span>Vale mais a cada semana</span></li>
       <% } %>
       <% if (item.custoSemanal > 0) { %>
-        <li>💸 Custa <%= item.custoSemanal %> de mel por semana</li>
+        <li class="flex items-center gap-2"><%- svgIcone('gasto', 'h-4 w-4 shrink-0') %><span>Custa <%= item.custoSemanal %> de mel por semana</span></li>
       <% } %>
       <% if (item.rendaSemanal > 0) { %>
-        <li>🍯 Rende <%= item.rendaSemanal %> de mel por semana</li>
+        <li class="flex items-center gap-2"><%- svgIcone('mel', 'h-4 w-4 shrink-0') %><span>Rende <%= item.rendaSemanal %> de mel por semana</span></li>
       <% } %>
       <% if (!item.counts_in_patrimony) { %>
-        <li>✨ Enfeite: isso não aumenta seu patrimônio</li>
+        <li class="flex items-center gap-2"><%- svgIcone('brilho', 'h-4 w-4 shrink-0') %><span>Enfeite: isso não aumenta seu patrimônio</span></li>
       <% } %>
       <% if (item.avisoDaFaixa) { %>
         <li class="text-tinta-suave"><%= item.avisoDaFaixa %></li>
@@ -43,7 +43,7 @@
     <% if (item.bloqueios.length > 0) { %>
       <ul class="mt-3 grid gap-1 text-sm text-tinta-suave">
         <% item.bloqueios.forEach((bloqueio) => { %>
-          <li>🔒 <%= bloqueio.mensagem %></li>
+          <li class="flex items-center gap-2"><%- svgIcone('cadeado', 'h-4 w-4 shrink-0') %><span><%= bloqueio.mensagem %></span></li>
         <% }) %>
       </ul>
     <% } %>
@@ -56,7 +56,7 @@
           Entregando <%= item.troca.itemTrocado %>: −<%= item.troca.desconto %>
         </p>
       <% } %>
-      <p class="text-lg font-semibold tabular-nums">🍯 <%= item.precoComDesconto %></p>
+      <p class="inline-flex items-center gap-1.5 text-lg font-semibold tabular-nums"><%- svgIcone('mel', 'h-5 w-5') %><span><%= item.precoComDesconto %></span></p>
       <% if (!item.podeComprar && item.bloqueios.length === 0) { %>
         <p class="text-xs tabular-nums text-tinta-suave">faltam <%= item.faltamDeMel %> de mel</p>
       <% } %>

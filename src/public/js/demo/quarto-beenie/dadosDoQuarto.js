@@ -1,6 +1,6 @@
 // Dados do quarto: cada parede é um fundo 600×600 com itens sobrepostos.
 //
-// As imagens ficam em /img/jogo. O palco é 600×600, do mesmo tamanho dos PNGs,
+// As imagens ficam em /img/jogo. O palco é 600×600, do mesmo tamanho dos webps,
 // então a arte ocupa a tela inteira sem sobras laterais. Os hotspots usam as
 // coordenadas do palco; os itens são desenhados por `desenho.js`.
 //
@@ -14,6 +14,10 @@
 // não ganham contorno e não têm hotspot. Elas ficam logo depois do objeto
 // correspondente para aparecerem por cima dele. Os fiapos de brinquedos e de
 // travesseiro usam `item-nao-colocado` e somem quando o item é pego.
+//
+// `ICONES_DOS_ITENS` associa cada item carregável ao ícone mostrado no hexágono
+// do canto superior esquerdo; quadro e cortina não aparecem porque são cliques,
+// não itens.
 
 export const ARTE = Object.freeze({
   largura: 600,
@@ -23,43 +27,65 @@ export const ARTE = Object.freeze({
 });
 
 export const IMAGENS_DO_QUARTO = [
-  { chave: 'parede-frente', caminho: '/img/jogo/F_parede.png' },
-  { chave: 'parede-esquerda', caminho: '/img/jogo/D_parede.png' },
-  { chave: 'parede-tras', caminho: '/img/jogo/T_parede.png' },
-  { chave: 'parede-direita', caminho: '/img/jogo/E_parede.png' },
+  { chave: 'parede-frente', caminho: '/img/jogo/F_parede.webp' },
+  { chave: 'parede-esquerda', caminho: '/img/jogo/D_parede.webp' },
+  { chave: 'parede-tras', caminho: '/img/jogo/T_parede.webp' },
+  { chave: 'parede-direita', caminho: '/img/jogo/E_parede.webp' },
 
-  { chave: 'item-porta', caminho: '/img/jogo/F_porta.png' },
-  { chave: 'item-roupa-1', caminho: '/img/jogo/F_roupa.png' },
-  { chave: 'item-travesseiro-1', caminho: '/img/jogo/F_travesseiro.png' },
+  { chave: 'item-porta', caminho: '/img/jogo/F_porta.webp' },
+  { chave: 'item-roupa-1', caminho: '/img/jogo/F_roupa.webp' },
+  { chave: 'item-travesseiro-1', caminho: '/img/jogo/F_travesseiro.webp' },
 
-  { chave: 'item-janela', caminho: '/img/jogo/T_janela.png' },
-  { chave: 'item-cortina-fechada', caminho: '/img/jogo/T_cortina_fechada.png' },
-  { chave: 'item-cortina-aberta', caminho: '/img/jogo/T_cortina_aberta.png' },
-  { chave: 'item-mesa', caminho: '/img/jogo/T_mesa.png' },
-  { chave: 'item-livro-jogado', caminho: '/img/jogo/T_livro_jogado.png' },
-  { chave: 'item-livro-fechado', caminho: '/img/jogo/T_livro_fechado.png' },
-  { chave: 'item-roupa-2', caminho: '/img/jogo/T_roupa.png' },
+  { chave: 'item-janela', caminho: '/img/jogo/T_janela.webp' },
+  { chave: 'item-cortina-fechada', caminho: '/img/jogo/T_cortina_fechada.webp' },
+  { chave: 'item-cortina-aberta', caminho: '/img/jogo/T_cortina_aberta.webp' },
+  { chave: 'item-mesa', caminho: '/img/jogo/T_mesa.webp' },
+  { chave: 'item-livro-jogado', caminho: '/img/jogo/T_livro_jogado.webp' },
+  { chave: 'item-livro-fechado', caminho: '/img/jogo/T_livro_fechado.webp' },
+  { chave: 'item-roupa-2', caminho: '/img/jogo/T_roupa.webp' },
 
-  { chave: 'item-cama', caminho: '/img/jogo/E_cama_vazia.png' },
-  { chave: 'item-travesseiro-2', caminho: '/img/jogo/E_travesseiro.png' },
-  { chave: 'item-travesseiro-arrumado-1', caminho: '/img/jogo/E_travesseiro1_arrumado.png' },
-  { chave: 'item-travesseiro-arrumado-2', caminho: '/img/jogo/E_travesseiro2_arrumado.png' },
-  { chave: 'item-coberta', caminho: '/img/jogo/E_coberta.png' },
-  { chave: 'item-coberta-arrumada', caminho: '/img/jogo/E_coberta_arrumada.png' },
-  { chave: 'item-quadro-torto', caminho: '/img/jogo/E_quadro_torto.png' },
-  { chave: 'item-quadro', caminho: '/img/jogo/E_quadro.png' },
-  { chave: 'fiapo-travesseiro', caminho: '/img/jogo/E_fiapo_travesseiro.png' },
-  { chave: 'fiapo-cama', caminho: '/img/jogo/E_fiapo_cama.png' },
+  { chave: 'item-cama', caminho: '/img/jogo/E_cama_vazia.webp' },
+  { chave: 'item-travesseiro-2', caminho: '/img/jogo/E_travesseiro.webp' },
+  { chave: 'item-travesseiro-arrumado-1', caminho: '/img/jogo/E_travesseiro1_arrumado.webp' },
+  { chave: 'item-travesseiro-arrumado-2', caminho: '/img/jogo/E_travesseiro2_arrumado.webp' },
+  { chave: 'item-coberta', caminho: '/img/jogo/E_coberta.webp' },
+  { chave: 'item-coberta-arrumada', caminho: '/img/jogo/E_coberta_arrumada.webp' },
+  { chave: 'item-quadro-torto', caminho: '/img/jogo/E_quadro_torto.webp' },
+  { chave: 'item-quadro', caminho: '/img/jogo/E_quadro.webp' },
+  { chave: 'fiapo-travesseiro', caminho: '/img/jogo/E_fiapo_travesseiro.webp' },
+  { chave: 'fiapo-cama', caminho: '/img/jogo/E_fiapo_cama.webp' },
 
-  { chave: 'item-armario-aberto', caminho: '/img/jogo/D_armario_aberto.png' },
-  { chave: 'item-armario-fechado', caminho: '/img/jogo/D_armario_fechado.png' },
-  { chave: 'item-roupa-3', caminho: '/img/jogo/D_roupa.png' },
-  { chave: 'item-bau-aberto', caminho: '/img/jogo/D_bau_aberto.png' },
-  { chave: 'item-bau-fechado', caminho: '/img/jogo/D_bau_fechado.png' },
-  { chave: 'item-brinquedos', caminho: '/img/jogo/D_brinquedos.png' },
-  { chave: 'fiapo-brinquedos', caminho: '/img/jogo/D_fiapo_brinquedos.png' },
-  { chave: 'fiapo-bau', caminho: '/img/jogo/D_fiapo_bau.png' },
+  { chave: 'item-armario-aberto', caminho: '/img/jogo/D_armario_aberto.webp' },
+  { chave: 'item-armario-fechado', caminho: '/img/jogo/D_armario_fechado.webp' },
+  { chave: 'item-roupa-3', caminho: '/img/jogo/D_roupa.webp' },
+  { chave: 'item-bau-aberto', caminho: '/img/jogo/D_bau_aberto.webp' },
+  { chave: 'item-bau-fechado', caminho: '/img/jogo/D_bau_fechado.webp' },
+  { chave: 'item-brinquedos', caminho: '/img/jogo/D_brinquedos.webp' },
+  { chave: 'fiapo-brinquedos', caminho: '/img/jogo/D_fiapo_brinquedos.webp' },
+  { chave: 'fiapo-bau', caminho: '/img/jogo/D_fiapo_bau.webp' },
 ];
+
+// Ícones do hexágono de item na mão. Quadro e cortina são atividades de clique,
+// não itens carregáveis, e por isso não têm ícone.
+export const ICONES_DOS_ITENS = Object.freeze({
+  brinquedos: { chave: 'icone-brinquedos', caminho: '/img/jogo/icones/brinquedos_icon.webp' },
+  'roupa-frente': { chave: 'icone-roupa-frente', caminho: '/img/jogo/icones/F_roupa_icon.webp' },
+  'roupa-tras': { chave: 'icone-roupa-tras', caminho: '/img/jogo/icones/T_roupa_icon.webp' },
+  'roupa-esquerda': {
+    chave: 'icone-roupa-esquerda',
+    caminho: '/img/jogo/icones/D_roupa_icon.webp',
+  },
+  'travesseiro-frente': {
+    chave: 'icone-travesseiro-frente',
+    caminho: '/img/jogo/icones/travesseiro1_icon.webp',
+  },
+  'travesseiro-direita': {
+    chave: 'icone-travesseiro-direita',
+    caminho: '/img/jogo/icones/travesseiro2_icon.webp',
+  },
+  coberta: { chave: 'icone-coberta', caminho: '/img/jogo/icones/coberta_icon.webp' },
+  livro: { chave: 'icone-livro', caminho: '/img/jogo/icones/livro_icon.webp' },
+});
 
 // Rótulos usados nas frases de “carregando um item por vez”.
 export const ROTULOS_DOS_ITENS = Object.freeze({

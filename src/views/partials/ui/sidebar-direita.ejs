@@ -45,7 +45,7 @@
             <li class="flex flex-col gap-1 rounded-favo bg-cera p-3 text-xs">
               <span class="font-medium text-tinta"><%= meta.titulo %></span>
               <span class="tabular-nums text-tinta-suave">
-                <%= meta.percentual %>% · <%= meta.urgencia.icone %> <%= meta.urgencia.frase %>
+                <%= meta.percentual %>% · <%- svgIcone(meta.urgencia.icone, 'h-4 w-4') %> <%= meta.urgencia.frase %>
               </span>
             </li>
           <% }) %>
@@ -97,7 +97,7 @@
     <% } else { %>
       <p class="text-xs tabular-nums text-tinta">
         Você está em <strong><%= colmeia.liga.posicao %>º lugar</strong> no <%= colmeia.liga.grupo.nome %>,
-        com 🌼 <%= colmeia.liga.polen %> de pólen. Ninguém desce de liga.
+        com <span class="inline-flex items-center gap-1"><%- svgIcone('polen', 'h-4 w-4') %><span><%= colmeia.liga.polen %></span></span> de pólen. Ninguém desce de liga.
       </p>
     <% } %>
   </section>

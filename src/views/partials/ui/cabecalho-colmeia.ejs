@@ -32,15 +32,15 @@
 
     <div class="flex flex-wrap items-start gap-x-8 gap-y-4">
       <%- include('badge-recurso', {
-        icone: '🍯',
+        icone: 'mel',
         rotulo: 'Seu mel',
         valor: jogador.mel,
         grande: true,
-        detalhe: `🌼 ${jogador.polen} de pólen`,
+        detalhe: { icone: 'polen', texto: `${jogador.polen} de pólen` },
       }) %>
 
       <%- include('badge-recurso', {
-        icone: '🏠',
+        icone: 'patrimonio',
         rotulo: 'Seu patrimônio',
         valor: jogador.patrimonio.total,
         grande: true,

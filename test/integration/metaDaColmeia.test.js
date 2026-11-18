@@ -124,7 +124,7 @@ describe('bloco da meta na Colmeia', opcoes, () => {
     // o prazo cai em "Faltam 1 dia" ou "Termina hoje", e cravar o plural aqui
     // faria o teste falhar pelo calendário.
     assert.match(html, new RegExp(meta.urgencia.frase));
-    assert.match(html, new RegExp(`Rende 🍯 ${meta.melDaRecompensa} de mel`));
+    assert.match(html, new RegExp(`Rende <svg[^>]*data-icone="mel"[^>]*>[\\s\\S]*?</svg> ${meta.melDaRecompensa} de mel`));
   });
 
   it('as outras metas ficam numa lista curta, sem competir com o destaque', async () => {
@@ -152,14 +152,14 @@ describe('bloco da meta na Colmeia', opcoes, () => {
 
     const html = await pagina('/painel');
 
-    assert.match(html, /⏰ Termina hoje/);
+    assert.match(html, /data-icone="relogio"[\s\S]*?Termina hoje/);
     assert.doesNotMatch(html, /Faltam 0 dias/, 'zero dia não é frase que alguém escreve');
   });
 
   it('a tela de metas usa o mesmo card, com a ação de cada estado', async () => {
     const html = await pagina('/metas');
 
-    assert.match(html, /Rende 🍯 \d+ de mel/);
+    assert.match(html, /Rende <svg[^>]*data-icone="mel"[^>]*>[\s\S]*?<\/svg> \d+ de mel/);
     assert.match(html, /dificuldade/);
     assert.match(html, /Marcar como concluída/);
   });

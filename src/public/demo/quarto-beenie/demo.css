@@ -107,23 +107,15 @@ body {
 }
 
 .demo__hud {
-  display: grid;
-  grid-template-areas:
-    'identidade dados'
-    'progresso progresso';
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 16px;
+  display: flex;
   align-items: center;
+  justify-content: center;
   margin-bottom: 10px;
-  padding: 12px 14px 10px;
+  padding: 12px 14px;
   border: 1px solid rgba(255, 194, 0, 0.28);
   border-radius: 16px;
   background: #241d0b;
-}
-
-.demo__hud-identidade {
-  grid-area: identidade;
-  min-width: 0;
+  text-align: center;
 }
 
 .demo__hud-titulo {
@@ -133,78 +125,6 @@ body {
   font-size: 24px;
   font-weight: 400;
   line-height: 1;
-}
-
-.demo__hud-subtitulo {
-  margin: 3px 0 0;
-  color: #bfae87;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.demo__hud-dados {
-  grid-area: dados;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px 14px;
-}
-
-.demo__hud-dados p {
-  margin: 0;
-  color: #bfae87;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.demo__hud-parede {
-  color: var(--mel) !important;
-}
-
-.demo__hud-mel {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #f5e8c8 !important;
-}
-
-.demo__hud-moeda {
-  display: block;
-  width: 18px;
-  height: 18px;
-  flex: none;
-}
-
-.demo__hud-mao {
-  min-height: 1.35em;
-  color: var(--mel) !important;
-}
-
-.demo__hud-progresso {
-  grid-area: progresso;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.demo__hud-favo {
-  width: 9px;
-  height: 9px;
-  border: 1px solid rgba(255, 194, 0, 0.45);
-  border-radius: 999px;
-  background: transparent;
-  transition:
-    background-color 180ms ease,
-    border-color 180ms ease;
-}
-
-.demo__hud-favo--feito {
-  border-color: var(--mel);
-  background: var(--mel);
 }
 
 .demo__midia {
@@ -568,22 +488,11 @@ code {
   }
 
   .demo__hud {
-    grid-template-areas:
-      'identidade'
-      'dados'
-      'progresso';
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 11px 12px 10px;
+    padding: 11px 12px;
   }
 
   .demo__hud-titulo {
     font-size: 21px;
-  }
-
-  .demo__hud-dados {
-    justify-content: flex-start;
-    gap: 3px 12px;
   }
 
   .demo__midia {
@@ -623,8 +532,7 @@ code {
 
 @media (prefers-reduced-motion: reduce) {
   .video-camada,
-  .demo__botao,
-  .demo__hud-favo {
+  .demo__botao {
     transition: none;
   }
 }

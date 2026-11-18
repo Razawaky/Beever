@@ -78,7 +78,7 @@ describe('resumo da meta na Colmeia', () => {
 
 describe('urgência do prazo da meta', () => {
   it('a que vence hoje é anunciada em palavra, não só em número', () => {
-    assert.deepEqual(urgenciaDoPrazo(0), { nivel: 'hoje', icone: '⏰', frase: 'Termina hoje' });
+    assert.deepEqual(urgenciaDoPrazo(0), { nivel: 'hoje', icone: 'relogio', frase: 'Termina hoje' });
   });
 
   it('dois dias ou menos contam como apertado', () => {

@@ -24,7 +24,13 @@ export function iniciarSessaoLogin(
       // Cacheado na sessão pelo mesmo motivo do ehAdmin: evita reconsultar o
       // banco a cada requisição só para decidir entre /painel e /onboarding.
       req.session.onboardingConcluido = onboardingConcluido;
-      resolve();
+
+      // O save tem que acontecer aqui, antes da resposta. Com middleware
+      // assíncrono na rota (os limites de login), o save automático do
+      // express-session no fim da resposta não basta para a sessão regenerada:
+      // o cookie novo ia para o navegador sem linha nenhuma no store, o login
+      // parecia ter dado certo e a página seguinte devolvia para /login.
+      req.session.save((erroAoSalvar) => (erroAoSalvar ? reject(erroAoSalvar) : resolve()));
     });
   });
 }

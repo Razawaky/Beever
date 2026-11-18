@@ -3,17 +3,23 @@
 // A cena só orquestra. As paredes e os hotspots vêm de `dadosDoQuarto.js`;
 // o desenho vem de `desenho.js`; o estado compartilhado vem de
 // `estadoDoJogo.js`. A regra de ouro é: só cabe um item na mão por vez.
+// O hexágono do item na mão fica fora das paredes para atravessar as quatro
+// rotações sem precisar ser redesenhado.
 
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
-import { PAREDES, ROTULOS_DOS_ITENS } from '../dadosDoQuarto.js';
+import { ICONES_DOS_ITENS, PAREDES, ROTULOS_DOS_ITENS } from '../dadosDoQuarto.js';
 import { CORES, FONTES, LARGURA, desenharParede } from '../desenho.js';
 import { estado } from '../estadoDoJogo.js';
-import { SEM_MOVIMENTO, anunciar, atualizarHud, definirInstrucoes } from '../interface.js';
+import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from '../interface.js';
 
 const TOTAL_DE_PAREDES = PAREDES.length;
 // O Phaser pula objetos com alpha 0 no hit-test. Um alpha quase invisível
 // mantém a área clicável sem mostrar a caixa do hotspot antes do hover.
 const ALPHA_QUASE_INVISIVEL = 0.001;
+// O centro do hexágono fica perto do canto e o raio ultrapassa as bordas
+// superior e esquerda. O canvas recorta o desenho: sobram os lados internos,
+// como se a casa de favo nascesse da moldura do jogo.
+const SLOT_DA_MAO = Object.freeze({ x: 42, y: 30, raio: 76, iconeMax: 90 });
 const INSTRUCOES_PADRAO =
   'Use as setas ← → ou os botões laterais para girar o quarto. Clique nos objetos para pegar e guardar um item por vez. Clique na porta para sair quando quiser; o mel é proporcional ao que arrumou.';
 
@@ -43,7 +49,9 @@ export class CenaQuarto extends Phaser.Scene {
     this.emTransicao = false;
     this.indoParaFim = false;
     this.paredeAtual = null;
-    this.estadoListener = () => this.atualizarHud();
+    this.iconeDaMao = null;
+    this.itemDaMaoAtual = undefined;
+    this.estadoListener = () => this.atualizarIconeDaMao();
     this.completoListener = () => this.aoConcluirTudo();
 
     this.criarInterface();
@@ -53,7 +61,7 @@ export class CenaQuarto extends Phaser.Scene {
     estado.on('completo', this.completoListener);
 
     this.mostrarParede(estado.parede, 0, true);
-    this.atualizarHud();
+    this.atualizarIconeDaMao();
 
     if (estado.completo) {
       this.time.delayedCall(250, () => this.aoConcluirTudo());
@@ -73,6 +81,8 @@ export class CenaQuarto extends Phaser.Scene {
   }
 
   criarInterface() {
+    this.criarSlotDaMao();
+
     const painelDialogo = this.add.graphics().setDepth(100);
     painelDialogo
       .fillStyle(CORES.painel, 0.92)
@@ -108,22 +118,97 @@ export class CenaQuarto extends Phaser.Scene {
       })
       .setDepth(102);
 
-    this.criarSeta(30, 286, -1, '‹');
-    this.criarSeta(LARGURA - 30, 286, 1, '›');
+    this.criarSeta(30, 286, -1);
+    this.criarSeta(LARGURA - 30, 286, 1);
   }
 
-  criarSeta(x, y, direcao, simbolo) {
+  criarSlotDaMao() {
+    this.slotDaMao = this.add
+      .container(SLOT_DA_MAO.x, SLOT_DA_MAO.y)
+      .setDepth(60);
+
+    const hexagono = [];
+    for (let lado = 0; lado < 6; lado += 1) {
+      const angulo = (Math.PI / 3) * lado + Math.PI / 6;
+      hexagono.push(
+        new Phaser.Geom.Point(
+          SLOT_DA_MAO.raio * Math.cos(angulo),
+          SLOT_DA_MAO.raio * Math.sin(angulo),
+        ),
+      );
+    }
+
+    // O preenchimento e a moldura são recortados pela borda do canvas; apenas
+    // os lados internos aparecem, integrando o favo à moldura do jogo.
+    const moldura = this.add.graphics();
+    moldura.fillStyle(CORES.painel, 0.96).fillPoints(hexagono, true);
+    moldura.lineStyle(3, CORES.mel, 1).strokePoints(hexagono, true);
+    this.slotDaMao.add(moldura);
+  }
+
+  atualizarIconeDaMao() {
+    const item = estado.carregando;
+    if (item === this.itemDaMaoAtual) return;
+    this.itemDaMaoAtual = item;
+
+    const icone = item ? ICONES_DOS_ITENS[item] : null;
+    if (!icone) {
+      this.iconeDaMao?.setVisible(false);
+      return;
+    }
+
+    if (!this.iconeDaMao) {
+      this.iconeDaMao = this.add.image(10, 10, icone.chave).setOrigin(0.5);
+      this.slotDaMao.add(this.iconeDaMao);
+    } else {
+      this.iconeDaMao.setTexture(icone.chave);
+    }
+
+    const escala = Math.min(
+      SLOT_DA_MAO.iconeMax / this.iconeDaMao.width,
+      SLOT_DA_MAO.iconeMax / this.iconeDaMao.height,
+    );
+    this.iconeDaMao.setScale(escala).setAlpha(1).setVisible(true);
+
+    if (!SEM_MOVIMENTO) {
+      this.tweens.killTweensOf(this.iconeDaMao);
+      this.iconeDaMao.setAlpha(0).setScale(escala * 0.8);
+      this.tweens.add({
+        targets: this.iconeDaMao,
+        alpha: 1,
+        scale: escala,
+        duration: 180,
+        ease: 'Back.out',
+      });
+    }
+  }
+
+  criarSeta(x, y, direcao) {
     const visual = this.add.container(x, y).setDepth(105);
     const fundo = this.add
       .circle(0, 0, 24, CORES.fundo, 0.76)
       .setStrokeStyle(2, CORES.mel, 0.6);
-    const seta = this.add
-      .text(0, 0, simbolo, {
-        fontFamily: FONTES.display,
-        fontSize: '38px',
-        color: '#f5e8c8',
-      })
-      .setOrigin(0.5, 0.44);
+
+    // O glifo da fonte tem larguras laterais diferentes e, mesmo com origin
+    // 0.5, a ponta da seta ficava fora do centro do círculo. Desenhar o
+    // chevron como vetor deixa os pontos simétricos em torno de (0, 0).
+    const seta = this.add.graphics();
+    const pintarSeta = (cor) => {
+      seta.clear();
+      seta.lineStyle(5, cor, 1);
+      seta.beginPath();
+      if (direcao < 0) {
+        seta.moveTo(6, -10);
+        seta.lineTo(-6, 0);
+        seta.lineTo(6, 10);
+      } else {
+        seta.moveTo(-6, -10);
+        seta.lineTo(6, 0);
+        seta.lineTo(-6, 10);
+      }
+      seta.strokePath();
+    };
+    pintarSeta(CORES.creme);
     visual.add([fundo, seta]);
 
     const zona = this.add
@@ -133,11 +218,11 @@ export class CenaQuarto extends Phaser.Scene {
 
     zona.on('pointerover', () => {
       fundo.setFillStyle(0x3a2c0b, 0.96);
-      seta.setColor('#ffc200');
+      pintarSeta(CORES.mel);
     });
     zona.on('pointerout', () => {
       fundo.setFillStyle(CORES.fundo, 0.76);
-      seta.setColor('#f5e8c8');
+      pintarSeta(CORES.creme);
     });
     zona.on('pointerdown', () => this.girar(direcao));
   }
@@ -386,21 +471,6 @@ export class CenaQuarto extends Phaser.Scene {
     definirInstrucoes('Abrindo o resultado do protótipo…');
 
     this.time.delayedCall(SEM_MOVIMENTO ? 500 : 1400, () => this.scene.start('fim'));
-  }
-
-  atualizarHud() {
-    const parede = PAREDES[estado.parede];
-
-    atualizarHud({
-      indiceParede: estado.parede,
-      totalDeParedes: TOTAL_DE_PAREDES,
-      nomeParede: parede.nome,
-      moedas: estado.moedas,
-      tarefasConcluidas: estado.tarefasConcluidas,
-      totalDeTarefas: estado.totalDeTarefas,
-      tarefas: estado.tarefas,
-      itemNaMao: estado.carregando ? rotuloDoItem(estado.carregando) : '',
-    });
   }
 
   mostrarDialogo(texto, emocao = 'default') {

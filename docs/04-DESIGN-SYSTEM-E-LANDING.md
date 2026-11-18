@@ -327,9 +327,10 @@ distração), mais "Ativar tudo" e "Modo normal".
 
 **O modo normal é o padrão, e é intocado.** Enquanto nada está ligado, nenhuma
 classe entra no `<html>`: cor, imagem, animação, navegação e tamanho de texto
-são exatamente os desenhados. Cada ajuste é opt-in, fica guardado no navegador e
-volta na próxima visita. Dentro do app, `profiles.has_reduced_motion` continua
-sendo a preferência da conta.
+são exatamente os desenhados. Contraste, texto e distração são opt-in do
+aparelho e voltam do navegador. Som e animação reduzida são da conta: o servidor
+lê `profiles.has_reduced_motion` e `is_sound_enabled`, guarda na sessão da
+persona e renderiza as classes no `<body>` só para quem está logado.
 
 
 

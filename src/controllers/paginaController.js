@@ -248,11 +248,12 @@ export const painel = assincrono(async (req, res) => {
  * da página `/perfil`, e o `painel.ejs` decide entre ele e a trilha.
  */
 export const painelPerfil = assincrono(async (req, res) => {
-  const [colmeia, dados, semana, metas] = await Promise.all([
+  const [colmeia, dados, semana, metas, avatares] = await Promise.all([
     homeService.obterColmeia(req.session.usuarioId),
     profilesService.obterDoUsuario(req.session.usuarioId),
     schedulesService.obterSemana(req.session.usuarioId),
     goalsService.listarAtivas(req.session.usuarioId),
+    profilesService.listarAvatares(),
   ]);
 
   renderizarPagina(res, 'painel', {
@@ -262,6 +263,7 @@ export const painelPerfil = assincrono(async (req, res) => {
     perfil: dados,
     semana,
     metas,
+    avatares,
     secao: 'perfil',
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
     dadosBody: { 'csrf-token': res.locals.csrfToken },
@@ -574,10 +576,11 @@ export const perfil = assincrono(async (req, res) => {
   // Mesma chegada da Colmeia e da tela de metas, pelo mesmo caminho.
   await homeService.prepararVisita(req.session.usuarioId);
 
-  const [dados, semana, metas] = await Promise.all([
+  const [dados, semana, metas, avatares] = await Promise.all([
     profilesService.obterDoUsuario(req.session.usuarioId),
     schedulesService.obterSemana(req.session.usuarioId),
     goalsService.listarAtivas(req.session.usuarioId),
+    profilesService.listarAvatares(),
   ]);
 
   renderizarPagina(res, 'perfil', {
@@ -586,6 +589,7 @@ export const perfil = assincrono(async (req, res) => {
     perfil: dados,
     semana,
     metas,
+    avatares,
     dadosBody: { 'csrf-token': res.locals.csrfToken },
     scripts: ['/js/perfil.js'],
   });

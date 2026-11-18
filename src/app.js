@@ -8,11 +8,13 @@ import pinoHttp from 'pino-http';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { mascote, POSES_DO_CLIQUE } from './config/mascote.js';
+import { svgIcone } from './public/js/icones.js';
 import { sessaoMiddleware } from './config/session.js';
 import { receberIlustracao } from './config/uploads.js';
 import { csrf } from './middlewares/csrf.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFound } from './middlewares/notFound.js';
+import { carregarPreferenciasDeAcessibilidade } from './middlewares/preferenciasDeAcessibilidade.js';
 import { limiteGlobal } from './middlewares/rateLimiters.js';
 import { requireAdmin } from './middlewares/requireAdmin.js';
 import { requestId } from './middlewares/requestId.js';
@@ -76,6 +78,8 @@ export function criarApp() {
   // painel também vem daqui, para a troca de reação ser um só arquivo.
   app.locals.mascote = mascote;
   app.locals.posesDoClique = POSES_DO_CLIQUE;
+  // Um desenho por ícone, usado por todas as telas: nenhuma view escreve emoji.
+  app.locals.svgIcone = svgIcone;
   app.use(express.static(path.join(diretorioAtual, 'public'), { maxAge: env.producao ? '7d' : 0 }));
 
   // As ilustrações enviadas pelo painel. Ficam fora de `src/public` porque são
@@ -95,6 +99,7 @@ export function criarApp() {
   app.use(['/admin/itens', '/admin/celulas'], requireAdmin, receberIlustracao);
 
   app.use(csrf);
+  app.use(carregarPreferenciasDeAcessibilidade);
   app.use(limiteGlobal);
 
   app.use(rotas);

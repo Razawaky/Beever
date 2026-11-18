@@ -22,7 +22,10 @@
   <section class="mt-10">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
       <h2 class="font-display text-xl">
-        <span aria-hidden="true"><%= iconeDaConquista(familia.criterio) %></span> <%= familia.titulo %>
+        <span class="inline-flex items-center gap-2">
+          <%- svgIcone(iconeDaConquista(familia.criterio), 'h-6 w-6') %>
+          <span><%= familia.titulo %></span>
+        </span>
       </h2>
       <p class="text-sm tabular-nums text-tinta-suave">
         <% if (familia.falta === null) { %>
