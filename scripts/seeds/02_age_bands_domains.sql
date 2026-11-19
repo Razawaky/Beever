@@ -42,8 +42,10 @@ INSERT INTO initial_goals (slug, label) VALUES
 AS novo
 ON DUPLICATE KEY UPDATE label = novo.label;
 
--- Os seis jogos do RF-JOG. Os dois últimos são P1.
+-- Os jogos do RF-JOG, mais o Quarto do Beenie que abre a trilha. Os dois
+-- últimos da lista original são P1.
 INSERT INTO game_types (slug, name, description) VALUES
+  ('quarto-do-beenie',      'Quarto do Beenie',       'Arrume o quarto girando as paredes e guardando um item por vez'),
   ('quiz-do-favo',          'Quiz do Favo',           'Perguntas de múltipla escolha sobre o conteúdo da célula'),
   ('arraste-e-classifique', 'Arraste e Classifique',  'Separa itens em categorias, com alternativa por clique e teclado'),
   ('monte-o-orcamento',     'Monte o Orçamento',      'Distribui uma quantia entre necessidades e desejos'),

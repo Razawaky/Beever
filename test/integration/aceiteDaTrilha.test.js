@@ -19,10 +19,9 @@ import * as progressService from '../../src/services/progressService.js';
  * pré-requisito via URL"*.
  *
  * Os testes das tarefas cobrem o detalhe de cada peça. Este percorre o caminho
- * inteiro, de uma vez, e cobre o limite que escapava: os favos semeados têm
- * quatro células, então o percentual salta de 75% para 100% e **os 80% exatos da
- * RN-027 nunca eram exercidos com dado real**. Aqui o favo recebe uma quinta
- * célula, e 4 de 5 dá exatamente 80%.
+ * inteiro, de uma vez, e cobre o limite da RN-027 com dado real: o primeiro
+ * favo tem cinco células, então 3 de 5 dá 60% e 4 de 5 dá exatamente 80% — o
+ * ponto em que o favo seguinte abre sem o atual ter fechado.
  */
 
 const pular = await motivoParaPular();
@@ -86,21 +85,6 @@ describe('aceite da trilha (E05)', opcoes, () => {
 
     primeiroFavo = await hivesRepository.buscarPorSlug('primeiros-passos');
     segundoFavo = await hivesRepository.buscarPorSlug('guardar-e-gastar');
-
-    // A quinta célula existe para o limite da RN-027 cair em número redondo:
-    // 4 de 5 é exatamente 80%, e 3 de 5 é 60%.
-    await banco.conexao.query(
-      `INSERT INTO cells (hive_id, game_type_id, age_band_id, order_index, title, estimated_seconds)
-       SELECT ?, c.game_type_id, c.age_band_id, 5, 'Revisando o que aprendi', 240
-         FROM cells c WHERE c.hive_id = ? AND c.order_index = 1`,
-      [primeiroFavo.id, primeiroFavo.id],
-    );
-    await banco.conexao.query(
-      `INSERT INTO contents (cell_id, version, body)
-       SELECT c.id, 1, JSON_OBJECT('tipo', 'placeholder', 'texto', 'Conteúdo em produção.')
-         FROM cells c WHERE c.hive_id = ? AND c.order_index = 5`,
-      [primeiroFavo.id],
-    );
   });
 
   after(async () => {

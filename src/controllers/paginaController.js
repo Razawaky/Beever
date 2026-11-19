@@ -639,6 +639,7 @@ export const favo = assincrono(async (req, res) => {
  * de arquivo.
  */
 const TELAS_DE_JOGO = {
+  'quarto-do-beenie': { areaDoJogo: 'quarto-beenie', script: '/js/quartoBeenie.js' },
   'quiz-do-favo': { areaDoJogo: 'quiz', script: '/js/quiz.js' },
   'arraste-e-classifique': { areaDoJogo: 'arraste', script: '/js/arraste.js' },
   'monte-o-orcamento': { areaDoJogo: 'orcamento', script: '/js/orcamento.js' },
@@ -674,7 +675,15 @@ export const celula = assincrono(async (req, res) => {
     celula,
     idFavo: Number(req.params.idFavo),
     areaDoJogo: tela.areaDoJogo,
-    scripts: [tela.script],
+    scripts:
+      tela.areaDoJogo === 'quarto-beenie'
+        ? [tela.script, '/js/demo/quarto-beenie/main.js']
+        : [tela.script],
+    // A página da demo entra com o bundle dela; as outras usam só o do app.
+    estilosExtras:
+      tela.areaDoJogo === 'quarto-beenie'
+        ? ['/demo/quarto-beenie/demo.css', '/css/cursor.css']
+        : [],
     // Os nomes vão em kebab-case porque o navegador lê `data-celula-id` como
     // `dataset.celulaId`; escrito junto, `data-celulaId` vira `celulaid` e o
     // JavaScript não acha nada. O token de CSRF viaja aqui pelo mesmo motivo
@@ -683,6 +692,7 @@ export const celula = assincrono(async (req, res) => {
       'celula-id': Number(celula.id),
       'favo-id': Number(req.params.idFavo),
       'csrf-token': res.locals.csrfToken,
+      ...(tela.areaDoJogo === 'quarto-beenie' ? { 'quarto-beenie-integrado': '1' } : {}),
     },
   });
 });

@@ -1,4 +1,5 @@
--- Conteúdo de demonstração: dois favos de quatro células por faixa etária.
+-- Conteúdo de demonstração: dois favos por faixa etária, começando pelas
+-- atividades dos primeiros passos.
 --
 -- Serve para a trilha existir de verdade em desenvolvimento — com ordem,
 -- desbloqueio e conteúdo — em vez de tela vazia. Não é o conteúdo pedagógico
@@ -28,10 +29,11 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO cells (hive_id, game_type_id, age_band_id, order_index, title, estimated_seconds)
 SELECT favo.id, jogo.id, faixa.id, dados.ordem, dados.titulo, dados.segundos
   FROM (
-    SELECT 'primeiros-passos' AS favo, 1 AS ordem, 'O que é mel?'            AS titulo, 'quiz-do-favo'          AS jogo, 180 AS segundos
-    UNION ALL SELECT 'primeiros-passos', 2, 'Ganhar e gastar',            'arraste-e-classifique', 240
-    UNION ALL SELECT 'primeiros-passos', 3, 'Preciso ou quero?',          'ordene-a-prioridade',   240
-    UNION ALL SELECT 'primeiros-passos', 4, 'Meu primeiro orçamento',     'monte-o-orcamento',     300
+    SELECT 'primeiros-passos' AS favo, 1 AS ordem, 'De onde vem o dinheiro?' AS titulo, 'quarto-do-beenie'      AS jogo, 300 AS segundos
+    UNION ALL SELECT 'primeiros-passos', 2, 'O que é mel?',               'quiz-do-favo',          180
+    UNION ALL SELECT 'primeiros-passos', 3, 'Ganhar e gastar',            'arraste-e-classifique', 240
+    UNION ALL SELECT 'primeiros-passos', 4, 'Preciso ou quero?',          'ordene-a-prioridade',   240
+    UNION ALL SELECT 'primeiros-passos', 5, 'Meu primeiro orçamento',     'monte-o-orcamento',     300
     UNION ALL SELECT 'guardar-e-gastar', 1, 'Por que guardar?',           'quiz-do-favo',          180
     UNION ALL SELECT 'guardar-e-gastar', 2, 'O cofre do tempo',           'cofre-do-tempo',        300
     UNION ALL SELECT 'guardar-e-gastar', 3, 'Comparando preços',          'mercado-esperto',       240
@@ -69,8 +71,22 @@ SELECT favo.id, jogo.id, faixa.id, dados.ordem, dados.titulo, dados.segundos
 ON DUPLICATE KEY UPDATE
   title = dados.titulo, game_type_id = jogo.id, estimated_seconds = dados.segundos;
 
--- Conteúdo só da primeira célula, como exemplo de formato. As outras recebem um
--- placeholder para a trilha navegar de ponta a ponta sem tela quebrada.
+-- A primeira atividade é o quarto do Beenie. A porta pode ser usada a qualquer
+-- momento: a nota acompanha o que foi arrumado, sem exigir tudo.
+INSERT INTO contents (cell_id, version, body)
+SELECT celula.id, 1, JSON_OBJECT(
+    'tipo', 'quarto-beenie',
+    'enunciado', 'Gire as paredes, pegue um item por vez e guarde cada coisa no lugar certo. Quando quiser, clique na porta.',
+    'total', 6,
+    'tarefas', JSON_ARRAY('bau', 'armario', 'cama', 'quadro', 'mesa', 'janela')
+  )
+  FROM cells celula
+  JOIN hives favo ON favo.id = celula.hive_id
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 1
+ON DUPLICATE KEY UPDATE body = VALUES(body);
+
+-- O quiz continua como exemplo de formato. As células sem conteúdo próprio
+-- recebem um placeholder para a trilha navegar de ponta a ponta sem tela quebrada.
 INSERT INTO contents (cell_id, version, body)
 SELECT celula.id, 1, JSON_OBJECT(
     'tipo', 'quiz',
@@ -89,7 +105,7 @@ SELECT celula.id, 1, JSON_OBJECT(
   )
   FROM cells celula
   JOIN hives favo ON favo.id = celula.hive_id
- WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 1
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 2
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
 -- Arraste e Classifique (RF-JOG-02): três células, uma por favo, cada uma com
@@ -112,7 +128,7 @@ SELECT celula.id, 1, JSON_OBJECT(
   )
   FROM cells celula
   JOIN hives favo ON favo.id = celula.hive_id
- WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 2
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 3
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
 INSERT INTO contents (cell_id, version, body)
@@ -175,7 +191,7 @@ SELECT celula.id, 1, JSON_OBJECT(
   )
   FROM cells celula
   JOIN hives favo ON favo.id = celula.hive_id
- WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 4
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 5
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
 INSERT INTO contents (cell_id, version, body)
@@ -428,7 +444,7 @@ SELECT celula.id, 1, JSON_OBJECT(
   )
   FROM cells celula
   JOIN hives favo ON favo.id = celula.hive_id
- WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 3
+ WHERE favo.slug = 'primeiros-passos' AND celula.order_index = 4
 ON DUPLICATE KEY UPDATE body = VALUES(body);
 
 INSERT INTO contents (cell_id, version, body)

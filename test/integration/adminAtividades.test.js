@@ -161,6 +161,22 @@ describe('cadastro de atividade pelo formulário', opcoes, () => {
     const [[faixa]] = await banco.conexao.query('SELECT id FROM age_bands WHERE code = ?', ['A']);
     idDaFaixaA = Number(faixa.id);
 
+    // A conta demo já vinha com quatro das cinco células do primeiro favo.
+    // Concluímos a última (orçamento) para que as células criadas por estes
+    // testes nasçam desbloqueadas, como acontecia antes do quarto entrar.
+    const [[jogadoraLinha]] = await banco.conexao.query('SELECT id FROM users WHERE email = ?', [
+      JOGADORA.email,
+    ]);
+    await banco.conexao.query(
+      `INSERT INTO cell_progress
+         (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
+       SELECT ?, celula.id, 1, 1, 4, 20, UTC_TIMESTAMP(), UTC_TIMESTAMP()
+         FROM cells celula
+         JOIN game_types tipo ON tipo.id = celula.game_type_id
+        WHERE celula.hive_id = ? AND tipo.slug = 'monte-o-orcamento'`,
+      [jogadoraLinha.id, idDoFavoDemo],
+    );
+
     const [tipos] = await banco.conexao.query('SELECT id, slug FROM game_types');
     tiposPorSlug = new Map(tipos.map((tipo) => [tipo.slug, Number(tipo.id)]));
 

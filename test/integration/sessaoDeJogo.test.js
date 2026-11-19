@@ -39,6 +39,7 @@ describe('sessão de jogo', opcoes, () => {
   let conexao;
   let idUsuario;
   let celulas;
+  let quiz;
 
   before(async () => {
     banco = await criarBancoDeTeste();
@@ -57,6 +58,18 @@ describe('sessão de jogo', opcoes, () => {
 
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
+    // Só a conclusão sem recompensa da primeira célula: os saldos deste teste
+    // podem então ser comparados com os da partida do quiz.
+    await conexao.query(
+      `INSERT INTO cell_progress
+         (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
+       SELECT ?, celula.id, 1, 1, 0, 100, UTC_TIMESTAMP(), UTC_TIMESTAMP()
+         FROM cells celula
+         JOIN game_types tipo ON tipo.id = celula.game_type_id
+        WHERE celula.hive_id = ? AND tipo.slug = 'quarto-do-beenie'`,
+      [idUsuario, favo.id],
+    );
+    quiz = celulas.find((celula) => celula.game_type_slug === 'quiz-do-favo');
   });
 
   after(async () => {
@@ -80,14 +93,14 @@ describe('sessão de jogo', opcoes, () => {
 
   it('a célula travada não abre partida, mesmo pedindo direto', async () => {
     await assert.rejects(
-      () => gameSessionService.abrir(idUsuario, celulas[1].id),
+      () => gameSessionService.abrir(idUsuario, celulas[2].id),
       (erro) => erro.esperado === true,
-      'a segunda célula depende da primeira (RN-026)',
+      'a terceira célula depende da segunda (RN-026)',
     );
   });
 
   it('abrir devolve token e as perguntas sem o gabarito', async () => {
-    const partida = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const partida = await gameSessionService.abrir(idUsuario, quiz.id);
 
     assert.match(partida.token, /^[0-9a-f-]{36}$/);
     assert.equal(partida.ehRepeticao, false);
@@ -99,7 +112,7 @@ describe('sessão de jogo', opcoes, () => {
 
   it('fechar com tudo certo paga as três recompensas e grava a partida', async () => {
     const antes = await saldos();
-    const { token } = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const { token } = await gameSessionService.abrir(idUsuario, quiz.id);
 
     const resultado = await gameSessionService.fechar(idUsuario, token, { respostas: RESPOSTAS_CERTAS });
 
@@ -122,7 +135,7 @@ describe('sessão de jogo', opcoes, () => {
   });
 
   it('reenviar o mesmo token devolve o resultado, sem creditar de novo (RN-009)', async () => {
-    const { token } = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const { token } = await gameSessionService.abrir(idUsuario, quiz.id);
     const primeira = await gameSessionService.fechar(idUsuario, token, { respostas: RESPOSTAS_CERTAS });
 
     const antes = await saldos();
@@ -135,7 +148,7 @@ describe('sessão de jogo', opcoes, () => {
   });
 
   it('a pontuação mandada pelo cliente é ignorada; quem conta erro é o servidor (RN-007)', async () => {
-    const { token } = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const { token } = await gameSessionService.abrir(idUsuario, quiz.id);
 
     const resultado = await gameSessionService.fechar(idUsuario, token, {
       respostas: RESPOSTAS_COM_UM_ERRO,
@@ -152,7 +165,7 @@ describe('sessão de jogo', opcoes, () => {
 
   it('repetir a célula paga 25% de XP e zero mel (RN-008)', async () => {
     const antes = await saldos();
-    const partida = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const partida = await gameSessionService.abrir(idUsuario, quiz.id);
 
     assert.equal(partida.ehRepeticao, true, 'a célula já foi concluída antes');
 
@@ -174,23 +187,23 @@ describe('sessão de jogo', opcoes, () => {
    * de o motor de recompensas ser acionado.
    */
   it('célula com conteúdo que não dá para jogar recusa abrir, em vez de pagar por nada', async () => {
-    const arraste = await gameSessionService.abrir(idUsuario, celulas[1].id);
+    const arraste = await gameSessionService.abrir(idUsuario, celulas[2].id);
     await gameSessionService.fechar(idUsuario, arraste.token, { respostas: CAIXAS_CERTAS });
 
     await conexao.query(
       "UPDATE contents SET body = JSON_OBJECT('tipo', 'placeholder', 'texto', 'Em produção.') WHERE cell_id = ?",
-      [celulas[2].id],
+      [celulas[3].id],
     );
 
     await assert.rejects(
-      () => gameSessionService.abrir(idUsuario, celulas[2].id),
+      () => gameSessionService.abrir(idUsuario, celulas[3].id),
       (erro) => erro.codigo === 'VALIDACAO',
-      'a terceira célula está liberada, mas o conteúdo dela não é jogável',
+      'a quarta célula está liberada, mas o conteúdo dela não é jogável',
     );
   });
 
   it('a partida abandonada é recusada, e não devolve um resultado zerado (L-3)', async () => {
-    const { token } = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const { token } = await gameSessionService.abrir(idUsuario, quiz.id);
     await gameSessionService.abandonar(idUsuario, token);
 
     await assert.rejects(
@@ -203,8 +216,8 @@ describe('sessão de jogo', opcoes, () => {
   it('is_replay é gravado com o que foi pago, não com o que era verdade na abertura (L-2)', async () => {
     // Duas partidas abertas antes de qualquer conclusão: as duas nascem como
     // estreia, e a segunda a fechar é paga como repetição.
-    const primeira = await gameSessionService.abrir(idUsuario, celulas[0].id);
-    const segunda = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const primeira = await gameSessionService.abrir(idUsuario, quiz.id);
+    const segunda = await gameSessionService.abrir(idUsuario, quiz.id);
 
     await gameSessionService.fechar(idUsuario, primeira.token, { respostas: RESPOSTAS_CERTAS });
     const resultado = await gameSessionService.fechar(idUsuario, segunda.token, { respostas: RESPOSTAS_CERTAS });
@@ -217,7 +230,7 @@ describe('sessão de jogo', opcoes, () => {
   });
 
   it('partida de outro jogador não pode ser fechada', async () => {
-    const { token } = await gameSessionService.abrir(idUsuario, celulas[0].id);
+    const { token } = await gameSessionService.abrir(idUsuario, quiz.id);
     const idIntruso = await usersRepository.criar({
       email: 'intruso-sessao@beever.dev',
       apelido: 'intruso',

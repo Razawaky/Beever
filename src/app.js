@@ -50,6 +50,30 @@ export function criarApp() {
     })
   );
 
+  // O quarto do Beenie roda num iframe da atividade "De onde vem o dinheiro?".
+  // Só a resposta da demo precisa autorizar o encaixe, e mesmo assim apenas por
+  // esta origem; as telas do jogo continuam com `frame-ancestors 'none'`.
+  app.use('/demo/quarto-beenie/', (req, res, next) => {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'; frame-ancestors 'self'",
+    );
+    next();
+  });
+
+  // A folha e os módulos da demo também mudaram. Sem isto o iframe pode seguir
+  // usando uma versão em cache e mostrar o rodapé que já foi removido.
+  app.use((req, res, next) => {
+    if (
+      req.path.startsWith('/demo/quarto-beenie/') ||
+      req.path.startsWith('/js/demo/quarto-beenie/') ||
+      req.path.startsWith('/js/vendor/demo/')
+    ) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+    next();
+  });
+
   // Antes do logger: é ele quem cria o id que o `pino-http` vai reaproveitar e
   // que todo log da requisição vai carregar.
   app.use(requestId);

@@ -62,7 +62,7 @@ describe('progressService', opcoes, () => {
     assert.equal(resultado.estrelas, 2, '2 erros são 2 estrelas (RN-030)');
     assert.equal(resultado.ehRepeticao, false, 'estreia não é repetição');
     assert.equal(Number(resultado.celula.stars), 2);
-    assert.equal(Number(resultado.favo.percent), 25, 'uma de quatro células');
+    assert.equal(Number(resultado.favo.percent), 20, 'uma de cinco células');
     assert.equal(resultado.favoConcluido, false);
   });
 
@@ -83,7 +83,7 @@ describe('progressService', opcoes, () => {
     assert.equal(resultado.estrelas, 0);
     assert.equal(Number(resultado.celula.attempts), 1, 'a tentativa fica registrada');
     assert.equal(resultado.celula.first_completed_at, null);
-    assert.equal(Number(resultado.favo.percent), 25, 'o percentual não andou');
+    assert.equal(Number(resultado.favo.percent), 20, 'o percentual não andou');
 
     const { celulas: lista } = await contentService.listarCelulasDoFavo(idUsuario, favo.id);
     assert.equal(lista[2].estado, ESTADOS.travadoPorCelulaAnterior);
@@ -123,7 +123,7 @@ describe('progressService', opcoes, () => {
     }
 
     const resumo = await progressService.resumoDoFavo(idUsuario, favo.id);
-    assert.equal(resumo.concluidas, 4);
+    assert.equal(resumo.concluidas, 5);
     assert.equal(resumo.percentual, 100);
 
     const trilha = await contentService.listarTrilha(idUsuario);

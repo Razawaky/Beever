@@ -105,6 +105,15 @@ describe('tela de resultado', opcoes, () => {
     idUsuario = Number(perfil.user_id);
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
+    await banco.conexao.query(
+      `INSERT INTO cell_progress
+         (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
+       SELECT ?, celula.id, 1, 1, 0, 100, UTC_TIMESTAMP(), UTC_TIMESTAMP()
+         FROM cells celula
+         JOIN game_types tipo ON tipo.id = celula.game_type_id
+        WHERE celula.hive_id = ? AND tipo.slug = 'quarto-do-beenie'`,
+      [idUsuario, favo.id],
+    );
     csrf = await lerToken('/painel');
   });
 
@@ -136,16 +145,16 @@ describe('tela de resultado', opcoes, () => {
   });
 
   it('terminar aponta para a próxima célula quando ela abre', async () => {
-    const { resultado } = await jogar(celulas[0].id, RESPOSTAS_DO_QUIZ);
+    const { resultado } = await jogar(celulas[1].id, RESPOSTAS_DO_QUIZ);
 
-    assert.ok(resultado.proximaCelula, 'a segunda célula abriu com a conclusão da primeira');
-    assert.equal(Number(resultado.proximaCelula.id), Number(celulas[1].id));
+    assert.ok(resultado.proximaCelula, 'a terceira célula abriu com a conclusão da segunda');
+    assert.equal(Number(resultado.proximaCelula.id), Number(celulas[2].id));
     assert.equal(Number(resultado.proximaCelula.idFavo), Number(favo.id));
     assert.ok(resultado.proximaCelula.titulo);
   });
 
   it('reenviar o mesmo token devolve o resultado gravado, com o mesmo caminho', async () => {
-    const { token, resultado } = await jogar(celulas[1].id, CAIXAS_CERTAS);
+    const { token, resultado } = await jogar(celulas[2].id, CAIXAS_CERTAS);
 
     const { body: reenvio } = await agente
       .post(`/partidas/${token}/resultado`)
@@ -164,10 +173,10 @@ describe('tela de resultado', opcoes, () => {
    * na segunda vez que ela jogasse a mesma coisa.
    */
   it('repetir uma célula ainda aponta para a seguinte, mesmo já concluída', async () => {
-    const { resultado } = await jogar(celulas[0].id, RESPOSTAS_DO_QUIZ);
+    const { resultado } = await jogar(celulas[1].id, RESPOSTAS_DO_QUIZ);
 
-    assert.equal(resultado.ehRepeticao, true, 'a primeira célula já tinha sido concluída');
-    assert.equal(Number(resultado.proximaCelula.id), Number(celulas[1].id));
+    assert.equal(resultado.ehRepeticao, true, 'a segunda célula já tinha sido concluída');
+    assert.equal(Number(resultado.proximaCelula.id), Number(celulas[2].id));
   });
 
   /**
@@ -175,12 +184,12 @@ describe('tela de resultado', opcoes, () => {
    * fim do favo: a última célula não tem para onde apontar.
    */
   it('a última célula do favo não aponta para lugar nenhum', async () => {
-    for (const celula of celulas.slice(1, 3)) {
+    for (const celula of celulas.slice(1, 4)) {
       await progressService.registrarTentativa(idUsuario, celula.id, { erros: 0, pontuacao: 100, concluiu: true });
     }
 
-    const { resultado } = await jogar(celulas[3].id, DIVISAO_DO_ORCAMENTO);
+    const { resultado } = await jogar(celulas[4].id, DIVISAO_DO_ORCAMENTO);
 
-    assert.equal(resultado.proximaCelula, null, 'depois da quarta célula acaba o favo');
+    assert.equal(resultado.proximaCelula, null, 'depois da quinta célula acaba o favo');
   });
 });

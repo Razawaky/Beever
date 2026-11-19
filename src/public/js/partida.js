@@ -48,9 +48,11 @@ export function mostrarProgresso(texto, feitas, total) {
   const porcento = Math.round((feitas / total) * 100);
   const passo = Math.round(porcento / 5) * 5;
 
-  painelDePasso.textContent = texto;
-  barra.className = `h-full rounded-pilula bg-mel barra-${passo}`;
-  barraCaixa.setAttribute('aria-valuenow', String(porcento));
+  // O quarto do Beenie não mostra o passo nem a barra da casca: a demo tem o
+  // próprio progresso. Os elementos podem não existir nessa atividade.
+  if (painelDePasso) painelDePasso.textContent = texto;
+  if (barra) barra.className = `h-full rounded-pilula bg-mel barra-${passo}`;
+  if (barraCaixa) barraCaixa.setAttribute('aria-valuenow', String(porcento));
 }
 
 // Guardado aqui para o jogo não precisar repassar o token a cada salvamento.

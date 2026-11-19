@@ -202,6 +202,15 @@ describe('varredura de segurança', opcoes, () => {
       assert.equal(resposta.headers['x-content-type-options'], 'nosniff');
       assert.equal(resposta.headers['x-powered-by'], undefined, 'não anuncie o servidor');
     });
+
+    it('o quarto integrado pode ser encaixado só pela própria origem', async () => {
+      const resposta = await request(app).get('/demo/quarto-beenie/').set('Accept', 'text/html').expect(200);
+      const csp = resposta.headers['content-security-policy'];
+
+      assert.match(csp, /frame-ancestors 'self'/, 'o iframe da atividade precisa desta folga');
+      assert.match(csp, /script-src 'self'/);
+      assert.ok(!csp.includes('unsafe-inline'));
+    });
   });
 
   describe('cookie e sessão (RNF-12)', () => {

@@ -12,6 +12,7 @@ import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
+import * as progressService from '../../src/services/progressService.js';
 
 /**
  * O Quiz do Favo pelo HTTP, do jeito que o navegador faz.
@@ -33,6 +34,7 @@ describe('Quiz do Favo', opcoes, () => {
   let csrf;
   let favo;
   let celulas;
+  let quiz;
 
   async function lerToken(caminho) {
     const resposta = await agente.get(caminho).set('Accept', 'text/html');
@@ -47,7 +49,7 @@ describe('Quiz do Favo', opcoes, () => {
       .post('/partidas')
       .set('Accept', 'application/json')
       .set('x-csrf-token', csrf)
-      .send({ idCelula: celulas[0].id });
+      .send({ idCelula: quiz.id });
   }
 
   async function contarPartidas() {
@@ -94,6 +96,15 @@ describe('Quiz do Favo', opcoes, () => {
     ]);
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, Number(perfil.user_id), ['A']);
+    quiz = celulas.find((celula) => celula.game_type_slug === 'quiz-do-favo');
+    // O quiz é a segunda célula agora: concluímos o quarto para liberá-lo, como
+    // o jogador faria na tela.
+    const quarto = celulas.find((celula) => celula.game_type_slug === 'quarto-do-beenie');
+    await progressService.registrarTentativa(Number(perfil.user_id), quarto.id, {
+      erros: 0,
+      pontuacao: 100,
+      concluiu: true,
+    });
     csrf = await lerToken('/painel');
   });
 
@@ -106,21 +117,21 @@ describe('Quiz do Favo', opcoes, () => {
   it('o favo oferece "Jogar" só na célula que tem jogo', async () => {
     const pagina = await agente.get(`/trilha/${favo.id}`).set('Accept', 'text/html').expect(200);
 
-    assert.match(pagina.text, new RegExp(`href="/trilha/${favo.id}/celula/${celulas[0].id}"`), 'o quiz é jogável');
+    assert.match(pagina.text, new RegExp(`href="/trilha/${favo.id}/celula/${quiz.id}"`), 'o quiz é jogável');
     // Nenhuma outra célula do favo abriu ainda: a RN-026 trava tudo até a
     // primeira ser concluída, e célula travada não oferece link.
-    assert.doesNotMatch(pagina.text, new RegExp(`celula/${celulas[3].id}"`), 'célula travada não vira link');
+    assert.doesNotMatch(pagina.text, new RegExp(`celula/${celulas[4].id}"`), 'célula travada não vira link');
   });
 
   it('a página do jogo não entrega o gabarito nem cria partida', async () => {
     const antes = await contarPartidas();
     const pagina = await agente
-      .get(`/trilha/${favo.id}/celula/${celulas[0].id}`)
+      .get(`/trilha/${favo.id}/celula/${quiz.id}`)
       .set('Accept', 'text/html')
       .expect(200);
 
     assert.match(pagina.text, /js\/quiz\.js/, 'a tela é montada pelo JS da página');
-    assert.match(pagina.text, new RegExp(`data-celula-id="${celulas[0].id}"`), 'é assim que o dataset lê');
+    assert.match(pagina.text, new RegExp(`data-celula-id="${quiz.id}"`), 'é assim que o dataset lê');
     assert.match(pagina.text, /data-csrf-token="[^"]+"/, 'a partida é POST e a página não tem formulário');
     assert.doesNotMatch(pagina.text, /correta/, 'a resposta certa não pode viajar no HTML');
     assert.equal(await contarPartidas(), antes, 'GET não cria partida');
@@ -128,7 +139,7 @@ describe('Quiz do Favo', opcoes, () => {
 
   it('a célula travada não abre a página do jogo', async () => {
     await agente
-      .get(`/trilha/${favo.id}/celula/${celulas[1].id}`)
+      .get(`/trilha/${favo.id}/celula/${celulas[2].id}`)
       .set('Accept', 'application/json')
       .expect(403);
   });
@@ -173,7 +184,7 @@ describe('Quiz do Favo', opcoes, () => {
     await agente
       .post('/partidas')
       .set('Accept', 'application/json')
-      .send({ idCelula: celulas[0].id })
+      .send({ idCelula: quiz.id })
       .expect(403);
   });
 

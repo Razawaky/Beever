@@ -94,6 +94,13 @@ const ORDENE = {
   ],
 };
 
+const QUARTO = {
+  tipo: 'quarto-beenie',
+  enunciado: 'Arrume o quarto.',
+  total: 6,
+  tarefas: ['bau', 'armario', 'cama', 'quadro', 'mesa', 'janela'],
+};
+
 describe('validadoresDeJogo', () => {
   describe('validarRespostas', () => {
     it('não acha erro quando tudo está certo', () => {
@@ -112,6 +119,17 @@ describe('validadoresDeJogo', () => {
 
     it('resposta a mais é ignorada, e não vira acerto', () => {
       assert.deepEqual(validarRespostas('quiz-do-favo', QUIZ, [0, 0, 0, 0]), { erros: 0, total: 2 });
+    });
+
+    it('conta cada tarefa do quarto que ficou pendente', () => {
+      assert.deepEqual(validarRespostas('quarto-do-beenie', QUARTO, QUARTO.tarefas), { erros: 0, total: 6 });
+      assert.equal(validarRespostas('quarto-do-beenie', QUARTO, ['bau', 'cama']).erros, 4);
+      assert.equal(validarRespostas('quarto-do-beenie', QUARTO, []).erros, 6);
+    });
+
+    it('ignora tarefa repetida e identificador inventado no quarto', () => {
+      const respostas = ['bau', 'bau', 'cama', 'inexistente'];
+      assert.deepEqual(validarRespostas('quarto-do-beenie', QUARTO, respostas), { erros: 4, total: 6 });
     });
 
     it('recusa resposta que não veio em lista', () => {
@@ -142,6 +160,19 @@ describe('validadoresDeJogo', () => {
       assert.throws(() => conferirForma('quiz-do-favo', torto), { codigo: 'VALIDACAO' });
     });
 
+    it('recusa quarto sem tarefas ou com tarefa repetida', () => {
+      assert.throws(() => conferirForma('quarto-do-beenie', { tipo: 'quarto-beenie' }), {
+        codigo: 'VALIDACAO',
+      });
+      assert.throws(
+        () => conferirForma('quarto-do-beenie', { ...QUARTO, tarefas: ['bau', 'bau'] }),
+        { codigo: 'VALIDACAO' },
+      );
+      assert.throws(() => conferirForma('quarto-do-beenie', { ...QUARTO, total: 3 }), {
+        codigo: 'VALIDACAO',
+      });
+    });
+
     it('recusa tipo de jogo sem validador, dizendo qual é', () => {
       // Os seis jogos do escopo têm validador; o slug abaixo não existe, e é
       // esse o caso que a mensagem de erro precisa nomear.
@@ -158,6 +189,14 @@ describe('validadoresDeJogo', () => {
         assert.equal(pergunta.correta, undefined);
         assert.ok(pergunta.enunciado && pergunta.alternativas.length >= 2);
       }
+    });
+
+    it('entrega só o total de tarefas do quarto, não o gabarito', () => {
+      const paraTela = conteudoParaJogar('quarto-do-beenie', QUARTO);
+
+      assert.equal(paraTela.total, 6);
+      assert.equal(paraTela.enunciado, QUARTO.enunciado);
+      assert.equal(paraTela.tarefas, undefined);
     });
 
     it('não altera o conteúdo original', () => {
@@ -470,6 +509,7 @@ describe('validadoresDeJogo', () => {
 
   it('diz quais tipos de jogo já são jogáveis', () => {
     assert.deepEqual(tiposJogaveis(), [
+      'quarto-do-beenie',
       'quiz-do-favo',
       'arraste-e-classifique',
       'monte-o-orcamento',

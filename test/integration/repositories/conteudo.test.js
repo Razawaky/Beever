@@ -90,13 +90,13 @@ describe('repositories de conteúdo', opcoes, () => {
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
 
-    assert.equal(celulas.length, 4);
+    assert.equal(celulas.length, 5);
     assert.deepEqual(
       celulas.map((celula) => Number(celula.order_index)),
-      [1, 2, 3, 4],
+      [1, 2, 3, 4, 5],
     );
-    assert.equal(celulas[0].title, 'O que é mel?');
-    assert.equal(celulas[0].game_type_slug, 'quiz-do-favo', 'o tipo de jogo decide qual validador roda');
+    assert.equal(celulas[0].title, 'De onde vem o dinheiro?');
+    assert.equal(celulas[0].game_type_slug, 'quarto-do-beenie', 'o tipo de jogo decide qual validador roda');
     assert.equal(Number(celulas[0].stars), 0, 'célula nunca jogada aparece com zero, não some da lista');
     assert.equal(celulas[0].first_completed_at, null);
   });
@@ -120,7 +120,7 @@ describe('repositories de conteúdo', opcoes, () => {
 
     const totais = await cellsRepository.contarPorFavos([primeiro.id, segundo.id, deOutraFaixa.id], ['A']);
 
-    assert.equal(totais.get(Number(primeiro.id)), 4, 'é o denominador da RN-027');
+    assert.equal(totais.get(Number(primeiro.id)), 5, 'é o denominador da RN-027');
     assert.equal(totais.get(Number(segundo.id)), 4);
     assert.equal(totais.has(Number(deOutraFaixa.id)), false, 'favo de faixa acima não entra na conta');
 

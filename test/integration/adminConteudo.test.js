@@ -82,6 +82,21 @@ describe('cadastro de conteúdo pelo painel', opcoes, () => {
 
     const [[faixa]] = await banco.conexao.query('SELECT id FROM age_bands WHERE code = ?', ['A']);
     idDaFaixaA = Number(faixa.id);
+
+    // A conta demo tem quatro de cinco células concluídas no primeiro favo.
+    // Fechamos a última para que a célula criada pelo teste abra de imediato.
+    const [[jogadoraLinha]] = await banco.conexao.query('SELECT id FROM users WHERE email = ?', [
+      JOGADORA.email,
+    ]);
+    await banco.conexao.query(
+      `INSERT INTO cell_progress
+         (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
+       SELECT ?, celula.id, 1, 1, 4, 20, UTC_TIMESTAMP(), UTC_TIMESTAMP()
+         FROM cells celula
+         JOIN game_types tipo ON tipo.id = celula.game_type_id
+        WHERE celula.hive_id = ? AND tipo.slug = 'monte-o-orcamento'`,
+      [jogadoraLinha.id, idDoFavoDemo],
+    );
   });
 
   after(async () => {
@@ -285,7 +300,11 @@ describe('cadastro de conteúdo pelo painel', opcoes, () => {
       .expect(200);
 
     const favo = await jogadora.get(`/trilha/${idDoFavoDemo}`).set('Accept', 'text/html').expect(200);
-    assert.doesNotMatch(favo.text, new RegExp(jogada.title), 'a célula desativada some da trilha');
+    assert.doesNotMatch(
+      favo.text,
+      new RegExp(`celula/${jogada.id}`),
+      'a célula desativada some da trilha',
+    );
 
     const [progresso] = await banco.conexao.query('SELECT stars FROM cell_progress WHERE cell_id = ?', [
       jogada.id,

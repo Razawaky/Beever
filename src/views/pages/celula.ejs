@@ -12,19 +12,19 @@
   O id da célula e o do favo viajam em `data-` no `<body>`, porque a CSP é
   `script-src 'self'` e não existe script inline neste projeto.
 -%>
-<header class="bg-mel px-6 py-6">
+<header class="bg-mel px-6 <%= areaDoJogo === 'quarto-beenie' ? 'py-3' : 'py-6' %>">
   <div class="mx-auto max-w-2xl">
     <a
       href="/painel/trilha/<%= idFavo %>"
       class="text-sm font-semibold text-tinta underline decoration-tinta/30 decoration-2 underline-offset-4 hover:decoration-tinta focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
       >&larr; Voltar ao favo</a
     >
-    <h1 class="mt-2 font-display text-2xl text-tinta sm:text-3xl"><%= celula.title %></h1>
+    <h1 class="font-display text-tinta <%= areaDoJogo === 'quarto-beenie' ? 'mt-1 text-xl sm:text-2xl' : 'mt-2 text-2xl sm:text-3xl' %>"><%= celula.title %></h1>
     <p class="mt-1 text-sm text-tinta-suave"><%= celula.game_type_name %></p>
   </div>
 </header>
 
-<main class="mx-auto max-w-2xl px-6 py-8">
+<main class="mx-auto <%= areaDoJogo === 'quarto-beenie' ? 'max-w-none px-0 pb-8 pt-2' : 'max-w-2xl px-6 py-8' %>">
   <p id="jogo-carregando" class="rounded-favo bg-cera p-6 text-center text-tinta-suave">Preparando a atividade…</p>
 
   <p
@@ -34,13 +34,20 @@
   ></p>
 
   <section id="jogo-area" class="hidden">
+    <% if (areaDoJogo === 'quarto-beenie') { %>
+    <p id="jogo-repeticao" class="hidden text-xs font-medium text-tinta-suave">
+      Você já concluiu esta célula: repetir rende menos.
+    </p>
+    <% } else { %>
     <div class="flex items-center justify-between gap-4">
       <p id="jogo-passo" class="text-sm font-semibold text-tinta-suave"></p>
       <p id="jogo-repeticao" class="hidden text-xs font-medium text-tinta-suave">
         Você já concluiu esta célula: repetir rende menos.
       </p>
     </div>
+    <% } %>
 
+    <% if (areaDoJogo !== 'quarto-beenie') { %>
     <div
       class="mt-3 h-3 overflow-hidden rounded-pilula bg-cera"
       role="progressbar"
@@ -52,6 +59,7 @@
     >
       <div id="jogo-barra" class="h-full rounded-pilula bg-mel barra-0"></div>
     </div>
+    <% } %>
 
     <%# A mídia da atividade é da casca, e não do jogo: cadastrada uma vez pelo
         painel, ela aparece do mesmo jeito nos oito tipos. O quadrinho tem arte

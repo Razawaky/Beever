@@ -56,6 +56,12 @@ body {
   padding: 28px 16px 48px;
 }
 
+/* Na atividade o cabeçalho da demo foi retirado: sobra só o espaço vazio no
+   topo, que afasta o palco da navbar. */
+body[data-quarto-beenie-integrado='1'] .demo {
+  padding-top: 0;
+}
+
 .demo__cabecalho {
   max-width: 780px;
   margin: 0 auto 20px;
@@ -610,4 +616,45 @@ code {
   .demo__botao {
     transition: none;
   }
+}
+
+/* Dentro da atividade real, o protótipo vira só o palco: o site já tem
+   cabeçalho, título, rodapé e navegação próprios. */
+.demo-integrado body {
+  background: var(--palco);
+}
+
+.demo-integrado .demo {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.demo-integrado .demo__cabecalho,
+.demo-integrado .demo__acoes,
+.demo-integrado .arquitetura,
+.demo-integrado .demo__rodape {
+  display: none;
+}
+
+/* A moldura do palco continua igual à da demo isolada; só o texto que ficava
+   abaixo dela é removido da tela (o progresso já é anunciado pela casca). */
+.demo-integrado .demo__palco {
+  width: 100%;
+  margin: 0;
+}
+
+.demo-integrado .demo__status,
+.demo-integrado .demo__instrucoes {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

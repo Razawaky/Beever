@@ -96,7 +96,7 @@ describe('aplicação', opcoes, () => {
 
         assert.match(resposta.text, /^<!doctype html>/i);
         assert.match(resposta.text, /<html lang="pt-BR">/);
-        assert.match(resposta.text, /<link rel="stylesheet" href="\/css\/app\.css" \/>/);
+        assert.match(resposta.text, /<link rel="stylesheet" href="\/css\/app\.css\?v=\d+" \/>/);
         assert.ok(resposta.text.includes(titulo), `a página deveria se intitular "${titulo}"`);
         assert.match(resposta.text, /<\/body>\s*<\/html>/);
       });
@@ -119,7 +119,7 @@ describe('aplicação', opcoes, () => {
       const cadastro = await request(app).get('/cadastro').set('Accept', 'text/html').expect(200);
       // `type="module"` no lugar de `defer` desde a T-07.3: as telas de jogo
       // importam a parte comum, e módulo já é adiado por natureza.
-      assert.match(cadastro.text, /<script src="\/js\/cadastro\.js" type="module"><\/script>/);
+      assert.match(cadastro.text, /<script src="\/js\/cadastro\.js\?v=\d+" type="module"><\/script>/);
 
       // Desde o painel de acessibilidade, toda tela carrega um script — o do
       // painel, e só ele. Página sem interatividade própria não carrega mais nada.

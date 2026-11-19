@@ -66,9 +66,10 @@ INSERT INTO guardian_consents (user_id, guardian_email) VALUES (@demo_user_id, '
 -- ---------------------------------------------------------------------------
 -- Progresso na trilha
 -- ---------------------------------------------------------------------------
--- Todo o primeiro favo concluído e a primeira célula do segundo. Estrelas
+-- Quatro das cinco células do primeiro favo e a primeira do segundo. Estrelas
 -- 3, 3, 3, 2 e 2 — os créditos mais abaixo são exatamente o que reward_configs
--- paga para a faixa A nessas estrelas.
+-- paga para a faixa A nessas estrelas. Os 80% já abrem o favo seguinte, e a
+-- última célula do primeiro favo fica disponível para a conta demo jogar.
 
 INSERT INTO cell_progress (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
 SELECT @demo_user_id, celula.id, dados.estrelas, 1, dados.erros, dados.pontuacao,

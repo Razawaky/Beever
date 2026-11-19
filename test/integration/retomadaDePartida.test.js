@@ -103,7 +103,16 @@ describe('retomada de partida', opcoes, () => {
     ]);
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, Number(perfil.user_id), ['A']);
-    idDaCelula = celulas[0].id;
+    await banco.conexao.query(
+      `INSERT INTO cell_progress
+         (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
+       SELECT ?, celula.id, 1, 1, 0, 100, UTC_TIMESTAMP(), UTC_TIMESTAMP()
+         FROM cells celula
+         JOIN game_types tipo ON tipo.id = celula.game_type_id
+        WHERE celula.hive_id = ? AND tipo.slug = 'quarto-do-beenie'`,
+      [Number(perfil.user_id), favo.id],
+    );
+    idDaCelula = celulas.find((celula) => celula.game_type_slug === 'quiz-do-favo').id;
     csrf = await lerToken('/painel');
   });
 

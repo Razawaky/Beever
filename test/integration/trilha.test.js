@@ -96,7 +96,7 @@ describe('trilha — contentService', opcoes, () => {
   it('lista as células do favo aberto, só a primeira disponível', async () => {
     const { celulas: lista } = await contentService.listarCelulasDoFavo(idUsuario, primeiroFavo.id);
 
-    assert.equal(lista.length, 4);
+    assert.equal(lista.length, 5);
     assert.equal(lista[0].estado, ESTADOS.disponivel);
     assert.ok(
       lista.slice(1).every((celula) => celula.estado === ESTADOS.travadoPorCelulaAnterior),
@@ -147,15 +147,20 @@ describe('trilha — contentService', opcoes, () => {
     await concluir(celulas[2]);
 
     const parcial = await contentService.listarTrilha(idUsuario);
-    assert.equal(parcial[0].percentual, 75);
-    assert.equal(parcial[1].estado, ESTADOS.travadoPorPercentual, '75% ainda não é 80%');
+    assert.equal(parcial[0].percentual, 60);
+    assert.equal(parcial[1].estado, ESTADOS.travadoPorPercentual, '60% ainda não é 80%');
 
     await concluir(celulas[3]);
+
+    const nosOitenta = await contentService.listarTrilha(idUsuario);
+    assert.equal(nosOitenta[0].percentual, 80);
+    assert.equal(nosOitenta[1].estado, ESTADOS.disponivel, 'nos 80% exatos o favo seguinte abre');
+
+    await concluir(celulas[4]);
 
     const completa = await contentService.listarTrilha(idUsuario);
     assert.equal(completa[0].percentual, 100);
     assert.ok(completa[0].concluido, 'favo fechado tem data de conclusão');
-    assert.equal(completa[1].estado, ESTADOS.disponivel, 'o favo seguinte abriu');
   });
 
   it('requisito de patrimônio trava o favo mesmo com o percentual cumprido (RN-028)', async () => {

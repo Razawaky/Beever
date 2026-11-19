@@ -8,5 +8,8 @@
 -%>
 <link rel="preload" href="/fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/fonts/lilita-one-latin.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="/css/app.css" />
+<link rel="stylesheet" href="/css/app.css?v=<%= versaoDoCss %>" />
+<% estilosExtras.forEach((caminho) => { %>
+<link rel="stylesheet" href="<%= caminho %>" />
+<% }) %>
 <title><%= titulo %></title>

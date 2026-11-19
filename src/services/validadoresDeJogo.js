@@ -620,7 +620,61 @@ const quadrinho = {
   },
 };
 
+/**
+ * Quarto do Beenie: a resposta é a lista de tarefas que a pessoa arrumou.
+ *
+ * O jogo funciona como o restante do motor: o cliente manda só o que fez, e o
+ * servidor conta quantas tarefas do conteúdo faltaram. Como a porta pode ser
+ * usada a qualquer momento, sair cedo não é erro de Digitação — é nota menor,
+ * proporcional ao que ficou feito.
+ */
+const quartoDoBeenie = {
+  conferirForma(corpo) {
+    const tarefas = corpo?.tarefas;
+    if (!Array.isArray(tarefas) || tarefas.length === 0) {
+      throw erroValidacao('Esta célula ainda não é jogável: o quarto não tem tarefas cadastradas');
+    }
+    if (tarefas.some((tarefa) => typeof tarefa !== 'string' || tarefa.trim() === '')) {
+      throw erroValidacao('Tarefa do quarto com identificador inválido');
+    }
+    if (new Set(tarefas).size !== tarefas.length) {
+      throw erroValidacao('Tarefa do quarto repetida no conteúdo');
+    }
+    if (corpo.total !== undefined && Number(corpo.total) !== tarefas.length) {
+      throw erroValidacao('O total de tarefas do quarto não confere com o conteúdo');
+    }
+  },
+
+  paraJogar(corpo) {
+    return {
+      tipo: corpo.tipo,
+      enunciado: corpo.enunciado,
+      total: corpo.tarefas.length,
+    };
+  },
+
+  validar(corpo, respostas) {
+    if (!Array.isArray(respostas)) {
+      throw erroValidacao('As tarefas concluídas precisam vir em lista');
+    }
+
+    const entregues = new Set(respostas.filter((tarefa) => typeof tarefa === 'string'));
+    const concluidas = corpo.tarefas.filter((tarefa) => entregues.has(tarefa)).length;
+
+    return { erros: corpo.tarefas.length - concluidas, total: corpo.tarefas.length };
+  },
+
+  estadoParaSalvar(respostasParciais) {
+    if (!Array.isArray(respostasParciais)) {
+      throw erroValidacao('O progresso do quarto precisa vir em lista');
+    }
+    const tarefas = respostasParciais.filter((tarefa) => typeof tarefa === 'string');
+    return { respostas: [...new Set(tarefas)].slice(0, 100) };
+  },
+};
+
 const VALIDADORES = {
+  'quarto-do-beenie': quartoDoBeenie,
   'quiz-do-favo': quiz,
   'arraste-e-classifique': arraste,
   'monte-o-orcamento': orcamento,

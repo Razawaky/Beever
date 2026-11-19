@@ -8,6 +8,7 @@ import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
 import { ROTULOS_DAS_TAREFAS } from '../dadosDoQuarto.js';
 import { CORES, FONTES, LARGURA, criarFundoEscuro } from '../desenho.js';
 import { IDS_DAS_TAREFAS, estado } from '../estadoDoJogo.js';
+import { publicarFim } from '../integracao.js';
 import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from '../interface.js';
 
 function rotularTarefas(ids) {
@@ -36,6 +37,10 @@ export class CenaFim extends Phaser.Scene {
     const total = estado.totalDeTarefas;
     const tudoPronto = concluidas.length === total;
     const nadaFeito = concluidas.length === 0;
+
+    // A demo isolada não tem ouvinte; a atividade integrada usa este aviso para
+    // fechar a partida com o mesmo crédito que o servidor calcularia.
+    publicarFim({ tarefas: concluidas, total });
 
     const titulo = tudoPronto
       ? 'Quarto arrumado!'

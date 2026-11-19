@@ -8,9 +8,9 @@
 -- Faixa C de propósito: é a única com custo fixo e depreciação ligados
 -- (RN-038), então a economia aparece inteira. E, pela RN-029, quem está na
 -- faixa C enxerga também as faixas anteriores — então a trilha dele são os seis
--- favos e as 26 células, todas concluídas aqui. O teto do "maximizado" é o
+-- favos e as 27 células, todas concluídas aqui. O teto do "maximizado" é o
 -- conteúdo que existe: as conquistas de 30, 75 e 150 células e a de 12 favos
--- não têm como ser alcançadas com 26 células e 6 favos.
+-- não têm como ser alcançadas com 27 células e 6 favos.
 --
 -- O hash da senha chega em @avancado_hash, definido pelo scripts/seed.js.
 --
@@ -52,7 +52,7 @@ SELECT @leo, dia.numero, 1
 INSERT INTO guardian_consents (user_id, guardian_email) VALUES (@leo, 'responsavel@beever.dev');
 
 -- ---------------------------------------------------------------------------
--- Trilha: as 26 células das três faixas, todas com três estrelas
+-- Trilha: as 27 células das três faixas, todas com três estrelas
 -- ---------------------------------------------------------------------------
 
 INSERT INTO cell_progress (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
@@ -302,7 +302,7 @@ VALUES (@leo, 100, 100, 2, CURDATE(), UTC_TIMESTAMP());
 -- ---------------------------------------------------------------------------
 -- Conquistas: as catorze que este progresso alcança
 -- ---------------------------------------------------------------------------
--- As de 30, 75 e 150 células ficam de fora porque só existem 26 células no
+-- As de 30, 75 e 150 células ficam de fora porque só existem 27 células no
 -- catálogo, e a de 12 favos porque só existem 6. É limite de conteúdo, não do
 -- jogador.
 

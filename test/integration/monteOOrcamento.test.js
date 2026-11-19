@@ -103,9 +103,9 @@ describe('Monte o Orçamento', opcoes, () => {
     const idUsuario = Number(perfil.user_id);
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
-    idDaCelulaDeOrcamento = celulas[3].id;
+    idDaCelulaDeOrcamento = celulas[4].id;
 
-    for (const celula of celulas.slice(0, 3)) {
+    for (const celula of celulas.slice(0, 4)) {
       await progressService.registrarTentativa(idUsuario, celula.id, { erros: 0, pontuacao: 100, concluiu: true });
     }
     csrf = await lerToken('/painel');

@@ -10,7 +10,13 @@ import { CenaFim } from './cenas/CenaFim.js';
 import { CenaQuarto } from './cenas/CenaQuarto.js';
 import { ALTURA, LARGURA } from './desenho.js';
 import { estado } from './estadoDoJogo.js';
+import { INTEGRADO_POR_QUERY, SEM_SOM, publicarProgresso } from './integracao.js';
 import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from './interface.js';
+
+// A página copiada para a atividade mostra a demo inteira: só o rodapé foi
+// retirado. A classe que esconde os outros blocos continua valendo apenas para
+// o modo antigo, em iframe.
+if (INTEGRADO_POR_QUERY) document.documentElement.classList.add('demo-integrado');
 
 const camadaDoVideo = document.getElementById('video-camada');
 const video = document.getElementById('video-intro');
@@ -23,6 +29,11 @@ const hud = document.querySelector('.demo__hud');
 
 let jogo = null;
 let iniciando = false;
+
+// A página de jogo real usa estes avisos para salvar rascunho e, na saída,
+// fechar a partida. Fora do modo integrado `publicarProgresso` não faz nada.
+estado.on('mudou', () => publicarProgresso(estado));
+publicarProgresso(estado);
 
 function esperar(milissegundos) {
   return new Promise((resolver) => {
@@ -139,8 +150,10 @@ function liberarVideo() {
 }
 
 if (video) {
-  video.muted = false;
-  video.volume = 1;
+  // O clique no play autoriza áudio. A preferência "sem som" da conta vem da
+  // classe do body na atividade, ou da query no modo antigo em iframe.
+  video.muted = SEM_SOM;
+  video.volume = SEM_SOM ? 0 : 1;
   atualizarBotaoSom();
 
   video.addEventListener('ended', iniciarJogo, { once: true });

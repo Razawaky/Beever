@@ -152,12 +152,12 @@ describe('conteúdo por faixa etária', opcoes, () => {
 
     await banco.conexao.query(
       `UPDATE cells SET age_band_id = (SELECT id FROM age_bands WHERE code = 'C')
-        WHERE hive_id = ? AND order_index = 4`,
+        WHERE hive_id = ? AND order_index = 5`,
       [favo.id],
     );
 
     const { celulas } = await contentService.listarCelulasDoFavo(crianca.idUsuario, favo.id);
-    assert.equal(celulas.length, 3, 'a quarta célula é de faixa acima e some da lista');
+    assert.equal(celulas.length, 4, 'a quinta célula é de faixa acima e some da lista');
 
     for (const celula of celulas) {
       await progressService.registrarTentativa(crianca.idUsuario, celula.id, {
@@ -168,7 +168,7 @@ describe('conteúdo por faixa etária', opcoes, () => {
     }
 
     const resumo = await progressService.resumoDoFavo(crianca.idUsuario, favo.id);
-    assert.equal(resumo.total, 3, 'o denominador é o que o jogador enxerga');
+    assert.equal(resumo.total, 4, 'o denominador é o que o jogador enxerga');
     assert.equal(resumo.percentual, 100, 'sem isso o favo nunca fecharia, e travaria o seguinte para sempre');
 
     const trilha = await contentService.listarTrilha(crianca.idUsuario);

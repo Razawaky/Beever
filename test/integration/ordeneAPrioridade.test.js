@@ -100,8 +100,8 @@ describe('Ordene a Prioridade', opcoes, () => {
 
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
-    idDaCelulaDeOrdenar = celulas[2].id;
-    for (const celula of celulas.slice(0, 2)) {
+    idDaCelulaDeOrdenar = celulas[3].id;
+    for (const celula of celulas.slice(0, 3)) {
       await progressService.registrarTentativa(idUsuario, celula.id, { erros: 0, pontuacao: 100, concluiu: true });
     }
     csrf = await lerToken('/painel');

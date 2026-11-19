@@ -65,7 +65,18 @@ describe('aceite da E06 — motor de recompensas', opcoes, () => {
 
     const favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, idUsuario, ['A']);
-    celula = celulas[0];
+    // O quiz é a segunda célula. Só marcamos a primeira como concluída, sem
+    // créditos, para que os saldos destes testes continuem medindo só o quiz.
+    await conexao.query(
+      `INSERT INTO cell_progress
+         (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
+       SELECT ?, celula.id, 1, 1, 0, 100, UTC_TIMESTAMP(), UTC_TIMESTAMP()
+         FROM cells celula
+         JOIN game_types tipo ON tipo.id = celula.game_type_id
+        WHERE celula.hive_id = ? AND tipo.slug = 'quarto-do-beenie'`,
+      [idUsuario, favo.id],
+    );
+    celula = celulas.find((item) => item.game_type_slug === 'quiz-do-favo');
   });
 
   after(async () => {

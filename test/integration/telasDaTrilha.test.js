@@ -102,7 +102,7 @@ describe('telas da trilha', opcoes, () => {
   it('a trilha diz quantas células o favo tem antes de o jogador tocar nele', async () => {
     const pagina = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
 
-    assert.match(pagina.text, /0 de 4 células/, 'o total vem do catálogo, não do cache de progresso');
+    assert.match(pagina.text, /0 de 5 células/, 'o total vem do catálogo, não do cache de progresso');
     assert.doesNotMatch(pagina.text, /de \? células/, 'a tela sabe o número: não pergunta');
   });
 
@@ -128,14 +128,14 @@ describe('telas da trilha', opcoes, () => {
   it('o favo aberto lista as células, só a primeira com botão de jogar', async () => {
     const pagina = await agente.get(`/trilha/${primeiroFavo.id}`).set('Accept', 'text/html').expect(200);
 
-    assert.match(pagina.text, /O que é mel\?/);
+    assert.match(pagina.text, /De onde vem o dinheiro\?/);
     assert.match(pagina.text, /Meu primeiro orçamento/);
     assert.match(pagina.text, /Conclua a célula anterior/, 'as travadas dizem por quê');
 
-    // Desde a T-07.2 o quiz é jogável, e só ele: as outras três células deste
-    // favo são de jogos que a E07 ainda não escreveu.
+    // O quarto é a primeira célula e já é jogável; as demais continuam travadas
+    // até que ela seja concluída.
     const links = pagina.text.match(/\/celula\/\d+/g) ?? [];
-    assert.equal(links.length, 1, 'só a célula de quiz oferece caminho');
+    assert.equal(links.length, 1, 'só a primeira célula oferece caminho');
     assert.match(pagina.text, new RegExp(`/trilha/${primeiroFavo.id}/celula/${celulas[0].id}`));
   });
 
@@ -166,7 +166,7 @@ describe('telas da trilha', opcoes, () => {
     assert.doesNotMatch(pagina.text, /em breve/);
 
     const trilha = await agente.get('/trilha').set('Accept', 'text/html').expect(200);
-    assert.match(trilha.text, /25%/);
+    assert.match(trilha.text, /20%/);
   });
 
   /**

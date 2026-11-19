@@ -1,7 +1,18 @@
+import { statSync } from 'node:fs';
+
 import { iconeDaConquista } from '../config/conquistas.js';
 import { svgIcone } from '../public/js/icones.js';
 import { classeDaBarra } from './barraDeProgresso.js';
 import { preferenciasDaSessao } from './preferenciasDeAcessibilidade.js';
+
+/**
+ * A URL dos estilos leva o horário de modificação do arquivo: assim uma
+ * alteração no bundle chega ao navegador mesmo quando ele guardou a folha em
+ * cache.
+ */
+function versaoDoAsset(caminho) {
+  return Math.floor(statSync(new URL(`../public${caminho}`, import.meta.url)).mtimeMs);
+}
 
 /**
  * Renderiza uma página dentro do layout base.
@@ -24,6 +35,7 @@ export function renderizarPagina(res, pagina, dados = {}) {
     comAcessibilidade = true,
     dadosBody = {},
     scripts = [],
+    estilosExtras = [],
     ...conteudo
   } = dados;
 
@@ -48,6 +60,9 @@ export function renderizarPagina(res, pagina, dados = {}) {
 
   return res.render('layout', {
     pagina: `pages/${pagina}`,
+    versaoDoCss: versaoDoAsset('/css/app.css'),
+    estilosExtras: estilosExtras.map((caminho) => `${caminho}?v=${versaoDoAsset(caminho)}`),
+    scripts: scripts.map((caminho) => `${caminho}?v=${versaoDoAsset(caminho)}`),
     // Disponível em toda página: barra de progresso aparece no painel e nas
     // metas, e nenhuma das duas pode escrever largura em atributo `style`.
     classeDaBarra,
@@ -63,7 +78,6 @@ export function renderizarPagina(res, pagina, dados = {}) {
     comRodape,
     comAcessibilidade,
     dadosBody: dadosDoCorpo,
-    scripts,
     ...conteudo,
   });
 }

@@ -108,7 +108,7 @@ describe('progressRepository', opcoes, () => {
   it('conta concluídas contra o total, e só vale com pelo menos uma estrela', async () => {
     const contagem = await progressRepository.contarCelulasDoFavo(idUsuario, favo.id);
 
-    assert.equal(contagem.total, 4);
+    assert.equal(contagem.total, 5);
     assert.equal(contagem.concluidas, 1, 'a segunda célula tem tentativa, mas não tem estrela nem conclusão');
   });
 
@@ -116,8 +116,8 @@ describe('progressRepository', opcoes, () => {
     const progresso = await emTransacao((c) => progressRepository.recalcularFavo(c, idUsuario, favo.id));
 
     assert.equal(Number(progresso.completed_cells), 1);
-    assert.equal(Number(progresso.total_cells), 4);
-    assert.equal(Number(progresso.percent), 25);
+    assert.equal(Number(progresso.total_cells), 5);
+    assert.equal(Number(progresso.percent), 20);
     assert.equal(progresso.completed_at, null, 'favo só fecha quando todas as células fecham');
   });
 
@@ -138,7 +138,7 @@ describe('progressRepository', opcoes, () => {
 
     const fechado = await emTransacao((c) => progressRepository.recalcularFavo(c, idUsuario, favo.id));
     assert.equal(Number(fechado.percent), 100);
-    assert.equal(Number(fechado.completed_cells), 4);
+    assert.equal(Number(fechado.completed_cells), 5);
     assert.ok(fechado.completed_at, 'favo completo tem data');
 
     const denovo = await emTransacao((c) => progressRepository.recalcularFavo(c, idUsuario, favo.id));

@@ -130,6 +130,22 @@ describe('acervo da célula e sorteio da partida', opcoes, () => {
 
     const [[faixa]] = await banco.conexao.query('SELECT id FROM age_bands WHERE code = ?', ['A']);
     idDaFaixaA = Number(faixa.id);
+
+    // Com o quarto na frente, a conta demo ficou com uma célula pendente no
+    // primeiro favo. Concluímos o orçamento para liberar as células criadas
+    // pelos testes, como era antes da atividade nova entrar.
+    const [[jogadoraLinha]] = await banco.conexao.query('SELECT id FROM users WHERE email = ?', [
+      JOGADORA.email,
+    ]);
+    await banco.conexao.query(
+      `INSERT INTO cell_progress
+         (user_id, cell_id, stars, attempts, errors, best_score, first_completed_at, last_completed_at)
+       SELECT ?, celula.id, 1, 1, 4, 20, UTC_TIMESTAMP(), UTC_TIMESTAMP()
+         FROM cells celula
+         JOIN game_types tipo ON tipo.id = celula.game_type_id
+        WHERE celula.hive_id = ? AND tipo.slug = 'monte-o-orcamento'`,
+      [jogadoraLinha.id, idDoFavoDemo],
+    );
   });
 
   after(async () => {

@@ -12,6 +12,7 @@ import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
+import * as progressService from '../../src/services/progressService.js';
 
 /**
  * O Arraste e Classifique pelo HTTP (RF-JOG-02).
@@ -101,12 +102,17 @@ describe('Arraste e Classifique', opcoes, () => {
     ]);
     favo = await hivesRepository.buscarPorSlug('primeiros-passos');
     const celulas = await cellsRepository.listarDoFavoComProgresso(favo.id, Number(perfil.user_id), ['A']);
-    idDaCelulaDeArrastar = celulas[1].id;
+    idDaCelulaDeArrastar = celulas[2].id;
     csrf = await lerToken('/painel');
 
-    // A segunda célula do favo é a de arrastar, e ela nasce travada pela
-    // RN-026: sem concluir o quiz da primeira, nada aqui abre.
-    const { body: partidaDoQuiz } = await abrirPartida(celulas[0].id).expect(201);
+    // A terceira célula do favo é a de arrastar, e ela nasce travada pela
+    // RN-026: sem concluir o quarto e o quiz, nada aqui abre.
+    await progressService.registrarTentativa(Number(perfil.user_id), celulas[0].id, {
+      erros: 0,
+      pontuacao: 100,
+      concluiu: true,
+    });
+    const { body: partidaDoQuiz } = await abrirPartida(celulas[1].id).expect(201);
     await concluirPartida(partidaDoQuiz.token, RESPOSTAS_DO_QUIZ).expect(200);
   });
 
