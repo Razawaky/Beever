@@ -9,19 +9,26 @@
 -%>
 <%
   const compacto = Boolean(locals.compacto);
-  const concluidaCompacta = compacto && tarefa.concluida;
+  const concluidaOuCumprida = Boolean(tarefa.concluida || tarefa.cumprida);
+  const verdeCompacta = compacto && concluidaOuCumprida;
+  const concluidaExpandida = !compacto && tarefa.concluida;
+  const bordaEstado = concluidaExpandida
+    ? 'border-4 border-tarefa-concluida-borda'
+    : (!compacto && tarefa.cumprida ? 'border-4 border-tarefa-pendente-borda' : 'border-4 border-transparent');
+  const paddingEstado = concluidaExpandida ? 'px-4 py-2' : 'px-4 py-3';
+  const fundoPadrao = compacto ? 'bg-white' : 'bg-cera';
 %>
-<li class="flex flex-wrap items-center justify-between gap-3 rounded-favo px-4 py-3 text-sm shadow-sm <%= concluidaCompacta ? 'bg-tarefa-concluida' : 'bg-white' %>">
+<li class="flex flex-wrap items-center justify-between gap-3 rounded-favo <%= paddingEstado %> text-sm shadow-sm <%= verdeCompacta ? 'bg-tarefa-concluida' : fundoPadrao %> <%= bordaEstado %>">
   <div class="min-w-0 flex-1">
-    <p class="font-medium <%= tarefa.concluida ? (compacto ? 'text-acerto-texto' : 'text-tinta-suave line-through') : 'text-tinta' %>"><%= tarefa.titulo %></p>
+    <p class="font-medium <%= tarefa.concluida ? (compacto ? 'text-acerto-texto' : 'text-tinta-suave line-through') : 'text-tinta' %> <%= concluidaExpandida ? 'text-sm' : '' %>"><%= tarefa.titulo %></p>
 
-    <% if (!compacto) { %>
+    <% if (!compacto && !tarefa.concluida) { %>
       <p class="mt-0.5 text-xs tabular-nums text-tinta-suave">
         <%= tarefa.atual %> de <%= tarefa.alvo %> · <%= tarefa.escopo %> ·
         vale <%- svgIcone('mel', 'h-3.5 w-3.5') %> <%= tarefa.melDaRecompensa %><% if (tarefa.polenDaRecompensa > 0) { %> e <%- svgIcone('polen', 'h-3.5 w-3.5') %> <%= tarefa.polenDaRecompensa %><% } %>
       </p>
 
-      <% if (!tarefa.concluida) { %>
+      <% if (!tarefa.cumprida) { %>
         <div class="mt-2 w-40">
           <%- include('barra-progresso', {
             percentual: tarefa.percentual,
@@ -37,11 +44,13 @@
       <span class="inline-flex items-center gap-1 text-xs font-semibold text-acerto-texto"><%- svgIcone('check', 'h-4 w-4') %> Concluída</span>
     <% } %>
   <% } else if (tarefa.cumprida) { %>
-    <form method="POST" action="/tarefas/<%= tarefa.id %>/concluir" class="<%= compacto ? 'pointer-events-auto relative z-20' : '' %>">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-      <input type="hidden" name="voltarPara" value="<%= locals.voltarPara || '/metas' %>" />
-      <%- include('./botao', { texto: 'Receber recompensa', tipo: 'submit', tamanho: 'medio' }) %>
-    </form>
+    <% if (!compacto) { %>
+      <form method="POST" action="/tarefas/<%= tarefa.id %>/concluir">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="voltarPara" value="<%= locals.voltarPara || '/metas' %>" />
+        <%- include('./botao', { texto: 'Receber recompensa', tipo: 'submit', tamanho: 'medio' }) %>
+      </form>
+    <% } %>
   <% } else if (!compacto) { %>
     <span class="text-xs tabular-nums text-tinta-suave"><%= tarefa.percentual %>% feito</span>
   <% } %>

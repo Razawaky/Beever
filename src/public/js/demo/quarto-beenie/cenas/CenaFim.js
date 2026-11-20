@@ -7,7 +7,7 @@
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
 import { CORES, FONTES, LARGURA, criarFundoEscuro } from '../desenho.js';
 import { IDS_DAS_TAREFAS, estado } from '../estadoDoJogo.js';
-import { estrelasRecebidas, observarEstrelasDoServidor, publicarFim } from '../integracao.js';
+import { estrelasRecebidas, observarEstrelasDoServidor, observarProximaCelula, proximaCelulaRecebida, publicarFim } from '../integracao.js';
 import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from '../interface.js';
 
 const TAMANHO_DA_NOTA = Object.freeze({ largura: 198, altura: 234 });
@@ -47,7 +47,7 @@ export class CenaFim extends Phaser.Scene {
   }
 
   create() {
-    this.reiniciando = false;
+    this.continuando = false;
 
     const concluidas = IDS_DAS_TAREFAS.filter((id) => estado.tarefas[id]);
     const total = estado.totalDeTarefas;
@@ -65,7 +65,7 @@ export class CenaFim extends Phaser.Scene {
         : 'Quarto parcialmente arrumado!';
 
     const subtitulo = tudoPronto
-      ? 'Todas as atividades concluídas no protótipo do Beenie'
+      ? ''
       : nadaFeito
         ? 'Você saiu sem concluir atividades. O mel é proporcional ao que foi feito.'
         : 'Você saiu antes de terminar. O mel é proporcional ao que foi feito.';
@@ -74,12 +74,19 @@ export class CenaFim extends Phaser.Scene {
     let estrelas = estrelasRecebidas() ?? estrelasDemo(concluidas.length, total);
     this.desenharEstrelas(estrelas);
 
-    const pararDeObservar = observarEstrelasDoServidor((quantidade) => {
+    const pararDeObservarEstrelas = observarEstrelasDoServidor((quantidade) => {
       estrelas = quantidade;
       this.desenharEstrelas(quantidade);
       this.anunciarResultado(estrelas, nota);
     });
-    this.events.once('shutdown', pararDeObservar);
+    const pararDeObservarProxima = observarProximaCelula(() => {
+      // A próxima célula chega após o servidor concluir a partida; o botão já
+      // navega com o que estiver disponível no momento do clique.
+    });
+    this.events.once('shutdown', () => {
+      pararDeObservarEstrelas();
+      pararDeObservarProxima();
+    });
 
     criarFundoEscuro(this);
     this.add.circle(LARGURA / 2, 224, 170, CORES.mel, 0.08);
@@ -110,17 +117,12 @@ export class CenaFim extends Phaser.Scene {
       .setDepth(10);
 
     const textoMoedas = this.add
-      .text(LARGURA / 2, 414, `${estado.moedas} mel (demo)`, {
+      .text(LARGURA / 2, 414, `${estado.moedas} mel`, {
         fontFamily: FONTES.display,
         fontSize: '34px',
         color: '#ffc200',
       })
       .setOrigin(0.5, 0);
-
-    this.add
-      .image(textoMoedas.x - textoMoedas.width / 2 - 22, 432, 'moeda')
-      .setDisplaySize(28, 28)
-      .setOrigin(0.5);
 
     this.criarBotao();
 
@@ -145,8 +147,8 @@ export class CenaFim extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.ENTER,
       Phaser.Input.Keyboard.KeyCodes.SPACE,
     ]);
-    this.input.keyboard?.once('keydown-ENTER', () => this.reiniciar());
-    this.input.keyboard?.once('keydown-SPACE', () => this.reiniciar());
+    this.input.keyboard?.once('keydown-ENTER', () => this.irParaProximaCelula());
+    this.input.keyboard?.once('keydown-SPACE', () => this.irParaProximaCelula());
 
     this.cameras.main.fadeIn(SEM_MOVIMENTO ? 0 : 300, 27, 21, 8);
     this.anunciarResultado(estrelas, nota);
@@ -185,7 +187,7 @@ export class CenaFim extends Phaser.Scene {
 
   anunciarResultado(estrelas, nota) {
     anunciar(
-      `Fim da demo: ${estado.moedas} de mel de demonstração. Resultado: ${nota.rotulo}. ${estrelas} de 3 estrelas.`,
+      `Resultado: ${estado.moedas} de mel. Nota ${nota.rotulo}. ${estrelas} de 3 estrelas.`,
     );
   }
 
@@ -195,7 +197,7 @@ export class CenaFim extends Phaser.Scene {
       .rectangle(0, 0, 280, 50, CORES.mel)
       .setStrokeStyle(3, 0x9a7400);
     const texto = this.add
-      .text(0, 0, 'Jogar de novo', {
+      .text(0, 0, 'Próxima célula', {
         fontFamily: FONTES.texto,
         fontSize: '18px',
         color: '#241d0b',
@@ -209,13 +211,25 @@ export class CenaFim extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     zona.on('pointerover', () => fundo.setFillStyle(CORES.nectar, 1));
     zona.on('pointerout', () => fundo.setFillStyle(CORES.mel, 1));
-    zona.on('pointerdown', () => this.reiniciar());
+    zona.on('pointerdown', () => this.irParaProximaCelula());
   }
 
-  reiniciar() {
-    if (this.reiniciando) return;
-    this.reiniciando = true;
-    estado.reiniciar();
-    this.scene.start('quarto');
+  irParaProximaCelula() {
+    if (this.continuando) return;
+    this.continuando = true;
+
+    const proxima = proximaCelulaRecebida();
+    if (proxima?.id && proxima?.idFavo) {
+      window.location.href = `/trilha/${proxima.idFavo}/celula/${proxima.id}`;
+      return;
+    }
+
+    const idFavo = document.body?.dataset?.favoId;
+    if (idFavo) {
+      window.location.href = `/painel/trilha/${idFavo}`;
+      return;
+    }
+
+    window.location.href = '/painel/trilha';
   }
 }

@@ -20,6 +20,9 @@ const ORIGEM = 'quarto-beenie';
 let estrelasDoServidor = null;
 const observadoresDeEstrelas = new Set();
 
+let proximaCelula = null;
+const observadoresDeProximaCelula = new Set();
+
 export function estrelasRecebidas() {
   return estrelasDoServidor;
 }
@@ -33,6 +36,20 @@ export function definirEstrelasDoServidor(quantidade) {
 export function observarEstrelasDoServidor(observador) {
   observadoresDeEstrelas.add(observador);
   return () => observadoresDeEstrelas.delete(observador);
+}
+
+export function proximaCelulaRecebida() {
+  return proximaCelula;
+}
+
+export function definirProximaCelula(celula) {
+  proximaCelula = celula ?? null;
+  for (const observador of observadoresDeProximaCelula) observador(proximaCelula);
+}
+
+export function observarProximaCelula(observador) {
+  observadoresDeProximaCelula.add(observador);
+  return () => observadoresDeProximaCelula.delete(observador);
 }
 
 export function publicar(tipo, dados = {}) {

@@ -25,16 +25,18 @@
   </div>
 </header>
 
-<main class="mx-auto <%= areaDoJogo === 'quarto-beenie' ? 'max-w-none px-0 pb-8 pt-2' : 'max-w-2xl px-6 py-8' %>">
-  <p id="jogo-carregando" class="rounded-favo bg-cera p-6 text-center text-tinta-suave">Preparando a atividade…</p>
+<main class="relative mx-auto <%= areaDoJogo === 'quarto-beenie' ? 'max-w-none px-0 pb-8 pt-2' : 'max-w-2xl px-6 py-8' %>">
+  <div class="main-favos favos-de-fundo" aria-hidden="true"></div>
+
+  <p id="jogo-carregando" class="relative z-10 rounded-favo bg-cera p-6 text-center text-tinta-suave">Preparando a atividade…</p>
 
   <p
     id="jogo-erro"
-    class="hidden rounded-favo border-2 border-erro bg-white p-6 text-center font-medium text-erro-texto"
+    class="relative z-10 hidden rounded-favo border-2 border-erro bg-white p-6 text-center font-medium text-erro-texto"
     role="alert"
   ></p>
 
-  <section id="jogo-area" class="hidden">
+  <section id="jogo-area" class="relative z-10 hidden">
     <% if (areaDoJogo === 'quarto-beenie') { %>
     <p id="jogo-repeticao" class="hidden text-xs font-medium text-tinta-suave">
       Você já concluiu esta célula: repetir rende menos.
@@ -73,6 +75,8 @@
 
   <%# O quarto encerra com a própria tela final da demo, sem o painel da casca. -%>
   <% if (areaDoJogo !== 'quarto-beenie') { %>
-  <%- include('../partials/jogo-resultado') %>
+  <div class="relative z-10">
+    <%- include('../partials/jogo-resultado') %>
+  </div>
   <% } %>
 </main>

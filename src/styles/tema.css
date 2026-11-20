@@ -60,7 +60,9 @@
   .avatar-fundo-rosa { background-color: #FFAFCC; }
   .avatar-fundo-areia { background-color: #E6E0C8; }
 
-  .bg-tarefa-concluida { background-color: #E8F7EE; }
+  .bg-tarefa-concluida { background-color: #A7DDB5; }
+  .border-tarefa-pendente-borda { border-color: #FFC200; }
+  .border-tarefa-concluida-borda { border-color: #2E9E4F; }
 
   /* Botão flutuante de acessibilidade (src/views/partials/ui/acessibilidade.ejs).
      Altere as cores aqui se quiser mudar a aparência do botão. */
@@ -120,7 +122,7 @@
     transform: translateX(0) rotate(-2deg);
   }
   50% {
-    transform: translateX(-4  px) rotate(2deg);
+    transform: translateX(-4px) rotate(2deg);
   }
 }
 
