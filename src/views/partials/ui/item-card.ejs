@@ -1,8 +1,6 @@
 <%#
-  Card do item na vitrine (RF-LOJ-03). O comportamento econômico é escrito em
-  frase, não em jargão: a criança precisa entender o que o item faz com o mel
-  dela antes de gastar. Os números já vêm respondidos pelo `shopService`, com a
-  regra da faixa aplicada (RN-038).
+  Card do item na vitrine (RF-LOJ-03), simplificado: tipo, nome, descrição e valor.
+  Os números já vêm respondidos pelo `shopService`, com a regra da faixa aplicada (RN-038).
 %>
 <article class="flex flex-col justify-between rounded-favo bg-white p-6 shadow-md">
   <div>
@@ -15,52 +13,12 @@
     <span class="text-xs font-semibold uppercase tracking-wide text-tinta-suave"><%= item.category_name %></span>
     <h3 class="mt-1 text-lg font-bold"><%= item.name %></h3>
     <p class="mt-2 text-sm text-tinta-suave"><%= item.description_kid %></p>
-
-    <ul class="mt-4 grid gap-1 text-sm tabular-nums">
-      <% if (item.perdeValor) { %>
-        <li class="flex items-center gap-2"><%- svgIcone('tendenciaBaixa', 'h-4 w-4 shrink-0') %><span>Perde valor toda semana</span></li>
-      <% } else if (Number(item.valuation_rate) > 0) { %>
-        <li class="flex items-center gap-2"><%- svgIcone('tendenciaAlta', 'h-4 w-4 shrink-0') %><span>Vale mais a cada semana</span></li>
-      <% } %>
-      <% if (item.custoSemanal > 0) { %>
-        <li class="flex items-center gap-2"><%- svgIcone('gasto', 'h-4 w-4 shrink-0') %><span>Custa <%= item.custoSemanal %> de mel por semana</span></li>
-      <% } %>
-      <% if (item.rendaSemanal > 0) { %>
-        <li class="flex items-center gap-2"><%- svgIcone('mel', 'h-4 w-4 shrink-0') %><span>Rende <%= item.rendaSemanal %> de mel por semana</span></li>
-      <% } %>
-      <% if (!item.counts_in_patrimony) { %>
-        <li class="flex items-center gap-2"><%- svgIcone('brilho', 'h-4 w-4 shrink-0') %><span>Enfeite: isso não aumenta seu patrimônio</span></li>
-      <% } %>
-      <% if (item.avisoDaFaixa) { %>
-        <li class="text-tinta-suave"><%= item.avisoDaFaixa %></li>
-      <% } %>
-    </ul>
-
-    <% if (item.quantidadePossuida > 0) { %>
-      <p class="mt-3 text-sm font-medium">Você já tem <%= item.quantidadePossuida %></p>
-    <% } %>
-
-    <% if (item.bloqueios.length > 0) { %>
-      <ul class="mt-3 grid gap-1 text-sm text-tinta-suave">
-        <% item.bloqueios.forEach((bloqueio) => { %>
-          <li class="flex items-center gap-2"><%- svgIcone('cadeado', 'h-4 w-4 shrink-0') %><span><%= bloqueio.mensagem %></span></li>
-        <% }) %>
-      </ul>
-    <% } %>
   </div>
 
   <div class="mt-6 flex items-end justify-between gap-4">
-    <div>
-      <% if (item.troca) { %>
-        <p class="text-xs tabular-nums text-tinta-suave">
-          Entregando <%= item.troca.itemTrocado %>: −<%= item.troca.desconto %>
-        </p>
-      <% } %>
-      <p class="inline-flex items-center gap-1.5 text-lg font-semibold tabular-nums"><%- svgIcone('mel', 'h-5 w-5') %><span><%= item.precoComDesconto %></span></p>
-      <% if (!item.podeComprar && item.bloqueios.length === 0) { %>
-        <p class="text-xs tabular-nums text-tinta-suave">faltam <%= item.faltamDeMel %> de mel</p>
-      <% } %>
-    </div>
+    <p class="inline-flex items-center gap-1.5 text-lg font-semibold tabular-nums text-tinta">
+      <%- svgIcone('mel', 'h-5 w-5') %><span><%= item.precoComDesconto %></span>
+    </p>
 
     <% if (item.bloqueios.length > 0) { %>
       <span class="rounded-pilula bg-cera px-4 py-2 text-sm font-medium text-tinta-suave">Ainda não</span>
@@ -72,7 +30,7 @@
         texto: 'Quero este',
         href: `${locals.confirmacaoBase ?? '/loja/itens'}/${item.id}/confirmar`,
         tamanho: 'medio',
-        rotuloAcessivel: `Quero ${item.nome}`,
+        rotuloAcessivel: `Quero ${item.name}`,
       }) %>
     <% } %>
   </div>

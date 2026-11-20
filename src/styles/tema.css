@@ -59,6 +59,13 @@
   .avatar-fundo-lavanda { background-color: #CDB4DB; }
   .avatar-fundo-rosa { background-color: #FFAFCC; }
   .avatar-fundo-areia { background-color: #E6E0C8; }
+
+  .bg-tarefa-concluida { background-color: #E8F7EE; }
+
+  /* Botão flutuante de acessibilidade (src/views/partials/ui/acessibilidade.ejs).
+     Altere as cores aqui se quiser mudar a aparência do botão. */
+  .btn-acessibilidade { background-color: #2563EB; color: #FFFFFF; }
+  .btn-acessibilidade:hover { background-color: #1D4ED8; }
 }
 
 @keyframes float-up {

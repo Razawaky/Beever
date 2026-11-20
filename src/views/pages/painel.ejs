@@ -102,9 +102,9 @@
       </div>
     <% } %>
 
-    <%# A Beenie só mora na Colmeia: nas outras seções ela taparia a loja, o
-        cofre e as conquistas, que ocupam a largura toda da `<main>`. -%>
-    <% if (secaoAtual === 'colmeia') { %>
+    <%# A Beenie interativa mora na Colmeia e na trilha completa. Nas outras
+        seções ela pode tapar conteúdo que ocupa a largura toda da `<main>`. -%>
+    <% if (secaoAtual === 'colmeia' || secaoAtual === 'trilha') { %>
       <div class="absolute right-4 bottom-4 z-20">
         <button
           type="button"
