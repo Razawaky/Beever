@@ -1,0 +1,86 @@
+<%#
+  Formulário do favo, usado para criar e para editar. `favo` nulo quer dizer
+  criação; a diferença fica no endereço do POST e nos valores iniciais.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'conteudo' }) %>
+
+<main class="mx-auto max-w-2xl px-6 py-10">
+  <a href="/admin/favos" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar aos favos</a>
+  <h1 class="mt-4 text-3xl font-bold"><%= favo ? 'Editar favo' : 'Novo favo' %></h1>
+
+  <form method="POST" action="<%= favo ? `/admin/favos/${favo.id}` : '/admin/favos' %>" class="mt-8 space-y-4">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div>
+      <label for="titulo" class="mb-1 block text-sm font-medium">Título</label>
+      <input
+        id="titulo"
+        name="titulo"
+        type="text"
+        required
+        maxlength="120"
+        value="<%= favo ? favo.title : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+    </div>
+
+    <div>
+      <label for="slug" class="mb-1 block text-sm font-medium">Endereço</label>
+      <input
+        id="slug"
+        name="slug"
+        type="text"
+        maxlength="60"
+        pattern="[a-z0-9\-]+"
+        value="<%= favo ? favo.slug : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+      <p class="mt-1 text-xs text-tinta-suave">Deixe em branco para gerar a partir do título.</p>
+    </div>
+
+    <div>
+      <label for="descricao" class="mb-1 block text-sm font-medium">Descrição</label>
+      <textarea
+        id="descricao"
+        name="descricao"
+        rows="3"
+        maxlength="500"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      ><%= favo ? favo.description || '' : '' %></textarea>
+    </div>
+
+    <div>
+      <label for="idFaixa" class="mb-1 block text-sm font-medium">Faixa etária</label>
+      <select
+        id="idFaixa"
+        name="idFaixa"
+        required
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      >
+        <% faixas.forEach((faixa) => { %>
+          <option value="<%= faixa.id %>" <%= favo && Number(favo.age_band_id) === Number(faixa.id) ? 'selected' : '' %>>
+            <%= faixa.code %> — <%= faixa.name %> (<%= faixa.min_age %> a <%= faixa.max_age %> anos)
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      <label for="percentualDeDesbloqueio" class="mb-1 block text-sm font-medium">
+        Percentual para liberar o favo seguinte
+      </label>
+      <input
+        id="percentualDeDesbloqueio"
+        name="percentualDeDesbloqueio"
+        type="number"
+        min="1"
+        max="100"
+        required
+        value="<%= favo ? favo.unlock_percent : 80 %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+    </div>
+
+    <%- include('../../partials/ui/botao', { texto: favo ? 'Salvar favo' : 'Criar favo', tipo: 'submit' }) %>
+  </form>
+</main>

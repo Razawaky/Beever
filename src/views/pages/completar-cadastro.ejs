@@ -1,0 +1,60 @@
+  <div class="flex min-h-screen items-center justify-center p-8">
+    <div class="w-full max-w-sm">
+      <a href="/login" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar para entrar</a>
+
+      <h1 class="mt-6 text-3xl font-bold">Falta pouco</h1>
+      <p class="mt-2 text-tinta-suave">
+        Você entrou com o Google como <strong class="text-tinta"><%= email %></strong>.
+        Agora é só escolher um apelido para criar a conta.
+      </p>
+
+      <form method="POST" action="/sessao/google/cadastro" class="mt-8 space-y-4">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+        <%# Campo vazio de propósito: o nome do Google é dado pessoal, e a RN-049 só deixa guardar apelido. %>
+        <div>
+          <label for="apelido" class="mb-1 block text-sm font-medium">Apelido</label>
+          <input
+            id="apelido"
+            name="apelido"
+            type="text"
+            required
+            maxlength="60"
+            autocomplete="nickname"
+            placeholder="Como você quer ser chamado"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="data_nasc" class="mb-1 block text-sm font-medium">Data de nascimento</label>
+          <input
+            id="data_nasc"
+            name="data_nasc"
+            type="date"
+            required
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <label class="flex cursor-pointer gap-3 rounded-favo border border-linha bg-cera p-4 text-sm">
+          <input
+            type="checkbox"
+            id="consentimento_responsavel"
+            name="consentimento_responsavel"
+            required
+            class="mt-0.5 h-5 w-5 shrink-0 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+          />
+          <span>
+            Sou o responsável por esta criança e autorizo a criação da conta.
+            <span class="mt-1 block text-tinta-suave">
+              O Beever coleta apenas apelido e avatar, nunca nome completo, endereço ou telefone.
+              O mel do jogo é fictício: não existe compra com dinheiro de verdade.
+            </span>
+          </span>
+        </label>
+
+        <%- include('../partials/ui/botao', { texto: 'Criar conta', tipo: 'submit', classe: 'w-full' }) %>
+      </form>
+    </div>
+  </div>

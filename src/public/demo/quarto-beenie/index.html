@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1b1508" />
+    <title>O Quarto do Beenie — Protótipo | Beever</title>
+    <link rel="icon" href="/img/beever-icon.png" />
+    <link rel="stylesheet" href="./demo.css" />
+    <link rel="stylesheet" href="/css/cursor.css" />
+  </head>
+  <body>
+    <main class="demo">
+      <header class="demo__cabecalho">
+        <p class="demo__selo">Protótipo isolado · arquitetura Phaser</p>
+        <h1 class="demo__titulo">O Quarto do Beenie</h1>
+        <p class="demo__resumo">
+          Uma introdução em vídeo, um quarto em quatro ângulos e seis atividades. Pegue um item
+          por vez e clique no móvel certo para guardar: brinquedos no baú, roupas no armário,
+          travesseiro e coberta na cama, livro na mesa. O item carregado aparece no hexágono escuro
+          no canto superior esquerdo. A porta está sempre aberta: saia quando quiser e receba o mel
+          conforme o que arrumou.
+        </p>
+      </header>
+
+      <section class="demo__palco" aria-label="Protótipo do quarto do Beenie">
+        <div class="demo__hud" hidden>
+          <p class="demo__hud-titulo">Quarto do Beenie</p>
+        </div>
+
+        <div class="demo__midia">
+          <div id="video-camada" class="video-camada">
+            <video
+              id="video-intro"
+              class="video"
+              poster="./poster.png"
+              preload="auto"
+              playsinline
+              aria-label="Introdução do Quarto do Beenie"
+            >
+              <source src="./intro.mp4" type="video/mp4" />
+              <source src="./intro.webm" type="video/webm" />
+              Seu navegador não suporta vídeo em HTML5.
+            </video>
+
+            <button
+              id="video-tocar"
+              class="video__play"
+              type="button"
+              aria-label="Reproduzir introdução com áudio"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M8 5.5v13l11-6.5L8 5.5Z" fill="currentColor" stroke="none" />
+              </svg>
+            </button>
+
+            <button
+              id="video-som"
+              class="video__som"
+              type="button"
+              aria-label="Ativar som"
+              aria-pressed="false"
+              title="Ativar som"
+            >
+              <svg class="icone-som icone-som--mudo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 9h4l5-4v14l-5-4H4z" />
+                <path d="m17 9 5 6m0-6-5 6" />
+              </svg>
+              <svg class="icone-som icone-som--ligado" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 9h4l5-4v14l-5-4H4z" />
+                <path d="M16 9a4 4 0 0 1 0 6" />
+                <path d="M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+              </svg>
+            </button>
+
+            <button id="video-pular" class="video__pular" type="button">Pular vídeo</button>
+          </div>
+
+          <div id="jogo" class="demo__canvas" hidden></div>
+        </div>
+
+        <p id="status" class="demo__status" role="status" aria-live="polite">
+          Carregando o protótipo…
+        </p>
+        <p id="instrucoes" class="demo__instrucoes">
+          A introdução é um vídeo curto, com áudio. Depois, use as setas para girar o quarto,
+          pegue um item por vez, clique no móvel para guardar e clique na porta para sair quando
+          quiser.
+        </p>
+      </section>
+
+      <div class="demo__acoes">
+        <button id="rever-intro" class="demo__botao demo__botao--secundario" type="button" hidden>
+          Rever introdução
+        </button>
+        <a class="demo__link" href="/demo/favo-click/">Ver demo anterior: Segure e Solte</a>
+        <a class="demo__link" href="/">Voltar ao Beever</a>
+      </div>
+
+      <section class="arquitetura" aria-labelledby="arquitetura-titulo">
+        <div class="arquitetura__cabecalho">
+          <p class="arquitetura__selo">Como está organizado</p>
+          <h2 id="arquitetura-titulo">Cenas separadas, estado compartilhado</h2>
+        </div>
+
+        <ol class="fluxo">
+          <li class="fluxo__item">
+            <span class="fluxo__numero">1</span>
+            <strong>Intro</strong>
+            <span>Vídeo HTML, poster e botão de pular.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">2</span>
+            <strong>Boot</strong>
+            <span>Carrega o Beenie, as paredes, os itens e os ícones.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">3</span>
+            <strong>Quarto</strong>
+            <span>Quatro paredes, rotação e hexágono do item na mão.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">4</span>
+            <strong>Atividades</strong>
+            <span>Seis tarefas de pegar e guardar, com um item por vez.</span>
+          </li>
+          <li class="fluxo__item">
+            <span class="fluxo__numero">5</span>
+            <strong>Fim</strong>
+            <span>Resumo do que foi arrumado, mel proporcional e reinício local.</span>
+          </li>
+        </ol>
+
+        <div class="arquitetura__notas">
+          <p>
+            <code>dadosDoQuarto.js</code> descreve paredes, imagens, ícones e hotspots.
+            A cena não precisa saber o que é uma cama ou um baú para desenhá-los.
+          </p>
+          <p>
+            <code>estadoDoJogo.js</code> guarda parede atual, atividades, itens guardados, o item
+            na mão e o mel fictício. A mochila do Beenie tem um espaço só: pegar outro item antes
+            de guardar o primeiro é recusado com uma explicação.
+          </p>
+        </div>
+      </section>
+
+      <footer class="demo__rodape">
+        Demo local: nenhuma partida é aberta, nenhuma moeda de verdade é creditada e nenhuma rota
+        do jogo real foi alterada. O vídeo de introdução é local e substituível: basta trocar os
+        arquivos <code>intro.mp4</code> e <code>intro.webm</code>.
+      </footer>
+
+      <noscript>
+        <p class="demo__aviso">Este protótipo precisa de JavaScript para rodar.</p>
+      </noscript>
+    </main>
+
+    <script type="module" src="/js/demo/quarto-beenie/main.js"></script>
+  </body>
+</html>

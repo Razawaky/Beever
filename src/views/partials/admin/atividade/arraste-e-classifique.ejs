@@ -1,0 +1,47 @@
+<%#
+  Arraste e Classifique: até cinco caixas e até oito cartas. A carta aponta a
+  caixa pelo número da linha, porque sem JavaScript a tela não teria como
+  oferecer uma lista das caixas que acabaram de ser digitadas.
+-%>
+<% const categorias = corpo?.categorias ?? [];
+   const cartas = corpo?.cartas ?? [];
+   const numeroDaCaixa = (id) => categorias.findIndex((categoria) => categoria.id === id) + 1; %>
+<%- include('campos', { nome: 'enunciado', rotulo: 'Enunciado', valor: corpo?.enunciado, id: 'enunciado' }) %>
+
+<fieldset class="mt-4 rounded-favo border border-linha p-4">
+  <legend class="px-2 text-sm font-semibold">Caixas</legend>
+  <div class="space-y-3">
+    <% for (let indice = 0; indice < 5; indice += 1) { %>
+      <%- include('campos', {
+        nome: 'categoriaNome',
+        rotulo: `Caixa ${indice + 1}`,
+        valor: categorias[indice]?.nome,
+        id: `caixa-${indice}`,
+      }) %>
+    <% } %>
+  </div>
+</fieldset>
+
+<fieldset class="mt-4 rounded-favo border border-linha p-4">
+  <legend class="px-2 text-sm font-semibold">Cartas</legend>
+  <div class="space-y-3">
+    <% for (let indice = 0; indice < 8; indice += 1) { %>
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="min-w-56 flex-1">
+          <%- include('campos', { nome: 'cartaTexto', rotulo: `Carta ${indice + 1}`, valor: cartas[indice]?.texto, id: `carta-${indice}` }) %>
+        </div>
+        <div class="w-40">
+          <%- include('campos', {
+            nome: 'cartaCaixa',
+            rotulo: 'Número da caixa',
+            valor: cartas[indice] ? numeroDaCaixa(cartas[indice].categoria) : 1,
+            tipo: 'number',
+            minimo: 1,
+            maximo: 5,
+            id: `carta-caixa-${indice}`,
+          }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</fieldset>
