@@ -24,6 +24,8 @@ router.put(
     param('id').isInt({ min: 1 }),
     body('apelido').optional().trim().notEmpty().custom(exigirApelidoPublico),
     body('avatar').optional().trim().isLength({ max: 60 }),
+    body('avatar_cor_fundo').optional({ nullable: true }).isString().isLength({ max: 16 }),
+    body('avatarCorFundo').optional({ nullable: true }).isString().isLength({ max: 16 }),
     body('fuso').optional().trim().isLength({ max: 64 }),
     // RN-011 reconhece cinco durações, e o banco as repete em
     // `ck_profiles_session_minutes`. Aceitar 5 a 60 aqui deixava passar valores

@@ -61,6 +61,8 @@ export class CenaBoot extends Phaser.Scene {
       this.load.image(icone.chave, icone.caminho);
     });
 
+    this.load.audio('musica-quarto', '/audio/quarto_beenie_loop.mp3');
+
     anunciar('Carregando o quarto do Beenie…');
     definirInstrucoes('O vídeo terminou. O quarto está sendo preparado.');
   }

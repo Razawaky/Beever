@@ -22,6 +22,8 @@ export const atualizar = assincrono(async (req, res) => {
   const {
     apelido,
     avatar,
+    avatar_cor_fundo: avatarCorFundoSnake,
+    avatarCorFundo,
     fuso,
     minutos_por_sessao: minutosPorSessao,
     som_ativo: somAtivo,
@@ -31,6 +33,7 @@ export const atualizar = assincrono(async (req, res) => {
   const perfil = await profilesService.atualizar(Number(req.params.id), req.session.usuarioId, {
     apelido,
     avatar,
+    avatarCorFundo: avatarCorFundoSnake ?? avatarCorFundo,
     fuso,
     minutosPorSessao: minutosPorSessao === undefined ? undefined : Number(minutosPorSessao),
     somAtivo: booleano(somAtivo),

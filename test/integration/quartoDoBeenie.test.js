@@ -133,6 +133,8 @@ describe('Quarto do Beenie na trilha', opcoes, () => {
     assert.ok(!pagina.text.includes('quarto-beenie-frame'), 'não há mais iframe');
     assert.ok(!pagina.text.includes('id="jogo-barra-caixa"'), 'a barra branca da casca não aparece');
     assert.ok(!pagina.text.includes('id="jogo-passo"'), 'o texto de passo da casca não aparece');
+    assert.ok(!pagina.text.includes('id="jogo-resultado"'), 'o resultado da casca não aparece');
+    assert.ok(!pagina.text.includes('id="jogo-mascote"'), 'o mascote do resultado não aparece');
     assert.ok(!pagina.text.includes('"tarefas"'), 'a lista de tarefas não viaja no HTML');
     assert.equal(await contarPartidas(), antes, 'GET não cria partida');
   });
@@ -176,6 +178,24 @@ describe('Quarto do Beenie na trilha', opcoes, () => {
     assert.equal(resultado.erros, 4);
     assert.equal(resultado.estrelas, 1, 'quem sai cedo não é reprovado');
     assert.ok(resultado.mel > 0, 'mesmo a saída antecipada rende o mínimo');
+  });
+
+  it('não dá estrelas quando nenhuma tarefa foi arrumada', async () => {
+    const { quem, token, quarto: celula } = await novaJogadora('quarto-vazio@beever.dev', 'vazio');
+    const { body: partida } = await abrirPartida(quem, token, celula).expect(201);
+    const { body: resultado } = await fechar(quem, token, partida.token, []);
+
+    assert.equal(resultado.erros, 6);
+    assert.equal(resultado.estrelas, 0, 'arrumar nada não rende estrela');
+
+    const [[progresso]] = await banco.conexao.query(
+      `SELECT cp.last_completed_at
+         FROM cell_progress cp
+         JOIN users u ON u.id = cp.user_id
+        WHERE u.email = ? AND cp.cell_id = ?`,
+      ['quarto-vazio@beever.dev', celula.id],
+    );
+    assert.ok(progresso?.last_completed_at, 'a célula ainda conclui, mesmo sem estrela');
   });
 
   async function contarPartidas() {

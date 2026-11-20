@@ -626,7 +626,8 @@ const quadrinho = {
  * O jogo funciona como o restante do motor: o cliente manda só o que fez, e o
  * servidor conta quantas tarefas do conteúdo faltaram. Como a porta pode ser
  * usada a qualquer momento, sair cedo não é erro de Digitação — é nota menor,
- * proporcional ao que ficou feito.
+ * proporcional ao que ficou feito. Sair sem arrumar nada é o único caso sem
+ * estrela: a partida fecha e a célula conclui, mas o resultado fica em zero.
  */
 const quartoDoBeenie = {
   conferirForma(corpo) {
@@ -661,7 +662,13 @@ const quartoDoBeenie = {
     const entregues = new Set(respostas.filter((tarefa) => typeof tarefa === 'string'));
     const concluidas = corpo.tarefas.filter((tarefa) => entregues.has(tarefa)).length;
 
-    return { erros: corpo.tarefas.length - concluidas, total: corpo.tarefas.length };
+    return {
+      erros: corpo.tarefas.length - concluidas,
+      total: corpo.tarefas.length,
+      // Sinaliza a exceção do quarto: sem nenhuma tarefa arrumada a saída ainda
+      // conclui a célula, mas não rende estrelas (RN-030).
+      semRespostas: concluidas === 0,
+    };
   },
 
   estadoParaSalvar(respostasParciais) {

@@ -99,6 +99,8 @@ export async function obterColmeia(idUsuario) {
   return {
     jogador: {
       apelido: perfil.apelido,
+      avatar_imagem: perfil.avatar_imagem,
+      avatar_background: perfil.avatar_background ?? null,
       nivel: perfil.nivel,
       mel: perfil.mel,
       polen: perfil.polen,

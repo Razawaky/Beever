@@ -19,8 +19,18 @@
         <% if (ativo === 'perfil') { %>aria-current="page"<% } %>
         class="flex min-h-11 items-center gap-3 rounded-favo p-2 -m-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-pilula bg-white/40 text-xl font-bold">
-          <%= jogador.apelido.charAt(0).toUpperCase() %>
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-pilula text-xl font-bold text-tinta <%= classeDeCorDeFundoDoAvatar(jogador.avatar_background) %>">
+          <% if (jogador.avatar_imagem) { %>
+            <img
+              src="<%= jogador.avatar_imagem %>"
+              alt=""
+              width="48"
+              height="48"
+              class="h-10 w-10 object-contain"
+            />
+          <% } else { %>
+            <span aria-hidden="true"><%= jogador.apelido.charAt(0).toUpperCase() %></span>
+          <% } %>
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-lg font-bold text-tinta"><%= jogador.apelido %></h1>

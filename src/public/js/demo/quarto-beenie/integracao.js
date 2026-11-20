@@ -17,6 +17,24 @@ export const SEM_SOM =
 
 const ORIGEM = 'quarto-beenie';
 
+let estrelasDoServidor = null;
+const observadoresDeEstrelas = new Set();
+
+export function estrelasRecebidas() {
+  return estrelasDoServidor;
+}
+
+export function definirEstrelasDoServidor(quantidade) {
+  const valor = Math.min(3, Math.max(0, Math.round(Number(quantidade) || 0)));
+  estrelasDoServidor = valor;
+  for (const observador of observadoresDeEstrelas) observador(valor);
+}
+
+export function observarEstrelasDoServidor(observador) {
+  observadoresDeEstrelas.add(observador);
+  return () => observadoresDeEstrelas.delete(observador);
+}
+
 export function publicar(tipo, dados = {}) {
   if (!INTEGRADO) return;
 
@@ -39,6 +57,9 @@ export function publicarProgresso(estado) {
 }
 
 export function publicarFim({ tarefas, total }) {
+  // Cada saída pela porta é uma tentativa nova: não reaproveita estrelas da
+  // partida anterior enquanto a resposta do servidor não chega.
+  estrelasDoServidor = null;
   publicar('final', { tarefas, total });
 }
 

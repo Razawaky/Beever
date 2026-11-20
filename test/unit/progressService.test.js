@@ -28,4 +28,10 @@ describe('progressService — estrelas da RN-030', () => {
     assert.equal(estrelasPara(0, false), 0, 'sair no meio sem errar não conclui a célula');
     assert.equal(estrelasPara(10, false), 0);
   });
+
+  it('quarto sem nenhuma tarefa arrumada fica em zero', () => {
+    assert.equal(estrelasPara(6, true, true), 0);
+    assert.equal(estrelasPara(0, true, true), 0, 'a exceção vence a faixa de três estrelas');
+    assert.equal(estrelasPara(6, true, false), 1, 'sem a exceção, o piso continua valendo');
+  });
 });

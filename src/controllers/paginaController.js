@@ -264,6 +264,7 @@ export const painelPerfil = assincrono(async (req, res) => {
     semana,
     metas,
     avatares,
+    coresDeFundoDoAvatar: profilesService.listarCoresDeFundoDoAvatar(),
     secao: 'perfil',
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
     dadosBody: { 'csrf-token': res.locals.csrfToken },
@@ -590,6 +591,7 @@ export const perfil = assincrono(async (req, res) => {
     semana,
     metas,
     avatares,
+    coresDeFundoDoAvatar: profilesService.listarCoresDeFundoDoAvatar(),
     dadosBody: { 'csrf-token': res.locals.csrfToken },
     scripts: ['/js/perfil.js'],
   });

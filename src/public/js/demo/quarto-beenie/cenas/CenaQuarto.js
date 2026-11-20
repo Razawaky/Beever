@@ -174,9 +174,13 @@ export class CenaQuarto extends Phaser.Scene {
     this.balaoFala = null;
     this.timerFala = null;
     this.chaveFalante = null;
+    this.confirmandoSaida = false;
     this.chaveRepouso = EXPRESSOES.default;
     this.estadoListener = () => this.atualizarIconeDaMao();
     this.completoListener = () => this.aoConcluirTudo();
+
+    this.musica = this.sound.add('musica-quarto', { loop: true, volume: 0.5 });
+    this.musica.play();
 
     this.criarInterface();
     this.configurarEntrada();
@@ -202,6 +206,9 @@ export class CenaQuarto extends Phaser.Scene {
       estado.off('mudou', this.estadoListener);
       estado.off('completo', this.completoListener);
       this.limparFala();
+      this.musica?.stop();
+      this.musica?.destroy();
+      this.musica = null;
       destruirContainer(this.paredeAtual);
     });
   }
@@ -352,7 +359,7 @@ export class CenaQuarto extends Phaser.Scene {
   }
 
   girar(direcao) {
-    if (this.emTransicao || this.indoParaFim) return;
+    if (this.emTransicao || this.indoParaFim || this.confirmandoSaida) return;
     const proximo = (estado.parede + direcao + TOTAL_DE_PAREDES) % TOTAL_DE_PAREDES;
     this.mostrarParede(proximo, direcao);
   }
@@ -454,10 +461,10 @@ export class CenaQuarto extends Phaser.Scene {
   }
 
   interagir(hotspot) {
-    if (this.emTransicao || this.indoParaFim) return;
+    if (this.emTransicao || this.indoParaFim || this.confirmandoSaida) return;
 
     if (hotspot.tipo === 'sair') {
-      this.sairDoQuarto();
+      this.perguntarSaida();
       return;
     }
 
@@ -567,6 +574,112 @@ export class CenaQuarto extends Phaser.Scene {
     this.mostrarExpressao('estrelas');
     anunciar('Todas as atividades concluídas. Clique na porta para sair e ver o resultado.');
     definirInstrucoes('Tudo pronto. Clique na porta para sair quando quiser.');
+  }
+
+  // A porta pergunta antes de encerrar. O balão reaproveita a expressão feliz
+  // (`beenie_neutral_happy_talk.webp`) e fica aberto até a jogadora escolher.
+  perguntarSaida() {
+    if (this.indoParaFim || this.confirmandoSaida) return;
+
+    this.limparFala();
+    this.prepararRepousoPara(EXPRESSOES.feliz);
+    this.confirmandoSaida = true;
+
+    const { altura, raio } = BALAO_DA_DICA;
+    const x = LARGURA / 2;
+    const y = ALTURA - altura / 2;
+
+    const balao = this.add.container(x, y).setDepth(101);
+    const fundo = this.add.graphics();
+    fundo
+      .fillStyle(0xffffff, 0.98)
+      .fillRoundedRect(-LARGURA / 2, -altura / 2, LARGURA, altura, raio);
+
+    const pergunta = this.add.text(-LARGURA / 2 + 18, -altura / 2 + 12, 'Acabamos?', {
+      fontFamily: FONTES.texto,
+      fontSize: '20px',
+      fontStyle: '700',
+      color: '#3a2c0b',
+    });
+
+    const sim = this.criarBotaoDeBalao(
+      -LARGURA / 2 + 68,
+      altura / 2 - 26,
+      100,
+      'Sim!',
+      () => this.responderSaida(true),
+      true,
+    );
+    const aindaNao = this.criarBotaoDeBalao(
+      -LARGURA / 2 + 180,
+      altura / 2 - 26,
+      150,
+      'Ainda não.',
+      () => this.responderSaida(false),
+    );
+
+    balao.add([fundo, pergunta, sim, aindaNao]);
+    balao.setScale(0.8).setAlpha(0);
+    this.balaoFala = balao;
+    this.chaveFalante = EXPRESSOES.feliz;
+
+    this.aplicarExpressao(EXPRESSOES.feliz);
+
+    if (SEM_MOVIMENTO) {
+      balao.setScale(1).setAlpha(1);
+    } else {
+      this.tweens.add({
+        targets: balao,
+        scaleX: 1,
+        scaleY: 1,
+        alpha: 1,
+        duration: 220,
+        ease: 'Back.out',
+      });
+    }
+
+    this.input.keyboard?.once('keydown-ESC', () => this.responderSaida(false));
+    this.input.keyboard?.once('keydown-ENTER', () => this.responderSaida(true));
+    anunciar('Acabamos? Escolha Sim para sair ou Ainda não para continuar arrumando.');
+    definirInstrucoes('A Beenie perguntou se acabou. Escolha uma das opções no balão.');
+  }
+
+  criarBotaoDeBalao(x, y, largura, texto, aoClicar, destaque = false) {
+    const altura = 36;
+    const botao = this.add.container(x, y);
+    const cor = destaque ? CORES.mel : CORES.parede;
+    const fundo = this.add.rectangle(0, 0, largura, altura, cor, 1);
+    fundo.setStrokeStyle(2, CORES.madeiraEscura, 1);
+    const rotulo = this.add
+      .text(0, 0, texto, {
+        fontFamily: FONTES.texto,
+        fontSize: '15px',
+        fontStyle: '700',
+        color: '#241d0b',
+      })
+      .setOrigin(0.5);
+    botao.add([fundo, rotulo]);
+    botao.setSize(largura, altura).setInteractive({ useHandCursor: true });
+    botao.on('pointerover', () => fundo.setFillStyle(destaque ? CORES.nectar : CORES.creme, 1));
+    botao.on('pointerout', () => fundo.setFillStyle(cor, 1));
+    botao.on('pointerdown', aoClicar);
+    return botao;
+  }
+
+  responderSaida(confirma) {
+    if (!this.confirmandoSaida || this.indoParaFim) return;
+
+    this.confirmandoSaida = false;
+    this.limparFala();
+
+    if (confirma) {
+      this.sairDoQuarto();
+      return;
+    }
+
+    this.definirRepouso(chaveDeRepouso(EXPRESSOES.feliz));
+    anunciar('Ainda não. Continue arrumando o quarto.');
+    definirInstrucoes(INSTRUCOES_PADRAO);
   }
 
   sairDoQuarto() {
@@ -680,6 +793,7 @@ export class CenaQuarto extends Phaser.Scene {
     this.balaoFala = null;
     this.timerFala = null;
     this.chaveFalante = null;
+    this.confirmandoSaida = false;
   }
 
   terminarFala(balao, chaveFalante) {

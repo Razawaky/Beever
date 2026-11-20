@@ -6,30 +6,46 @@
   // O catálogo vem do banco, igual ao do onboarding: sem upload e sem lista
   // paralela no JavaScript da tela.
   const opcoesDeAvatar = locals.avatares ?? [];
+  const coresDeFundo = locals.coresDeFundoDoAvatar ?? [];
+  const corAtual = perfil.avatar_cor_fundo || perfil.avatar_background || '';
+  const classeFundoAvatar = classeDeCorDeFundoDoAvatar(corAtual);
 %>
 
 <div class="mx-auto max-w-3xl">
   <div class="overflow-hidden rounded-favo <%= emBloco ? '' : 'bg-white shadow-xl' %>">
     <div class="flex items-center gap-4 bg-mel px-8 py-8">
-      <% if (perfil.avatar_imagem) { %>
-        <img
+      <button
+        type="button"
+        id="btn-abrir-avatar"
+        class="group relative rounded-pilula focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+        aria-label="Alterar imagem e cor de fundo do perfil"
+        aria-haspopup="dialog"
+        aria-controls="dialogo-avatar"
+      >
+        <span
           id="avatar-atual"
           data-avatar-atual
-          src="<%= perfil.avatar_imagem %>"
-          alt=""
-          width="64"
-          height="64"
-          class="h-16 w-16 object-contain"
-        />
-      <% } else { %>
-        <div
-          id="avatar-atual"
-          data-avatar-atual
-          class="flex h-16 w-16 items-center justify-center rounded-pilula bg-white/40 text-2xl font-bold"
+          data-avatar-cor="<%= corAtual %>"
+          class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-pilula ring-2 ring-white/70 transition group-hover:ring-tinta/40 <%= classeFundoAvatar %>"
         >
-          <%= perfil.apelido.charAt(0).toUpperCase() %>
-        </div>
-      <% } %>
+          <% if (perfil.avatar_imagem) { %>
+            <img
+              src="<%= perfil.avatar_imagem %>"
+              alt=""
+              width="64"
+              height="64"
+              class="h-14 w-14 object-contain"
+            />
+          <% } else { %>
+            <span class="text-2xl font-bold text-tinta" aria-hidden="true"><%= perfil.apelido.charAt(0).toUpperCase() %></span>
+          <% } %>
+        </span>
+        <span class="pointer-events-none absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-pilula bg-tinta text-cera shadow ring-2 ring-mel" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+        </span>
+      </button>
       <div>
         <<%= TagDoTitulo %> class="text-2xl font-bold text-tinta sm:text-3xl"><%= perfil.apelido %></<%= TagDoTitulo %>>
         <p class="text-sm text-tinta-suave">
@@ -41,14 +57,25 @@
     </div>
 
     <div class="p-8">
-      <section class="rounded-favo bg-cera p-6">
-        <h2 class="text-lg font-semibold">Minha imagem</h2>
-        <p class="mt-1 text-sm text-tinta-suave">Escolha uma das abelhas do Beever. Sua escolha é salva na hora.</p>
+      <p
+        id="aviso-avatar"
+        role="status"
+        aria-live="polite"
+        class="hidden rounded-lg bg-cera px-4 py-3 text-sm"
+      ></p>
 
-        <form id="form-avatar" class="mt-4" data-perfil-id="<%= perfil.id %>">
-          <fieldset>
-            <legend class="sr-only">Escolha sua imagem de perfil</legend>
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <dialog
+        id="dialogo-avatar"
+        class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-favo border-0 bg-white p-0 text-tinta shadow-elevado backdrop:bg-tinta/40"
+        aria-labelledby="dialogo-avatar-titulo"
+      >
+        <form id="form-avatar" class="p-6 sm:p-8" data-perfil-id="<%= perfil.id %>">
+          <h3 id="dialogo-avatar-titulo" class="font-display text-2xl text-tinta">Escolha seu Beenie e a cor de fundo</h3>
+          <p class="mt-1 text-sm text-tinta-suave">Selecione uma imagem e uma cor, depois salve.</p>
+
+          <fieldset class="mt-6">
+            <legend class="text-sm font-semibold text-tinta">Beenie</legend>
+            <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <% opcoesDeAvatar.forEach((opcao) => { %>
                 <label class="cursor-pointer">
                   <input
@@ -60,7 +87,7 @@
                     <%= perfil.avatar === opcao.valor ? 'checked' : '' %>
                   />
                   <span
-                    class="flex min-h-24 flex-col items-center justify-center gap-1 rounded-favo border-2 border-linha bg-white p-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                    class="flex min-h-24 flex-col items-center justify-center gap-1 rounded-favo border-2 border-linha bg-cera p-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
                   >
                     <img
                       src="<%= opcao.imagem %>"
@@ -77,14 +104,55 @@
             </div>
           </fieldset>
 
+          <fieldset class="mt-6">
+            <legend class="text-sm font-semibold text-tinta">Cor de fundo</legend>
+            <div class="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-6">
+              <% coresDeFundo.forEach((cor) => { %>
+                <label class="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="avatar_cor_fundo"
+                    value="<%= cor.valor %>"
+                    data-classe="<%= cor.classe %>"
+                    class="peer sr-only"
+                    <%= corAtual === cor.valor ? 'checked' : '' %>
+                  />
+                  <span
+                    class="flex flex-col items-center gap-2 rounded-favo border-2 border-linha bg-white p-2 text-center transition hover:border-ambar peer-checked:border-mel peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                  >
+                    <span class="h-10 w-10 rounded-pilula ring-1 ring-linha <%= cor.classe %>" aria-hidden="true"></span>
+                    <span class="text-[11px] font-semibold leading-tight text-tinta"><%= cor.rotulo %></span>
+                  </span>
+                </label>
+              <% }) %>
+            </div>
+          </fieldset>
+
           <p
-            id="aviso-avatar"
+            id="aviso-avatar-dialogo"
             role="status"
             aria-live="polite"
-            class="mt-4 hidden rounded-lg bg-white px-4 py-3 text-sm"
+            class="mt-4 hidden rounded-lg bg-cera px-4 py-3 text-sm"
           ></p>
+
+          <div class="mt-6 flex flex-wrap justify-end gap-3">
+            <button
+              type="button"
+              id="btn-cancelar-avatar"
+              class="inline-flex min-h-11 items-center justify-center rounded-favo border-2 border-linha bg-white px-4 py-2 text-sm font-semibold text-tinta transition hover:border-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              id="btn-salvar-avatar"
+              class="inline-flex min-h-11 items-center justify-center rounded-favo bg-mel px-5 py-2 text-sm font-bold text-tinta transition hover:bg-ambar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+            >
+              Salvar
+            </button>
+          </div>
         </form>
-      </section>
+      </dialog>
 
       <section class="mt-6 rounded-favo bg-cera p-6">
         <h2 class="text-lg font-semibold">Meus dias de jogo</h2>

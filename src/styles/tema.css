@@ -43,6 +43,22 @@
       drop-shadow(0 2px 0 var(--color-cera, #FFFDF7))
       drop-shadow(0 -2px 0 var(--color-cera, #FFFDF7));
   }
+
+  /* Cores de fundo do avatar de perfil (config em src/config/avatar.js).
+     Atualize junto com CORES_DE_FUNDO_DO_AVATAR ao trocar a paleta. */
+  .avatar-fundo-padrao { background-color: #FFC200; }
+  .avatar-fundo-cera { background-color: #FFFDF7; }
+  .avatar-fundo-mel { background-color: #FFC200; }
+  .avatar-fundo-polen { background-color: #FFD966; }
+  .avatar-fundo-ambar { background-color: #FFB703; }
+  .avatar-fundo-laranja { background-color: #F4A261; }
+  .avatar-fundo-verde-claro { background-color: #A7D8A0; }
+  .avatar-fundo-verde { background-color: #7BC96F; }
+  .avatar-fundo-azul-claro { background-color: #8ECAE6; }
+  .avatar-fundo-ceu { background-color: #90DBF4; }
+  .avatar-fundo-lavanda { background-color: #CDB4DB; }
+  .avatar-fundo-rosa { background-color: #FFAFCC; }
+  .avatar-fundo-areia { background-color: #E6E0C8; }
 }
 
 @keyframes float-up {
@@ -94,10 +110,10 @@
    trilha.css continua sendo a da landing (RNF-26: desligado no bloco abaixo). */
 @keyframes balanceio {
   0%, 100% {
-    transform: translateY(0) rotate(-2deg);
+    transform: translateX(0) rotate(-2deg);
   }
   50% {
-    transform: translateY(-8px) rotate(2deg);
+    transform: translateX(-4  px) rotate(2deg);
   }
 }
 

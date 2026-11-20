@@ -31,10 +31,14 @@ const ESTRELA_MINIMA = 1;
  * Quantas estrelas a tentativa vale (RN-030). Quem não concluiu fica em zero:
  * não é punição, é só ausência de resultado — a célula continua aberta.
  *
+ * `semRespostas` é a exceção do Quarto do Beenie: sair sem arrumar nada fecha a
+ * partida e conclui a célula, mas não rende estrela nenhuma. Fora desse caso,
+ * o piso de uma estrela continua valendo para quem errou muito.
+ *
  * Pura, para poder ser testada sem banco.
  */
-export function estrelasPara(erros, concluiu) {
-  if (!concluiu) return 0;
+export function estrelasPara(erros, concluiu, semRespostas = false) {
+  if (!concluiu || semRespostas) return 0;
 
   const faixa = FAIXAS_DE_ESTRELA.find((linha) => Number(erros) <= linha.ateErros);
   return faixa ? faixa.estrelas : ESTRELA_MINIMA;
@@ -50,7 +54,12 @@ export function estrelasPara(erros, concluiu) {
  * `conexao` vem preenchida quando a E06 chama de dentro da transação que paga.
  * Sem ela, o service abre a própria.
  */
-export async function registrarTentativa(idUsuario, idCelula, { erros = 0, pontuacao = 0, concluiu = false }, conexao = null) {
+export async function registrarTentativa(
+  idUsuario,
+  idCelula,
+  { erros = 0, pontuacao = 0, concluiu = false, semRespostas = false },
+  conexao = null,
+) {
   const errosNumero = Number(erros);
   if (!Number.isInteger(errosNumero) || errosNumero < 0) {
     throw erroValidacao('A contagem de erros precisa ser um inteiro não negativo');
@@ -61,7 +70,7 @@ export async function registrarTentativa(idUsuario, idCelula, { erros = 0, pontu
   const { celula } = await contentService.abrirCelula(idUsuario, idCelula);
   const codigosDeFaixa = await contentService.faixasDoJogador(idUsuario);
 
-  const estrelas = estrelasPara(errosNumero, concluiu);
+  const estrelas = estrelasPara(errosNumero, concluiu, semRespostas);
   const gravar = async (c) => {
     await progressRepository.registrarTentativa(c, {
       idUsuario,

@@ -17,21 +17,36 @@ const botaoContinuar = document.getElementById('jogo-continuar');
 const linkDoFavo = document.getElementById('jogo-voltar-ao-favo');
 
 /**
- * Os dois desfechos. A arte vem do catálogo do servidor, que desce nos atributos
- * da seção, e este arquivo só escolhe qual dos dois usar.
+ * Imagem e mensagem do desfecho conforme a nota (estrelas) recebida.
+ * As artes ficam em `img/score`: ótimo, bom, médio e ruim.
  */
-const MASCOTES = {
-  comemorando: {
-    imagem: secao.dataset.mascoteVitoria,
-    alt: secao.dataset.mascoteVitoriaAlt,
+const SCORES = {
+  3: {
+    imagem: '/img/score/beenie_score_verygood.webp',
+    alt: 'Beenie comemorando com nota ótima',
     titulo: 'Muito bem!',
   },
-  animando: {
-    imagem: secao.dataset.mascoteTentativa,
-    alt: secao.dataset.mascoteTentativaAlt,
-    titulo: 'Boa tentativa!',
+  2: {
+    imagem: '/img/score/beenie_score_good.webp',
+    alt: 'Beenie feliz com nota boa',
+    titulo: 'Bom trabalho!',
+  },
+  1: {
+    imagem: '/img/score/beenie_score_meh.webp',
+    alt: 'Beenie pensativa com nota média',
+    titulo: 'Quase lá!',
+  },
+  0: {
+    imagem: '/img/score/beenie_score_bad.webp',
+    alt: 'Beenie desanimada com nota ruim',
+    titulo: 'Continue tentando!',
   },
 };
+
+function scorePorEstrelas(estrelas) {
+  const quantidade = Math.max(0, Math.min(3, Number(estrelas) || 0));
+  return SCORES[quantidade] ?? SCORES[0];
+}
 
 const ESPACO_SVG = 'http://www.w3.org/2000/svg';
 const CONTORNO_DA_ESTRELA =
@@ -126,11 +141,15 @@ function mostrarCaminho(proximaCelula) {
 }
 
 export function mostrarResultado(dados) {
-  const mascoteEscolhido = dados.estrelas === 3 ? MASCOTES.comemorando : MASCOTES.animando;
+  // O Quarto do Beenie não monta esta seção: o módulo ainda é importado pela
+  // casca comum, mas não há painel para preencher nessa atividade.
+  if (!secao) return;
 
-  mascote.src = mascoteEscolhido.imagem;
-  mascote.alt = mascoteEscolhido.alt;
-  titulo.textContent = mascoteEscolhido.titulo;
+  const score = scorePorEstrelas(dados.estrelas);
+
+  mascote.src = score.imagem;
+  mascote.alt = score.alt;
+  titulo.textContent = score.titulo;
 
   mostrarEstrelas(dados.estrelas);
   mostrarGanhos(dados);

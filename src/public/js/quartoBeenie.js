@@ -6,6 +6,7 @@
 // estrelas e mel continuam sendo decididos pelo servidor, com o gabarito do
 // `contents.body`.
 import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
+import { definirEstrelasDoServidor } from './demo/quarto-beenie/integracao.js';
 
 let token = null;
 let total = 6;
@@ -47,12 +48,13 @@ function receberMensagem(dados) {
 }
 
 function agendarConclusao() {
-  // Deixa o quadro final do jogo aparecer antes de trocar pelo resultado do
-  // motor. Não é valor nenhum: é só tempo de leitura da nota.
+  // Deixa o quadro final do jogo aparecer antes de fechar a partida no
+  // servidor. Não é valor nenhum: é só tempo de leitura da nota.
   const atraso = document.body.classList.contains('a11y-movimento-reduzido') ? 0 : 1200;
   temporizador = window.setTimeout(async () => {
     try {
-      await concluirPartida(token, tarefas);
+      const dados = await concluirPartida(token, tarefas, { exibirResultado: false });
+      definirEstrelasDoServidor(dados.estrelas);
     } catch (erro) {
       mostrarErro(erro.message);
     }

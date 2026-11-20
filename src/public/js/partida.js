@@ -90,9 +90,13 @@ export function salvarProgresso(respostasParciais) {
   return pedir(`/partidas/${tokenDaPartida}/estado`, { respostas: respostasParciais }, 'PUT').catch(() => false);
 }
 
-/** Manda as respostas e entrega o resultado para a tela que o mostra. */
-export async function concluirPartida(token, respostas) {
+/** Manda as respostas e, por padrão, entrega o resultado para a tela que o mostra. */
+export async function concluirPartida(token, respostas, { exibirResultado = true } = {}) {
   const dados = await pedir(`/partidas/${token}/resultado`, { respostas });
+
+  // O Quarto do Beenie já tem a própria tela final: só fecha a partida no
+  // servidor e deixa o palco como está.
+  if (!exibirResultado) return dados;
 
   area.classList.add('hidden');
   mostrarResultado(dados);

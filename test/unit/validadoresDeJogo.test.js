@@ -122,14 +122,26 @@ describe('validadoresDeJogo', () => {
     });
 
     it('conta cada tarefa do quarto que ficou pendente', () => {
-      assert.deepEqual(validarRespostas('quarto-do-beenie', QUARTO, QUARTO.tarefas), { erros: 0, total: 6 });
+      assert.deepEqual(validarRespostas('quarto-do-beenie', QUARTO, QUARTO.tarefas), {
+        erros: 0,
+        total: 6,
+        semRespostas: false,
+      });
       assert.equal(validarRespostas('quarto-do-beenie', QUARTO, ['bau', 'cama']).erros, 4);
-      assert.equal(validarRespostas('quarto-do-beenie', QUARTO, []).erros, 6);
+      assert.deepEqual(validarRespostas('quarto-do-beenie', QUARTO, []), {
+        erros: 6,
+        total: 6,
+        semRespostas: true,
+      });
     });
 
     it('ignora tarefa repetida e identificador inventado no quarto', () => {
       const respostas = ['bau', 'bau', 'cama', 'inexistente'];
-      assert.deepEqual(validarRespostas('quarto-do-beenie', QUARTO, respostas), { erros: 4, total: 6 });
+      assert.deepEqual(validarRespostas('quarto-do-beenie', QUARTO, respostas), {
+        erros: 4,
+        total: 6,
+        semRespostas: false,
+      });
     });
 
     it('recusa resposta que não veio em lista', () => {

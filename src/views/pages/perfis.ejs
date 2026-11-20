@@ -41,14 +41,14 @@
               type="submit"
               class="group flex min-h-20 w-full items-center gap-4 rounded-favo border-2 border-linha bg-cera p-4 text-left transition hover:border-ambar hover:bg-mel/30 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 <%= podeTerMenu ? 'pr-16' : '' %>"
             >
-              <span class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-pilula bg-mel text-2xl font-bold text-tinta">
+              <span class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-pilula text-2xl font-bold text-tinta <%= classeDeCorDeFundoDoAvatar(perfil.avatar_background) %>">
                 <% if (perfil.avatar_imagem) { %>
                   <img
                     src="<%= perfil.avatar_imagem %>"
                     alt=""
                     width="64"
                     height="64"
-                    class="h-full w-full object-cover"
+                    class="h-14 w-14 object-contain"
                   />
                 <% } else { %>
                   <span aria-hidden="true"><%= perfil.apelido.charAt(0).toUpperCase() %></span>

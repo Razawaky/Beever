@@ -1,4 +1,4 @@
-// Edição do perfil: disponibilidade semanal (RF-ONB-09) e imagem do mascote.
+// Edição do perfil: disponibilidade semanal (RF-ONB-09) e imagem/cor do avatar.
 // JS puro na página. O corpo vai em JSON, então o token de CSRF viaja no
 // cabeçalho, e nada recarrega: quem trocou uma coisa quer ver a outra parada.
 const formulario = document.getElementById('form-disponibilidade');
@@ -8,8 +8,18 @@ const perfilId = formulario?.dataset.perfilId;
 const csrfToken = document.body.dataset.csrfToken;
 
 const formAvatar = document.getElementById('form-avatar');
+const dialogoAvatar = document.getElementById('dialogo-avatar');
+const botaoAbrirAvatar = document.getElementById('btn-abrir-avatar');
+const botaoCancelarAvatar = document.getElementById('btn-cancelar-avatar');
 const avisoAvatar = document.getElementById('aviso-avatar');
+const avisoAvatarDialogo = document.getElementById('aviso-avatar-dialogo');
+const botaoSalvarAvatar = document.getElementById('btn-salvar-avatar');
+
 let avatarAnterior = formAvatar?.querySelector('input[name="avatar"]:checked')?.value ?? '';
+let corAnterior =
+  formAvatar?.querySelector('input[name="avatar_cor_fundo"]:checked')?.value ??
+  document.getElementById('avatar-atual')?.dataset.avatarCor ??
+  '';
 let salvandoAvatar = false;
 
 function mostrarMensagem(elemento, mensagem, erro = false) {
@@ -17,6 +27,13 @@ function mostrarMensagem(elemento, mensagem, erro = false) {
   elemento.textContent = mensagem;
   elemento.classList.remove('hidden');
   elemento.classList.toggle('text-perigo', erro);
+}
+
+function esconderMensagem(elemento) {
+  if (!elemento) return;
+  elemento.textContent = '';
+  elemento.classList.add('hidden');
+  elemento.classList.remove('text-perigo');
 }
 
 function mostrar(mensagem, erro = false) {
@@ -89,57 +106,131 @@ formulario?.addEventListener('submit', async (evento) => {
   }
 });
 
-/** Troca a imagem do cabeçalho, inclusive quando hoje é só a letra do apelido. */
-function atualizarImagem(caminho) {
-  const atual = document.getElementById('avatar-atual') ?? document.querySelector('[data-avatar-atual]');
-  if (!atual || !caminho) return;
-
-  const imagem = document.createElement('img');
-  imagem.id = 'avatar-atual';
-  imagem.dataset.avatarAtual = '';
-  imagem.src = caminho;
-  imagem.alt = '';
-  imagem.width = 64;
-  imagem.height = 64;
-  imagem.className = 'h-16 w-16 object-contain';
-  atual.replaceWith(imagem);
-}
-
-function marcarAvatar(valor) {
-  const campo = [...(formAvatar?.querySelectorAll('input[name="avatar"]') ?? [])].find(
+function marcarRadio(nome, valor) {
+  const campo = [...(formAvatar?.querySelectorAll(`input[name="${nome}"]`) ?? [])].find(
     (opcao) => opcao.value === valor,
   );
   if (campo) campo.checked = true;
 }
 
-// A escolha salva sozinha: um toque na abelha já troca a imagem, sem um segundo
-// botão primário competindo com "Salvar meus dias" na mesma tela.
-formAvatar?.addEventListener('change', async (evento) => {
-  if (evento.target.name !== 'avatar' || salvandoAvatar) return;
+function valorRadio(nome) {
+  return formAvatar?.querySelector(`input[name="${nome}"]:checked`)?.value ?? '';
+}
 
-  const escolhido = evento.target;
-  const proximo = escolhido.value;
-  if (proximo === avatarAnterior) return;
+function classeDaCorSelecionada(valor) {
+  const campo = [...(formAvatar?.querySelectorAll('input[name="avatar_cor_fundo"]') ?? [])].find(
+    (opcao) => opcao.value === valor,
+  );
+  return campo?.dataset.classe || 'avatar-fundo-padrao';
+}
 
-  const grupo = formAvatar.querySelector('fieldset');
+function aplicarFundoNoAvatar(valorCor) {
+  const atual = document.getElementById('avatar-atual') ?? document.querySelector('[data-avatar-atual]');
+  if (!atual) return;
+  const classeNova = classeDaCorSelecionada(valorCor);
+  [...atual.classList].forEach((classe) => {
+    if (classe.startsWith('avatar-fundo-')) atual.classList.remove(classe);
+  });
+  atual.classList.add(classeNova);
+  atual.dataset.avatarCor = valorCor || '';
+}
+
+function atualizarImagemDoAvatar(caminho) {
+  const atual = document.getElementById('avatar-atual') ?? document.querySelector('[data-avatar-atual]');
+  if (!atual) return;
+
+  if (caminho) {
+    let imagem = atual.querySelector('img');
+    if (!imagem) {
+      atual.replaceChildren();
+      imagem = document.createElement('img');
+      imagem.alt = '';
+      imagem.width = 64;
+      imagem.height = 64;
+      imagem.className = 'h-14 w-14 object-contain';
+      atual.append(imagem);
+    }
+    imagem.src = caminho;
+    return;
+  }
+
+  atual.replaceChildren();
+  const inicial = document.createElement('span');
+  inicial.className = 'text-2xl font-bold text-tinta';
+  inicial.setAttribute('aria-hidden', 'true');
+  const titulo = document.querySelector('h1, h2');
+  inicial.textContent = (titulo?.textContent || '?').trim().charAt(0).toUpperCase() || '?';
+  atual.append(inicial);
+}
+
+function abrirDialogoAvatar() {
+  if (!dialogoAvatar || typeof dialogoAvatar.showModal !== 'function') return;
+  marcarRadio('avatar', avatarAnterior);
+  marcarRadio('avatar_cor_fundo', corAnterior);
+  esconderMensagem(avisoAvatarDialogo);
+  dialogoAvatar.showModal();
+}
+
+function fecharDialogoAvatar() {
+  if (dialogoAvatar?.open) dialogoAvatar.close();
+}
+
+botaoAbrirAvatar?.addEventListener('click', abrirDialogoAvatar);
+botaoCancelarAvatar?.addEventListener('click', () => {
+  marcarRadio('avatar', avatarAnterior);
+  marcarRadio('avatar_cor_fundo', corAnterior);
+  fecharDialogoAvatar();
+});
+
+dialogoAvatar?.addEventListener('cancel', () => {
+  marcarRadio('avatar', avatarAnterior);
+  marcarRadio('avatar_cor_fundo', corAnterior);
+});
+
+formAvatar?.addEventListener('submit', async (evento) => {
+  if (!dialogoAvatar) return;
+  evento.preventDefault();
+  if (salvandoAvatar) return;
+
+  const avatar = valorRadio('avatar');
+  const corFundo = valorRadio('avatar_cor_fundo');
+  if (!avatar) {
+    mostrarMensagem(avisoAvatarDialogo, 'Escolha um Beenie.', true);
+    return;
+  }
+
+  const grupo = formAvatar.querySelectorAll('fieldset, button');
   salvandoAvatar = true;
-  if (grupo) grupo.disabled = true;
-  mostrarMensagem(avisoAvatar, 'Salvando sua imagem...');
+  grupo.forEach((el) => {
+    el.disabled = true;
+  });
+  if (botaoSalvarAvatar) botaoSalvarAvatar.textContent = 'Salvando...';
+  mostrarMensagem(avisoAvatarDialogo, 'Salvando sua imagem...');
 
   try {
     const perfil = await enviarAoPerfil(
       `/perfil/${formAvatar.dataset.perfilId}`,
-      { avatar: proximo },
+      { avatar, avatar_cor_fundo: corFundo },
       'Não foi possível salvar sua imagem.',
     );
-    atualizarImagem(perfil.avatar_imagem ?? escolhido.dataset.imagem);
-    avatarAnterior = proximo;
-    mostrarMensagem(avisoAvatar, 'Imagem atualizada!');
+
+    const avatarEscolhido = formAvatar.querySelector('input[name="avatar"]:checked');
+    atualizarImagemDoAvatar(perfil.avatar_imagem ?? avatarEscolhido?.dataset.imagem ?? '');
+    const corSalva = perfil.avatar_cor_fundo ?? perfil.avatar_background ?? corFundo;
+    aplicarFundoNoAvatar(corSalva);
+    avatarAnterior = perfil.avatar ?? avatar;
+    corAnterior = corSalva || '';
+
+    esconderMensagem(avisoAvatarDialogo);
+    mostrarMensagem(avisoAvatar, 'Imagem e cor atualizadas!');
+    fecharDialogoAvatar();
   } catch (erro) {
-    marcarAvatar(avatarAnterior);
-    mostrarMensagem(avisoAvatar, erro.message, true);
+    mostrarMensagem(avisoAvatarDialogo, erro.message, true);
   } finally {
     salvandoAvatar = false;
-    if (grupo) grupo.disabled = false;
+    grupo.forEach((el) => {
+      el.disabled = false;
+    });
+    if (botaoSalvarAvatar) botaoSalvarAvatar.textContent = 'Salvar';
   }
 });

@@ -5,9 +5,10 @@
   `fetch` e monta a área do meio. Assim `GET` não cria partida, e atualizar a
   tela não deixa partida aberta para trás.
 
-  O que é igual em todo jogo — cabeçalho, carregando, erro, barra de progresso e
-  resultado — está aqui. O que muda é a área do meio, que vem do parcial do
-  jogo em `partials/jogos/`.
+  O que é comum aos jogos — cabeçalho, carregando e erro — está aqui. A barra
+  de progresso e o painel de resultado ficam de fora do Quarto do Beenie, que
+  já tem os próprios. O que muda é a área do meio, que vem do parcial do jogo
+  em `partials/jogos/`.
 
   O id da célula e o do favo viajam em `data-` no `<body>`, porque a CSP é
   `script-src 'self'` e não existe script inline neste projeto.
@@ -70,5 +71,8 @@
     <%- include(`../partials/jogos/${areaDoJogo}`) %>
   </section>
 
+  <%# O quarto encerra com a própria tela final da demo, sem o painel da casca. -%>
+  <% if (areaDoJogo !== 'quarto-beenie') { %>
   <%- include('../partials/jogo-resultado') %>
+  <% } %>
 </main>

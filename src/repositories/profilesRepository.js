@@ -12,7 +12,7 @@ import { consultar, consultarEm } from '../config/database.js';
  */
 
 const CAMPOS =
-  'id, user_id, age_band_id, avatar_id, initial_goal_id, onboarding_step, timezone, session_minutes, is_sound_enabled, has_reduced_motion, created_at';
+  'id, user_id, age_band_id, avatar_id, avatar_background, initial_goal_id, onboarding_step, timezone, session_minutes, is_sound_enabled, has_reduced_motion, created_at';
 
 export async function buscarPorUsuario(idUsuario) {
   const linhas = await consultar(`SELECT ${CAMPOS} FROM profiles WHERE user_id = ?`, [idUsuario]);
@@ -70,6 +70,7 @@ export async function atualizar(
   {
     faixaEtaria = null,
     avatar = null,
+    avatarBackground,
     objetivoInicial = null,
     fuso = null,
     minutosPorSessao = null,
@@ -78,11 +79,13 @@ export async function atualizar(
   },
   conexao = null,
 ) {
+  const mudarAvatarBackground = avatarBackground !== undefined;
   const resultado = await consultarEm(
     conexao,
     `UPDATE profiles
         SET age_band_id        = CASE WHEN ? IS NULL THEN age_band_id     ELSE (SELECT id FROM age_bands     WHERE code = ?) END,
             avatar_id          = CASE WHEN ? IS NULL THEN avatar_id       ELSE (SELECT id FROM avatars       WHERE slug = ?) END,
+            avatar_background  = CASE WHEN ? THEN ? ELSE avatar_background END,
             initial_goal_id    = CASE WHEN ? IS NULL THEN initial_goal_id ELSE (SELECT id FROM initial_goals WHERE slug = ?) END,
             timezone           = COALESCE(?, timezone),
             session_minutes    = COALESCE(?, session_minutes),
@@ -94,6 +97,8 @@ export async function atualizar(
       faixaEtaria,
       avatar,
       avatar,
+      mudarAvatarBackground ? 1 : 0,
+      mudarAvatarBackground ? avatarBackground : null,
       objetivoInicial,
       objetivoInicial,
       fuso,
@@ -135,7 +140,7 @@ export async function remover(id) {
  */
 export async function listarDetalhadoPorUsuario(idUsuario) {
   return consultar(
-    `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion,
+    `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion, p.avatar_background,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
             a.slug AS avatar, a.image_path AS avatar_imagem,
             o.slug AS objetivo_inicial, o.label AS objetivo_inicial_rotulo
@@ -160,7 +165,7 @@ export async function listarDetalhadoPorUsuario(idUsuario) {
  */
 export async function listarDetalhadoDaConta(idConta) {
   return consultar(
-    `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion,
+    `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion, p.avatar_background,
             u.nickname AS apelido, u.email, u.owner_user_id, u.onboarding_completed_at,
             ul.level AS nivel,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,

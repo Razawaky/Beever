@@ -1,4 +1,9 @@
 import { emTransacao } from '../config/database.js';
+import {
+  CORES_DE_FUNDO_DO_AVATAR,
+  corDeFundoDoAvatarValida,
+  normalizarCorDeFundoDoAvatar,
+} from '../config/avatar.js';
 import { logger } from '../config/logger.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as sessionsRepository from '../repositories/sessionsRepository.js';
@@ -116,6 +121,10 @@ function exigirDoCatalogo(opcoes, valor, mensagem) {
 export async function listarAvatares() {
   const avatares = await profilesRepository.listarAvatares();
   return avatares.map((avatar) => ({ valor: avatar.slug, rotulo: avatar.name, imagem: avatar.image_path }));
+}
+
+export function listarCoresDeFundoDoAvatar() {
+  return CORES_DE_FUNDO_DO_AVATAR;
 }
 
 export async function obterCatalogoDoOnboarding() {
@@ -301,12 +310,19 @@ async function exigirPosse(idPerfil, idUsuario) {
 export async function atualizar(
   idPerfil,
   idUsuario,
-  { apelido, avatar, fuso, minutosPorSessao, somAtivo, animacaoReduzida },
+  { apelido, avatar, avatarCorFundo, avatarBackground, fuso, minutosPorSessao, somAtivo, animacaoReduzida },
 ) {
   const minutosInformados = minutosPorSessao !== undefined && minutosPorSessao !== null;
   if (minutosInformados) exigirMinutosValidos(minutosPorSessao);
 
   await exigirPosse(idPerfil, idUsuario);
+
+  const corInformada = avatarCorFundo !== undefined || avatarBackground !== undefined;
+  const corBruta = avatarCorFundo !== undefined ? avatarCorFundo : avatarBackground;
+  if (corInformada && !corDeFundoDoAvatarValida(corBruta)) {
+    throw erroValidacao('Escolha uma cor de fundo válida para o avatar');
+  }
+  const corNormalizada = corInformada ? normalizarCorDeFundoDoAvatar(corBruta) : undefined;
 
   // O avatar continua opcional aqui — esta é a tela de perfil, onde se muda uma
   // coisa de cada vez —, mas quando vem, vem conferido contra o catálogo.
@@ -320,7 +336,14 @@ export async function atualizar(
   const anterior = await profilesRepository.buscarDetalhadoPorUsuario(idUsuario);
 
   if (apelido) await usersRepository.atualizar(idUsuario, { apelido });
-  await profilesRepository.atualizar(idPerfil, { avatar, fuso, minutosPorSessao, somAtivo, animacaoReduzida });
+  await profilesRepository.atualizar(idPerfil, {
+    avatar,
+    avatarBackground: corNormalizada,
+    fuso,
+    minutosPorSessao,
+    somAtivo,
+    animacaoReduzida,
+  });
 
   // Apelido é dado pessoal (RN-049) e a trilha é imutável por gatilho (RNF-17):
   // o que entrar aqui sobrevive ao apagamento da conta (RN-053). Entra o fato de
@@ -328,8 +351,12 @@ export async function atualizar(
   await auditService.registrar(auditService.usuario(idUsuario), 'perfil.atualizado', {
     entidade: 'profile',
     id: idPerfil,
-    antes: { avatar: anterior?.avatar },
-    depois: { apelidoAlterado: Boolean(apelido), avatar: avatar ?? anterior?.avatar },
+    antes: { avatar: anterior?.avatar, avatar_background: anterior?.avatar_background ?? null },
+    depois: {
+      apelidoAlterado: Boolean(apelido),
+      avatar: avatar ?? anterior?.avatar,
+      avatar_background: corInformada ? corNormalizada : (anterior?.avatar_background ?? null),
+    },
   });
 
   return obterDoUsuario(idUsuario);

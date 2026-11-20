@@ -145,7 +145,7 @@ function resultadoGravado(partida) {
  * Separado de `fechar` para a função não virar uma escada — aqui é a parte que
  * escreve, lá é a que confere.
  */
-async function creditarPartida(conexao, { idUsuario, token, partida, celula, erros, pontuacao }) {
+async function creditarPartida(conexao, { idUsuario, token, partida, celula, erros, pontuacao, semRespostas = false }) {
   // Trava a partida antes de qualquer escrita. Duas conclusões ao mesmo tempo
   // viram uma: a segunda espera, encontra a partida já fechada e devolve o
   // resultado dela em vez de creditar outra vez.
@@ -155,7 +155,7 @@ async function creditarPartida(conexao, { idUsuario, token, partida, celula, err
   const tentativa = await progressService.registrarTentativa(
     idUsuario,
     partida.cell_id,
-    { erros, pontuacao, concluiu: true },
+    { erros, pontuacao, concluiu: true, semRespostas },
     conexao,
   );
 
@@ -227,7 +227,11 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
   // publicar outra versão no meio da partida não pode trocar o gabarito dela.
   const conteudo = await conteudoDaPartida(partida);
 
-  const { erros, total } = validadoresDeJogo.validarRespostas(celula.game_type_slug, conteudo.body, respostas);
+  const { erros, total, semRespostas = false } = validadoresDeJogo.validarRespostas(
+    celula.game_type_slug,
+    conteudo.body,
+    respostas,
+  );
   const pontuacao = total === 0 ? 0 : Math.round(((total - erros) / total) * 100);
 
   // Retrato antes da partida, para a linha de auditoria (RN-010). Lido aqui, e
@@ -241,7 +245,8 @@ export async function fechar(idUsuario, token, { respostas = [] } = {}) {
   const resultado = await idempotencyService.executarUmaVezSo(
     { chave: `partida:${token}`, idUsuario, operacao: 'partida.fechar' },
     {
-      executar: (conexao) => creditarPartida(conexao, { idUsuario, token, partida, celula, erros, pontuacao }),
+      executar: (conexao) =>
+        creditarPartida(conexao, { idUsuario, token, partida, celula, erros, pontuacao, semRespostas }),
       aoRepetir: async () => resultadoGravado(await gameSessionsRepository.buscarPorToken(token)),
     },
   );

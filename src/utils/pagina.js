@@ -1,5 +1,6 @@
 import { statSync } from 'node:fs';
 
+import { classeDeCorDeFundoDoAvatar } from '../config/avatar.js';
 import { iconeDaConquista } from '../config/conquistas.js';
 import { svgIcone } from '../public/js/icones.js';
 import { classeDaBarra } from './barraDeProgresso.js';
@@ -69,6 +70,7 @@ export function renderizarPagina(res, pagina, dados = {}) {
     // Também global: a conquista aparece na Colmeia e na tela dela, e o ícone
     // tem um lugar só de troca (DT-103).
     iconeDaConquista,
+    classeDeCorDeFundoDoAvatar,
     // Os SVGs são montados aqui, e não só em `app.locals`, para que até a tela
     // de erro — renderizada por um app mínimo nos testes — encontre o helper.
     svgIcone,

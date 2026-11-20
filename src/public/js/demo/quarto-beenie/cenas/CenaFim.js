@@ -5,17 +5,34 @@
 // introdução, a própria página oferece o botão "Rever introdução".
 
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
-import { ROTULOS_DAS_TAREFAS } from '../dadosDoQuarto.js';
 import { CORES, FONTES, LARGURA, criarFundoEscuro } from '../desenho.js';
 import { IDS_DAS_TAREFAS, estado } from '../estadoDoJogo.js';
-import { publicarFim } from '../integracao.js';
+import { estrelasRecebidas, observarEstrelasDoServidor, publicarFim } from '../integracao.js';
 import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from '../interface.js';
 
-function rotularTarefas(ids) {
-  return ids.map((id) => ROTULOS_DAS_TAREFAS[id] ?? id).join(', ');
+const TAMANHO_DA_NOTA = Object.freeze({ largura: 198, altura: 234 });
+const POSICAO_DAS_ESTRELAS = 366;
+
+// A demo isolada não tem servidor, mas usa a mesma faixa da RN-030: sair sem
+// arrumar nada vale zero, até um erro vale três, até três vale duas e o resto
+// cai no piso de uma estrela.
+function estrelasDemo(concluidas, total) {
+  if (concluidas === 0) return 0;
+  const erros = total - concluidas;
+  if (erros <= 1) return 3;
+  if (erros <= 3) return 2;
+  return 1;
 }
 
-const TAMANHO_DA_NOTA = Object.freeze({ largura: 198, altura: 234 });
+function pontosDaEstrela(x, y, externo, interno) {
+  const pontos = [];
+  for (let indice = 0; indice < 10; indice += 1) {
+    const angulo = -Math.PI / 2 + (indice * Math.PI) / 5;
+    const raio = indice % 2 === 0 ? externo : interno;
+    pontos.push(new Phaser.Geom.Point(x + Math.cos(angulo) * raio, y + Math.sin(angulo) * raio));
+  }
+  return pontos;
+}
 
 function notaPorTarefas(concluidas, total) {
   if (concluidas >= total) return { chave: 'score-otimo', rotulo: 'ótimo' };
@@ -33,7 +50,6 @@ export class CenaFim extends Phaser.Scene {
     this.reiniciando = false;
 
     const concluidas = IDS_DAS_TAREFAS.filter((id) => estado.tarefas[id]);
-    const pendentes = IDS_DAS_TAREFAS.filter((id) => !estado.tarefas[id]);
     const total = estado.totalDeTarefas;
     const tudoPronto = concluidas.length === total;
     const nadaFeito = concluidas.length === 0;
@@ -55,12 +71,15 @@ export class CenaFim extends Phaser.Scene {
         : 'Você saiu antes de terminar. O mel é proporcional ao que foi feito.';
 
     const nota = notaPorTarefas(concluidas.length, total);
-    const textoConcluidas = concluidas.length
-      ? `Concluídas: ${rotularTarefas(concluidas)}`
-      : 'Concluídas: nenhuma';
-    const textoPendentes = pendentes.length
-      ? `Pendentes: ${rotularTarefas(pendentes)}`
-      : 'Pendentes: nenhuma';
+    let estrelas = estrelasRecebidas() ?? estrelasDemo(concluidas.length, total);
+    this.desenharEstrelas(estrelas);
+
+    const pararDeObservar = observarEstrelasDoServidor((quantidade) => {
+      estrelas = quantidade;
+      this.desenharEstrelas(quantidade);
+      this.anunciarResultado(estrelas, nota);
+    });
+    this.events.once('shutdown', pararDeObservar);
 
     criarFundoEscuro(this);
     this.add.circle(LARGURA / 2, 224, 170, CORES.mel, 0.08);
@@ -91,7 +110,7 @@ export class CenaFim extends Phaser.Scene {
       .setDepth(10);
 
     const textoMoedas = this.add
-      .text(LARGURA / 2, 320, `${estado.moedas} mel (demo)`, {
+      .text(LARGURA / 2, 414, `${estado.moedas} mel (demo)`, {
         fontFamily: FONTES.display,
         fontSize: '34px',
         color: '#ffc200',
@@ -99,58 +118,9 @@ export class CenaFim extends Phaser.Scene {
       .setOrigin(0.5, 0);
 
     this.add
-      .image(textoMoedas.x - textoMoedas.width / 2 - 22, 338, 'moeda')
+      .image(textoMoedas.x - textoMoedas.width / 2 - 22, 432, 'moeda')
       .setDisplaySize(28, 28)
       .setOrigin(0.5);
-
-    this.add
-      .text(
-        LARGURA / 2,
-        362,
-        `${concluidas.length} de ${total} atividades concluídas`,
-        {
-          fontFamily: FONTES.texto,
-          fontSize: '17px',
-          color: '#f5e8c8',
-          fontStyle: 'bold',
-        },
-      )
-      .setOrigin(0.5, 0);
-
-    this.add
-      .text(LARGURA / 2, 392, textoConcluidas, {
-        fontFamily: FONTES.texto,
-        fontSize: '13px',
-        color: '#f5e8c8',
-        align: 'center',
-        wordWrap: { width: 520 },
-      })
-      .setOrigin(0.5, 0);
-
-    this.add
-      .text(LARGURA / 2, 414, textoPendentes, {
-        fontFamily: FONTES.texto,
-        fontSize: '13px',
-        color: '#bfae87',
-        align: 'center',
-        wordWrap: { width: 520 },
-      })
-      .setOrigin(0.5, 0);
-
-    this.add
-      .text(
-        LARGURA / 2,
-        444,
-        'Nada foi creditado no Beever. No jogo real, o servidor calcula a recompensa.',
-        {
-          fontFamily: FONTES.texto,
-          fontSize: '12px',
-          color: '#bfae87',
-          align: 'center',
-          wordWrap: { width: 520 },
-        },
-      )
-      .setOrigin(0.5, 0);
 
     this.criarBotao();
 
@@ -179,10 +149,44 @@ export class CenaFim extends Phaser.Scene {
     this.input.keyboard?.once('keydown-SPACE', () => this.reiniciar());
 
     this.cameras.main.fadeIn(SEM_MOVIMENTO ? 0 : 300, 27, 21, 8);
+    this.anunciarResultado(estrelas, nota);
+    definirInstrucoes('Resultado do quarto.');
+  }
+
+  desenharEstrelas(quantidade) {
+    this.estrelasAtuais = quantidade;
+    if (this.estrelasDesenhadas) {
+      this.estrelasDesenhadas.forEach((estrela) => estrela.destroy());
+    }
+    this.estrelasDesenhadas = [];
+
+    const espacamento = 46;
+    const inicio = LARGURA / 2 - espacamento;
+
+    for (let posicao = 0; posicao < 3; posicao += 1) {
+      const pontos = pontosDaEstrela(inicio + posicao * espacamento, POSICAO_DAS_ESTRELAS, 17, 8);
+      const ganha = posicao < quantidade;
+      const desenho = this.add.graphics();
+
+      desenho.fillStyle(ganha ? CORES.mel : CORES.tintaSuave, 0.9);
+      desenho.fillPoints(pontos, true);
+      desenho.lineStyle(2, ganha ? CORES.nectar : CORES.paredeSombra, 1);
+      desenho.strokePoints(pontos, true);
+
+      // Mesmo escalonamento da tela de resultado do app, sem `style` inline.
+      if (ganha && !SEM_MOVIMENTO) {
+        desenho.setAlpha(0);
+        this.tweens.add({ targets: desenho, alpha: 1, duration: 300, delay: posicao * 150 });
+      }
+
+      this.estrelasDesenhadas.push(desenho);
+    }
+  }
+
+  anunciarResultado(estrelas, nota) {
     anunciar(
-      `Fim da demo: ${concluidas.length} de ${total} atividades e ${estado.moedas} de mel de demonstração. Resultado: ${nota.rotulo}.`,
+      `Fim da demo: ${estado.moedas} de mel de demonstração. Resultado: ${nota.rotulo}. ${estrelas} de 3 estrelas.`,
     );
-    definirInstrucoes('Clique em “Jogar de novo” ou aperte Enter para voltar ao quarto.');
   }
 
   criarBotao() {
@@ -206,14 +210,6 @@ export class CenaFim extends Phaser.Scene {
     zona.on('pointerover', () => fundo.setFillStyle(CORES.nectar, 1));
     zona.on('pointerout', () => fundo.setFillStyle(CORES.mel, 1));
     zona.on('pointerdown', () => this.reiniciar());
-
-    this.add
-      .text(LARGURA / 2, 535, 'Enter, Espaço ou clique para recomeçar', {
-        fontFamily: FONTES.texto,
-        fontSize: '12px',
-        color: '#8f7d58',
-      })
-      .setOrigin(0.5, 0);
   }
 
   reiniciar() {
