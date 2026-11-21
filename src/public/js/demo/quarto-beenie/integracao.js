@@ -23,6 +23,9 @@ const observadoresDeEstrelas = new Set();
 let proximaCelula = null;
 const observadoresDeProximaCelula = new Set();
 
+let recompensasDoServidor = null;
+const observadoresDeRecompensas = new Set();
+
 export function estrelasRecebidas() {
   return estrelasDoServidor;
 }
@@ -52,6 +55,29 @@ export function observarProximaCelula(observador) {
   return () => observadoresDeProximaCelula.delete(observador);
 }
 
+export function recompensasRecebidas() {
+  return recompensasDoServidor;
+}
+
+export function definirRecompensas(dados) {
+  if (!dados || typeof dados !== 'object') {
+    recompensasDoServidor = null;
+  } else {
+    recompensasDoServidor = {
+      xp: Math.max(0, Number(dados.xp) || 0),
+      polen: Math.max(0, Number(dados.polen) || 0),
+      mel: Math.max(0, Number(dados.mel) || 0),
+      bonusDeMelPorNivel: Math.max(0, Number(dados.bonusDeMelPorNivel) || 0),
+    };
+  }
+  for (const observador of observadoresDeRecompensas) observador(recompensasDoServidor);
+}
+
+export function observarRecompensas(observador) {
+  observadoresDeRecompensas.add(observador);
+  return () => observadoresDeRecompensas.delete(observador);
+}
+
 export function publicar(tipo, dados = {}) {
   if (!INTEGRADO) return;
 
@@ -74,9 +100,11 @@ export function publicarProgresso(estado) {
 }
 
 export function publicarFim({ tarefas, total }) {
-  // Cada saída pela porta é uma tentativa nova: não reaproveita estrelas da
-  // partida anterior enquanto a resposta do servidor não chega.
+  // Cada saída pela porta é uma tentativa nova: não reaproveita estrelas nem
+  // recompensas da partida anterior enquanto a resposta do servidor não chega.
   estrelasDoServidor = null;
+  recompensasDoServidor = null;
+  for (const observador of observadoresDeRecompensas) observador(recompensasDoServidor);
   publicar('final', { tarefas, total });
 }
 

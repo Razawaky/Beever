@@ -8,7 +8,7 @@
 -%>
 <div class="rounded-favo bg-white p-6 text-center">
   <% if (!locals.semMascote) { %>
-    <%- include('./mascote', { pose: 'acolhendo', decorativa: true, classe: 'mx-auto h-24 w-auto' }) %>
+    <%- include('./mascote', { pose: 'howdy', decorativa: true, classe: 'mx-auto h-24 w-auto' }) %>
   <% } %>
   <p class="<%= locals.semMascote ? '' : 'mt-3' %> text-sm text-tinta-suave"><%= mensagem %></p>
 

@@ -14,21 +14,21 @@
  * (`animate-float`), para que um desenho novo entre sem reescrever tela.
  */
 export const MASCOTES = {
-  acolhendo: {
-    arquivo: '/img/beenie_howdy.webp',
+  howdy: {
+    arquivo: '/img/onboarding/beenie_howdy.webp',
     alt: 'Beenie acenando',
     largura: 612,
     altura: 812,
   },
-  chamando: {
+  sentado: {
     arquivo: '/img/beenie_sentado_sexy.webp',
-    alt: 'Beenie chamando para começar',
+    alt: 'Beenie sentado',
     largura: 482,
     altura: 746,
   },
-  entrando: {
-    arquivo: '/img/beenie_vem.webp',
-    alt: 'Beenie na porta do Beever',
+  andando: {
+    arquivo: '/img/onboarding/beenie_vem.webp',
+    alt: 'Beenie andando',
     largura: 1000,
     altura: 1017,
   },
@@ -40,18 +40,18 @@ export const MASCOTES = {
   },
   mostrando: {
     arquivo: '/img/beenie_show.webp',
-    alt: 'Beenie apresentando a colmeia',
+    alt: 'Beenie mostrando',
     largura: 501,
     altura: 541,
   },
   um_real: {
-    arquivo: '/img/beenie_1real.webp',
+    arquivo: '/img/onboarding/beenie_1real.webp',
     alt: 'Beenie segurando uma moeda de 1 real',
     largura: 458,
     altura: 806,
   },
   bebe: {
-    arquivo: '/img/babybee.webp',
+    arquivo: '/img/onboarding/babybee.webp',
     alt: 'Bebê abelha',
     largura: 255,
     altura: 338,
@@ -68,68 +68,68 @@ export const MASCOTES = {
     largura: 1000,
     altura: 1017,
   },
-  clicavel: {
-    arquivo: '/img/clicks/beenie_click_default.webp',
-    alt: 'Beenie pronta para brincar',
-    largura: 275,
-    altura: 412,
+  click_normal: {
+    arquivo: '/img/clicks/beenie/beenie_click_default.webp',
+    alt: 'Beenie parado',
+    largura: 456,
+    altura: 572,
   },
-  curiosa: {
-    arquivo: '/img/clicks/beenie_click_a.webp',
-    alt: 'Beenie curiosa',
-    largura: 275,
-    altura: 412,
+  click_eita: {
+    arquivo: '/img/clicks/beenie/beenie_click_eita.webp',
+    alt: 'Beenie eita',
+    largura: 456,
+    altura: 572,
   },
-  oops: {
-    arquivo: '/img/clicks/beenie_click_oopsy.webp',
+  click_oops: {
+    arquivo: '/img/clicks/beenie/beenie_click_ops.webp',
     alt: 'Beenie fazendo oops',
-    largura: 275,
-    altura: 412,
+    largura: 456,
+    altura: 572,
   },
-  sorrindo: {
-    arquivo: '/img/clicks/beenie_click_smiley.webp',
-    alt: 'Beenie sorrindo',
-    largura: 275,
-    altura: 412,
+  click_smirk: {
+    arquivo: '/img/clicks/beenie/beenie_click_smirk.webp',
+    alt: 'Beenie sorrindo de canto',
+    largura: 456,
+    altura: 572,
   },
-  falando: {
-    arquivo: '/img/clicks/beenie_click_speak.webp',
+  click_falando: {
+    arquivo: '/img/clicks/beenie/beenie_click_default_speak.webp',
     alt: 'Beenie falando',
-    largura: 275,
-    altura: 412,
+    largura: 456,
+    altura: 572,
   },
-  estrelas: {
-    arquivo: '/img/clicks/beenie_click_stars.webp',
-    alt: 'Beenie encantado com estrelas',
-    largura: 275,
-    altura: 412,
+  click_amazed: {
+    arquivo: '/img/clicks/beenie/beenie_click_amazed.webp',
+    alt: 'Beenie encantado',
+    largura: 456,
+    altura: 572,
   },
-  pensando: {
-    arquivo: '/img/clicks/beenie_click_uhhhhh.webp',
-    alt: 'Beenie pensativa',
-    largura: 275,
-    altura: 412,
+  click_uhh: {
+    arquivo: '/img/clicks/beenie/beenie_click_uhhh.webp',
+    alt: 'Beenie uhhh',
+    largura: 456,
+    altura: 572,
   },
-  comemorando: {
-    arquivo: '/img/clicks/beenie_click_yeah.webp',
-    alt: 'Beenie comemorando',
-    largura: 275,
-    altura: 412,
+  click_rindo: {
+    arquivo: '/img/clicks/beenie/beenie_click_rindo.webp',
+    alt: 'Beenie rindo',
+    largura: 456,
+    altura: 572,
   },
   musica: {
-    arquivo: '/img/beenie_music.webp',
+    arquivo: '/img/onboarding/beenie_music.webp',
     alt: 'Beenie escutando música',
     largura: 395,
     altura: 463,
   },
   tempo: {
-    arquivo: '/img/beenie_time.webp',
+    arquivo: '/img/onboarding/beenie_time.webp',
     alt: 'Beenie mostrando o tempo',
     largura: 410,
     altura: 544,
   },
   calendario: {
-    arquivo: '/img/beenie_calendario.webp',
+    arquivo: '/img/onboarding/beenie_calendario.webp',
     alt: 'Beenie mostrando o calendário',
     largura: 570,
     altura: 739,
@@ -143,14 +143,14 @@ export const MASCOTES = {
  * nova é acrescentar a pose acima e o nome aqui.
  */
 export const POSES_DO_CLIQUE = [
-  'clicavel',
-  'curiosa',
-  'oops',
-  'sorrindo',
-  'falando',
-  'estrelas',
-  'pensando',
-  'comemorando',
+  'click_normal',
+  'click_eita',
+  'click_oops',
+  'click_smirk',
+  'click_falando',
+  'click_amazed',
+  'click_uhh',
+  'click_rindo',
 ];
 
 /**

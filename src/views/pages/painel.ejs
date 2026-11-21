@@ -105,20 +105,53 @@
     <%# A Beenie interativa mora na Colmeia e na trilha completa. Nas outras
         seções ela pode tapar conteúdo que ocupa a largura toda da `<main>`. -%>
     <% if (secaoAtual === 'colmeia' || secaoAtual === 'trilha') { %>
-      <div class="absolute right-4 bottom-4 z-20">
+      <div class="beenie-painel-fixa z-20 flex flex-col items-end gap-2">
+        <div
+          id="beenie-fala"
+          class="beenie-balao hidden max-w-64 rounded-2xl border border-linha bg-white px-4 py-3 text-sm text-tinta shadow-lg"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></div>
+
         <button
           type="button"
           id="beenie-clicavel"
           aria-label="Brincar com a Beenie"
-          data-beenie-imagens="<%= posesDoClique.map((pose) => mascote(pose).arquivo).join('|') %>"
-          class="min-h-11 cursor-pointer rounded-3xl p-2 transition-transform duration-150 active:scale-95"
+          class="min-h-11 cursor-pointer rounded-3xl p-2 pb-0 transition-transform duration-150 active:scale-95"
         >
-          <%- include('../partials/ui/mascote', {
-            id: 'beenie-imagem',
-            pose: 'clicavel',
-            decorativa: true,
-            classe: 'h-128 w-auto object-contain animate-balanceio',
-          }) %>
+          <span class="relative inline-block animate-balanceio">
+            <img
+              id="beenie-imagem"
+              src="<%= mascote('click_normal').arquivo %>"
+              alt=""
+              width="<%= mascote('click_normal').largura %>"
+              height="<%= mascote('click_normal').altura %>"
+              loading="lazy"
+              class="block w-auto object-contain"
+              style="height: min(52rem, 88vh);"
+            />
+            <img
+              id="beenie-mao-esquerda"
+              src="/img/clicks/mao/esquerda/L_mao_descanso.webp"
+              alt=""
+              width="456"
+              height="572"
+              loading="lazy"
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 h-full w-full object-contain"
+            />
+            <img
+              id="beenie-mao-direita"
+              src="/img/clicks/mao/direita/R_mao_descanso.webp"
+              alt=""
+              width="456"
+              height="572"
+              loading="lazy"
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 h-full w-full object-contain"
+            />
+          </span>
         </button>
       </div>
     <% } %>

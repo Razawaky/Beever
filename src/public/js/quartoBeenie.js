@@ -6,7 +6,7 @@
 // estrelas e mel continuam sendo decididos pelo servidor, com o gabarito do
 // `contents.body`.
 import { abrirPartida, concluirPartida, mostrarErro, mostrarProgresso, salvarProgresso } from './partida.js';
-import { definirEstrelasDoServidor, definirProximaCelula } from './demo/quarto-beenie/integracao.js';
+import { definirEstrelasDoServidor, definirProximaCelula, definirRecompensas } from './demo/quarto-beenie/integracao.js';
 
 let token = null;
 let total = 6;
@@ -56,6 +56,7 @@ function agendarConclusao() {
       const dados = await concluirPartida(token, tarefas, { exibirResultado: false });
       definirEstrelasDoServidor(dados.estrelas);
       definirProximaCelula(dados.proximaCelula);
+      definirRecompensas(dados);
     } catch (erro) {
       mostrarErro(erro.message);
     }

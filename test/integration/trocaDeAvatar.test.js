@@ -100,7 +100,7 @@ describe('troca de avatar no perfil', opcoes, () => {
       .expect(200);
 
     assert.equal(resposta.body.avatar, 'beenie-musica');
-    assert.equal(resposta.body.avatar_imagem, '/img/beenie_music.webp');
+    assert.equal(resposta.body.avatar_imagem, '/img/onboarding/beenie_music.webp');
 
     const pagina = await agente.get('/perfil').set('Accept', 'text/html').expect(200);
     assert.match(pagina.text, /id="avatar-atual"\s+data-avatar-atual\s+src="\/img\/beenie_music\.webp"/);

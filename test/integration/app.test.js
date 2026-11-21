@@ -76,7 +76,7 @@ describe('aplicação', opcoes, () => {
   });
 
   it('serve os arquivos estáticos de src/public', async () => {
-    await request(app).get('/img/beever-icon.png').expect(200);
+    await request(app).get('/img/logos/beever-icon.png').expect(200);
   });
 
   describe('layout base', () => {

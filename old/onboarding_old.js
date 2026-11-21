@@ -21,7 +21,7 @@ const steps = [
             { value: 'hobby', label: 'Apenas por hobby' },
             { value: 'school', label: 'Reforço escolar' }
         ],
-        image: "../src/img/beenie_1real.png",
+        image: "../src/img/onboarding/beenie_1real.webp",
         position: "-bottom-35 left-120 -translate-x-1/2",
         buttonText: "Próximo"
     },
@@ -36,7 +36,7 @@ const steps = [
             { value: 'advanced', label: 'Mestre do mel (Avançado)' }
         ],
         image: "../src/img/beenie_vem.png",
-        secondaryImage: "../src/img/babybee.png", // CORRIGIDO AQUI
+        secondaryImage: "../src/img/onboarding/babybee.webp", // CORRIGIDO AQUI
         position: "-bottom-30 left-130 -translate-x-1/2",
         buttonText: "Finalizar Cadastro"
     }
@@ -125,7 +125,7 @@ function renderStep() {
                 style="filter: drop-shadow(2px 2px 0px #0f172b) drop-shadow(-2px -2px 0px #0f172b) drop-shadow(2px -2px 0px #0f172b) drop-shadow(-2px 2px 0px #0f172b);">
                 
                 ${step.id === 'goal' ? `
-                    <img src="../src/img/1real.gif" alt="Moeda de 1 Real" 
+                    <img src="../src/img/onboarding/1real.gif" alt="Moeda de 1 Real" 
                          class="absolute top-50 right-26 -translate-x-1/2 w-14 h-14 animate-bounce"
                          style="filter: drop-shadow(0px 0px 4px #fff785) drop-shadow(0px 0px 12px #fff785) drop-shadow(0px 0px 30px #fff785) drop-shadow(0px 0px 50px #ffa41b);">
                 ` : ''}

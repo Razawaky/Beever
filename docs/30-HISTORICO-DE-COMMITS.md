@@ -3740,13 +3740,13 @@ Abre a E11 fechando o que faltava dos tokens da identidade. As fontes eram só n
  */
 export const MASCOTES = {
   acolhendo: {
-    arquivo: '/img/beenie_howdy.webp',
+    arquivo: '/img/onboarding/beenie_howdy.webp',
     alt: 'Beenie acenando',
     largura: 612,
     altura: 812,
   },
   chamando: {
-    arquivo: '/img/beenie_vem.webp',
+    arquivo: '/img/onboarding/beenie_vem.webp',
     alt: 'Beenie chamando para começar',
     largura: 482,
     altura: 746,

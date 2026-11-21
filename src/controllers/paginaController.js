@@ -41,8 +41,8 @@ const FUNDO_COLMEIA = 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-1
 // body. O caminho continua saindo do catálogo: trocar a arte é mexer num lugar
 // só, e não caçar strings em `onboarding.js`.
 const MASCOTES_DO_ONBOARDING = {
-  acolhendo: mascote('acolhendo').arquivo,
-  entrando: mascote('entrando').arquivo,
+  acolhendo: mascote('howdy').arquivo,
+  entrando: mascote('andando').arquivo,
   um_real: mascote('um_real').arquivo,
   calendario: mascote('calendario').arquivo,
   coolpose: mascote('coolpose').arquivo,
@@ -143,7 +143,7 @@ export const onboarding = assincrono(async (req, res) => {
       'csrf-token': res.locals.csrfToken,
       onboarding: JSON.stringify(rascunho),
       mascotes: JSON.stringify(MASCOTES_DO_ONBOARDING),
-      moeda: '/img/1real.gif',
+      moeda: '/img/onboarding/1real.gif',
     },
     scripts: ['/js/onboarding.js'],
   });

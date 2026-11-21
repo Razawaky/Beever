@@ -207,7 +207,7 @@ describe('telas da trilha', opcoes, () => {
     assert.ok(estadoVazio, 'sem faixa etária, a trilha precisa do cartão de estado vazio');
 
     assert.match(estadoVazio[0], /ainda está sendo montada/);
-    assert.match(estadoVazio[0], new RegExp(mascote('chamando').arquivo.replace('.', '\\.')));
+    assert.match(estadoVazio[0], new RegExp(mascote('sentado').arquivo.replace('.', '\\.')));
     // O partial do botão emite o `<a` com quebra de linha antes dos atributos,
     // então o espaço literal não aparece: é `\b`, e não um espaço fixo.
     assert.match(estadoVazio[0], /<a\b[^>]*href="\/painel"/, 'o estado vazio precisa oferecer para onde ir');

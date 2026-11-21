@@ -57,29 +57,27 @@ do Beever.
 | `estadoDoJogo.js` | Estado compartilhado: parede atual, atividades, itens, item na mão e mel fictício. |
 | `interface.js` | Ponte para `#status` e `#instrucoes`; o cabeçalho acima do palco é só o título. |
 
-As imagens do quarto ficam em `src/public/img/jogo/` e mantêm o prefixo original.
+As imagens do quarto ficam em `src/public/img/jogo/`, organizadas por subpastas.
 Depois da inversão dos lados, a arte `D_*` (armário e baú) aparece na parede
 Esquerda, e a arte `E_*` (cama e quadro) aparece na parede Direita.
 
-- fundos: `F_parede.png`, `D_parede.png`, `T_parede.png`, `E_parede.png`;
-- **Frente (F)**: `F_porta.png`, `F_roupa.png`, `F_travesseiro.png`;
-- **Trás (T)**: `T_janela.png`, `T_cortina_fechada.png`, `T_cortina_aberta.png`,
-  `T_mesa.png`, `T_livro_jogado.png`, `T_livro_fechado.png`, `T_roupa.png`;
-- **Direita — arte E**: `E_cama_vazia.png`, `E_travesseiro.png`,
-  `E_travesseiro1_arrumado.png`, `E_travesseiro2_arrumado.png`,
-  `E_coberta.png`, `E_coberta_arrumada.png`, `E_quadro_torto.png`,
-  `E_quadro.png`, `E_fiapo_cama.png`, `E_fiapo_travesseiro.png`;
-- **Esquerda — arte D**: `D_armario_aberto.png`, `D_armario_fechado.png`,
-  `D_roupa.png`, `D_bau_aberto.png`, `D_bau_fechado.png`,
-  `D_brinquedos.png`, `D_fiapo_bau.png`, `D_fiapo_brinquedos.png`.
-- **Ícones da mão**: `icones/brinquedos_icon.png`, `icones/coberta_icon.png`,
-  `icones/livro_icon.png`, `icones/travesseiro1_icon.png`,
-  `icones/travesseiro2_icon.png`, `icones/F_roupa_icon.png`,
-  `icones/T_roupa_icon.png` e `icones/D_roupa_icon.png`. Quadro e cortina são
+- **Frente** (`paredes/frente/`): `F_parede.webp`, `F_porta.webp`, `F_roupa.webp`, `F_travesseiro.webp`;
+- **Trás** (`paredes/`): `T_parede.webp`, `T_janela.webp`, `T_cortina_fechada.webp`, `T_cortina_aberta.webp`,
+  `T_mesa.webp`, `T_livro_jogado.webp`, `T_livro_fechado.webp`, `T_roupa.webp`;
+- **Direita — arte E** (`paredes/esquerda/`): `E_parede.webp`, `E_cama_vazia.webp`, `E_travesseiro.webp`,
+  `E_travesseiro1_arrumado.webp`, `E_travesseiro2_arrumado.webp`,
+  `E_coberta.webp`, `E_coberta_arrumada.webp`, `E_quadro_torto.webp`,
+  `E_quadro.webp`, `E_fiapo_cama.webp`, `E_fiapo_travesseiro.webp`;
+- **Esquerda — arte D** (`paredes/direita/`): `D_parede.webp`, `D_armario_aberto.webp`, `D_armario_fechado.webp`,
+  `D_roupa.webp`, `D_bau_aberto.webp`, `D_bau_fechado.webp`,
+  `D_brinquedos.webp`, `D_fiapo_bau.webp`, `D_fiapo_brinquedos.webp`.
+- **Ícones da mão** (`icones/`): `brinquedos_icon.webp`, `coberta_icon.webp`,
+  `livro_icon.webp`, `travesseiro1_icon.webp`,
+  `travesseiro2_icon.webp`, `F_roupa_icon.webp`,
+  `T_roupa_icon.webp` e `D_roupa_icon.webp`. Quadro e cortina são
   ações de clique, não itens carregáveis, e não têm ícone.
 
-Os retratos do Beenie ficam em `src/public/img/clicks/` e a moeda em
-`src/public/img/mel-moeda-virtual.png`.
+Os retratos da Beenie usados no jogo ficam em `src/public/img/jogo/beenie/`, as notas de resultado em `src/public/img/score/` e os cliques/avatares em `src/public/img/clicks/beenie/`.
 
 ## Decisões
 

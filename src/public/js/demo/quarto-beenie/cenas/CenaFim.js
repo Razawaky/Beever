@@ -7,7 +7,7 @@
 import * as Phaser from '/js/vendor/demo/phaser.esm.min.js';
 import { CORES, FONTES, LARGURA, criarFundoEscuro } from '../desenho.js';
 import { IDS_DAS_TAREFAS, estado } from '../estadoDoJogo.js';
-import { estrelasRecebidas, observarEstrelasDoServidor, observarProximaCelula, proximaCelulaRecebida, publicarFim } from '../integracao.js';
+import { estrelasRecebidas, observarEstrelasDoServidor, observarProximaCelula, observarRecompensas, proximaCelulaRecebida, publicarFim, recompensasRecebidas } from '../integracao.js';
 import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from '../interface.js';
 
 const TAMANHO_DA_NOTA = Object.freeze({ largura: 198, altura: 234 });
@@ -83,9 +83,14 @@ export class CenaFim extends Phaser.Scene {
       // A próxima célula chega após o servidor concluir a partida; o botão já
       // navega com o que estiver disponível no momento do clique.
     });
+    const pararDeObservarRecompensas = observarRecompensas(() => {
+      this.atualizarRecompensas();
+      this.anunciarResultado(estrelas, nota);
+    });
     this.events.once('shutdown', () => {
       pararDeObservarEstrelas();
       pararDeObservarProxima();
+      pararDeObservarRecompensas();
     });
 
     criarFundoEscuro(this);
@@ -123,6 +128,16 @@ export class CenaFim extends Phaser.Scene {
         color: '#ffc200',
       })
       .setOrigin(0.5, 0);
+
+    this.textoRecompensas = this.add
+      .text(LARGURA / 2, 448, '', {
+        fontFamily: FONTES.texto,
+        fontSize: '16px',
+        color: '#bfae87',
+        align: 'center',
+      })
+      .setOrigin(0.5, 0);
+    this.atualizarRecompensas();
 
     this.criarBotao();
 
@@ -185,10 +200,22 @@ export class CenaFim extends Phaser.Scene {
     }
   }
 
+  atualizarRecompensas() {
+    if (!this.textoRecompensas) return;
+    const recompensas = recompensasRecebidas();
+    if (!recompensas) {
+      this.textoRecompensas.setText('');
+      return;
+    }
+    this.textoRecompensas.setText(`XP +${recompensas.xp}   Pólen +${recompensas.polen}`);
+  }
+
   anunciarResultado(estrelas, nota) {
-    anunciar(
-      `Resultado: ${estado.moedas} de mel. Nota ${nota.rotulo}. ${estrelas} de 3 estrelas.`,
-    );
+    const recompensas = recompensasRecebidas();
+    const ganhos = recompensas
+      ? ` ${estado.moedas} de mel, +${recompensas.xp} XP e +${recompensas.polen} de pólen.`
+      : ` ${estado.moedas} de mel.`;
+    anunciar(`Resultado:${ganhos} Nota ${nota.rotulo}. ${estrelas} de 3 estrelas.`);
   }
 
   criarBotao() {

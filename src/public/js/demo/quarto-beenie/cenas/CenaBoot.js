@@ -51,7 +51,6 @@ export class CenaBoot extends Phaser.Scene {
     this.load.image('score-muito-bom', '/img/score/beenie_score_good.webp');
     this.load.image('score-meh', '/img/score/beenie_score_meh.webp');
     this.load.image('score-ruim', '/img/score/beenie_score_bad.webp');
-    this.load.image('moeda', '/img/mel-moeda-virtual.png');
 
     IMAGENS_DO_QUARTO.forEach((imagem) => {
       this.load.image(imagem.chave, imagem.caminho);

@@ -11,12 +11,12 @@
   id="jogo-resultado"
   class="hidden text-center"
   aria-live="polite"
-  data-mascote-vitoria="<%= mascote('acolhendo').arquivo %>"
-  data-mascote-vitoria-alt="<%= mascote('acolhendo').alt %>"
-  data-mascote-tentativa="<%= mascote('chamando').arquivo %>"
-  data-mascote-tentativa-alt="<%= mascote('chamando').alt %>"
+  data-mascote-vitoria="<%= mascote('howdy').arquivo %>"
+  data-mascote-vitoria-alt="<%= mascote('howdy').alt %>"
+  data-mascote-tentativa="<%= mascote('sentado').arquivo %>"
+  data-mascote-tentativa-alt="<%= mascote('sentado').alt %>"
 >
-  <%- include('./ui/mascote', { id: 'jogo-mascote', pose: 'acolhendo', decorativa: true, classe: 'mx-auto h-56 w-56 object-contain animate-float' }) %>
+  <%- include('./ui/mascote', { id: 'jogo-mascote', pose: 'howdy', decorativa: true, classe: 'mx-auto h-56 w-56 object-contain animate-float' }) %>
 
   <h2 id="jogo-resultado-titulo" class="mt-2 font-display text-2xl text-tinta"></h2>
 
