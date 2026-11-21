@@ -186,7 +186,34 @@
   padding: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 250px;
+  max-width: min(360px, calc(100vw - 40px));
   animation: slideIn 0.3s ease-out;
+}
+
+/* O estado vem da palavra no título, reforçada pela variante de texto aprovada
+   em AA no tema. Nenhuma cor carrega informação sozinha (RNF-25). */
+.toast-titulo {
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+.toast-erro .toast-titulo {
+  color: var(--color-erro-texto);
+}
+
+.toast-aviso .toast-titulo,
+.toast-info .toast-titulo {
+  color: var(--color-atencao-texto);
+}
+
+.toast-sucesso .toast-titulo {
+  color: var(--color-acerto-texto);
+}
+
+.toast-mensagem {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-tinta-suave);
 }
 
 @keyframes slideIn {

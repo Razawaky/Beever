@@ -17,6 +17,9 @@
     <%- include('partials/head') %>
   </head>
   <body class="<%= [classeBody, classesAcessibilidade].filter(Boolean).join(' ') %>"<% Object.entries(dadosBody).forEach(([chave, valor]) => { %> data-<%= chave %>="<%= valor %>"<% }) %>>
+    <%# Globais de feedback: o toast e o dialog de alerta valem em toda tela. -%>
+    <%- include('partials/ui/notificacoes') %>
+
     <% if (comCabecalho) { %><%- include('partials/header') %><% } %>
 
     <%- include(pagina) %>

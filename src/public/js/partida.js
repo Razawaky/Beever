@@ -8,6 +8,9 @@
 // as respostas escolhidas. A tela de resultado é do `resultado.js`, para o
 // arquivo comum a todos os jogos não virar uma tela.
 import { mostrarResultado } from './resultado.js';
+// A tela de jogo não carrega o painel de acessibilidade; este é o ponto comum
+// que garante aviso de erro também nela.
+import './notificacoes.js';
 
 const carregando = document.getElementById('jogo-carregando');
 const aviso = document.getElementById('jogo-erro');

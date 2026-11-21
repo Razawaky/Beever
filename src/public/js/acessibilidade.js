@@ -5,6 +5,9 @@
 // no `<body>`, e este script manda o clique para ele em vez de usar o localStorage.
 // A preferência de movimento do sistema continua valendo por conta própria.
 import { svgIcone } from './icones.js';
+// Toast/dialog globais: este script está em todas as telas comuns, então é ele
+// quem garante que uma resposta de erro nunca deixe a tela quebrada sem aviso.
+import './notificacoes.js';
 
 const AJUSTES = {
   movimento: 'a11y-movimento-reduzido',
