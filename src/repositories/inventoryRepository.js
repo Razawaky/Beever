@@ -20,7 +20,7 @@ import { consultar, consultarEm } from '../config/database.js';
 
 const CAMPOS = `inv.id, inv.item_id, inv.purchase_id, inv.current_value, inv.overdue_cycles,
                 inv.is_equipped, inv.acquired_at, inv.sold_at, inv.sold_value,
-                s.slug AS status, i.name AS item_name, i.slug AS item_slug,
+                s.slug AS status, i.name AS item_name, i.slug AS item_slug, i.image_path AS item_image_path,
                 i.counts_in_patrimony, i.upkeep_cost, i.income_per_cycle,
                 c.name AS category_name, p.price_at_purchase AS purchase_price`;
 
@@ -297,4 +297,25 @@ export async function bloquearUnidadeAtiva(conexao, idUnidade, idUsuario) {
     [idUnidade, idUsuario],
   );
   return linhas[0] ?? null;
+}
+
+/**
+ * Cosméticos que o jogador possui e pode equipar no avatar.
+ * Cosmético aqui é item que não conta no patrimônio (RN-041) — mesmo critério
+ * usado no inventário. Só itens em mãos (não vendidos/consumidos).
+ */
+export async function listarCosmeticosDoUsuario(idUsuario) {
+  return consultar(
+    `SELECT DISTINCT i.id AS item_id, i.name, i.slug, i.image_path, c.name AS category_name,
+            i.cosmetic_kind, i.cosmetic_layer
+       FROM inventory inv
+       JOIN items i ON i.id = inv.item_id
+       JOIN item_categories c ON c.id = i.category_id
+       JOIN inventory_statuses s ON s.id = inv.status_id
+      WHERE inv.user_id = ?
+        AND s.slug NOT IN ('vendido', 'consumido')
+        AND i.counts_in_patrimony = 0
+      ORDER BY i.name, i.id`,
+    [idUsuario],
+  );
 }

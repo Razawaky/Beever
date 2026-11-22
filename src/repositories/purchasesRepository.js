@@ -52,7 +52,25 @@ export async function buscarPorId(id) {
   return linhas[0] ?? null;
 }
 
-/** Quanto o jogador já gastou na loja — entra no cálculo de patrimônio e nos relatórios. */
+/** Se o jogador já comprou este item alguma vez (unicidade por perfil). */
+export async function jaComprou(idUsuario, idItem, conexao = null) {
+  const linhas = await consultarEm(
+    conexao,
+    'SELECT 1 FROM purchases WHERE user_id = ? AND item_id = ? LIMIT 1',
+    [idUsuario, idItem],
+  );
+  return linhas.length > 0;
+}
+
+/** IDs dos itens já comprados pelo jogador, para marcar a vitrine. */
+export async function listarIdsDeItensComprados(idUsuario) {
+  const linhas = await consultar(
+    'SELECT DISTINCT item_id FROM purchases WHERE user_id = ?',
+    [idUsuario],
+  );
+  return linhas.map((linha) => Number(linha.item_id));
+}
+
 /**
  * A compra mais recente daquele item pelo jogador.
  *

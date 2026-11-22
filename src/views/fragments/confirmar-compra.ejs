@@ -68,7 +68,11 @@
       <% } %>
     </ul>
 
-    <% if (previa.bloqueios.length > 0) { %>
+    <% if (previa.jaComprou) { %>
+      <p class="mt-6 rounded-favo bg-tarefa-concluida p-4 text-sm font-medium text-tinta">
+        Você já tem este item. Cada item só pode ser comprado uma vez.
+      </p>
+    <% } else if (previa.bloqueios.length > 0) { %>
       <ul class="mt-6 grid gap-1 rounded-favo bg-cera p-4 text-sm">
         <% previa.bloqueios.forEach((bloqueio) => { %>
           <li class="flex items-center gap-2"><%- svgIcone('cadeado', 'h-4 w-4 shrink-0') %><span><%= bloqueio.mensagem %></span></li>
@@ -90,7 +94,7 @@
           <input type="hidden" name="idUnidadeTrocada" value="<%= previa.troca.idUnidade %>" />
         <% } %>
         <%- include('../partials/ui/botao', {
-          texto: previa.podeComprar ? 'Comprar agora' : 'Ainda não dá',
+          texto: previa.jaComprou ? 'Já é seu' : (previa.podeComprar ? 'Comprar agora' : 'Ainda não dá'),
           tipo: 'submit',
           desabilitado: !previa.podeComprar,
         }) %>

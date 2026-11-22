@@ -26,6 +26,22 @@ router.put(
     body('avatar').optional().trim().isLength({ max: 60 }),
     body('avatar_cor_fundo').optional({ nullable: true }).isString().isLength({ max: 16 }),
     body('avatarCorFundo').optional({ nullable: true }).isString().isLength({ max: 16 }),
+    body('cosmetico_equipado_item_id').optional({ nullable: true }).custom((valor) => {
+      if (valor === null || valor === '' || valor === 0 || valor === '0') return true;
+      return Number.isInteger(Number(valor)) && Number(valor) > 0;
+    }).withMessage('Acessório inválido'),
+    body('cosmeticoEquipadoItemId').optional({ nullable: true }).custom((valor) => {
+      if (valor === null || valor === '' || valor === 0 || valor === '0') return true;
+      return Number.isInteger(Number(valor)) && Number(valor) > 0;
+    }).withMessage('Acessório inválido'),
+    body('cosmetico_fundo_equipado_item_id').optional({ nullable: true }).custom((valor) => {
+      if (valor === null || valor === '' || valor === 0 || valor === '0') return true;
+      return Number.isInteger(Number(valor)) && Number(valor) > 0;
+    }).withMessage('Fundo de avatar inválido'),
+    body('cosmeticoFundoEquipadoItemId').optional({ nullable: true }).custom((valor) => {
+      if (valor === null || valor === '' || valor === 0 || valor === '0') return true;
+      return Number.isInteger(Number(valor)) && Number(valor) > 0;
+    }).withMessage('Fundo de avatar inválido'),
     body('fuso').optional().trim().isLength({ max: 64 }),
     // RN-011 reconhece cinco durações, e o banco as repete em
     // `ck_profiles_session_minutes`. Aceitar 5 a 60 aqui deixava passar valores

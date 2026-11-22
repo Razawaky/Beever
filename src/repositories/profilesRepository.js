@@ -71,6 +71,8 @@ export async function atualizar(
     faixaEtaria = null,
     avatar = null,
     avatarBackground,
+    equippedCosmeticItemId,
+    equippedBackgroundCosmeticItemId,
     objetivoInicial = null,
     fuso = null,
     minutosPorSessao = null,
@@ -80,17 +82,21 @@ export async function atualizar(
   conexao = null,
 ) {
   const mudarAvatarBackground = avatarBackground !== undefined;
+  const mudarCosmeticoEquipado = equippedCosmeticItemId !== undefined;
+  const mudarCosmeticoFundoEquipado = equippedBackgroundCosmeticItemId !== undefined;
   const resultado = await consultarEm(
     conexao,
     `UPDATE profiles
-        SET age_band_id        = CASE WHEN ? IS NULL THEN age_band_id     ELSE (SELECT id FROM age_bands     WHERE code = ?) END,
-            avatar_id          = CASE WHEN ? IS NULL THEN avatar_id       ELSE (SELECT id FROM avatars       WHERE slug = ?) END,
-            avatar_background  = CASE WHEN ? THEN ? ELSE avatar_background END,
-            initial_goal_id    = CASE WHEN ? IS NULL THEN initial_goal_id ELSE (SELECT id FROM initial_goals WHERE slug = ?) END,
-            timezone           = COALESCE(?, timezone),
-            session_minutes    = COALESCE(?, session_minutes),
-            is_sound_enabled   = COALESCE(?, is_sound_enabled),
-            has_reduced_motion = COALESCE(?, has_reduced_motion)
+        SET age_band_id                          = CASE WHEN ? IS NULL THEN age_band_id     ELSE (SELECT id FROM age_bands     WHERE code = ?) END,
+            avatar_id                            = CASE WHEN ? IS NULL THEN avatar_id       ELSE (SELECT id FROM avatars       WHERE slug = ?) END,
+            avatar_background                    = CASE WHEN ? THEN ? ELSE avatar_background END,
+            equipped_cosmetic_item_id            = CASE WHEN ? THEN ? ELSE equipped_cosmetic_item_id END,
+            equipped_background_cosmetic_item_id = CASE WHEN ? THEN ? ELSE equipped_background_cosmetic_item_id END,
+            initial_goal_id                      = CASE WHEN ? IS NULL THEN initial_goal_id ELSE (SELECT id FROM initial_goals WHERE slug = ?) END,
+            timezone                             = COALESCE(?, timezone),
+            session_minutes                      = COALESCE(?, session_minutes),
+            is_sound_enabled                     = COALESCE(?, is_sound_enabled),
+            has_reduced_motion                   = COALESCE(?, has_reduced_motion)
       WHERE id = ?`,
     [
       faixaEtaria,
@@ -99,6 +105,10 @@ export async function atualizar(
       avatar,
       mudarAvatarBackground ? 1 : 0,
       mudarAvatarBackground ? avatarBackground : null,
+      mudarCosmeticoEquipado ? 1 : 0,
+      mudarCosmeticoEquipado ? (equippedCosmeticItemId ?? null) : null,
+      mudarCosmeticoFundoEquipado ? 1 : 0,
+      mudarCosmeticoFundoEquipado ? (equippedBackgroundCosmeticItemId ?? null) : null,
       objetivoInicial,
       objetivoInicial,
       fuso,
@@ -141,12 +151,19 @@ export async function remover(id) {
 export async function listarDetalhadoPorUsuario(idUsuario) {
   return consultar(
     `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion, p.avatar_background,
+            p.equipped_cosmetic_item_id AS avatar_cosmetico_item_id,
+            ec.image_path AS avatar_cosmetico_imagem, ec.name AS avatar_cosmetico_nome,
+            ec.cosmetic_kind AS avatar_cosmetico_kind, ec.cosmetic_layer AS avatar_cosmetico_camada,
+            p.equipped_background_cosmetic_item_id AS avatar_cosmetico_fundo_item_id,
+            ecb.image_path AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
             a.slug AS avatar, a.image_path AS avatar_imagem,
             o.slug AS objetivo_inicial, o.label AS objetivo_inicial_rotulo
        FROM profiles p
        LEFT JOIN age_bands f     ON f.id = p.age_band_id
        LEFT JOIN avatars a       ON a.id = p.avatar_id
+       LEFT JOIN items ec        ON ec.id = p.equipped_cosmetic_item_id
+       LEFT JOIN items ecb       ON ecb.id = p.equipped_background_cosmetic_item_id
        LEFT JOIN initial_goals o ON o.id = p.initial_goal_id
       WHERE p.user_id = ?
       ORDER BY p.created_at, p.id`,
@@ -166,6 +183,11 @@ export async function listarDetalhadoPorUsuario(idUsuario) {
 export async function listarDetalhadoDaConta(idConta) {
   return consultar(
     `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion, p.avatar_background,
+            p.equipped_cosmetic_item_id AS avatar_cosmetico_item_id,
+            ec.image_path AS avatar_cosmetico_imagem, ec.name AS avatar_cosmetico_nome,
+            ec.cosmetic_kind AS avatar_cosmetico_kind, ec.cosmetic_layer AS avatar_cosmetico_camada,
+            p.equipped_background_cosmetic_item_id AS avatar_cosmetico_fundo_item_id,
+            ecb.image_path AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
             u.nickname AS apelido, u.email, u.owner_user_id, u.onboarding_completed_at,
             ul.level AS nivel,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
@@ -176,6 +198,8 @@ export async function listarDetalhadoDaConta(idConta) {
        LEFT JOIN user_levels ul ON ul.user_id = p.user_id
        LEFT JOIN age_bands f     ON f.id = p.age_band_id
        LEFT JOIN avatars a       ON a.id = p.avatar_id
+       LEFT JOIN items ec        ON ec.id = p.equipped_cosmetic_item_id
+       LEFT JOIN items ecb       ON ecb.id = p.equipped_background_cosmetic_item_id
        LEFT JOIN initial_goals o ON o.id = p.initial_goal_id
       WHERE u.id = ? OR u.owner_user_id = ?
       ORDER BY (u.owner_user_id IS NULL) DESC, p.created_at, p.id`,

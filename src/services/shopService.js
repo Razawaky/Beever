@@ -1,4 +1,5 @@
 import * as inventoryRepository from '../repositories/inventoryRepository.js';
+import * as purchasesRepository from '../repositories/purchasesRepository.js';
 import * as itemsService from './itemsService.js';
 import * as patrimonyService from './patrimonyService.js';
 import * as profilesService from './profilesService.js';
@@ -62,12 +63,15 @@ function comportamentoNaFaixa(item, regras) {
 
 /** O catálogo com o estado de compra de cada item para este jogador. */
 export async function listarVitrine(idUsuario) {
-  const [catalogo, patrimonio, unidades, regras] = await Promise.all([
+  const [catalogo, patrimonio, unidades, regras, idsComprados] = await Promise.all([
     itemsService.listarCatalogo(),
     patrimonyService.obterDoUsuario(idUsuario),
     inventoryRepository.listarPorUsuario(idUsuario),
     profilesService.regrasEconomicasDoUsuario(idUsuario),
+    purchasesRepository.listarIdsDeItensComprados(idUsuario),
   ]);
+
+  const comprados = new Set(idsComprados.map(Number));
 
   const pendenciasPorItem = await itemsService.requisitosNaoCumpridosDosItens(
     catalogo.map((item) => item.id),
@@ -79,6 +83,7 @@ export async function listarVitrine(idUsuario) {
     const bloqueios = pendencias.filter((pendencia) => !pendencia.naoVerificavelAinda);
     const troca = ofertaDeTroca(item, unidades);
     const preco = Number(item.price) - (troca?.desconto ?? 0);
+    const jaComprou = comprados.has(Number(item.id));
 
     return {
       ...item,
@@ -90,7 +95,8 @@ export async function listarVitrine(idUsuario) {
       troca,
       bloqueios,
       avisos: pendencias.filter((pendencia) => pendencia.naoVerificavelAinda),
-      podeComprar: bloqueios.length === 0 && patrimonio.carteira >= preco,
+      jaComprou,
+      podeComprar: !jaComprou && bloqueios.length === 0 && patrimonio.carteira >= preco,
       faltamDeMel: Math.max(preco - patrimonio.carteira, 0),
     };
   });
@@ -109,11 +115,12 @@ export async function listarVitrine(idUsuario) {
  */
 export async function previaDaCompra(idUsuario, idItem, { idUnidadeTrocada = null } = {}) {
   const item = await itemsService.obterAtivo(idItem);
-  const [patrimonio, unidades, pendencias, regras] = await Promise.all([
+  const [patrimonio, unidades, pendencias, regras, jaComprou] = await Promise.all([
     patrimonyService.obterDoUsuario(idUsuario),
     inventoryRepository.listarPorUsuario(idUsuario),
     itemsService.requisitosNaoCumpridos(idItem, idUsuario),
     profilesService.regrasEconomicasDoUsuario(idUsuario),
+    purchasesRepository.jaComprou(idUsuario, idItem),
   ]);
 
   const oferta = ofertaDeTroca(item, unidades);
@@ -157,6 +164,7 @@ export async function previaDaCompra(idUsuario, idItem, { idUnidadeTrocada = nul
     entraNoPatrimonio,
     bloqueios,
     avisos: pendencias.filter((pendencia) => pendencia.naoVerificavelAinda),
-    podeComprar: bloqueios.length === 0 && patrimonio.carteira >= precoPago,
+    jaComprou,
+    podeComprar: !jaComprou && bloqueios.length === 0 && patrimonio.carteira >= precoPago,
   };
 }

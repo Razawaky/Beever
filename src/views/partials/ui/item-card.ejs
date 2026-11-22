@@ -8,7 +8,7 @@
         chega sempre em WebP com dimensões escritas, para não haver salto. -%>
     <% if (item.image_path) { %>
       <img src="<%= item.image_path %>" alt="" width="800" height="800"
-        class="mb-4 aspect-square w-full rounded-favo object-cover" />
+        class="mb-4 aspect-square w-full rounded-favo bg-cera object-contain" />
     <% } %>
     <span class="text-xs font-semibold uppercase tracking-wide text-tinta-suave"><%= item.category_name %></span>
     <h3 class="mt-1 text-lg font-bold"><%= item.name %></h3>
@@ -20,7 +20,9 @@
       <%- svgIcone('mel', 'h-5 w-5') %><span><%= item.precoComDesconto %></span>
     </p>
 
-    <% if (item.bloqueios.length > 0) { %>
+    <% if (item.jaComprou) { %>
+      <span class="rounded-pilula bg-tarefa-concluida px-4 py-2 text-sm font-medium text-tinta">Já é seu</span>
+    <% } else if (item.bloqueios.length > 0) { %>
       <span class="rounded-pilula bg-cera px-4 py-2 text-sm font-medium text-tinta-suave">Ainda não</span>
     <% } else { %>
       <%# O botão leva para a confirmação, nunca direto para a compra: a criança

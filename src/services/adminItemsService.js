@@ -71,6 +71,36 @@ async function conferirItemDeOrigem(idItemDeOrigem, idDoItem = null) {
   }
 }
 
+function normalizarCosmetico(dados) {
+  const tipo = dados.tipoCosmetico || null;
+  const camada = dados.camadaCosmetica || null;
+  const tiposValidos = new Set(['avatar', 'fundo']);
+  const camadasValidas = new Set(['frente', 'atras']);
+
+  if (tipo && !tiposValidos.has(tipo)) {
+    throw erroValidacao('Tipo de cosmético inválido');
+  }
+  if (camada && !camadasValidas.has(camada)) {
+    throw erroValidacao('Camada do cosmético inválida');
+  }
+
+  if (!tipo) {
+    return { ...dados, tipoCosmetico: null, camadaCosmetica: null };
+  }
+
+  // Cosmético não entra no patrimônio.
+  const normalizado = { ...dados, contaNoPatrimonio: false, tipoCosmetico: tipo };
+
+  if (tipo === 'fundo') {
+    return { ...normalizado, camadaCosmetica: null };
+  }
+
+  if (!camada) {
+    throw erroValidacao('Escolha se o cosmético do avatar fica sobre ou atrás do personagem');
+  }
+  return { ...normalizado, camadaCosmetica: camada };
+}
+
 export async function opcoesDeCadastro() {
   const [categorias, comportamentos, tiposDeRequisito, itens] = await Promise.all([
     itemsRepository.listarCategorias(),
@@ -94,13 +124,16 @@ export async function detalharItem(idItem) {
   return { item, comportamentos, requisitos };
 }
 
-export async function criarItem(dados, ilustracao, ator) {
+export async function criarItem(dadosEntrada, ilustracao, ator) {
+  const dados = normalizarCosmetico(dadosEntrada);
   const slug = dados.slug || slugDoNome(dados.nome);
   await exigirSlugLivre(slug);
   conferirFaixaDeValor(dados);
   await conferirItemDeOrigem(dados.idItemDeOrigem);
 
-  const caminhoDaImagem = ilustracao ? await guardarIlustracao(ilustracao) : null;
+  const caminhoDaImagem = ilustracao
+    ? await guardarIlustracao(ilustracao, { recortar: !dados.tipoCosmetico })
+    : null;
   const comportamentos = comportamentosDosNumeros(dados);
 
   const id = await emTransacao(async (conexao) => {
@@ -123,13 +156,16 @@ export async function criarItem(dados, ilustracao, ator) {
  * o valor do dia, e é ele que a economia lê. O preço novo vale da próxima compra
  * em diante.
  */
-export async function atualizarItem(idItem, dados, ilustracao, ator) {
+export async function atualizarItem(idItem, dadosEntrada, ilustracao, ator) {
+  const dados = normalizarCosmetico(dadosEntrada);
   const antes = await exigirItem(idItem);
   if (dados.slug) await exigirSlugLivre(dados.slug, antes.id);
   conferirFaixaDeValor(dados);
   await conferirItemDeOrigem(dados.idItemDeOrigem, antes.id);
 
-  const caminhoDaImagem = ilustracao ? await guardarIlustracao(ilustracao) : null;
+  const caminhoDaImagem = ilustracao
+    ? await guardarIlustracao(ilustracao, { recortar: !dados.tipoCosmetico })
+    : null;
   const comportamentos = comportamentosDosNumeros(dados);
 
   await emTransacao(async (conexao) => {

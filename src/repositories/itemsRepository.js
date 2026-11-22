@@ -15,7 +15,8 @@ import { consultar, consultarEm } from '../config/database.js';
 const CAMPOS = `i.id, i.slug, i.name, i.description_kid, i.image_path, i.price, i.category_id,
                 c.slug AS category_slug, c.name AS category_name,
                 i.counts_in_patrimony, i.valuation_rate, i.valuation_floor_pct, i.valuation_cap_pct,
-                i.upkeep_cost, i.income_per_cycle, i.upgrade_of_item_id, i.is_consumable`;
+                i.upkeep_cost, i.income_per_cycle, i.upgrade_of_item_id, i.is_consumable,
+                i.cosmetic_kind, i.cosmetic_layer`;
 
 export async function listarAtivos() {
   return consultar(
@@ -176,8 +177,9 @@ export async function criar(dados, conexao = null) {
     conexao,
     `INSERT INTO items (slug, name, description_kid, image_path, category_id, price,
                         counts_in_patrimony, valuation_rate, valuation_floor_pct, valuation_cap_pct,
-                        upkeep_cost, income_per_cycle, upgrade_of_item_id, is_consumable)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        upkeep_cost, income_per_cycle, upgrade_of_item_id, is_consumable,
+                        cosmetic_kind, cosmetic_layer)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       dados.slug,
       dados.nome,
@@ -193,6 +195,8 @@ export async function criar(dados, conexao = null) {
       dados.rendaPorCiclo,
       dados.idItemDeOrigem,
       dados.ehConsumivel ? 1 : 0,
+      dados.tipoCosmetico ?? null,
+      dados.camadaCosmetica ?? null,
     ],
   );
   return resultado.insertId;
@@ -216,7 +220,9 @@ export async function atualizar(id, dados, conexao = null) {
             upkeep_cost         = COALESCE(?, upkeep_cost),
             income_per_cycle    = COALESCE(?, income_per_cycle),
             upgrade_of_item_id  = ?,
-            is_consumable       = COALESCE(?, is_consumable)
+            is_consumable       = COALESCE(?, is_consumable),
+            cosmetic_kind       = ?,
+            cosmetic_layer      = ?
       WHERE id = ? AND deleted_at IS NULL`,
     [
       dados.slug,
@@ -235,6 +241,8 @@ export async function atualizar(id, dados, conexao = null) {
       // e com COALESCE o campo em branco seria lido como "não mexer".
       dados.idItemDeOrigem,
       dados.ehConsumivel === null ? null : dados.ehConsumivel ? 1 : 0,
+      dados.tipoCosmetico ?? null,
+      dados.camadaCosmetica ?? null,
       id,
     ],
   );

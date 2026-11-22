@@ -17,6 +17,7 @@ import {
   garantirTexturaDeContorno,
 } from '../desenho.js';
 import { estado } from '../estadoDoJogo.js';
+import { SEM_SOM } from '../integracao.js';
 import { SEM_MOVIMENTO, anunciar, definirInstrucoes } from '../interface.js';
 
 const TOTAL_DE_PAREDES = PAREDES.length;
@@ -87,6 +88,31 @@ const EXPRESSOES = Object.freeze({
   estrelas: 'beenie-estrelas',
   annoyed: 'beenie-annoyed',
 });
+
+let contextoAudioFala = null;
+function tocarBlipDeFala() {
+  if (SEM_SOM || document.body?.classList?.contains('a11y-sem-som')) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  try {
+    if (!contextoAudioFala) contextoAudioFala = new Ctx();
+    if (contextoAudioFala.state === 'suspended') contextoAudioFala.resume().catch(() => {});
+    const agora = contextoAudioFala.currentTime;
+    const osc = contextoAudioFala.createOscillator();
+    const ganho = contextoAudioFala.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(520 + Math.random() * 120, agora);
+    ganho.gain.setValueAtTime(0.0001, agora);
+    ganho.gain.exponentialRampToValueAtTime(0.018, agora + 0.01);
+    ganho.gain.exponentialRampToValueAtTime(0.0001, agora + 0.045);
+    osc.connect(ganho);
+    ganho.connect(contextoAudioFala.destination);
+    osc.start(agora);
+    osc.stop(agora + 0.05);
+  } catch {
+    // Sem áudio: a fala visual continua.
+  }
+}
 
 // Depois de falar, a Beenie volta ao repouso combinado com a expressão usada:
 // feliz/estrelas voltam ao normal; aborrecida fica aborrecida.
@@ -173,6 +199,7 @@ export class CenaQuarto extends Phaser.Scene {
     this.itemDaMaoAtual = undefined;
     this.balaoFala = null;
     this.timerFala = null;
+    this.timerDigitar = null;
     this.chaveFalante = null;
     this.confirmandoSaida = false;
     this.chaveRepouso = EXPRESSOES.default;
@@ -595,7 +622,8 @@ export class CenaQuarto extends Phaser.Scene {
       .fillStyle(0xffffff, 0.98)
       .fillRoundedRect(-LARGURA / 2, -altura / 2, LARGURA, altura, raio);
 
-    const pergunta = this.add.text(-LARGURA / 2 + 18, -altura / 2 + 12, 'Acabamos?', {
+    const textoPergunta = 'Acabamos?';
+    const pergunta = this.add.text(-LARGURA / 2 + 18, -altura / 2 + 12, '', {
       fontFamily: FONTES.texto,
       fontSize: '20px',
       fontStyle: '700',
@@ -625,8 +653,36 @@ export class CenaQuarto extends Phaser.Scene {
 
     this.aplicarExpressao(EXPRESSOES.feliz);
 
+    const iniciarDigitacaoPergunta = () => {
+      if (this.balaoFala !== balao) return;
+      if (SEM_MOVIMENTO || !textoPergunta) {
+        pergunta.setText(textoPergunta);
+        return;
+      }
+
+      let indice = 0;
+      const passo = () => {
+        if (this.balaoFala !== balao) return;
+        if (indice >= textoPergunta.length) {
+          this.timerDigitar = null;
+          return;
+        }
+
+        const char = textoPergunta[indice];
+        indice += 1;
+        pergunta.setText(textoPergunta.slice(0, indice));
+        if (indice % 3 === 0 && /\S/.test(char)) tocarBlipDeFala();
+
+        const atraso = char === '.' || char === '!' || char === '?' || char === ',' ? 55 : 24;
+        this.timerDigitar = this.time.delayedCall(atraso, passo);
+      };
+
+      passo();
+    };
+
     if (SEM_MOVIMENTO) {
       balao.setScale(1).setAlpha(1);
+      iniciarDigitacaoPergunta();
     } else {
       this.tweens.add({
         targets: balao,
@@ -635,6 +691,7 @@ export class CenaQuarto extends Phaser.Scene {
         alpha: 1,
         duration: 220,
         ease: 'Back.out',
+        onComplete: iniciarDigitacaoPergunta,
       });
     }
 
@@ -750,7 +807,7 @@ export class CenaQuarto extends Phaser.Scene {
       .fillStyle(0xffffff, 0.98)
       .fillRoundedRect(-LARGURA / 2, -altura / 2, LARGURA, altura, raio);
 
-    const mensagem = this.add.text(-LARGURA / 2 + 18, -altura / 2 + 14, texto, {
+    const mensagem = this.add.text(-LARGURA / 2 + 18, -altura / 2 + 14, '', {
       fontFamily: FONTES.texto,
       fontSize: '16px',
       color: '#3a2c0b',
@@ -765,8 +822,47 @@ export class CenaQuarto extends Phaser.Scene {
 
     this.aplicarExpressao(chaveFalante);
 
+    const iniciarOcultamento = () => {
+      if (this.balaoFala !== balao) return;
+      this.timerFala?.remove();
+      const timer = this.time.delayedCall(visivelMs, () => {
+        if (this.timerFala === timer) this.terminarFala(balao, chaveFalante);
+      });
+      this.timerFala = timer;
+    };
+
+    const iniciarDigitacao = () => {
+      if (this.balaoFala !== balao) return;
+      if (SEM_MOVIMENTO || !texto) {
+        mensagem.setText(texto);
+        iniciarOcultamento();
+        return;
+      }
+
+      let indice = 0;
+      const passo = () => {
+        if (this.balaoFala !== balao) return;
+        if (indice >= texto.length) {
+          this.timerDigitar = null;
+          iniciarOcultamento();
+          return;
+        }
+
+        const char = texto[indice];
+        indice += 1;
+        mensagem.setText(texto.slice(0, indice));
+        if (indice % 3 === 0 && /\S/.test(char)) tocarBlipDeFala();
+
+        const atraso = char === '.' || char === '!' || char === '?' || char === ',' ? 55 : 24;
+        this.timerDigitar = this.time.delayedCall(atraso, passo);
+      };
+
+      passo();
+    };
+
     if (SEM_MOVIMENTO) {
       balao.setScale(1).setAlpha(1);
+      iniciarDigitacao();
     } else {
       this.tweens.add({
         targets: balao,
@@ -775,23 +871,21 @@ export class CenaQuarto extends Phaser.Scene {
         alpha: 1,
         duration: 220,
         ease: 'Back.out',
+        onComplete: iniciarDigitacao,
       });
     }
-
-    const timer = this.time.delayedCall(visivelMs, () => {
-      if (this.timerFala === timer) this.terminarFala(balao, chaveFalante);
-    });
-    this.timerFala = timer;
   }
 
   limparFala() {
     this.timerFala?.remove();
+    this.timerDigitar?.remove();
     if (this.balaoFala) {
       this.tweens.killTweensOf(this.balaoFala);
       this.balaoFala.destroy(true);
     }
     this.balaoFala = null;
     this.timerFala = null;
+    this.timerDigitar = null;
     this.chaveFalante = null;
     this.confirmandoSaida = false;
   }
@@ -799,6 +893,8 @@ export class CenaQuarto extends Phaser.Scene {
   terminarFala(balao, chaveFalante) {
     if (this.balaoFala !== balao) return;
 
+    this.timerDigitar?.remove();
+    this.timerDigitar = null;
     this.definirRepouso(chaveDeRepouso(chaveFalante));
 
     const finalizar = () => {
@@ -807,6 +903,7 @@ export class CenaQuarto extends Phaser.Scene {
       if (this.balaoFala === balao) {
         this.balaoFala = null;
         this.timerFala = null;
+        this.timerDigitar = null;
         this.chaveFalante = null;
       }
     };

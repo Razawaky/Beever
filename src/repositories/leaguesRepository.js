@@ -66,15 +66,24 @@ export async function entrar(idLiga, idUsuario, conexao = null) {
  */
 export async function listarMembrosComPolen(idLiga, de, ate) {
   return consultar(
-    `SELECT m.user_id, u.nickname, p.avatar_id, m.final_rank,
+    `SELECT m.user_id, u.nickname, p.avatar_id, p.avatar_background, a.image_path AS avatar_imagem,
+            p.equipped_cosmetic_item_id, ec.image_path AS avatar_cosmetico_imagem,
+            ec.cosmetic_kind AS avatar_cosmetico_kind, ec.cosmetic_layer AS avatar_cosmetico_camada,
+            p.equipped_background_cosmetic_item_id AS avatar_cosmetico_fundo_item_id,
+            ecb.image_path AS avatar_cosmetico_fundo_imagem, m.final_rank,
             COALESCE(SUM(pl.amount), 0) AS polen
        FROM league_members m
        JOIN users u ON u.id = m.user_id
        LEFT JOIN profiles p ON p.user_id = m.user_id
+       LEFT JOIN avatars a ON a.id = p.avatar_id
+       LEFT JOIN items ec ON ec.id = p.equipped_cosmetic_item_id
+       LEFT JOIN items ecb ON ecb.id = p.equipped_background_cosmetic_item_id
        LEFT JOIN point_ledger pl
               ON pl.user_id = m.user_id AND pl.created_at BETWEEN ? AND ?
       WHERE m.league_id = ?
-      GROUP BY m.user_id, u.nickname, p.avatar_id, m.final_rank
+      GROUP BY m.user_id, u.nickname, p.avatar_id, p.avatar_background, a.image_path,
+               p.equipped_cosmetic_item_id, ec.image_path, ec.cosmetic_kind, ec.cosmetic_layer,
+               p.equipped_background_cosmetic_item_id, ecb.image_path, m.final_rank
       ORDER BY polen DESC, u.nickname`,
     [de, ate, idLiga],
   );

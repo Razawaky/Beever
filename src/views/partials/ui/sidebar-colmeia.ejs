@@ -19,17 +19,26 @@
         <% if (ativo === 'perfil') { %>aria-current="page"<% } %>
         class="flex min-h-11 items-center gap-3 rounded-favo p-2 -m-2 transition hover:bg-white/40 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
       >
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-pilula text-xl font-bold text-tinta <%= classeDeCorDeFundoDoAvatar(jogador.avatar_background) %>">
+        <div class="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-pilula border-2 border-tinta/15 text-xl font-bold text-tinta <%= classeDeCorDeFundoDoAvatar(jogador.avatar_background) %>">
+          <% if (jogador.avatar_cosmetico_fundo_imagem) { %>
+            <img src="<%= jogador.avatar_cosmetico_fundo_imagem %>" alt="" width="48" height="48" class="pointer-events-none absolute inset-0 h-full w-full object-cover" />
+          <% } %>
+          <% if (jogador.avatar_cosmetico_imagem && jogador.avatar_cosmetico_camada === 'atras') { %>
+            <img src="<%= jogador.avatar_cosmetico_imagem %>" alt="" width="48" height="48" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain" />
+          <% } %>
           <% if (jogador.avatar_imagem) { %>
             <img
               src="<%= jogador.avatar_imagem %>"
               alt=""
               width="48"
               height="48"
-              class="h-10 w-10 object-contain"
+              class="relative z-10 h-full w-full object-contain"
             />
           <% } else { %>
-            <span aria-hidden="true"><%= jogador.apelido.charAt(0).toUpperCase() %></span>
+            <span class="relative z-10" aria-hidden="true"><%= jogador.apelido.charAt(0).toUpperCase() %></span>
+          <% } %>
+          <% if (jogador.avatar_cosmetico_imagem && jogador.avatar_cosmetico_camada !== 'atras') { %>
+            <img src="<%= jogador.avatar_cosmetico_imagem %>" alt="" width="48" height="48" class="pointer-events-none absolute inset-0 z-20 h-full w-full object-contain" />
           <% } %>
         </div>
         <div class="min-w-0 flex-1">

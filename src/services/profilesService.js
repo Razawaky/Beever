@@ -5,6 +5,7 @@ import {
   normalizarCorDeFundoDoAvatar,
 } from '../config/avatar.js';
 import { logger } from '../config/logger.js';
+import * as inventoryRepository from '../repositories/inventoryRepository.js';
 import * as profilesRepository from '../repositories/profilesRepository.js';
 import * as sessionsRepository from '../repositories/sessionsRepository.js';
 import * as usersRepository from '../repositories/usersRepository.js';
@@ -125,6 +126,20 @@ export async function listarAvatares() {
 
 export function listarCoresDeFundoDoAvatar() {
   return CORES_DE_FUNDO_DO_AVATAR;
+}
+
+/** Cosméticos comprados que o jogador pode equipar como acessório do avatar. */
+export async function listarCosmeticosDoUsuario(idUsuario) {
+  const cosmeticos = await inventoryRepository.listarCosmeticosDoUsuario(idUsuario);
+  return cosmeticos.map((item) => ({
+    itemId: Number(item.item_id),
+    nome: item.name,
+    slug: item.slug,
+    imagem: item.image_path,
+    categoria: item.category_name,
+    tipo: item.cosmetic_kind ?? null,
+    camada: item.cosmetic_layer ?? null,
+  }));
 }
 
 export async function obterCatalogoDoOnboarding() {
@@ -310,7 +325,20 @@ async function exigirPosse(idPerfil, idUsuario) {
 export async function atualizar(
   idPerfil,
   idUsuario,
-  { apelido, avatar, avatarCorFundo, avatarBackground, fuso, minutosPorSessao, somAtivo, animacaoReduzida },
+  {
+    apelido,
+    avatar,
+    avatarCorFundo,
+    avatarBackground,
+    cosmeticoEquipadoItemId,
+    equippedCosmeticItemId,
+    cosmeticoFundoEquipadoItemId,
+    equippedBackgroundCosmeticItemId,
+    fuso,
+    minutosPorSessao,
+    somAtivo,
+    animacaoReduzida,
+  },
 ) {
   const minutosInformados = minutosPorSessao !== undefined && minutosPorSessao !== null;
   if (minutosInformados) exigirMinutosValidos(minutosPorSessao);
@@ -323,6 +351,49 @@ export async function atualizar(
     throw erroValidacao('Escolha uma cor de fundo válida para o avatar');
   }
   const corNormalizada = corInformada ? normalizarCorDeFundoDoAvatar(corBruta) : undefined;
+
+  const cosmeticoInformado = cosmeticoEquipadoItemId !== undefined || equippedCosmeticItemId !== undefined;
+  const cosmeticoBruto = cosmeticoEquipadoItemId !== undefined ? cosmeticoEquipadoItemId : equippedCosmeticItemId;
+  const cosmeticoFundoInformado = cosmeticoFundoEquipadoItemId !== undefined || equippedBackgroundCosmeticItemId !== undefined;
+  const cosmeticoFundoBruto = cosmeticoFundoEquipadoItemId !== undefined ? cosmeticoFundoEquipadoItemId : equippedBackgroundCosmeticItemId;
+
+  let cosmeticoNormalizado;
+  let cosmeticoFundoNormalizado;
+  if (cosmeticoInformado || cosmeticoFundoInformado) {
+    const cosmeticos = await inventoryRepository.listarCosmeticosDoUsuario(idUsuario);
+    const porId = new Map(cosmeticos.map((item) => [Number(item.item_id), item]));
+
+    const normalizarEquipado = (bruto, { tipoEsperado, mensagemInvalido, mensagemPosse, mensagemTipo }) => {
+      if (bruto === null || bruto === '' || bruto === 0 || bruto === '0') return null;
+      const idItemCosmetico = Number(bruto);
+      if (!Number.isInteger(idItemCosmetico) || idItemCosmetico <= 0) {
+        throw erroValidacao(mensagemInvalido);
+      }
+      const item = porId.get(idItemCosmetico);
+      if (!item) throw erroValidacao(mensagemPosse);
+      const tipo = item.cosmetic_kind ?? 'avatar';
+      if (tipo !== tipoEsperado) throw erroValidacao(mensagemTipo);
+      return idItemCosmetico;
+    };
+
+    if (cosmeticoInformado) {
+      cosmeticoNormalizado = normalizarEquipado(cosmeticoBruto, {
+        tipoEsperado: 'avatar',
+        mensagemInvalido: 'Escolha um acessório válido',
+        mensagemPosse: 'Você só pode equipar um acessório que já comprou',
+        mensagemTipo: 'Este cosmético não é um acessório do personagem',
+      });
+    }
+
+    if (cosmeticoFundoInformado) {
+      cosmeticoFundoNormalizado = normalizarEquipado(cosmeticoFundoBruto, {
+        tipoEsperado: 'fundo',
+        mensagemInvalido: 'Escolha um fundo de avatar válido',
+        mensagemPosse: 'Você só pode equipar um fundo de avatar que já comprou',
+        mensagemTipo: 'Este cosmético não é um fundo de avatar',
+      });
+    }
+  }
 
   // O avatar continua opcional aqui — esta é a tela de perfil, onde se muda uma
   // coisa de cada vez —, mas quando vem, vem conferido contra o catálogo.
@@ -339,6 +410,8 @@ export async function atualizar(
   await profilesRepository.atualizar(idPerfil, {
     avatar,
     avatarBackground: corNormalizada,
+    equippedCosmeticItemId: cosmeticoNormalizado,
+    equippedBackgroundCosmeticItemId: cosmeticoFundoNormalizado,
     fuso,
     minutosPorSessao,
     somAtivo,

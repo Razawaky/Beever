@@ -41,14 +41,61 @@ export function receberIlustracao(req, res, next) {
   });
 }
 
+const MARGEM_RECORTE_TRANSPARENTE = 2;
+
+async function recortarTransparencia(bytes) {
+  const { data, info } = await sharp(bytes, { failOn: 'none' })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const { width, height, channels } = info;
+  let topo = height;
+  let esquerda = width;
+  let baixo = -1;
+  let direita = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alpha = data[(y * width + x) * channels + channels - 1];
+      if (alpha > 0) {
+        if (x < esquerda) esquerda = x;
+        if (x > direita) direita = x;
+        if (y < topo) topo = y;
+        if (y > baixo) baixo = y;
+      }
+    }
+  }
+
+  // Imagem totalmente transparente: mantém como veio para não gerar saída vazia.
+  if (baixo < topo || direita < esquerda) return sharp(bytes, { failOn: 'none' });
+
+  const margem = MARGEM_RECORTE_TRANSPARENTE;
+  const left = Math.max(0, esquerda - margem);
+  const top = Math.max(0, topo - margem);
+  const extractWidth = Math.min(width, direita + margem + 1) - left;
+  const extractHeight = Math.min(height, baixo + margem + 1) - top;
+
+  if (left === 0 && top === 0 && extractWidth === width && extractHeight === height) {
+    return sharp(bytes, { failOn: 'none' });
+  }
+
+  return sharp(bytes, { failOn: 'none' }).extract({ left, top, width: extractWidth, height: extractHeight });
+}
+
 /**
  * Converte para WebP e grava. O `sharp` é também a validação de verdade: um
  * arquivo que ele não abre não é imagem, não importa o que o navegador declarou.
+ *
+ * Antes da conversão, remove margens transparentes (alpha > 0 define a bounding
+ * box), mantendo uma pequena margem de segurança.
  */
-export async function guardarIlustracao(bytes) {
+export async function guardarIlustracao(bytes, { recortar = true } = {}) {
   let convertida;
   try {
-    convertida = await sharp(bytes)
+    const orientado = await sharp(bytes, { failOn: 'none' }).rotate().toBuffer();
+    const base = recortar ? await recortarTransparencia(orientado) : sharp(orientado, { failOn: 'none' });
+    convertida = await base
       .resize({ width: LARGURA_MAXIMA, withoutEnlargement: true })
       .webp({ quality: QUALIDADE_WEBP })
       .toBuffer();

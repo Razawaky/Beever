@@ -103,6 +103,14 @@ async function resolverTroca(conexao, { idUsuario, item, preco, idUnidadeTrocada
 async function registrarCompra(conexao, { idUsuario, item, preco, idUnidadeTrocada }) {
   const idItem = item.id;
   await exigirVagaParaEscudo(idUsuario, item);
+
+  if (await purchasesRepository.jaComprou(idUsuario, idItem, conexao)) {
+    throw new ErroAplicacao('Você já comprou este item', {
+      status: 422,
+      codigo: 'ITEM_JA_COMPRADO',
+    });
+  }
+
   const pendencias = await exigirRequisitos(idItem, idUsuario);
 
   const troca = await resolverTroca(conexao, { idUsuario, item, preco, idUnidadeTrocada });
