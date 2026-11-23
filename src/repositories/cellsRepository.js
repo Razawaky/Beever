@@ -12,7 +12,7 @@ import { consultar, consultarEm } from '../config/database.js';
  */
 
 const CAMPOS = `c.id, c.hive_id, c.game_type_id, c.age_band_id, c.order_index,
-                c.title, c.estimated_seconds,
+                c.title, c.estimated_seconds, c.reward_coins, c.reward_xp, c.reward_points,
                 gt.slug AS game_type_slug, gt.name AS game_type_name,
                 ab.code AS age_band_code`;
 
@@ -171,14 +171,14 @@ export async function buscarVizinha(idFavo, ordem, direcao) {
 }
 
 export async function criar(
-  { idFavo, idTipoDeJogo, idFaixa, ordem, titulo, segundosEstimados },
+  { idFavo, idTipoDeJogo, idFaixa, ordem, titulo, segundosEstimados, recompensaMel = null, recompensaXp = null, recompensaPontos = null },
   conexao = null,
 ) {
   const resultado = await consultarEm(
     conexao,
-    `INSERT INTO cells (hive_id, game_type_id, age_band_id, order_index, title, estimated_seconds)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [idFavo, idTipoDeJogo, idFaixa, ordem, titulo, segundosEstimados],
+    `INSERT INTO cells (hive_id, game_type_id, age_band_id, order_index, title, estimated_seconds, reward_coins, reward_xp, reward_points)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [idFavo, idTipoDeJogo, idFaixa, ordem, titulo, segundosEstimados, recompensaMel, recompensaXp, recompensaPontos],
   );
   return resultado.insertId;
 }
@@ -186,18 +186,30 @@ export async function criar(
 /** COALESCE mantém o valor atual quando o campo não é enviado. */
 export async function atualizar(
   id,
-  { idTipoDeJogo = null, idFaixa = null, titulo = null, segundosEstimados = null },
+  { idTipoDeJogo = null, idFaixa = null, titulo = null, segundosEstimados = null, recompensaMel, recompensaXp, recompensaPontos },
   conexao = null,
 ) {
+  const mudarRecompensaMel = recompensaMel !== undefined;
+  const mudarRecompensaXp = recompensaXp !== undefined;
+  const mudarRecompensaPontos = recompensaPontos !== undefined;
   await consultarEm(
     conexao,
     `UPDATE cells
         SET game_type_id      = COALESCE(?, game_type_id),
             age_band_id       = COALESCE(?, age_band_id),
             title             = COALESCE(?, title),
-            estimated_seconds = COALESCE(?, estimated_seconds)
+            estimated_seconds = COALESCE(?, estimated_seconds),
+            reward_coins      = CASE WHEN ? THEN ? ELSE reward_coins END,
+            reward_xp         = CASE WHEN ? THEN ? ELSE reward_xp END,
+            reward_points     = CASE WHEN ? THEN ? ELSE reward_points END
       WHERE id = ? AND deleted_at IS NULL`,
-    [idTipoDeJogo, idFaixa, titulo, segundosEstimados, id],
+    [
+      idTipoDeJogo, idFaixa, titulo, segundosEstimados,
+      mudarRecompensaMel ? 1 : 0, mudarRecompensaMel ? recompensaMel : null,
+      mudarRecompensaXp ? 1 : 0, mudarRecompensaXp ? recompensaXp : null,
+      mudarRecompensaPontos ? 1 : 0, mudarRecompensaPontos ? recompensaPontos : null,
+      id,
+    ],
   );
 }
 

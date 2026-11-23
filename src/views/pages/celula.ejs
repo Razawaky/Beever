@@ -25,10 +25,11 @@
   </div>
 </header>
 
-<main class="relative mx-auto <%= areaDoJogo === 'quarto-beenie' ? 'max-w-none px-0 pb-8 pt-2' : 'max-w-2xl px-6 py-8' %>">
-  <div class="main-favos favos-de-fundo" aria-hidden="true"></div>
+<div class="main-favos favos-de-fundo" aria-hidden="true"></div>
+<main class="relative mx-auto px-4 py-6 sm:px-6 sm:py-8 <%= areaDoJogo === 'quarto-beenie' ? 'max-w-5xl' : 'max-w-3xl' %>">
+  <div class="relative z-10 <%= areaDoJogo === 'quarto-beenie' ? '' : 'rounded-favo bg-white p-4 shadow-xl sm:p-6' %>">
 
-  <p id="jogo-carregando" class="relative z-10 rounded-favo bg-cera p-6 text-center text-tinta-suave">Preparando a atividade…</p>
+  <p id="jogo-carregando" class="rounded-favo bg-cera p-6 text-center text-tinta-suave">Preparando a atividade…</p>
 
   <p
     id="jogo-erro"
@@ -37,16 +38,9 @@
   ></p>
 
   <section id="jogo-area" class="relative z-10 hidden">
-    <% if (areaDoJogo === 'quarto-beenie') { %>
-    <p id="jogo-repeticao" class="hidden text-xs font-medium text-tinta-suave">
-      Você já concluiu esta célula: repetir rende menos.
-    </p>
-    <% } else { %>
+    <% if (areaDoJogo !== 'quarto-beenie') { %>
     <div class="flex items-center justify-between gap-4">
       <p id="jogo-passo" class="text-sm font-semibold text-tinta-suave"></p>
-      <p id="jogo-repeticao" class="hidden text-xs font-medium text-tinta-suave">
-        Você já concluiu esta célula: repetir rende menos.
-      </p>
     </div>
     <% } %>
 
@@ -79,4 +73,5 @@
     <%- include('../partials/jogo-resultado') %>
   </div>
   <% } %>
+  </div>
 </main>

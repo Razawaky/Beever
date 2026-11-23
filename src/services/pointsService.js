@@ -42,25 +42,30 @@ export async function creditar(conexao, idUsuario, quantidade, { motivo, referen
  * buraco é de administração, e derrubar a partida da criança não o conserta.
  */
 export async function calcularPolenDaCelula(
-  { slugDoTipoDeJogo, codigoDaFaixa, estrelas, ehRepeticao = false },
+  { slugDoTipoDeJogo, codigoDaFaixa, estrelas, ehRepeticao = false, recompensaPontosCelula = null },
   conexao = null,
 ) {
   if (!Number.isInteger(estrelas) || estrelas < 1) return 0;
 
-  const configuracao = await rewardConfigsRepository.buscarConfiguracao(
-    { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
-    conexao,
-  );
-
-  if (!configuracao) {
-    logger.error(
+  let polenCheio;
+  if (recompensaPontosCelula !== null && recompensaPontosCelula !== undefined) {
+    polenCheio = Math.max(0, Math.round(Number(recompensaPontosCelula) * (estrelas / 3)));
+  } else {
+    const configuracao = await rewardConfigsRepository.buscarConfiguracao(
       { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
-      'Sem configuração de recompensa: creditando zero de pólen',
+      conexao,
     );
-    return 0;
+
+    if (!configuracao) {
+      logger.error(
+        { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
+        'Sem configuração de recompensa: creditando zero de pólen',
+      );
+      return 0;
+    }
+    polenCheio = Number(configuracao.points_amount);
   }
 
-  const polenCheio = Number(configuracao.points_amount);
   if (!ehRepeticao) return polenCheio;
 
   const modificador = await rewardConfigsRepository.buscarModificador(
@@ -89,6 +94,7 @@ export async function creditarPorCelula(conexao, idUsuario, { celula, estrelas, 
       codigoDaFaixa: celula.age_band_code,
       estrelas,
       ehRepeticao,
+      recompensaPontosCelula: celula.reward_points ?? null,
     },
     conexao,
   );

@@ -118,6 +118,7 @@ router.put(
     // dava para concluir o onboarding sem mascote nenhum. Que o slug exista no
     // catálogo é o service que confere, contra a tabela `avatars`.
     body('avatar').trim().notEmpty().withMessage('Escolha sua abelha').isLength({ max: 60 }),
+    body('avatar_cor_fundo').optional({ values: 'falsy' }).trim().isLength({ max: 40 }),
     body('objetivo').trim().notEmpty().withMessage('Escolha um objetivo'),
     // O corpo da conclusão traz uma chave por passo do wizard: `tempo` e
     // `preferencias` vêm com o nome do passo. Ambos são opcionais porque quem

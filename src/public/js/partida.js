@@ -12,7 +12,6 @@ import { mostrarResultado } from './resultado.js';
 const carregando = document.getElementById('jogo-carregando');
 const aviso = document.getElementById('jogo-erro');
 const area = document.getElementById('jogo-area');
-const avisoDeRepeticao = document.getElementById('jogo-repeticao');
 const painelDePasso = document.getElementById('jogo-passo');
 const barra = document.getElementById('jogo-barra');
 const barraCaixa = document.getElementById('jogo-barra-caixa');
@@ -63,7 +62,6 @@ export async function abrirPartida() {
   const partida = await pedir('/partidas', { idCelula });
 
   tokenDaPartida = partida.token;
-  if (partida.ehRepeticao) avisoDeRepeticao.classList.remove('hidden');
 
   // A imagem da atividade, quando o painel cadastrou uma. Fica aqui porque é
   // igual nos oito jogos, e o `alt` é vazio de propósito: a arte ilustra o

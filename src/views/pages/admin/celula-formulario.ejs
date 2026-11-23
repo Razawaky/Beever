@@ -68,6 +68,49 @@
       />
     </div>
 
+    <fieldset class="rounded-favo border border-linha p-4">
+      <legend class="px-2 text-sm font-semibold">Recompensas da atividade</legend>
+      <p class="text-xs text-tinta-suave">Deixe em branco para usar o padrão. Se preencher, o valor vale como base de 3 estrelas e escala para 1/2 estrelas.</p>
+      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        <div>
+          <label for="recompensaMel" class="mb-1 block text-sm font-medium">Mel</label>
+          <input
+            id="recompensaMel"
+            name="recompensaMel"
+            type="number"
+            min="0"
+            step="1"
+            value="<%= celula && celula.reward_coins !== null && celula.reward_coins !== undefined ? celula.reward_coins : '' %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+        <div>
+          <label for="recompensaXp" class="mb-1 block text-sm font-medium">XP</label>
+          <input
+            id="recompensaXp"
+            name="recompensaXp"
+            type="number"
+            min="0"
+            step="1"
+            value="<%= celula && celula.reward_xp !== null && celula.reward_xp !== undefined ? celula.reward_xp : '' %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+        <div>
+          <label for="recompensaPontos" class="mb-1 block text-sm font-medium">Pólen</label>
+          <input
+            id="recompensaPontos"
+            name="recompensaPontos"
+            type="number"
+            min="0"
+            step="1"
+            value="<%= celula && celula.reward_points !== null && celula.reward_points !== undefined ? celula.reward_points : '' %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+      </div>
+    </fieldset>
+
     <%- include('../../partials/ui/botao', { texto: celula ? 'Salvar célula' : 'Criar célula', tipo: 'submit' }) %>
   </form>
 </main>

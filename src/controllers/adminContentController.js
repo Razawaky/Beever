@@ -177,9 +177,18 @@ function dadosDoFavo(req) {
 
 /** A faixa não vem do formulário: o service a herda do favo (RN-029). */
 function dadosDaCelula(req) {
+  const numeroOpcional = (valor) => {
+    if (valor === '' || valor === undefined || valor === null) return null;
+    const numero = Math.max(0, Math.floor(Number(valor)));
+    return Number.isFinite(numero) ? numero : null;
+  };
+
   return {
     titulo: req.body.titulo,
     idTipoDeJogo: Number(req.body.idTipoDeJogo),
     segundosEstimados: Number(req.body.segundosEstimados),
+    recompensaMel: numeroOpcional(req.body.recompensaMel),
+    recompensaXp: numeroOpcional(req.body.recompensaXp),
+    recompensaPontos: numeroOpcional(req.body.recompensaPontos),
   };
 }

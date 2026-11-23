@@ -141,6 +141,9 @@ export async function criarCelula(idFavo, dados, ator) {
     ordem,
     titulo: dados.titulo,
     segundosEstimados: dados.segundosEstimados ?? DURACAO_PADRAO_EM_SEGUNDOS,
+    recompensaMel: dados.recompensaMel ?? null,
+    recompensaXp: dados.recompensaXp ?? null,
+    recompensaPontos: dados.recompensaPontos ?? null,
   });
 
   await auditService.registrar(ator, 'celula.criada', {
@@ -155,7 +158,13 @@ export async function atualizarCelula(idCelula, dados, ator) {
   const antes = await exigirCelula(idCelula);
   const favo = await exigirFavo(antes.hive_id);
 
-  await cellsRepository.atualizar(antes.id, { ...dados, idFaixa: favo.age_band_id });
+  await cellsRepository.atualizar(antes.id, {
+    ...dados,
+    idFaixa: favo.age_band_id,
+    recompensaMel: dados.recompensaMel ?? null,
+    recompensaXp: dados.recompensaXp ?? null,
+    recompensaPontos: dados.recompensaPontos ?? null,
+  });
   const depois = await exigirCelula(antes.id);
 
   await auditService.registrar(ator, 'celula.editada', { entidade: 'cell', id: antes.id, antes, depois });

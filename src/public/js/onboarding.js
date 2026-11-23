@@ -39,6 +39,13 @@ const etapas = [
     moeda: true,
   },
   {
+    id: 'avatar',
+    pergunta: 'Escolha seu Beenie e a cor de fundo',
+    subtitulo: 'Veja a prévia e escolha como seu perfil vai aparecer.',
+    tipo: 'avatar',
+x
+  },
+  {
     id: 'preferencias',
     pergunta: 'Como você prefere jogar?',
     subtitulo: 'Marque o que quiser. Pode deixar tudo desmarcado.',
@@ -89,6 +96,7 @@ const barraProgresso = document.getElementById('progress-bar');
 const textoProgresso = document.getElementById('progress-text');
 const erroEl = document.getElementById('erro-onboarding');
 const mascoteEl = document.getElementById('mascote-onboarding');
+const mainEl = formulario?.closest('main');
 
 function lerRascunho() {
   try {
@@ -102,21 +110,17 @@ const rascunho = lerRascunho();
 const catalogo = rascunho.catalogo ?? {};
 const respostas = { ...(rascunho.respostas ?? {}) };
 
-// O avatar deixou de ser pergunta, mas continua sendo dado obrigatório do
-// perfil. A primeira opção do catálogo vira o padrão e viaja junto da
-// conclusão, sem o jogador precisar escolher.
 const avatarPadrao = catalogo.avatar?.[0]?.valor;
 if (!respostas.avatar && avatarPadrao) respostas.avatar = avatarPadrao;
+if (!respostas.avatar_cor_fundo) respostas.avatar_cor_fundo = catalogo.coresDeFundo?.[0]?.valor || 'creme';
 
-// O servidor ainda guarda o passo do avatar na lista, porque é ele quem valida
-// o dado ao concluir. Como a tela não mostra esse passo, um marcador depois
-// dele recua uma casa para cair na etapa certa do wizard.
 const passosDoServidor = Array.isArray(rascunho.passos) ? rascunho.passos : [];
-const indiceDoAvatar = passosDoServidor.indexOf('avatar');
 
 function indiceDaEtapa(passoDoServidor) {
   const passo = Number(passoDoServidor) || 0;
-  return indiceDoAvatar >= 0 && passo > indiceDoAvatar ? passo - 1 : passo;
+  const id = passosDoServidor[passo];
+  const idx = etapas.findIndex((etapa) => etapa.id === id);
+  return idx >= 0 ? idx : Math.min(passo, etapas.length - 1);
 }
 
 let etapaAtual = Math.min(Math.max(indiceDaEtapa(rascunho.passoAtual), 0), etapas.length - 1);
@@ -156,7 +160,86 @@ function opcaoMarcavel(tipo, opcao, marcada) {
   return rotulo;
 }
 
+function classeFundoAvatar(valor) {
+  const cor = (catalogo.coresDeFundo || []).find((item) => item.valor === valor);
+  return cor?.classe || 'avatar-fundo-creme';
+}
+
+function montarCampoAvatar() {
+  const avatarAtual = respostas.avatar || catalogo.avatar?.[0]?.valor || '';
+  const corAtual = respostas.avatar_cor_fundo || catalogo.coresDeFundo?.[0]?.valor || 'creme';
+
+  const wrap = elemento('div', 'grid gap-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] sm:items-start');
+
+  const previewCol = elemento('div', 'flex flex-col gap-1.5 rounded-favo bg-cera p-2');
+  previewCol.append(elemento('p', 'text-[11px] font-semibold uppercase tracking-wide text-tinta-suave', 'Prévia'));
+  const preview = elemento('span', `relative mx-auto flex aspect-square w-full max-w-[13rem] items-center justify-center overflow-hidden rounded-favo ring-2 ring-linha ${classeFundoAvatar(corAtual)}`);
+  preview.id = 'avatar-onboarding-preview';
+  const img = document.createElement('img');
+  img.id = 'avatar-onboarding-img';
+  img.alt = 'Prévia do Beenie';
+  img.width = 208;
+  img.height = 208;
+  img.className = 'relative z-10 h-full w-full object-contain';
+  const avatarSelecionado = (catalogo.avatar || []).find((a) => a.valor === avatarAtual);
+  if (avatarSelecionado?.imagem) img.src = avatarSelecionado.imagem;
+  else img.classList.add('hidden');
+  preview.append(img);
+  previewCol.append(preview);
+
+  const opcoesCol = elemento('div', 'sm:py-1');
+
+  const fsAvatar = document.createElement('fieldset');
+  fsAvatar.append(elemento('legend', 'text-sm font-semibold text-tinta', 'Beenie'));
+  const gridAvatar = elemento('div', 'mt-1.5 grid grid-cols-2 gap-1.5');
+  for (const opcao of catalogo.avatar || []) {
+    const label = elemento('label', 'cursor-pointer');
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'avatar_onboarding';
+    input.value = opcao.valor;
+    input.dataset.imagem = opcao.imagem || '';
+    input.className = 'peer sr-only';
+    input.checked = opcao.valor === avatarAtual;
+    label.append(input);
+    const span = elemento('span', 'flex min-h-9 items-center justify-center rounded-favo border-2 border-linha bg-cera px-2 py-1 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2');
+    span.append(elemento('span', 'text-xs font-semibold leading-tight text-tinta', opcao.rotulo));
+    label.append(span);
+    gridAvatar.append(label);
+  }
+  fsAvatar.append(gridAvatar);
+
+  const fsCor = document.createElement('fieldset');
+  fsCor.className = 'mt-3';
+  fsCor.append(elemento('legend', 'text-sm font-semibold text-tinta', 'Cor de fundo'));
+  const gridCor = elemento('div', 'mt-1.5 grid grid-cols-6 gap-1.5');
+  for (const cor of catalogo.coresDeFundo || []) {
+    const label = elemento('label', 'cursor-pointer');
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'avatar_cor_fundo_onboarding';
+    input.value = cor.valor;
+    input.dataset.classe = cor.classe || '';
+    input.setAttribute('aria-label', cor.rotulo);
+    input.className = 'peer sr-only';
+    input.checked = cor.valor === corAtual;
+    label.append(input);
+    const outer = elemento('span', 'flex items-center justify-center rounded-favo border-2 border-linha bg-white p-1 transition hover:border-ambar peer-checked:border-mel peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2');
+    const swatch = elemento('span', `h-7 w-7 rounded-pilula border-2 border-tinta/15 ring-1 ring-linha ${cor.classe || ''}`);
+    swatch.setAttribute('aria-hidden', 'true');
+    outer.append(swatch);
+    label.append(outer);
+    gridCor.append(label);
+  }
+  fsCor.append(gridCor);
+
+  opcoesCol.append(fsAvatar, fsCor);
+  wrap.append(previewCol, opcoesCol);
+  return wrap;
+}
+
 function montarCampo(etapa, valorAtual) {
+  if (etapa.tipo === 'avatar') return montarCampoAvatar();
   if (etapa.tipo === 'texto') {
     const campo = document.createElement('input');
     campo.type = 'text';
@@ -256,18 +339,55 @@ function montarMascote(etapa) {
   mascoteEl.replaceChildren(...filhos);
 }
 
+function atualizarPreviewAvatarOnboarding() {
+  const preview = document.getElementById('avatar-onboarding-preview');
+  const img = document.getElementById('avatar-onboarding-img');
+  if (!preview || !img) return;
+  const avatar = conteudo.querySelector('input[name="avatar_onboarding"]:checked')?.value;
+  const cor = conteudo.querySelector('input[name="avatar_cor_fundo_onboarding"]:checked')?.value || 'creme';
+  const opcao = (catalogo.avatar || []).find((a) => a.valor === avatar);
+  preview.className = `relative mx-auto flex aspect-square w-full max-w-[13rem] items-center justify-center overflow-hidden rounded-favo ring-2 ring-linha ${classeFundoAvatar(cor)}`;
+  if (opcao?.imagem) {
+    img.src = opcao.imagem;
+    img.classList.remove('hidden');
+  } else {
+    img.removeAttribute('src');
+    img.classList.add('hidden');
+  }
+}
+
 function renderizarEtapa() {
   const etapa = etapas[etapaAtual];
   botaoVoltar.classList.toggle('hidden', etapaAtual === 0);
   botaoAvancar.textContent = rotuloDoBotao();
   aplicarProgresso((etapaAtual / etapas.length) * 100);
 
-  montarMascote(etapa);
+  const ehAvatar = etapa.tipo === 'avatar';
+  mainEl?.classList.toggle('max-w-md', !ehAvatar);
+  mainEl?.classList.toggle('max-w-3xl', ehAvatar);
+  formulario?.classList.toggle('p-8', !ehAvatar);
+  formulario?.classList.toggle('p-4', ehAvatar);
+  formulario?.classList.toggle('sm:p-5', ehAvatar);
+  formulario?.classList.toggle('mt-8', !ehAvatar);
+  formulario?.classList.toggle('mt-4', ehAvatar);
+  const linhaBotoes = formulario?.querySelector('[data-onboarding-acoes]');
+  linhaBotoes?.classList.toggle('mt-8', !ehAvatar);
+  linhaBotoes?.classList.toggle('mt-4', ehAvatar);
+  const progresso = document.querySelector('[data-onboarding-progresso]');
+  progresso?.classList.toggle('mb-8', !ehAvatar);
+  progresso?.classList.toggle('mb-4', ehAvatar);
+
+  if (ehAvatar) {
+    mascoteEl.hidden = true;
+    mascoteEl.replaceChildren();
+  } else {
+    montarMascote(etapa);
+  }
 
   const passo = elemento('div', 'onboarding-etapa');
   passo.append(
-    elemento('h2', 'text-2xl font-bold', etapa.pergunta),
-    elemento('p', 'mt-1 mb-6 text-tinta-suave', etapa.subtitulo),
+    elemento('h2', ehAvatar ? 'text-xl font-bold' : 'text-2xl font-bold', etapa.pergunta),
+    elemento('p', `mt-1 ${ehAvatar ? 'mb-3 text-sm' : 'mb-6'} text-tinta-suave`, etapa.subtitulo),
   );
 
   const campoContainer = elemento('div');
@@ -276,10 +396,17 @@ function renderizarEtapa() {
 
   conteudo.replaceChildren(passo);
   campoContainer.append(montarCampo(etapa, respostas[etapa.id]));
+  if (ehAvatar) atualizarPreviewAvatarOnboarding();
 }
 
 function lerValorEtapa() {
   const etapa = etapas[etapaAtual];
+  if (etapa.tipo === 'avatar') {
+    const avatar = conteudo.querySelector('input[name="avatar_onboarding"]:checked')?.value ?? '';
+    const avatar_cor_fundo =
+      conteudo.querySelector('input[name="avatar_cor_fundo_onboarding"]:checked')?.value ?? 'creme';
+    return { avatar, avatar_cor_fundo };
+  }
   if (etapa.tipo === 'multipla') {
     return [...conteudo.querySelectorAll('input[name="campo-etapa"]:checked')].map((campo) => campo.value);
   }
@@ -334,13 +461,23 @@ formulario.addEventListener('submit', async (evento) => {
 
   const etapa = etapas[etapaAtual];
   const valor = lerValorEtapa();
-  const respondeu = Array.isArray(valor) ? valor.length > 0 : Boolean(valor);
+  const respondeu =
+    etapa.tipo === 'avatar'
+      ? Boolean(valor?.avatar)
+      : Array.isArray(valor)
+        ? valor.length > 0
+        : Boolean(valor);
   if (!respondeu && !etapa.permiteVazio) {
     mostrarErro('Responda para continuar.');
     return;
   }
 
-  respostas[etapa.id] = valor;
+  if (etapa.id === 'avatar' && valor && typeof valor === 'object') {
+    respostas.avatar = valor.avatar;
+    respostas.avatar_cor_fundo = valor.avatar_cor_fundo;
+  } else {
+    respostas[etapa.id] = valor;
+  }
   ocupado(true);
 
   try {
@@ -371,6 +508,15 @@ botaoVoltar.addEventListener('click', () => {
     etapaAtual -= 1;
     esconderErro();
     renderizarEtapa();
+  }
+});
+
+formulario.addEventListener('change', (evento) => {
+  if (
+    evento.target?.name === 'avatar_onboarding' ||
+    evento.target?.name === 'avatar_cor_fundo_onboarding'
+  ) {
+    atualizarPreviewAvatarOnboarding();
   }
 });
 

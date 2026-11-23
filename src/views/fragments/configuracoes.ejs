@@ -101,9 +101,21 @@
     </p>
   </section>
 
-  <section aria-labelledby="conta-titulo" class="rounded-favo bg-white p-6 shadow-xl sm:p-8">
-    <h2 id="conta-titulo" class="font-display text-xl text-tinta">Conta</h2>
-    <p class="mt-1 text-sm text-tinta-suave">
+  <details class="rounded-favo bg-white shadow-xl">
+    <summary class="cursor-pointer list-none p-6 sm:p-8 [&::-webkit-details-marker]:hidden">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h2 class="font-display text-xl text-tinta">Conta</h2>
+          <p class="mt-1 text-sm text-tinta-suave">Configurações avançadas da conta, sessão e exclusão.</p>
+        </div>
+        <span aria-hidden="true" data-chevron class="text-tinta-suave transition-transform">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </div>
+    </summary>
+
+    <div class="px-6 pb-6 sm:px-8 sm:pb-8">
+    <p class="text-sm text-tinta-suave">
       Você entrou como <strong class="break-all font-semibold text-tinta"><%= conta.email %></strong>.
       <% if (ehPerfilAdicional) { %>
         O perfil em uso é <strong class="font-semibold text-tinta"><%= perfil.apelido %></strong>.
@@ -225,5 +237,6 @@
         </button>
       </form>
     </details>
-  </section>
+    </div>
+  </details>
 </div>

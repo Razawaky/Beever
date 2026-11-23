@@ -98,7 +98,7 @@ export const salvarPassoDoOnboarding = assincrono(async (req, res) => {
 });
 
 export const salvarOnboarding = assincrono(async (req, res) => {
-  const { apelido, avatar, objetivo, nivel, tempo } = req.body;
+  const { apelido, avatar, objetivo, nivel, tempo, avatar_cor_fundo: avatarCorFundo } = req.body;
   // Um único dia marcado chega como string; a normalização de verdade é do
   // service, aqui só se garante que ele sempre receba lista.
   const dias = req.body.dias === undefined ? [] : [].concat(req.body.dias);
@@ -111,6 +111,7 @@ export const salvarOnboarding = assincrono(async (req, res) => {
   const resultado = await profilesService.salvarOnboarding(Number(req.params.id), req.session.usuarioId, {
     apelido,
     avatar,
+    avatarCorFundo,
     objetivo,
     nivel,
     dias,

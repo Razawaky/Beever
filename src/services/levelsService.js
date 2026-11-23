@@ -211,22 +211,27 @@ export function bonusDeMelEntreNiveis(curva, nivelAnterior, nivelNovo) {
  * buraco é de administração, e derrubar a partida da criança não o conserta.
  */
 export async function calcularXpDaCelula(
-  { slugDoTipoDeJogo, codigoDaFaixa, estrelas, ehRepeticao = false },
+  { slugDoTipoDeJogo, codigoDaFaixa, estrelas, ehRepeticao = false, recompensaXpCelula = null },
   conexao = null,
 ) {
   if (!Number.isInteger(estrelas) || estrelas < 1) return 0;
 
-  const configuracao = await rewardConfigsRepository.buscarConfiguracao(
-    { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
-    conexao,
-  );
+  let xpCheio;
+  if (recompensaXpCelula !== null && recompensaXpCelula !== undefined) {
+    xpCheio = Math.max(0, Math.round(Number(recompensaXpCelula) * (estrelas / 3)));
+  } else {
+    const configuracao = await rewardConfigsRepository.buscarConfiguracao(
+      { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
+      conexao,
+    );
 
-  if (!configuracao) {
-    logger.error({ slugDoTipoDeJogo, codigoDaFaixa, estrelas }, 'Sem configuração de recompensa: creditando zero de XP');
-    return 0;
+    if (!configuracao) {
+      logger.error({ slugDoTipoDeJogo, codigoDaFaixa, estrelas }, 'Sem configuração de recompensa: creditando zero de XP');
+      return 0;
+    }
+    xpCheio = Number(configuracao.xp_amount);
   }
 
-  const xpCheio = Number(configuracao.xp_amount);
   if (!ehRepeticao) return xpCheio;
 
   const modificador = await rewardConfigsRepository.buscarModificador(
@@ -255,6 +260,7 @@ export async function creditarPorCelula(conexao, idUsuario, { celula, estrelas, 
       codigoDaFaixa: celula.age_band_code,
       estrelas,
       ehRepeticao,
+      recompensaXpCelula: celula.reward_xp ?? null,
     },
     conexao,
   );

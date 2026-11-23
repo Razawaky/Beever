@@ -1,5 +1,5 @@
 <main class="demo">
-  <section class="demo__palco" aria-label="Protótipo do quarto do Beenie">
+  <section class="demo__palco relative" aria-label="Protótipo do quarto do Beenie">
     <div class="demo__hud" hidden>
       <p class="demo__hud-titulo">Quarto do Beenie</p>
     </div>
@@ -53,6 +53,23 @@
       </div>
 
       <div id="jogo" class="demo__canvas" hidden></div>
+    </div>
+
+    <div id="quarto-resultado-recompensas" class="pointer-events-none absolute inset-x-0 hidden px-6" aria-live="polite">
+      <dl class="mx-auto grid max-w-xs grid-cols-3 gap-2 text-center">
+        <div class="rounded-favo bg-cera/95 p-1.5 shadow-elevado sm:p-2">
+          <dt class="text-[11px] font-semibold text-tinta-suave">XP</dt>
+          <dd id="quarto-resultado-xp" class="font-display text-base leading-tight text-tinta tabular-nums sm:text-lg">0</dd>
+        </div>
+        <div class="rounded-favo bg-cera/95 p-1.5 shadow-elevado sm:p-2">
+          <dt class="text-[11px] font-semibold text-tinta-suave">Pólen</dt>
+          <dd id="quarto-resultado-polen" class="font-display text-base leading-tight text-tinta tabular-nums sm:text-lg">0</dd>
+        </div>
+        <div class="rounded-favo bg-cera/95 p-1.5 shadow-elevado sm:p-2">
+          <dt class="text-[11px] font-semibold text-tinta-suave">Mel</dt>
+          <dd id="quarto-resultado-mel" class="font-display text-base leading-tight text-tinta tabular-nums sm:text-lg">0</dd>
+        </div>
+      </dl>
     </div>
   </section>
 </main>

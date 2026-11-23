@@ -149,6 +149,7 @@ export async function obterCatalogoDoOnboarding() {
     tempo: MINUTOS_POR_SESSAO.map((minutos) => ({ valor: String(minutos), rotulo: `${minutos} minutos` })),
     objetivo: objetivos.map((objetivo) => ({ valor: objetivo.slug, rotulo: objetivo.label })),
     avatar: avatares,
+    coresDeFundo: CORES_DE_FUNDO_DO_AVATAR.map((cor) => ({ ...cor })),
     preferencias: PREFERENCIAS,
   };
 }
@@ -202,8 +203,12 @@ const ESCRITORES_DE_PASSO = {
     await profilesRepository.atualizar(idPerfil, { objetivoInicial: objetivo });
   },
   avatar: async ({ idPerfil, catalogo }, resposta) => {
-    const avatar = exigirDoCatalogo(catalogo.avatar, resposta, 'Escolha sua abelha');
-    await profilesRepository.atualizar(idPerfil, { avatar });
+    const valor = resposta && typeof resposta === 'object' && !Array.isArray(resposta) ? resposta : { avatar: resposta };
+    const avatar = exigirDoCatalogo(catalogo.avatar, valor.avatar, 'Escolha sua abelha');
+    const corBruta = valor.avatar_cor_fundo ?? valor.corFundo;
+    const cor = corBruta ? normalizarCorDeFundoDoAvatar(corBruta) : null;
+    if (corBruta && !cor) throw erroValidacao('Escolha uma cor de fundo válida para o avatar');
+    await profilesRepository.atualizar(idPerfil, { avatar, avatarBackground: cor ?? undefined });
   },
   // Nenhuma marcada é resposta legítima: quer dizer sem som e com animação
   // normal. Por isso este passo não tem checagem de "respondeu alguma coisa".
@@ -532,7 +537,7 @@ export async function remover(idPerfil, { contaId, perfilAtualId }) {
 export async function salvarOnboarding(
   idPerfil,
   idUsuario,
-  { apelido, avatar, objetivo, nivel, dias = [], minutosPorSessao, preferencias },
+  { apelido, avatar, avatarCorFundo, objetivo, nivel, dias = [], minutosPorSessao, preferencias },
 ) {
   // RF-ONB-03: pelo menos um dia. A tela já cobrava, o servidor não — e semana
   // vazia não é detalhe cosmético: é o que a RN-014 lê para dizer quantas metas
@@ -545,6 +550,8 @@ export async function salvarOnboarding(
   // sem mascote e sem objetivo (DT-27).
   exigirDoCatalogo(catalogo.avatar, avatar, 'Escolha sua abelha');
   exigirDoCatalogo(catalogo.objetivo, objetivo, 'Escolha um objetivo');
+  const corNormalizada = avatarCorFundo ? normalizarCorDeFundoDoAvatar(avatarCorFundo) : null;
+  if (avatarCorFundo && !corNormalizada) throw erroValidacao('Escolha uma cor de fundo válida para o avatar');
 
   const minutosInformados = minutosPorSessao !== undefined && minutosPorSessao !== null;
   if (minutosInformados) exigirMinutosValidos(minutosPorSessao);
@@ -565,6 +572,7 @@ export async function salvarOnboarding(
       idPerfil,
       {
         avatar,
+        avatarBackground: corNormalizada ?? undefined,
         objetivoInicial: objetivo,
         minutosPorSessao: minutosInformados ? Number(minutosPorSessao) : null,
         ...(preferenciasMarcadas ?? {}),
@@ -692,6 +700,7 @@ export async function obterRascunhoDoOnboarding(idUsuario) {
   if (dias.length > 0) respostas.dias = dias.map(String);
   if (perfil.objetivo_inicial) respostas.objetivo = perfil.objetivo_inicial;
   if (perfil.avatar) respostas.avatar = perfil.avatar;
+  respostas.avatar_cor_fundo = perfil.avatar_background || 'creme';
 
   return {
     passos: PASSOS_DO_ONBOARDING,

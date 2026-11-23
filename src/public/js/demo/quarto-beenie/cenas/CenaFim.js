@@ -48,6 +48,7 @@ export class CenaFim extends Phaser.Scene {
 
   create() {
     this.continuando = false;
+    document.getElementById('quarto-resultado-recompensas')?.classList.add('hidden');
 
     const concluidas = IDS_DAS_TAREFAS.filter((id) => estado.tarefas[id]);
     const total = estado.totalDeTarefas;
@@ -91,6 +92,7 @@ export class CenaFim extends Phaser.Scene {
       pararDeObservarEstrelas();
       pararDeObservarProxima();
       pararDeObservarRecompensas();
+      document.getElementById('quarto-resultado-recompensas')?.classList.add('hidden');
     });
 
     criarFundoEscuro(this);
@@ -121,22 +123,6 @@ export class CenaFim extends Phaser.Scene {
       .setDisplaySize(TAMANHO_DA_NOTA.largura, TAMANHO_DA_NOTA.altura)
       .setDepth(10);
 
-    const textoMoedas = this.add
-      .text(LARGURA / 2, 414, `${estado.moedas} mel`, {
-        fontFamily: FONTES.display,
-        fontSize: '34px',
-        color: '#ffc200',
-      })
-      .setOrigin(0.5, 0);
-
-    this.textoRecompensas = this.add
-      .text(LARGURA / 2, 448, '', {
-        fontFamily: FONTES.texto,
-        fontSize: '16px',
-        color: '#bfae87',
-        align: 'center',
-      })
-      .setOrigin(0.5, 0);
     this.atualizarRecompensas();
 
     this.criarBotao();
@@ -149,12 +135,6 @@ export class CenaFim extends Phaser.Scene {
         yoyo: true,
         repeat: -1,
         ease: 'Sine.inOut',
-      });
-      this.tweens.add({
-        targets: textoMoedas,
-        scale: { from: 0.9, to: 1 },
-        duration: 500,
-        ease: 'Back.out',
       });
     }
 
@@ -200,21 +180,38 @@ export class CenaFim extends Phaser.Scene {
     }
   }
 
-  atualizarRecompensas() {
-    if (!this.textoRecompensas) return;
+  melExibido() {
     const recompensas = recompensasRecebidas();
+    if (recompensas) return Math.max(0, Math.round((recompensas.mel || 0) + (recompensas.bonusDeMelPorNivel || 0)));
+    return Math.max(0, Math.round(estado.moedas || 0));
+  }
+
+  atualizarRecompensas() {
+    const recompensas = recompensasRecebidas();
+    const container = document.getElementById('quarto-resultado-recompensas');
+    const xp = document.getElementById('quarto-resultado-xp');
+    const polen = document.getElementById('quarto-resultado-polen');
+    const mel = document.getElementById('quarto-resultado-mel');
+    if (!container || !xp || !polen || !mel) return;
+
+    container.classList.remove('hidden');
     if (!recompensas) {
-      this.textoRecompensas.setText('');
+      xp.textContent = '+0';
+      polen.textContent = '+0';
+      mel.textContent = `+${this.melExibido()}`;
       return;
     }
-    this.textoRecompensas.setText(`XP +${recompensas.xp}   Pólen +${recompensas.polen}`);
+    xp.textContent = `+${recompensas.xp}`;
+    polen.textContent = `+${recompensas.polen}`;
+    mel.textContent = `+${this.melExibido()}`;
   }
 
   anunciarResultado(estrelas, nota) {
     const recompensas = recompensasRecebidas();
+    const mel = this.melExibido();
     const ganhos = recompensas
-      ? ` ${estado.moedas} de mel, +${recompensas.xp} XP e +${recompensas.polen} de pólen.`
-      : ` ${estado.moedas} de mel.`;
+      ? ` ${mel} de mel, +${recompensas.xp} XP e +${recompensas.polen} de pólen.`
+      : ` ${mel} de mel.`;
     anunciar(`Resultado:${ganhos} Nota ${nota.rotulo}. ${estrelas} de 3 estrelas.`);
   }
 

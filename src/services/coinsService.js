@@ -75,25 +75,31 @@ export async function obterCarteira(idUsuario) {
  * buraco é de administração, e derrubar a partida da criança não o conserta.
  */
 export async function calcularMelDaCelula(
-  { slugDoTipoDeJogo, codigoDaFaixa, estrelas, ehRepeticao = false },
+  { slugDoTipoDeJogo, codigoDaFaixa, estrelas, ehRepeticao = false, recompensaMelCelula = null },
   conexao = null,
 ) {
   if (!Number.isInteger(estrelas) || estrelas < 1) return 0;
 
-  const configuracao = await rewardConfigsRepository.buscarConfiguracao(
-    { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
-    conexao,
-  );
-
-  if (!configuracao) {
-    logger.error(
+  let melCheio;
+  if (recompensaMelCelula !== null && recompensaMelCelula !== undefined) {
+    // Override por célula: valor definido pelo admin, escalado pelas estrelas.
+    melCheio = Math.max(0, Math.round(Number(recompensaMelCelula) * (estrelas / 3)));
+  } else {
+    const configuracao = await rewardConfigsRepository.buscarConfiguracao(
       { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
-      'Sem configuração de recompensa: creditando zero de mel',
+      conexao,
     );
-    return 0;
+
+    if (!configuracao) {
+      logger.error(
+        { slugDoTipoDeJogo, codigoDaFaixa, estrelas },
+        'Sem configuração de recompensa: creditando zero de mel',
+      );
+      return 0;
+    }
+    melCheio = Number(configuracao.coins_amount);
   }
 
-  const melCheio = Number(configuracao.coins_amount);
   if (!ehRepeticao) return melCheio;
 
   const modificador = await rewardConfigsRepository.buscarModificador(
@@ -122,6 +128,7 @@ export async function creditarPorCelula(conexao, idUsuario, { celula, estrelas, 
       codigoDaFaixa: celula.age_band_code,
       estrelas,
       ehRepeticao,
+      recompensaMelCelula: celula.reward_coins ?? null,
     },
     conexao,
   );

@@ -1,14 +1,17 @@
-/* Fundo de favos do miolo do painel.
+/* Fundo de favos do miolo do painel/atividades.
  *
- * É a mesma textura do onboarding (`favos-de-fundo`), mas presa à `<main>` em
- * vez de ficar dentro dos cartões. Os blocos brancos continuam por cima; o
- * padrão aparece no fundo ao redor deles e nos vãos. A camada usa a opacidade
- * e o tamanho da `camada-meio` da landing, que é a medida usada no onboarding. */
+ * É a mesma textura do onboarding (`favos-de-fundo`), fixa na viewport para
+ * cobrir toda a página (incluindo áreas fora da `<main>`). Os blocos brancos
+ * continuam por cima; o padrão aparece no fundo ao redor deles e nos vãos. */
 .main-favos {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background-size: 84px 144px;
   opacity: 0.1;
+}
+
+details[open] > summary [data-chevron] {
+  transform: rotate(180deg);
 }

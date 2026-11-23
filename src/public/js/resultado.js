@@ -9,7 +9,6 @@ const mascote = document.getElementById('jogo-mascote');
 const titulo = document.getElementById('jogo-resultado-titulo');
 const painelDeEstrelas = document.getElementById('jogo-estrelas');
 const avisoDeNivel = document.getElementById('jogo-nivel');
-const avisoDeRepeticao = document.getElementById('jogo-repeticao-aviso');
 const painelDeConquistas = document.getElementById('jogo-conquistas');
 const tituloDasConquistas = document.getElementById('jogo-conquistas-titulo');
 const listaDeConquistas = document.getElementById('jogo-conquistas-lista');
@@ -92,7 +91,6 @@ function mostrarGanhos(dados) {
     avisoDeNivel.textContent = `Você chegou ao nível ${dados.nivel}! Bônus de ${dados.bonusDeMelPorNivel} de mel.`;
     avisoDeNivel.classList.remove('hidden');
   }
-  if (dados.ehRepeticao) avisoDeRepeticao.classList.remove('hidden');
 }
 
 /**
