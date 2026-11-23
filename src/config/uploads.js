@@ -83,30 +83,53 @@ async function recortarTransparencia(bytes) {
   return sharp(bytes, { failOn: 'none' }).extract({ left, top, width: extractWidth, height: extractHeight });
 }
 
+async function converterImagem(bytes, { recortar = true } = {}) {
+  const orientado = await sharp(bytes, { failOn: 'none' }).rotate().toBuffer();
+  const base = recortar ? await recortarTransparencia(orientado) : sharp(orientado, { failOn: 'none' });
+  return base
+    .resize({ width: LARGURA_MAXIMA, withoutEnlargement: true })
+    .webp({ quality: QUALIDADE_WEBP })
+    .toBuffer();
+}
+
+async function salvarBuffer(convertida) {
+  const nome = `${randomUUID()}.webp`;
+  await mkdir(env.uploads.diretorio, { recursive: true });
+  await writeFile(path.join(env.uploads.diretorio, nome), convertida);
+  return `/uploads/${nome}`;
+}
+
 /**
  * Converte para WebP e grava. O `sharp` é também a validação de verdade: um
  * arquivo que ele não abre não é imagem, não importa o que o navegador declarou.
- *
- * Antes da conversão, remove margens transparentes (alpha > 0 define a bounding
- * box), mantendo uma pequena margem de segurança.
  */
 export async function guardarIlustracao(bytes, { recortar = true } = {}) {
   let convertida;
   try {
-    const orientado = await sharp(bytes, { failOn: 'none' }).rotate().toBuffer();
-    const base = recortar ? await recortarTransparencia(orientado) : sharp(orientado, { failOn: 'none' });
-    convertida = await base
-      .resize({ width: LARGURA_MAXIMA, withoutEnlargement: true })
-      .webp({ quality: QUALIDADE_WEBP })
-      .toBuffer();
+    convertida = await converterImagem(bytes, { recortar });
   } catch {
     throw erroValidacao('O arquivo enviado não é uma imagem que consigamos abrir');
   }
+  return salvarBuffer(convertida);
+}
 
-  const nome = `${randomUUID()}.webp`;
-  await mkdir(env.uploads.diretorio, { recursive: true });
-  await writeFile(path.join(env.uploads.diretorio, nome), convertida);
-
-  // O caminho público, que é o que vai para o banco e para a tela.
-  return `/uploads/${nome}`;
+/**
+ * Para cosméticos: salva versão recortada (loja) e versão original/canvas (avatar).
+ */
+export async function guardarIlustracaoCosmetico(bytes) {
+  let recortada;
+  let original;
+  try {
+    [recortada, original] = await Promise.all([
+      converterImagem(bytes, { recortar: true }),
+      converterImagem(bytes, { recortar: false }),
+    ]);
+  } catch {
+    throw erroValidacao('O arquivo enviado não é uma imagem que consigamos abrir');
+  }
+  const [caminhoLoja, caminhoAvatar] = await Promise.all([
+    salvarBuffer(recortada),
+    salvarBuffer(original),
+  ]);
+  return { caminhoLoja, caminhoAvatar };
 }

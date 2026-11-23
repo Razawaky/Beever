@@ -12,7 +12,7 @@ import { consultar, consultarEm } from '../config/database.js';
  * histórico do jogador não pode ficar órfão.
  */
 
-const CAMPOS = `i.id, i.slug, i.name, i.description_kid, i.image_path, i.price, i.category_id,
+const CAMPOS = `i.id, i.slug, i.name, i.description_kid, i.image_path, i.avatar_image_path, i.price, i.category_id,
                 c.slug AS category_slug, c.name AS category_name,
                 i.counts_in_patrimony, i.valuation_rate, i.valuation_floor_pct, i.valuation_cap_pct,
                 i.upkeep_cost, i.income_per_cycle, i.upgrade_of_item_id, i.is_consumable,
@@ -175,16 +175,17 @@ export async function slugJaUsado(slug, idParaIgnorar = null) {
 export async function criar(dados, conexao = null) {
   const resultado = await consultarEm(
     conexao,
-    `INSERT INTO items (slug, name, description_kid, image_path, category_id, price,
+    `INSERT INTO items (slug, name, description_kid, image_path, avatar_image_path, category_id, price,
                         counts_in_patrimony, valuation_rate, valuation_floor_pct, valuation_cap_pct,
                         upkeep_cost, income_per_cycle, upgrade_of_item_id, is_consumable,
                         cosmetic_kind, cosmetic_layer)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       dados.slug,
       dados.nome,
       dados.descricaoInfantil,
       dados.caminhoDaImagem,
+      dados.caminhoImagemAvatar ?? null,
       dados.idCategoria,
       dados.preco,
       dados.contaNoPatrimonio ? 1 : 0,
@@ -211,6 +212,7 @@ export async function atualizar(id, dados, conexao = null) {
             name                = COALESCE(?, name),
             description_kid     = COALESCE(?, description_kid),
             image_path          = COALESCE(?, image_path),
+            avatar_image_path   = ?,
             category_id         = COALESCE(?, category_id),
             price               = COALESCE(?, price),
             counts_in_patrimony = COALESCE(?, counts_in_patrimony),
@@ -229,6 +231,7 @@ export async function atualizar(id, dados, conexao = null) {
       dados.nome,
       dados.descricaoInfantil,
       dados.caminhoDaImagem,
+      dados.caminhoImagemAvatar ?? null,
       dados.idCategoria,
       dados.preco,
       dados.contaNoPatrimonio === null ? null : dados.contaNoPatrimonio ? 1 : 0,

@@ -306,7 +306,8 @@ export async function bloquearUnidadeAtiva(conexao, idUnidade, idUsuario) {
  */
 export async function listarCosmeticosDoUsuario(idUsuario) {
   return consultar(
-    `SELECT DISTINCT i.id AS item_id, i.name, i.slug, i.image_path, c.name AS category_name,
+    `SELECT DISTINCT i.id AS item_id, i.name, i.slug,
+            COALESCE(i.avatar_image_path, i.image_path) AS image_path, c.name AS category_name,
             i.cosmetic_kind, i.cosmetic_layer
        FROM inventory inv
        JOIN items i ON i.id = inv.item_id

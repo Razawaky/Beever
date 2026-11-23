@@ -152,10 +152,10 @@ export async function listarDetalhadoPorUsuario(idUsuario) {
   return consultar(
     `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion, p.avatar_background,
             p.equipped_cosmetic_item_id AS avatar_cosmetico_item_id,
-            ec.image_path AS avatar_cosmetico_imagem, ec.name AS avatar_cosmetico_nome,
+            COALESCE(ec.avatar_image_path, ec.image_path) AS avatar_cosmetico_imagem, ec.name AS avatar_cosmetico_nome,
             ec.cosmetic_kind AS avatar_cosmetico_kind, ec.cosmetic_layer AS avatar_cosmetico_camada,
             p.equipped_background_cosmetic_item_id AS avatar_cosmetico_fundo_item_id,
-            ecb.image_path AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
+            COALESCE(ecb.avatar_image_path, ecb.image_path) AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
             a.slug AS avatar, a.image_path AS avatar_imagem,
             o.slug AS objetivo_inicial, o.label AS objetivo_inicial_rotulo
@@ -184,10 +184,10 @@ export async function listarDetalhadoDaConta(idConta) {
   return consultar(
     `SELECT p.id, p.user_id, p.onboarding_step, p.timezone, p.session_minutes, p.is_sound_enabled, p.has_reduced_motion, p.avatar_background,
             p.equipped_cosmetic_item_id AS avatar_cosmetico_item_id,
-            ec.image_path AS avatar_cosmetico_imagem, ec.name AS avatar_cosmetico_nome,
+            COALESCE(ec.avatar_image_path, ec.image_path) AS avatar_cosmetico_imagem, ec.name AS avatar_cosmetico_nome,
             ec.cosmetic_kind AS avatar_cosmetico_kind, ec.cosmetic_layer AS avatar_cosmetico_camada,
             p.equipped_background_cosmetic_item_id AS avatar_cosmetico_fundo_item_id,
-            ecb.image_path AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
+            COALESCE(ecb.avatar_image_path, ecb.image_path) AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
             u.nickname AS apelido, u.email, u.owner_user_id, u.onboarding_completed_at,
             ul.level AS nivel,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,

@@ -1,5 +1,5 @@
 import { emTransacao } from '../config/database.js';
-import { guardarIlustracao } from '../config/uploads.js';
+import { guardarIlustracao, guardarIlustracaoCosmetico } from '../config/uploads.js';
 import * as itemsRepository from '../repositories/itemsRepository.js';
 import { erroNaoEncontrado, erroValidacao } from '../utils/erros.js';
 import { slugDeTexto } from '../utils/slug.js';
@@ -131,13 +131,24 @@ export async function criarItem(dadosEntrada, ilustracao, ator) {
   conferirFaixaDeValor(dados);
   await conferirItemDeOrigem(dados.idItemDeOrigem);
 
-  const caminhoDaImagem = ilustracao
-    ? await guardarIlustracao(ilustracao, { recortar: !dados.tipoCosmetico })
-    : null;
+  let caminhoDaImagem = null;
+  let caminhoImagemAvatar = null;
+  if (ilustracao) {
+    if (dados.tipoCosmetico) {
+      const caminhos = await guardarIlustracaoCosmetico(ilustracao);
+      caminhoDaImagem = caminhos.caminhoLoja;
+      caminhoImagemAvatar = caminhos.caminhoAvatar;
+    } else {
+      caminhoDaImagem = await guardarIlustracao(ilustracao);
+    }
+  }
   const comportamentos = comportamentosDosNumeros(dados);
 
   const id = await emTransacao(async (conexao) => {
-    const novoId = await itemsRepository.criar({ ...dados, slug, caminhoDaImagem }, conexao);
+    const novoId = await itemsRepository.criar(
+      { ...dados, slug, caminhoDaImagem, caminhoImagemAvatar },
+      conexao,
+    );
     await itemsRepository.substituirComportamentos(novoId, comportamentos, conexao);
     await itemsRepository.substituirRequisitos(novoId, dados.requisitos, conexao);
     return novoId;
@@ -163,13 +174,29 @@ export async function atualizarItem(idItem, dadosEntrada, ilustracao, ator) {
   conferirFaixaDeValor(dados);
   await conferirItemDeOrigem(dados.idItemDeOrigem, antes.id);
 
-  const caminhoDaImagem = ilustracao
-    ? await guardarIlustracao(ilustracao, { recortar: !dados.tipoCosmetico })
-    : null;
+  let caminhoDaImagem = null;
+  let caminhoImagemAvatar;
+  if (ilustracao) {
+    if (dados.tipoCosmetico) {
+      const caminhos = await guardarIlustracaoCosmetico(ilustracao);
+      caminhoDaImagem = caminhos.caminhoLoja;
+      caminhoImagemAvatar = caminhos.caminhoAvatar;
+    } else {
+      caminhoDaImagem = await guardarIlustracao(ilustracao);
+      caminhoImagemAvatar = null;
+    }
+  } else {
+    // Sem novo upload: mantém imagem do avatar só se continuar sendo cosmético.
+    caminhoImagemAvatar = dados.tipoCosmetico ? (antes.avatar_image_path ?? null) : null;
+  }
   const comportamentos = comportamentosDosNumeros(dados);
 
   await emTransacao(async (conexao) => {
-    await itemsRepository.atualizar(antes.id, { ...dados, caminhoDaImagem }, conexao);
+    await itemsRepository.atualizar(
+      antes.id,
+      { ...dados, caminhoDaImagem, caminhoImagemAvatar },
+      conexao,
+    );
     await itemsRepository.substituirComportamentos(antes.id, comportamentos, conexao);
     await itemsRepository.substituirRequisitos(antes.id, dados.requisitos, conexao);
   });
