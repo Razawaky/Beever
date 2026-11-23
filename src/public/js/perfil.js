@@ -28,6 +28,10 @@ let cosmeticoFundoAnterior =
   formAvatar?.querySelector('input[name="cosmetico_fundo_equipado_item_id"]:checked')?.value ??
   document.getElementById('avatar-atual')?.dataset.avatarCosmeticoFundoId ??
   '';
+let cosmeticoPerfilAnterior =
+  formAvatar?.querySelector('input[name="cosmetico_perfil_equipado_item_id"]:checked')?.value ??
+  document.getElementById('avatar-atual')?.dataset.avatarCosmeticoPerfilId ??
+  '';
 let salvandoAvatar = false;
 
 function mostrarMensagem(elemento, mensagem, erro = false) {
@@ -214,7 +218,13 @@ function atualizarPreviewModal() {
   preview.classList.add(classeNova);
 
   const avatarSelecionado = formAvatar?.querySelector('input[name="avatar"]:checked');
-  const caminho = avatarSelecionado?.dataset.imagem ?? '';
+  const perfilSelecionado = formAvatar?.querySelector('input[name="cosmetico_perfil_equipado_item_id"]:checked');
+  const caminhoPerfil = perfilSelecionado?.dataset.imagem ?? '';
+  const fallbackAvatar = document.getElementById('avatar-fallback')?.value || '';
+  const radioFallback = fallbackAvatar
+    ? formAvatar?.querySelector(`input[name="avatar"][value="${CSS.escape(fallbackAvatar)}"]`)
+    : null;
+  const caminho = caminhoPerfil || (avatarSelecionado?.dataset.imagem ?? radioFallback?.dataset.imagem ?? '');
   let imagem = document.getElementById('avatar-preview-modal-img');
   let fallback = document.getElementById('avatar-preview-modal-fallback');
 
@@ -308,15 +318,28 @@ function selecionarAbaAvatar(aba) {
   });
 }
 
-function abrirDialogoAvatar() {
-  if (!dialogoAvatar || typeof dialogoAvatar.showModal !== 'function') return;
-  marcarRadio('avatar', avatarAnterior);
+function restaurarSelecaoAvatar() {
+  const fallback = document.getElementById('avatar-fallback');
+  if (fallback) fallback.value = avatarAnterior || fallback.value || '';
   marcarRadio('avatar_cor_fundo', corAnterior);
   marcarRadio('cosmetico_equipado_item_id', cosmeticoAnterior);
   marcarRadio('cosmetico_fundo_equipado_item_id', cosmeticoFundoAnterior);
+
+  if (cosmeticoPerfilAnterior) {
+    limparRadios('avatar');
+    marcarRadio('cosmetico_perfil_equipado_item_id', cosmeticoPerfilAnterior);
+  } else {
+    limparRadios('cosmetico_perfil_equipado_item_id');
+    marcarRadio('avatar', avatarAnterior);
+  }
+  atualizarPreviewModal();
+}
+
+function abrirDialogoAvatar() {
+  if (!dialogoAvatar || typeof dialogoAvatar.showModal !== 'function') return;
+  restaurarSelecaoAvatar();
   selecionarAbaAvatar('beenie');
   esconderMensagem(avisoAvatarDialogo);
-  atualizarPreviewModal();
   dialogoAvatar.showModal();
 }
 
@@ -326,20 +349,12 @@ function fecharDialogoAvatar() {
 
 botaoAbrirAvatar?.addEventListener('click', abrirDialogoAvatar);
 botaoCancelarAvatar?.addEventListener('click', () => {
-  marcarRadio('avatar', avatarAnterior);
-  marcarRadio('avatar_cor_fundo', corAnterior);
-  marcarRadio('cosmetico_equipado_item_id', cosmeticoAnterior);
-  marcarRadio('cosmetico_fundo_equipado_item_id', cosmeticoFundoAnterior);
-  atualizarPreviewModal();
+  restaurarSelecaoAvatar();
   fecharDialogoAvatar();
 });
 
 dialogoAvatar?.addEventListener('cancel', () => {
-  marcarRadio('avatar', avatarAnterior);
-  marcarRadio('avatar_cor_fundo', corAnterior);
-  marcarRadio('cosmetico_equipado_item_id', cosmeticoAnterior);
-  marcarRadio('cosmetico_fundo_equipado_item_id', cosmeticoFundoAnterior);
-  atualizarPreviewModal();
+  restaurarSelecaoAvatar();
 });
 
 formAvatar?.addEventListener('click', (evento) => {
@@ -347,12 +362,35 @@ formAvatar?.addEventListener('click', (evento) => {
   if (aba) selecionarAbaAvatar(aba);
 });
 
+function limparRadios(nome) {
+  formAvatar?.querySelectorAll(`input[name="${nome}"]`).forEach((radio) => {
+    radio.checked = false;
+  });
+}
+
 formAvatar?.addEventListener('change', (evento) => {
+  const nome = evento.target?.name;
+  if (nome === 'avatar') {
+    limparRadios('cosmetico_perfil_equipado_item_id');
+    const fallback = document.getElementById('avatar-fallback');
+    if (fallback) fallback.value = evento.target.value;
+  }
+  if (nome === 'cosmetico_perfil_equipado_item_id') {
+    formAvatar?.querySelectorAll('input[name="avatar"]').forEach((radio) => {
+      radio.checked = false;
+    });
+    if (evento.target.value) {
+      evento.target.closest('label')?.querySelectorAll('[data-novo-bolinha]').forEach((el) => {
+        el.classList.add('hidden');
+      });
+    }
+  }
   if (
-    evento.target?.name === 'avatar' ||
-    evento.target?.name === 'avatar_cor_fundo' ||
-    evento.target?.name === 'cosmetico_equipado_item_id' ||
-    evento.target?.name === 'cosmetico_fundo_equipado_item_id'
+    nome === 'avatar' ||
+    nome === 'avatar_cor_fundo' ||
+    nome === 'cosmetico_equipado_item_id' ||
+    nome === 'cosmetico_fundo_equipado_item_id' ||
+    nome === 'cosmetico_perfil_equipado_item_id'
   ) {
     atualizarPreviewModal();
   }
@@ -363,10 +401,12 @@ formAvatar?.addEventListener('submit', async (evento) => {
   evento.preventDefault();
   if (salvandoAvatar) return;
 
-  const avatar = valorRadio('avatar');
+  const avatarFallback = document.getElementById('avatar-fallback')?.value || avatarAnterior;
+  const avatar = valorRadio('avatar') || avatarFallback;
   const corFundo = valorRadio('avatar_cor_fundo');
   const cosmeticoEquipadoItemId = valorRadio('cosmetico_equipado_item_id');
   const cosmeticoFundoEquipadoItemId = valorRadio('cosmetico_fundo_equipado_item_id');
+  const cosmeticoPerfilEquipadoItemId = valorRadio('cosmetico_perfil_equipado_item_id');
   if (!avatar) {
     mostrarMensagem(avisoAvatarDialogo, 'Escolha um Beenie.', true);
     return;
@@ -388,12 +428,15 @@ formAvatar?.addEventListener('submit', async (evento) => {
         avatar_cor_fundo: corFundo,
         cosmetico_equipado_item_id: cosmeticoEquipadoItemId || null,
         cosmetico_fundo_equipado_item_id: cosmeticoFundoEquipadoItemId || null,
+        cosmetico_perfil_equipado_item_id: cosmeticoPerfilEquipadoItemId || null,
       },
       'Não foi possível salvar sua imagem.',
     );
 
     const avatarEscolhido = formAvatar.querySelector('input[name="avatar"]:checked');
-    atualizarImagemDoAvatar(perfil.avatar_imagem ?? avatarEscolhido?.dataset.imagem ?? '');
+    const perfilSelecionado = formAvatar.querySelector('input[name="cosmetico_perfil_equipado_item_id"]:checked');
+    const imagemPerfil = perfil.avatar_cosmetico_perfil_imagem ?? perfilSelecionado?.dataset.imagem ?? '';
+    atualizarImagemDoAvatar(imagemPerfil || perfil.avatar_imagem || (avatarEscolhido?.dataset.imagem ?? ''));
     const corSalva = perfil.avatar_cor_fundo ?? perfil.avatar_background ?? corFundo;
     aplicarFundoNoAvatar(corSalva);
 
@@ -413,9 +456,13 @@ formAvatar?.addEventListener('submit', async (evento) => {
     });
 
     avatarAnterior = perfil.avatar ?? avatar;
+    const fallback = document.getElementById('avatar-fallback');
+    if (fallback) fallback.value = avatarAnterior;
     corAnterior = corSalva || '';
     cosmeticoAnterior = cosmeticoIdSalvo ? String(cosmeticoIdSalvo) : '';
     cosmeticoFundoAnterior = cosmeticoFundoIdSalvo ? String(cosmeticoFundoIdSalvo) : '';
+    const cosmeticoPerfilIdSalvo = perfil.avatar_cosmetico_perfil_item_id ?? (cosmeticoPerfilEquipadoItemId || '');
+    cosmeticoPerfilAnterior = cosmeticoPerfilIdSalvo ? String(cosmeticoPerfilIdSalvo) : '';
 
     esconderMensagem(avisoAvatarDialogo);
     mostrarMensagem(avisoAvatar, 'Imagem e cor atualizadas!');

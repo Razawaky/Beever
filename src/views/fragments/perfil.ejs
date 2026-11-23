@@ -10,6 +10,7 @@
   const cosmeticos = locals.cosmeticos ?? [];
   const cosmeticosAvatar = cosmeticos.filter((item) => (item.tipo ?? 'avatar') === 'avatar');
   const cosmeticosFundo = cosmeticos.filter((item) => item.tipo === 'fundo');
+  const cosmeticosPerfil = cosmeticos.filter((item) => item.tipo === 'perfil');
   const corAtual = perfil.avatar_cor_fundo || perfil.avatar_background || '';
   const classeFundoAvatar = classeDeCorDeFundoDoAvatar(corAtual);
   const cosmeticoEquipadoId = perfil.avatar_cosmetico_item_id ? Number(perfil.avatar_cosmetico_item_id) : null;
@@ -17,6 +18,9 @@
   const cosmeticoEquipadoCamada = perfil.avatar_cosmetico_camada ?? 'frente';
   const cosmeticoFundoEquipadoId = perfil.avatar_cosmetico_fundo_item_id ? Number(perfil.avatar_cosmetico_fundo_item_id) : null;
   const cosmeticoFundoEquipadoImagem = perfil.avatar_cosmetico_fundo_imagem ?? '';
+  const cosmeticoPerfilEquipadoId = perfil.avatar_cosmetico_perfil_item_id ? Number(perfil.avatar_cosmetico_perfil_item_id) : null;
+  const cosmeticoPerfilEquipadoImagem = perfil.avatar_cosmetico_perfil_imagem ?? '';
+  const avatarImagemEfetiva = cosmeticoPerfilEquipadoImagem || perfil.avatar_imagem || '';
 %>
 
 <div class="mx-auto max-w-3xl">
@@ -39,6 +43,8 @@
           data-avatar-cosmetico-camada="<%= cosmeticoEquipadoCamada %>"
           data-avatar-cosmetico-fundo-id="<%= cosmeticoFundoEquipadoId ?? '' %>"
           data-avatar-cosmetico-fundo-imagem="<%= cosmeticoFundoEquipadoImagem %>"
+          data-avatar-cosmetico-perfil-id="<%= cosmeticoPerfilEquipadoId ?? '' %>"
+          data-avatar-cosmetico-perfil-imagem="<%= cosmeticoPerfilEquipadoImagem %>"
           class="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-pilula ring-2 ring-white/70 transition group-hover:ring-tinta/40 <%= classeFundoAvatar %>"
         >
           <img
@@ -57,10 +63,10 @@
             height="64"
             class="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain <%= cosmeticoEquipadoImagem && cosmeticoEquipadoCamada === 'atras' ? '' : 'hidden' %>"
           />
-          <% if (perfil.avatar_imagem) { %>
+          <% if (avatarImagemEfetiva) { %>
             <img
               id="avatar-atual-img"
-              src="<%= perfil.avatar_imagem %>"
+              src="<%= avatarImagemEfetiva %>"
               alt=""
               width="64"
               height="64"
@@ -134,10 +140,10 @@
                   height="320"
                   class="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain <%= cosmeticoEquipadoImagem && cosmeticoEquipadoCamada === 'atras' ? '' : 'hidden' %>"
                 />
-                <% if (perfil.avatar_imagem) { %>
+                <% if (avatarImagemEfetiva) { %>
                   <img
                     id="avatar-preview-modal-img"
-                    src="<%= perfil.avatar_imagem %>"
+                    src="<%= avatarImagemEfetiva %>"
                     alt="Prévia do Beenie"
                     width="320"
                     height="320"
@@ -195,6 +201,7 @@
               <div id="painel-avatar-beenie" role="tabpanel" aria-labelledby="aba-avatar-beenie" data-painel-avatar="beenie" class="mt-4">
                 <fieldset>
                   <legend class="text-sm font-semibold text-tinta">Beenie</legend>
+                  <p class="mt-1 text-sm text-tinta-suave">Escolha seu Beenie. Os com bolinha são itens novos da loja.</p>
                   <div class="mt-3 grid grid-cols-2 gap-3">
                     <% opcoesDeAvatar.forEach((opcao) => { %>
                       <label class="cursor-pointer">
@@ -204,7 +211,7 @@
                           value="<%= opcao.valor %>"
                           data-imagem="<%= opcao.imagem %>"
                           class="peer sr-only"
-                          <%= perfil.avatar === opcao.valor ? 'checked' : '' %>
+                          <%= !cosmeticoPerfilEquipadoId && perfil.avatar === opcao.valor ? 'checked' : '' %>
                         />
                         <span
                           class="flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
@@ -213,7 +220,27 @@
                         </span>
                       </label>
                     <% }) %>
+                    <% cosmeticosPerfil.forEach((cosmetico) => { %>
+                      <label class="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="cosmetico_perfil_equipado_item_id"
+                          value="<%= cosmetico.itemId %>"
+                          data-imagem="<%= cosmetico.imagem ?? '' %>"
+                          class="peer sr-only"
+                          <%= cosmeticoPerfilEquipadoId === Number(cosmetico.itemId) ? 'checked' : '' %>
+                        />
+                        <span
+                          class="relative flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                        >
+                          <span data-novo-bolinha class="absolute right-2 top-2 h-2.5 w-2.5 rounded-pilula bg-ambar ring-2 ring-white" aria-hidden="true"></span>
+                          <span data-novo-bolinha class="sr-only">Item novo</span>
+                          <span class="text-sm font-semibold leading-tight text-tinta"><%= cosmetico.nome %></span>
+                        </span>
+                      </label>
+                    <% }) %>
                   </div>
+                  <input type="hidden" name="avatar_fallback" id="avatar-fallback" value="<%= perfil.avatar || '' %>" />
                 </fieldset>
 
                 <fieldset class="mt-6">

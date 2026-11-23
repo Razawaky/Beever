@@ -74,7 +74,7 @@ async function conferirItemDeOrigem(idItemDeOrigem, idDoItem = null) {
 function normalizarCosmetico(dados) {
   const tipo = dados.tipoCosmetico || null;
   const camada = dados.camadaCosmetica || null;
-  const tiposValidos = new Set(['avatar', 'fundo']);
+  const tiposValidos = new Set(['avatar', 'fundo', 'perfil']);
   const camadasValidas = new Set(['frente', 'atras']);
 
   if (tipo && !tiposValidos.has(tipo)) {
@@ -91,7 +91,7 @@ function normalizarCosmetico(dados) {
   // Cosmético não entra no patrimônio.
   const normalizado = { ...dados, contaNoPatrimonio: false, tipoCosmetico: tipo };
 
-  if (tipo === 'fundo') {
+  if (tipo === 'fundo' || tipo === 'perfil') {
     return { ...normalizado, camadaCosmetica: null };
   }
 

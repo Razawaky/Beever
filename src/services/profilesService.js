@@ -339,6 +339,8 @@ export async function atualizar(
     equippedCosmeticItemId,
     cosmeticoFundoEquipadoItemId,
     equippedBackgroundCosmeticItemId,
+    cosmeticoPerfilEquipadoItemId,
+    equippedProfileCosmeticItemId,
     fuso,
     minutosPorSessao,
     somAtivo,
@@ -361,10 +363,13 @@ export async function atualizar(
   const cosmeticoBruto = cosmeticoEquipadoItemId !== undefined ? cosmeticoEquipadoItemId : equippedCosmeticItemId;
   const cosmeticoFundoInformado = cosmeticoFundoEquipadoItemId !== undefined || equippedBackgroundCosmeticItemId !== undefined;
   const cosmeticoFundoBruto = cosmeticoFundoEquipadoItemId !== undefined ? cosmeticoFundoEquipadoItemId : equippedBackgroundCosmeticItemId;
+  const cosmeticoPerfilInformado = cosmeticoPerfilEquipadoItemId !== undefined || equippedProfileCosmeticItemId !== undefined;
+  const cosmeticoPerfilBruto = cosmeticoPerfilEquipadoItemId !== undefined ? cosmeticoPerfilEquipadoItemId : equippedProfileCosmeticItemId;
 
   let cosmeticoNormalizado;
   let cosmeticoFundoNormalizado;
-  if (cosmeticoInformado || cosmeticoFundoInformado) {
+  let cosmeticoPerfilNormalizado;
+  if (cosmeticoInformado || cosmeticoFundoInformado || cosmeticoPerfilInformado) {
     const cosmeticos = await inventoryRepository.listarCosmeticosDoUsuario(idUsuario);
     const porId = new Map(cosmeticos.map((item) => [Number(item.item_id), item]));
 
@@ -398,6 +403,15 @@ export async function atualizar(
         mensagemTipo: 'Este cosmético não é um fundo de avatar',
       });
     }
+
+    if (cosmeticoPerfilInformado) {
+      cosmeticoPerfilNormalizado = normalizarEquipado(cosmeticoPerfilBruto, {
+        tipoEsperado: 'perfil',
+        mensagemInvalido: 'Escolha um avatar de perfil válido',
+        mensagemPosse: 'Você só pode equipar um avatar de perfil que já comprou',
+        mensagemTipo: 'Este cosmético não é um avatar de perfil',
+      });
+    }
   }
 
   // O avatar continua opcional aqui — esta é a tela de perfil, onde se muda uma
@@ -417,6 +431,7 @@ export async function atualizar(
     avatarBackground: corNormalizada,
     equippedCosmeticItemId: cosmeticoNormalizado,
     equippedBackgroundCosmeticItemId: cosmeticoFundoNormalizado,
+    equippedProfileCosmeticItemId: cosmeticoPerfilNormalizado,
     fuso,
     minutosPorSessao,
     somAtivo,

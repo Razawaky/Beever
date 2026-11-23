@@ -48,9 +48,10 @@
                 <% if (perfil.avatar_cosmetico_imagem && perfil.avatar_cosmetico_camada === 'atras') { %>
                   <img src="<%= perfil.avatar_cosmetico_imagem %>" alt="" width="64" height="64" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain" />
                 <% } %>
-                <% if (perfil.avatar_imagem) { %>
+                <% const avatarImagem = perfil.avatar_cosmetico_perfil_imagem || perfil.avatar_imagem; %>
+                <% if (avatarImagem) { %>
                   <img
-                    src="<%= perfil.avatar_imagem %>"
+                    src="<%= avatarImagem %>"
                     alt=""
                     width="64"
                     height="64"

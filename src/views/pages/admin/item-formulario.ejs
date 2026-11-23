@@ -72,7 +72,7 @@
     <% const ehCosmetico = categoriaSelecionada?.slug === 'cosmeticos' || Boolean(item?.cosmetic_kind); %>
     <fieldset class="rounded-favo border border-linha p-4 <%= ehCosmetico ? '' : 'hidden' %>" id="fieldset-cosmetico">
       <legend class="px-2 text-sm font-semibold">Cosmético</legend>
-      <p class="text-xs text-tinta-suave">Escolha se este cosmético é do avatar do Beenie ou do fundo do avatar.</p>
+      <p class="text-xs text-tinta-suave">Escolha se este cosmético é um acessório, fundo do avatar ou avatar do perfil comprável.</p>
 
       <div class="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
@@ -80,8 +80,9 @@
           <select id="tipoCosmetico" name="tipoCosmetico"
             class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
             <option value="" <%= !item?.cosmetic_kind ? 'selected' : '' %>>Selecione</option>
-            <option value="avatar" <%= item?.cosmetic_kind === 'avatar' ? 'selected' : '' %>>Avatar do Beenie</option>
+            <option value="avatar" <%= item?.cosmetic_kind === 'avatar' ? 'selected' : '' %>>Acessório do Beenie</option>
             <option value="fundo" <%= item?.cosmetic_kind === 'fundo' ? 'selected' : '' %>>Fundo do avatar</option>
+            <option value="perfil" <%= item?.cosmetic_kind === 'perfil' ? 'selected' : '' %>>Avatar do perfil</option>
           </select>
         </div>
 

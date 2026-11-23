@@ -104,6 +104,7 @@ export async function obterColmeia(idUsuario) {
       avatar_cosmetico_imagem: perfil.avatar_cosmetico_imagem ?? null,
       avatar_cosmetico_camada: perfil.avatar_cosmetico_camada ?? 'frente',
       avatar_cosmetico_fundo_imagem: perfil.avatar_cosmetico_fundo_imagem ?? null,
+      avatar_cosmetico_perfil_imagem: perfil.avatar_cosmetico_perfil_imagem ?? null,
       nivel: perfil.nivel,
       mel: perfil.mel,
       polen: perfil.polen,

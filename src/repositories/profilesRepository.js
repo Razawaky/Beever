@@ -73,6 +73,7 @@ export async function atualizar(
     avatarBackground,
     equippedCosmeticItemId,
     equippedBackgroundCosmeticItemId,
+    equippedProfileCosmeticItemId,
     objetivoInicial = null,
     fuso = null,
     minutosPorSessao = null,
@@ -84,6 +85,7 @@ export async function atualizar(
   const mudarAvatarBackground = avatarBackground !== undefined;
   const mudarCosmeticoEquipado = equippedCosmeticItemId !== undefined;
   const mudarCosmeticoFundoEquipado = equippedBackgroundCosmeticItemId !== undefined;
+  const mudarCosmeticoPerfilEquipado = equippedProfileCosmeticItemId !== undefined;
   const resultado = await consultarEm(
     conexao,
     `UPDATE profiles
@@ -92,6 +94,7 @@ export async function atualizar(
             avatar_background                    = CASE WHEN ? THEN ? ELSE avatar_background END,
             equipped_cosmetic_item_id            = CASE WHEN ? THEN ? ELSE equipped_cosmetic_item_id END,
             equipped_background_cosmetic_item_id = CASE WHEN ? THEN ? ELSE equipped_background_cosmetic_item_id END,
+            equipped_profile_cosmetic_item_id    = CASE WHEN ? THEN ? ELSE equipped_profile_cosmetic_item_id END,
             initial_goal_id                      = CASE WHEN ? IS NULL THEN initial_goal_id ELSE (SELECT id FROM initial_goals WHERE slug = ?) END,
             timezone                             = COALESCE(?, timezone),
             session_minutes                      = COALESCE(?, session_minutes),
@@ -109,6 +112,8 @@ export async function atualizar(
       mudarCosmeticoEquipado ? (equippedCosmeticItemId ?? null) : null,
       mudarCosmeticoFundoEquipado ? 1 : 0,
       mudarCosmeticoFundoEquipado ? (equippedBackgroundCosmeticItemId ?? null) : null,
+      mudarCosmeticoPerfilEquipado ? 1 : 0,
+      mudarCosmeticoPerfilEquipado ? (equippedProfileCosmeticItemId ?? null) : null,
       objetivoInicial,
       objetivoInicial,
       fuso,
@@ -156,6 +161,8 @@ export async function listarDetalhadoPorUsuario(idUsuario) {
             ec.cosmetic_kind AS avatar_cosmetico_kind, ec.cosmetic_layer AS avatar_cosmetico_camada,
             p.equipped_background_cosmetic_item_id AS avatar_cosmetico_fundo_item_id,
             COALESCE(ecb.avatar_image_path, ecb.image_path) AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
+            p.equipped_profile_cosmetic_item_id AS avatar_cosmetico_perfil_item_id,
+            COALESCE(ecp.avatar_image_path, ecp.image_path) AS avatar_cosmetico_perfil_imagem, ecp.name AS avatar_cosmetico_perfil_nome,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
             a.slug AS avatar, a.image_path AS avatar_imagem,
             o.slug AS objetivo_inicial, o.label AS objetivo_inicial_rotulo
@@ -164,6 +171,7 @@ export async function listarDetalhadoPorUsuario(idUsuario) {
        LEFT JOIN avatars a       ON a.id = p.avatar_id
        LEFT JOIN items ec        ON ec.id = p.equipped_cosmetic_item_id
        LEFT JOIN items ecb       ON ecb.id = p.equipped_background_cosmetic_item_id
+       LEFT JOIN items ecp       ON ecp.id = p.equipped_profile_cosmetic_item_id
        LEFT JOIN initial_goals o ON o.id = p.initial_goal_id
       WHERE p.user_id = ?
       ORDER BY p.created_at, p.id`,
@@ -188,6 +196,8 @@ export async function listarDetalhadoDaConta(idConta) {
             ec.cosmetic_kind AS avatar_cosmetico_kind, ec.cosmetic_layer AS avatar_cosmetico_camada,
             p.equipped_background_cosmetic_item_id AS avatar_cosmetico_fundo_item_id,
             COALESCE(ecb.avatar_image_path, ecb.image_path) AS avatar_cosmetico_fundo_imagem, ecb.name AS avatar_cosmetico_fundo_nome,
+            p.equipped_profile_cosmetic_item_id AS avatar_cosmetico_perfil_item_id,
+            COALESCE(ecp.avatar_image_path, ecp.image_path) AS avatar_cosmetico_perfil_imagem, ecp.name AS avatar_cosmetico_perfil_nome,
             u.nickname AS apelido, u.email, u.owner_user_id, u.onboarding_completed_at,
             ul.level AS nivel,
             f.code AS faixa_etaria, f.name AS faixa_etaria_nome,
@@ -200,6 +210,7 @@ export async function listarDetalhadoDaConta(idConta) {
        LEFT JOIN avatars a       ON a.id = p.avatar_id
        LEFT JOIN items ec        ON ec.id = p.equipped_cosmetic_item_id
        LEFT JOIN items ecb       ON ecb.id = p.equipped_background_cosmetic_item_id
+       LEFT JOIN items ecp       ON ecp.id = p.equipped_profile_cosmetic_item_id
        LEFT JOIN initial_goals o ON o.id = p.initial_goal_id
       WHERE u.id = ? OR u.owner_user_id = ?
       ORDER BY (u.owner_user_id IS NULL) DESC, p.created_at, p.id`,
