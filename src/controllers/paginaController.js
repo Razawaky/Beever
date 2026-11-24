@@ -63,7 +63,7 @@ function redirecionarLogado(req, res) {
 async function carregarTelaDeMetas(idUsuario) {
   const [listaDeMetas, tarefas, semana, conquistas] = await Promise.all([
     goalsService.listarDoUsuario(idUsuario),
-    tasksService.listarDoUsuario(idUsuario),
+    tasksService.listarVisiveisDoDia(idUsuario),
     streakService.resumoDaSemana(idUsuario),
     achievementsService.listarDoUsuario(idUsuario),
   ]);
@@ -180,7 +180,7 @@ export const perfis = assincrono(async (req, res) => {
     perfis: lista,
     perfilAtualId: req.session.perfilId,
     conta: req.session.email ?? lista.find((perfil) => perfil.email)?.email,
-    scripts: ['/js/perfis.js'],
+    scripts: ['/js/perfis.js', '/js/excluir-conta.js'],
   });
 });
 

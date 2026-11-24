@@ -43,6 +43,7 @@ export function renderizarPagina(res, pagina, dados = {}) {
   const preferencias = preferenciasDaSessao(res.req);
   const classesAcessibilidade = [
     preferencias.animacaoReduzida ? 'a11y-movimento-reduzido' : null,
+    preferencias.transicoesSuaves ? 'transicoes-suaves' : null,
     !preferencias.somAtivo ? 'a11y-sem-som' : null,
   ]
     .filter(Boolean)

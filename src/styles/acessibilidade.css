@@ -32,6 +32,46 @@ body.a11y-movimento-reduzido .camada-de-favos {
 }
 
 /* ---------------------------------------------------------------------------
+   Transições suaves — só na sessão da pessoa logada
+   --------------------------------------------------------------------------- */
+/* A classe vem do servidor junto com as outras preferências da conta. Quem
+   pediu movimento reduzido não a recebe, e o `!important` abaixo cobre o caso
+   de o sistema pedir menos movimento. O deslocamento de página é só opacidade:
+   um `transform` aqui tornaria os elementos fixos dentro do `<main>` filhos
+   dele e quebraria a Beenie grudada na borda. */
+@keyframes beever-entrada {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+:root.transicoes-suaves {
+  scroll-behavior: smooth;
+}
+
+body.transicoes-suaves main {
+  animation: beever-entrada 280ms ease-out both;
+}
+
+:root.a11y-movimento-reduzido,
+body.a11y-movimento-reduzido {
+  scroll-behavior: auto !important;
+}
+
+:root.a11y-movimento-reduzido main,
+body.a11y-movimento-reduzido main {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.transicoes-suaves {
+    scroll-behavior: auto;
+  }
+  body.transicoes-suaves main {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Contraste reforçado — texto de apoio vira texto de verdade
    --------------------------------------------------------------------------- */
 :root.a11y-contraste .text-tinta-suave {

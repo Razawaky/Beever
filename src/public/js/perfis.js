@@ -157,6 +157,12 @@ for (const item of document.querySelectorAll('[data-excluir-perfil]')) {
   item.addEventListener('click', () => abrirDialogoExclusao(item));
 }
 
+// O item "Excluir conta" vive no menu do canto do quadro. O módulo compartilhado
+// abre o diálogo; aqui só fechamos o menu para ele não ficar aberto atrás dele.
+for (const item of document.querySelectorAll('[data-excluir-conta]')) {
+  item.addEventListener('click', () => fecharMenu());
+}
+
 cancelarExcluirPerfil?.addEventListener('click', () => dialogoExcluirPerfil?.close());
 
 // Clicar no véu também cancela, seguindo o padrão dos outros diálogos da tela.

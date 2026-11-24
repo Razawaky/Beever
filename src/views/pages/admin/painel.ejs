@@ -1,7 +1,6 @@
 <%#
-  Painel da administração. Hoje só a contagem de contas e a lista de quem é
-  admin: as métricas agregadas são a T-12.7, e cadastro de conteúdo, item e
-  atividade entra da T-12.2 em diante.
+  Painel da administração: atalhos para contas, conteúdo da trilha, loja,
+  conquistas, tarefas e auditoria. Toda ação feita aqui deixa rastro na trilha.
 -%>
 <%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'painel' }) %>
 
@@ -38,6 +37,34 @@
     <%- include('../../partials/ui/botao', {
       texto: 'Abrir os favos',
       href: '/admin/favos',
+      tamanho: 'medio',
+      classe: 'mt-4',
+    }) %>
+  </section>
+
+  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
+    <h2 class="text-lg font-semibold">Conquistas</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Catálogo de marcos automáticos: critério, alvo e bônus em mel. A conquista é
+      desativada, nunca apagada, para preservar o histórico de quem a desbloqueou.
+    </p>
+    <%- include('../../partials/ui/botao', {
+      texto: 'Abrir as conquistas',
+      href: '/admin/conquistas',
+      tamanho: 'medio',
+      classe: 'mt-4',
+    }) %>
+  </section>
+
+  <section class="mt-8 rounded-favo border border-linha bg-white p-6">
+    <h2 class="text-lg font-semibold">Tarefas</h2>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Catálogo dos compromissos curtos que o gerador distribui por dia. Escopo, alvo,
+      recompensa e fonte de progresso ficam aqui; o pagamento continua no servidor.
+    </p>
+    <%- include('../../partials/ui/botao', {
+      texto: 'Abrir as tarefas',
+      href: '/admin/tarefas',
       tamanho: 'medio',
       classe: 'mt-4',
     }) %>

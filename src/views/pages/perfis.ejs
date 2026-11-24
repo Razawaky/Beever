@@ -2,8 +2,49 @@
   const atual = (id) => Number(id) === Number(perfilAtualId);
   const temVarios = perfis.length > 1;
 %>
-<main class="flex min-h-screen items-center justify-center px-4 py-10">
-  <section class="w-full max-w-xl rounded-favo bg-white p-6 shadow-painel sm:p-10">
+<div class="main-favos favos-de-fundo" aria-hidden="true"></div>
+<main class="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+  <section class="relative w-full max-w-xl rounded-favo bg-white p-6 shadow-painel sm:p-10">
+    <%# Opções da conta no canto do quadro: o mesmo diálogo de exclusão das configurações. %>
+    <div class="absolute right-4 top-4 z-30">
+      <button
+        type="button"
+        id="btn-menu-conta"
+        data-menu-perfil
+        aria-label="Opções da conta"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        aria-controls="menu-conta"
+        class="inline-flex h-11 w-11 items-center justify-center rounded-pilula text-tinta-suave transition hover:bg-cera hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
+          <circle cx="12" cy="5" r="1.8" />
+          <circle cx="12" cy="12" r="1.8" />
+          <circle cx="12" cy="19" r="1.8" />
+        </svg>
+      </button>
+
+      <div
+        id="menu-conta"
+        role="menu"
+        aria-labelledby="btn-menu-conta"
+        class="absolute right-0 top-full z-30 mt-2 hidden w-56 rounded-favo border border-linha bg-white p-2 shadow-elevado"
+      >
+        <button
+          type="button"
+          role="menuitem"
+          id="btn-excluir-conta"
+          data-excluir-conta
+          class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-erro-texto transition hover:bg-erro/10 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 shrink-0">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
+          </svg>
+          Excluir conta
+        </button>
+      </div>
+    </div>
+
     <div class="text-center">
       <a
         href="/painel"
@@ -251,3 +292,5 @@
     </button>
   </div>
 </dialog>
+
+<%- include('../partials/ui/dialogo-excluir-conta') %>

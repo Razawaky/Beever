@@ -1,0 +1,96 @@
+<%#
+  Formulário da conquista, para criar e para editar. O critério vem de uma lista
+  fechada: só existe conquista para o que o sistema já sabe medir. O alvo e o
+  bônus são números — quem credita o mel é o serviço do jogador, nunca o painel.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'conquistas' }) %>
+
+<main class="mx-auto max-w-2xl px-6 py-10">
+  <a href="/admin/conquistas" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar às conquistas</a>
+  <h1 class="mt-4 text-3xl font-bold"><%= conquista ? 'Editar conquista' : 'Nova conquista' %></h1>
+
+  <form
+    method="POST"
+    action="<%= conquista ? `/admin/conquistas/${conquista.id}` : '/admin/conquistas' %>"
+    class="mt-8 space-y-4"
+  >
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div>
+      <label for="nome" class="mb-1 block text-sm font-medium">Nome</label>
+      <input id="nome" name="nome" type="text" required maxlength="120"
+        value="<%= conquista ? conquista.name : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+    </div>
+
+    <div>
+      <label for="slug" class="mb-1 block text-sm font-medium">Endereço</label>
+      <input id="slug" name="slug" type="text" maxlength="60" pattern="[a-z0-9\-]+"
+        value="<%= conquista ? conquista.slug : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      <p class="mt-1 text-xs text-tinta-suave">
+        <%= conquista ? 'Em branco mantém o endereço atual.' : 'Deixe em branco para gerar a partir do nome.' %>
+      </p>
+    </div>
+
+    <div>
+      <label for="descricao" class="mb-1 block text-sm font-medium">Descrição</label>
+      <textarea id="descricao" name="descricao" rows="3" required maxlength="255"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      ><%= conquista ? conquista.description : '' %></textarea>
+      <p class="mt-1 text-xs text-tinta-suave">É o texto que a criança vê no cartão da conquista.</p>
+    </div>
+
+    <div>
+      <label for="criterio" class="mb-1 block text-sm font-medium">Critério</label>
+      <select id="criterio" name="criterio" required
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
+        <% criterios.forEach((criterio) => { %>
+          <option value="<%= criterio.slug %>" <%= conquista && conquista.criterion_type === criterio.slug ? 'selected' : '' %>>
+            <%= criterio.nome %>
+          </option>
+        <% }) %>
+      </select>
+      <p class="mt-1 text-xs text-tinta-suave">
+        Só existem critérios que o sistema já sabe medir. Para criar um novo, é preciso alterar o código.
+      </p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="alvo" class="mb-1 block text-sm font-medium">Alvo</label>
+        <input id="alvo" name="alvo" type="number" min="1" max="1000000000" required
+          value="<%= conquista ? conquista.criterion_target : 1 %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        <p class="mt-1 text-xs text-tinta-suave">A conquista vale quando o contador chega a este número.</p>
+      </div>
+
+      <div>
+        <label for="mel" class="mb-1 block text-sm font-medium">Bônus em mel</label>
+        <input id="mel" name="mel" type="number" min="0" max="1000000000000" required
+          value="<%= conquista ? conquista.reward_coins : 0 %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+        <p class="mt-1 text-xs text-tinta-suave">Creditado uma vez, no servidor, ao desbloquear.</p>
+      </div>
+    </div>
+
+    <p class="rounded-favo bg-cera px-4 py-3 text-sm text-tinta-suave">
+      O ícone da conquista acompanha o critério. Para tirar a conquista do jogo sem apagar o
+      histórico, use <strong class="font-semibold text-tinta">Desativar</strong> na lista.
+    </p>
+
+    <div class="flex flex-wrap gap-3 pt-2">
+      <%- include('../../partials/ui/botao', {
+        texto: conquista ? 'Salvar conquista' : 'Criar conquista',
+        tipo: 'submit',
+        tamanho: 'medio',
+      }) %>
+      <%- include('../../partials/ui/botao', {
+        texto: 'Cancelar',
+        href: '/admin/conquistas',
+        variante: 'secundario',
+        tamanho: 'medio',
+      }) %>
+    </div>
+  </form>
+</main>

@@ -33,7 +33,9 @@
         `sticky`, e um ancestral que recorta o eixo desliga esse comportamento.
         A Colmeia já traz o próprio bloco em `fragments/painel-trilha`. -%>
     <% if (secaoAtual !== 'colmeia') { %>
-      <div class="relative z-10 mx-auto w-full max-w-5xl overflow-hidden rounded-favo bg-white p-4 shadow-xl sm:p-6">
+      <%# O inventário tem dica com balão que precisa ultrapassar as bordas do
+          quadro; por isso não recorta o conteúdo nessa seção. -%>
+      <div class="relative z-10 mx-auto w-full max-w-5xl rounded-favo bg-white p-4 shadow-xl sm:p-6 <%= secaoAtual === 'inventario' ? '' : 'overflow-hidden' %>">
     <% } %>
 
     <% if (secaoAtual === 'configuracoes') { %>
@@ -84,6 +86,8 @@
         favo,
         celulas,
         caminhoTrilha: '/painel/trilha',
+        mostrarTipoDaAtividade: false,
+        minutosPorExtenso: true,
       }) %>
     <% } else if (secaoAtual === 'confirmacao') { %>
       <%- include('../fragments/confirmar-compra', {

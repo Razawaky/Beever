@@ -66,7 +66,7 @@ export async function obterColmeia(idUsuario) {
       patrimonyService.obterDoUsuario(idUsuario),
       streakService.resumoDaSemana(idUsuario),
       goalsService.listarAtivas(idUsuario),
-      tasksService.listarAtivas(idUsuario),
+      tasksService.listarVisiveisDoDia(idUsuario),
       contentService.listarTrilha(idUsuario),
       economicCycleService.listarEventosRecentes(idUsuario),
       economicCycleService.avisoDoDia(idUsuario),

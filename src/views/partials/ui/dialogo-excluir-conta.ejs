@@ -1,0 +1,71 @@
+<%#
+  Confirmação da exclusão da conta, usada nas configurações e na seleção de
+  perfis. A primeira etapa diz o que se perde; a segunda pede a senha da conta.
+  O servidor checa a senha de novo antes de desativar qualquer coisa.
+-%>
+<dialog
+  id="dialogo-excluir-conta"
+  class="m-auto w-[calc(100%-2rem)] max-w-md rounded-favo border-0 bg-white p-0 text-tinta shadow-elevado backdrop:bg-tinta/40"
+  aria-labelledby="dialogo-excluir-conta-titulo"
+>
+  <div id="etapa-confirmar-exclusao" class="p-6 sm:p-8">
+    <h3 id="dialogo-excluir-conta-titulo" class="font-display text-2xl text-tinta">Excluir conta?</h3>
+    <p class="mt-2 text-sm text-tinta-suave">
+      Isso desativa sua conta e todos os perfis dela. Todo o progresso fica indisponível: durante
+      15 dias o suporte ainda pode recuperar algo, depois disso não. Você tem certeza que quer
+      continuar?
+    </p>
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      <button
+        type="button"
+        id="btn-cancelar-exclusao"
+        class="inline-flex min-h-11 items-center justify-center rounded-favo border-2 border-linha bg-white px-4 py-2 text-sm font-semibold text-tinta transition hover:border-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        id="btn-confirmar-exclusao"
+        class="inline-flex min-h-11 items-center justify-center rounded-favo bg-erro-texto px-5 py-2 text-sm font-bold text-white transition hover:bg-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        Sim, continuar
+      </button>
+    </div>
+  </div>
+
+  <form id="form-excluir-conta" class="hidden p-6 sm:p-8">
+    <h3 class="font-display text-2xl text-tinta">Senha da conta</h3>
+    <p class="mt-1 text-sm text-tinta-suave">
+      Digite a senha da conta para confirmar a exclusão.
+    </p>
+
+    <label for="senha-exclusao" class="mt-5 block text-sm font-semibold text-tinta">Senha da conta</label>
+    <input
+      id="senha-exclusao"
+      name="senha"
+      type="password"
+      autocomplete="current-password"
+      required
+      class="mt-2 w-full rounded-favo border-2 border-linha bg-white px-4 py-3 text-tinta focus:border-mel focus:outline-none focus:ring-2 focus:ring-mel/40"
+    />
+
+    <p id="erro-exclusao" role="status" aria-live="polite" class="mt-3 hidden text-sm text-perigo"></p>
+
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      <button
+        type="button"
+        id="btn-voltar-exclusao"
+        class="inline-flex min-h-11 items-center justify-center rounded-favo border-2 border-linha bg-white px-4 py-2 text-sm font-semibold text-tinta transition hover:border-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        Voltar
+      </button>
+      <button
+        type="submit"
+        id="btn-excluir-confirmado"
+        class="inline-flex min-h-11 items-center justify-center rounded-favo bg-erro-texto px-5 py-2 text-sm font-bold text-white transition hover:bg-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        Excluir conta
+      </button>
+    </div>
+  </form>
+</dialog>

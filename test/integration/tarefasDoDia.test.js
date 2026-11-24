@@ -20,7 +20,8 @@ import { dataDoDia, diaDaSemana } from '../../src/utils/diaDoJogador.js';
  * Geração e progresso das tarefas (RF-TAR-01, RF-TAR-02, RN-046, RN-047).
  * O que estes testes protegem: dia fora da agenda não gera, o teto de 3 ativas
  * vale contando o que sobrou, a vencida expira e abre vaga, e o progresso vem do
- * evento — jogar move a tarefa, clicar não.
+ * evento — jogar move a tarefa, clicar não. A agenda também não é histórico: o
+ * que foi concluído hoje aparece, o de ontem some da lista e da rota.
  */
 
 const pular = await motivoParaPular();
@@ -168,6 +169,42 @@ describe('tarefas do dia', opcoes, () => {
       [idUsuario],
     );
     assert.ok(Number(expiradas[0].total) > 0);
+  });
+
+  it('concluída hoje aparece; concluída ontem some da agenda e da rota', async () => {
+    await limparTarefas();
+    await definirAgenda([0, 1, 2, 3, 4, 5, 6]);
+    await tasksService.garantirTarefasDoDia(idUsuario);
+
+    const [tarefa] = await ativas();
+    assert.ok(tarefa, 'a agenda do dia tem tarefa para o teste');
+
+    await banco.conexao.query(
+      `UPDATE tasks
+          SET current_value = target_value,
+              status_id = (SELECT id FROM goal_statuses WHERE slug = 'concluida'),
+              completed_at = NOW()
+        WHERE id = ?`,
+      [tarefa.id],
+    );
+    const deHoje = await tasksService.listarVisiveisDoDia(idUsuario);
+    assert.ok(deHoje.some((visivel) => Number(visivel.id) === Number(tarefa.id)));
+
+    await banco.conexao.query(
+      'UPDATE tasks SET completed_at = NOW() - INTERVAL 1 DAY WHERE id = ?',
+      [tarefa.id],
+    );
+    const semOntem = await tasksService.listarVisiveisDoDia(idUsuario);
+    assert.ok(!semOntem.some((visivel) => Number(visivel.id) === Number(tarefa.id)));
+
+    const resposta = await agente
+      .get('/tarefas')
+      .set('Accept', 'application/json')
+      .expect(200);
+    assert.ok(
+      !resposta.body.some((visivel) => Number(visivel.id) === Number(tarefa.id)),
+      'GET /tarefas não devolve tarefa fechada ontem',
+    );
   });
 
   it('concluir células move a tarefa sozinha, sem clique nenhum', async () => {

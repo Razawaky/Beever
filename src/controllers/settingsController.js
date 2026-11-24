@@ -58,6 +58,7 @@ function montarPagina(req, res, dados, { status = 200, alterado = null, erro = n
     erro,
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
     // `painel.js` cuida do diálogo de saída; `configuracoes.js` protege a área da conta.
+    // A exclusão ficou só na tela de perfis, que carrega `excluir-conta.js`.
     scripts: ['/js/painel.js', '/js/configuracoes.js'],
   });
 }
@@ -146,8 +147,13 @@ export const alterarSenha = assincrono(async (req, res) => {
 export const excluirConta = assincrono(async (req, res) => {
   try {
     const contaId = idDaConta(req);
+    // A senha é pedida de novo mesmo com a área avançada já aberta: excluir a
+    // conta é a única ação aqui que não tem volta.
+    await authService.verificarSenhaDaConta(contaId, req.body.senha);
     await usersService.inativar(contaId, atorDaRequisicao(req));
   } catch (erro) {
+    if (!(erro instanceof ErroAplicacao)) throw erro;
+    if (querJson(req)) return res.status(erro.status).json({ erro: erro.message });
     return responderComErro(req, res, erro);
   }
 
@@ -157,5 +163,6 @@ export const excluirConta = assincrono(async (req, res) => {
   await encerrarSessao(req);
   res.clearCookie('beever.sid');
 
+  if (querJson(req)) return res.json({ ok: true, redirect: '/login?conta=excluida' });
   return res.redirect('/login?conta=excluida');
 });

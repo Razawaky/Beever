@@ -69,6 +69,8 @@ dialog::backdrop {
   --color-atencao-texto: #7d550a;
   --color-erro: #d93a3a;
   --color-erro-texto: #aa0a23;
+  /* Escudo é azul: um dia salvo não se confunde com o verde de quem jogou. */
+  --color-escudo: #2f6fd0;
 
   /* Favo é o canto padrão de botão e card; pílula é barra, badge e avatar. */
   --radius-favo: 20px;

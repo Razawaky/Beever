@@ -137,9 +137,17 @@ router.post(
   validate,
   settingsController.alterarSenha,
 );
-// Não há campo de formulário aqui, mas `validate` fecha a cadeia como nas
-// outras rotas de escrita: se um dia entrar um corpo, ele não passa batido.
-router.post('/painel/configuracoes/conta', requireOnboarding, validate, settingsController.excluirConta);
+// A exclusão só acontece com a senha da conta, confirmada no servidor tanto
+// para o diálogo (JSON) quanto para um formulário sem JavaScript. Vale também
+// na tela de perfis, onde o onboarding pode estar pendente — por isso exige
+// só login, e não onboarding concluído.
+router.post(
+  '/painel/configuracoes/conta',
+  requireLogin,
+  regrasVerificarSenhaConta,
+  validate,
+  settingsController.excluirConta,
+);
 router.get('/painel/perfil', requireOnboarding, paginaController.painelPerfil);
 router.get('/painel/loja', requireOnboarding, paginaController.painelLoja);
 router.get('/painel/inventario', requireOnboarding, paginaController.painelInventario);

@@ -41,6 +41,9 @@ export function preferenciasDaSessao(req) {
   return {
     logado,
     animacaoReduzida: logado && Boolean(sessao.animacaoReduzida),
+    // As transições de entrada e a rolagem suave valem só para a pessoa logada
+    // e desaparecem quando ela pede movimento reduzido.
+    transicoesSuaves: logado && !sessao.animacaoReduzida,
     somAtivo: !logado || sessao.somAtivo !== false,
     chavesGerenciadas: logado ? [PREFERENCIA_ANIMACAO, PREFERENCIA_SOM] : [],
   };

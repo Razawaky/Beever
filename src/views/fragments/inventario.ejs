@@ -16,12 +16,17 @@
 <% } %>
 
 <div class="<%= mostrarTitulo ? 'mt-6' : '' %>">
-  <%- include('../partials/ui/patrimonio-topo', { patrimonio: resumo.patrimonio }) %>
+  <%- include('../partials/ui/patrimonio-topo', { patrimonio: resumo.patrimonio, mostrarComposicao: false }) %>
 </div>
 
 <section class="mt-10">
-  <h2 class="font-display text-xl">Bens</h2>
-  <p class="mt-1 text-sm text-tinta-suave">Estes contam no seu patrimônio.</p>
+  <h2 class="flex items-center gap-2 font-display text-xl">
+    Bens
+    <span class="dica-info" tabindex="0" aria-describedby="dica-bens">
+      <span aria-hidden="true">?</span>
+      <span id="dica-bens" role="tooltip" class="dica-info-balao">Itens que contam no seu patrimônio</span>
+    </span>
+  </h2>
 
   <% if (resumo.bens.length === 0) { %>
     <p class="mt-4 rounded-favo bg-white p-6 text-sm text-tinta-suave">
@@ -74,8 +79,13 @@
 </section>
 
 <section class="mt-10">
-  <h2 class="font-display text-xl">Enfeites</h2>
-  <p class="mt-1 text-sm text-tinta-suave">Estes não aumentam seu patrimônio: são só para deixar tudo com a sua cara.</p>
+  <h2 class="flex items-center gap-2 font-display text-xl">
+    Enfeites
+    <span class="dica-info" tabindex="0" aria-describedby="dica-enfeites">
+      <span aria-hidden="true">?</span>
+      <span id="dica-enfeites" role="tooltip" class="dica-info-balao">Itens para customização do perfil</span>
+    </span>
+  </h2>
 
   <% if (resumo.cosmeticos.length === 0) { %>
     <p class="mt-4 rounded-favo bg-white p-6 text-sm text-tinta-suave">Nenhum enfeite por enquanto.</p>

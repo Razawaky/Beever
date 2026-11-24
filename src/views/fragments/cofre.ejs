@@ -21,7 +21,7 @@
 <% } %>
 
 <div class="<%= mostrarTitulo ? 'mt-6 ' : '' %>lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
-  <div>
+  <div class="min-w-0">
     <section class="rounded-favo bg-white p-6 shadow-md">
       <%- include('../partials/ui/badge-recurso', {
         icone: 'mel',
@@ -92,10 +92,10 @@
 
       <%# Os três campos da meta só cabem lado a lado em largura inteira. A partir
           de `lg` a seção é meia coluna em qualquer tela, então ficam dois. %>
-      <form method="POST" action="/cofre/meta" class="mt-4 grid gap-3 sm:grid-cols-3 sm:items-end lg:grid-cols-2">
+      <form method="POST" action="/cofre/meta" class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end lg:grid-cols-2">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
         <input type="hidden" name="voltarPara" value="<%= voltarPara %>" />
-        <div class="grid gap-2">
+        <div class="grid min-w-0 gap-2">
           <label for="valor-meta" class="text-sm font-semibold">Quero juntar</label>
           <input
             id="valor-meta"
@@ -103,24 +103,24 @@
             type="number"
             min="1"
             value="<%= cofre.meta ? cofre.meta.valor : '' %>"
-            class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+            class="w-full min-w-0 rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
           />
         </div>
-        <div class="grid gap-2">
+        <div class="grid min-w-0 gap-2">
           <label for="prazo-meta" class="text-sm font-semibold">Até quando</label>
           <input
             id="prazo-meta"
             name="prazo"
             type="date"
-            class="rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+            class="w-full min-w-0 rounded-favo border border-linha px-4 py-2 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
           />
         </div>
-        <%- include('../partials/ui/botao', { texto: 'Salvar meta', tipo: 'submit', tamanho: 'medio' }) %>
+        <%- include('../partials/ui/botao', { texto: 'Salvar meta', tipo: 'submit', tamanho: 'medio', classe: 'lg:col-span-2' }) %>
       </form>
     </section>
   </div>
 
-  <div>
+  <div class="min-w-0">
     <% /* Simulação "Se você guardar todo mês" ocultada (mantida para referência). */ %>
     <% if (false) { %>
     <section class="mt-8 rounded-favo bg-white p-6 shadow-md lg:mt-0">

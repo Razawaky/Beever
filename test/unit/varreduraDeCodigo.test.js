@@ -44,6 +44,7 @@ function semComentarios(conteudo) {
 const INTERPOLACOES_AUDITADAS = new Set([
   // Constantes de módulo.
   'CAMPOS',
+  'CAMPOS_ADMIN',
   'CAMPOS_PUBLICOS',
   'CAMPOS_DA_CONSULTA',
   'JOINS',

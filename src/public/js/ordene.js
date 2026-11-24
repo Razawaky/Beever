@@ -12,7 +12,7 @@ const botaoConfirmar = document.getElementById('ordene-confirmar');
 const aviso = document.getElementById('ordene-aviso');
 
 const CLASSES_DA_SETA =
-  'h-11 w-11 shrink-0 rounded-pilula border-2 border-linha bg-white font-display text-lg text-tinta transition hover:border-ambar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40';
+  'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-pilula border-2 border-linha bg-white text-tinta transition hover:border-ambar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40';
 
 let itens = [];
 let token = null;

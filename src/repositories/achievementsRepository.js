@@ -7,6 +7,9 @@ import { consultar, consultarEm } from '../config/database.js';
  */
 
 const CAMPOS = 'id, slug, name, description, criterion_type, criterion_target, reward_coins';
+// O painel também mostra o estado; as consultas do jogador continuam escondendo
+// o inativo porque quem as chama é a tela da criança.
+const CAMPOS_ADMIN = `${CAMPOS}, is_active`;
 
 export async function buscarPorSlug(slug, conexao = null) {
   const linhas = await consultarEm(
@@ -73,4 +76,81 @@ export async function listarDoUsuario(idUsuario) {
       ORDER BY ua.unlocked_at, ua.id`,
     [idUsuario],
   );
+}
+
+/**
+ * Consultas do painel administrativo. Conquista não é apagada: `user_achievements`
+ * aponta para ela com ON DELETE RESTRICT, e apagar apagaria o histórico do jogador.
+ * A baixa lógica é `is_active`, igual à dos itens da loja.
+ */
+export async function listarParaAdmin() {
+  return consultar(
+    `SELECT ${CAMPOS_ADMIN}
+       FROM achievements
+      ORDER BY criterion_type, criterion_target, name`,
+  );
+}
+
+export async function buscarParaAdmin(id) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS_ADMIN} FROM achievements WHERE id = ?`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
+export async function slugJaUsado(slug, idParaIgnorar = null) {
+  const linhas = await consultar(
+    'SELECT 1 FROM achievements WHERE slug = ? AND id <> COALESCE(?, 0) LIMIT 1',
+    [slug, idParaIgnorar],
+  );
+  return linhas.length > 0;
+}
+
+export async function criar(dados, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `INSERT INTO achievements (slug, name, description, criterion_type, criterion_target, reward_coins, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      dados.slug,
+      dados.nome,
+      dados.descricao,
+      dados.criterio,
+      dados.alvo,
+      dados.mel,
+      dados.ativo === false ? 0 : 1,
+    ],
+  );
+  return resultado.insertId;
+}
+
+export async function atualizar(id, dados, conexao = null) {
+  await consultarEm(
+    conexao,
+    `UPDATE achievements
+        SET slug = COALESCE(?, slug),
+            name = COALESCE(?, name),
+            description = COALESCE(?, description),
+            criterion_type = COALESCE(?, criterion_type),
+            criterion_target = COALESCE(?, criterion_target),
+            reward_coins = COALESCE(?, reward_coins)
+      WHERE id = ?`,
+    [
+      dados.slug,
+      dados.nome,
+      dados.descricao,
+      dados.criterio,
+      dados.alvo,
+      dados.mel,
+      id,
+    ],
+  );
+}
+
+export async function definirAtivo(id, ativo, conexao = null) {
+  await consultarEm(conexao, 'UPDATE achievements SET is_active = ? WHERE id = ?', [
+    ativo ? 1 : 0,
+    id,
+  ]);
 }

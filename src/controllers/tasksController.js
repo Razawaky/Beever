@@ -3,7 +3,7 @@ import { assincrono } from '../utils/erros.js';
 import { paginaDeVolta, querJson } from '../utils/resposta.js';
 
 export const listar = assincrono(async (req, res) => {
-  res.json(await tasksService.listarDoUsuario(req.session.usuarioId));
+  res.json(await tasksService.listarVisiveisDoDia(req.session.usuarioId));
 });
 
 export const concluir = assincrono(async (req, res) => {

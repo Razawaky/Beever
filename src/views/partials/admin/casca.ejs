@@ -27,6 +27,16 @@
         <%= locals.atual === 'itens' ? 'aria-current="page"' : '' %>
       >Itens</a>
       <a
+        href="/admin/conquistas"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'conquistas' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'conquistas' ? 'aria-current="page"' : '' %>
+      >Conquistas</a>
+      <a
+        href="/admin/tarefas"
+        class="underline-offset-4 hover:underline<%= locals.atual === 'tarefas' ? ' font-semibold underline' : '' %>"
+        <%= locals.atual === 'tarefas' ? 'aria-current="page"' : '' %>
+      >Tarefas</a>
+      <a
         href="/admin/auditoria"
         class="underline-offset-4 hover:underline<%= locals.atual === 'auditoria' ? ' font-semibold underline' : '' %>"
         <%= locals.atual === 'auditoria' ? 'aria-current="page"' : '' %>

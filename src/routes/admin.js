@@ -1,13 +1,18 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 
+import * as adminAchievementsController from '../controllers/adminAchievementsController.js';
 import * as adminContentController from '../controllers/adminContentController.js';
 import * as adminAuditController from '../controllers/adminAuditController.js';
 import * as adminController from '../controllers/adminController.js';
 import * as adminItemsController from '../controllers/adminItemsController.js';
+import * as adminTaskTypesController from '../controllers/adminTaskTypesController.js';
 import { limiteAdministrativo, limiteAutenticacao, limitePorCredencial } from '../middlewares/rateLimiters.js';
 import { requireAdmin } from '../middlewares/requireAdmin.js';
 import { validate } from '../middlewares/validate.js';
+import { ESCOPOS_DE_TAREFA } from '../services/adminTaskTypesService.js';
+import { CRITERIOS } from '../services/criteriosDeConquista.js';
+import { fontesMensuraveis } from '../services/taskProgressSources.js';
 
 /**
  * Rotas da área administrativa, todas sob `/admin`.
@@ -171,6 +176,63 @@ router.post(
   body('ativo').isIn(['true', 'false']),
   validate,
   adminItemsController.alternar,
+);
+
+/**
+ * Conquistas. O critério só aceita o que o sistema sabe medir: permitir texto
+ * livre aqui criaria uma conquista que nunca destrava e que a tela não sabe
+ * mostrar. A regra de pagamento continua no service do jogador.
+ */
+const regrasDeConquista = [
+  body('nome').trim().notEmpty().withMessage('Informe o nome da conquista').isLength({ max: 120 }),
+  body('slug').optional({ values: 'falsy' }).trim().matches(/^[a-z0-9-]+$/).withMessage('Endereço inválido').isLength({ max: 60 }),
+  body('descricao').trim().notEmpty().withMessage('Explique a conquista').isLength({ max: 255 }),
+  body('criterio').isIn(Object.keys(CRITERIOS)).withMessage('Escolha um critério'),
+  body('alvo').isInt({ min: 1, max: 1000000000 }).withMessage('O alvo vai de 1 a 1.000.000.000'),
+  body('mel').isInt({ min: 0, max: 1000000000000 }).withMessage('O bônus não pode ser negativo'),
+];
+
+router.get('/conquistas', adminAchievementsController.listar);
+router.get('/conquistas/novo', adminAchievementsController.formulario);
+router.post('/conquistas', regrasDeConquista, validate, adminAchievementsController.criar);
+router.get('/conquistas/:id', idNaUrl, validate, adminAchievementsController.detalhar);
+router.get('/conquistas/:id/editar', idNaUrl, validate, adminAchievementsController.formulario);
+router.post('/conquistas/:id', idNaUrl, regrasDeConquista, validate, adminAchievementsController.atualizar);
+router.post(
+  '/conquistas/:id/ativo',
+  idNaUrl,
+  body('ativo').isIn(['true', 'false']),
+  validate,
+  adminAchievementsController.alternar,
+);
+
+/**
+ * Tipos de tarefa. Escopo e fonte são listas fechadas, pelas mesmas razões do
+ * critério das conquistas: o gerador só propõe o que o sistema sabe medir, e o
+ * pagamento continua no serviço do jogador.
+ */
+const regrasDeTarefa = [
+  body('nome').trim().notEmpty().withMessage('Informe o nome da tarefa').isLength({ max: 120 }),
+  body('slug').optional({ values: 'falsy' }).trim().matches(/^[a-z0-9-]+$/).withMessage('Endereço inválido').isLength({ max: 60 }),
+  body('escopo').isIn(ESCOPOS_DE_TAREFA).withMessage('Escolha diária ou semanal'),
+  body('fonte').isIn(fontesMensuraveis()).withMessage('Escolha uma fonte conhecida'),
+  body('alvo').isInt({ min: 1, max: 1000000000 }).withMessage('O alvo vai de 1 a 1.000.000.000'),
+  body('polen').isInt({ min: 0, max: 1000000000 }).withMessage('O pólen não pode ser negativo'),
+  body('mel').isInt({ min: 0, max: 1000000000000 }).withMessage('O mel não pode ser negativo'),
+];
+
+router.get('/tarefas', adminTaskTypesController.listar);
+router.get('/tarefas/novo', adminTaskTypesController.formulario);
+router.post('/tarefas', regrasDeTarefa, validate, adminTaskTypesController.criar);
+router.get('/tarefas/:id', idNaUrl, validate, adminTaskTypesController.detalhar);
+router.get('/tarefas/:id/editar', idNaUrl, validate, adminTaskTypesController.formulario);
+router.post('/tarefas/:id', idNaUrl, regrasDeTarefa, validate, adminTaskTypesController.atualizar);
+router.post(
+  '/tarefas/:id/ativo',
+  idNaUrl,
+  body('ativo').isIn(['true', 'false']),
+  validate,
+  adminTaskTypesController.alternar,
 );
 
 router.get('/celulas/:idCelula/conteudo', idDaCelulaNaUrl, validate, adminContentController.formularioDeConteudo);

@@ -18,7 +18,7 @@
   <% } %>
 
   <div class="<%= mostrarTitulo ? 'mt-6' : '' %>">
-    <%- include('../partials/ui/patrimonio-topo', { patrimonio: vitrine.patrimonio }) %>
+    <%- include('../partials/ui/patrimonio-topo', { patrimonio: vitrine.patrimonio, mostrarComposicao: false }) %>
   </div>
 
   <% if (vitrine.itens.length === 0) { %>

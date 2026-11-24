@@ -35,6 +35,7 @@ import * as taskProgressSources from './taskProgressSources.js';
  * E08. Aqui existe a criação avulsa, que é o que a tela usa hoje.
  */
 
+/** Histórico completo, para auditoria. A agenda da tela usa `listarVisiveisDoDia`. */
 export async function listarDoUsuario(idUsuario) {
   return tasksRepository.listarPorUsuario(idUsuario);
 }
@@ -100,6 +101,22 @@ const MAXIMO_DE_ATIVAS = 3;
 
 function paraMySQL(data) {
   return data.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+/**
+ * Tarefas que fazem sentido na tela agora: o que ainda cabe no prazo e o que foi
+ * concluído hoje. O que fechou ontem fica no banco para auditoria, mas não volta
+ * a aparecer na agenda — sem isso a criança vê o mesmo histórico todos os dias.
+ */
+export async function listarVisiveisDoDia(idUsuario, agora = new Date()) {
+  const fuso = await profilesService.fusoDoUsuario(idUsuario);
+  const hoje = dataDoDia(agora, fuso);
+
+  return tasksRepository.listarVisiveisDoDia(
+    idUsuario,
+    paraMySQL(inicioDoDia(hoje, fuso)),
+    paraMySQL(fimDoDia(hoje, fuso)),
+  );
 }
 
 /**

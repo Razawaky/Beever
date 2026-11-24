@@ -27,6 +27,12 @@ const JOINS = `JOIN task_types tt ON tt.id = t.task_type_id
                JOIN task_scopes sc ON sc.id = tt.scope_id
                JOIN goal_statuses st ON st.id = t.status_id`;
 
+// Colunas do catálogo no painel: inclui o inativo e o nome do escopo. A lista
+// que alimenta a geração continua em `listarTipos`, que esconde o inativo.
+const CAMPOS_ADMIN = `tt.id, tt.slug, tt.name, tt.default_target, tt.reward_points,
+                      tt.reward_coins, tt.progress_source, tt.is_active,
+                      sc.slug AS scope, sc.name AS escopo_nome`;
+
 export async function listarPorUsuario(idUsuario) {
   return consultar(
     `SELECT ${CAMPOS}
@@ -46,6 +52,27 @@ export async function listarAtivasPorUsuario(idUsuario) {
       WHERE t.user_id = ? AND st.slug = 'ativa'
       ORDER BY t.due_at, t.id`,
     [idUsuario],
+  );
+}
+
+/**
+ * O que a tela mostra como "tarefas do dia": o que ainda pode ser feito no prazo
+ * atual e o que foi concluído hoje. Concluídas de ontem e vencidas ficam no banco
+ * para auditoria, mas não voltam para a lista — senão a tela vira um histórico
+ * repetido em vez de uma agenda.
+ */
+export async function listarVisiveisDoDia(idUsuario, desde, ate) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM tasks t
+       ${JOINS}
+      WHERE t.user_id = ?
+        AND (
+          (st.slug = 'ativa' AND t.due_at >= NOW())
+          OR (st.slug = 'concluida' AND t.completed_at >= ? AND t.completed_at < ?)
+        )
+      ORDER BY t.due_at, t.id`,
+    [idUsuario, desde, ate],
   );
 }
 
@@ -188,6 +215,70 @@ export async function listarTipos() {
       WHERE tt.is_active = 1
       ORDER BY sc.slug, tt.name`,
   );
+}
+
+/** Consultas do painel. Tipo não é apagado: `tasks` aponta para ele com ON DELETE RESTRICT. */
+export async function listarTiposParaAdmin() {
+  return consultar(
+    `SELECT ${CAMPOS_ADMIN}
+       FROM task_types tt
+       JOIN task_scopes sc ON sc.id = tt.scope_id
+      ORDER BY sc.slug, tt.name`,
+  );
+}
+
+export async function buscarTipoParaAdmin(id) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS_ADMIN}
+       FROM task_types tt
+       JOIN task_scopes sc ON sc.id = tt.scope_id
+      WHERE tt.id = ?`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
+export async function slugTipoJaUsado(slug, idParaIgnorar = null) {
+  const linhas = await consultar(
+    'SELECT 1 FROM task_types WHERE slug = ? AND id <> COALESCE(?, 0) LIMIT 1',
+    [slug, idParaIgnorar],
+  );
+  return linhas.length > 0;
+}
+
+export async function criarTipo(dados, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `INSERT INTO task_types (slug, name, scope_id, progress_source, default_target, reward_points, reward_coins)
+     SELECT ?, ?, sc.id, ?, ?, ?, ?
+       FROM task_scopes sc
+      WHERE sc.slug = ?`,
+    [dados.slug, dados.nome, dados.fonte, dados.alvo, dados.polen, dados.mel, dados.escopo],
+  );
+  return resultado.insertId;
+}
+
+export async function atualizarTipo(id, dados, conexao = null) {
+  await consultarEm(
+    conexao,
+    `UPDATE task_types
+        SET slug = COALESCE(?, slug),
+            name = COALESCE(?, name),
+            scope_id = COALESCE((SELECT id FROM task_scopes WHERE slug = ?), scope_id),
+            progress_source = COALESCE(?, progress_source),
+            default_target = COALESCE(?, default_target),
+            reward_points = COALESCE(?, reward_points),
+            reward_coins = COALESCE(?, reward_coins)
+      WHERE id = ?`,
+    [dados.slug, dados.nome, dados.escopo, dados.fonte, dados.alvo, dados.polen, dados.mel, id],
+  );
+}
+
+export async function definirTipoAtivo(id, ativo, conexao = null) {
+  await consultarEm(conexao, 'UPDATE task_types SET is_active = ? WHERE id = ?', [
+    ativo ? 1 : 0,
+    id,
+  ]);
 }
 
 /**
