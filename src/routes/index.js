@@ -55,6 +55,10 @@ const regrasSenhaDaConta = [
   }),
 ];
 
+const regrasVerificarSenhaConta = [
+  body('senha').isString().notEmpty().withMessage('Digite a senha da conta.'),
+];
+
 // RN-050: os dois interruptores aceitos pelo formulário e pelo JSON do painel de
 // acessibilidade. A ausência é permitida para quem mexe só numa das duas.
 const valorDeInterruptor = (valor) => [true, false, 'true', 'false', 'on', 'off', '1', '0'].includes(valor);
@@ -105,6 +109,13 @@ router.post(
 );
 router.get('/painel', requireOnboarding, paginaController.painel);
 router.get('/painel/configuracoes', requireOnboarding, settingsController.mostrar);
+router.post(
+  '/painel/configuracoes/verificar-senha',
+  requireOnboarding,
+  regrasVerificarSenhaConta,
+  validate,
+  settingsController.verificarSenhaConta,
+);
 router.post(
   '/painel/configuracoes/preferencias',
   requireOnboarding,

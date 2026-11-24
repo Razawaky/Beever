@@ -54,6 +54,17 @@
         <img src="<%= item.image_path %>" alt="Ilustração atual de <%= item.name %>" width="96" height="96"
           class="mt-2 h-24 w-24 rounded object-cover" />
       <% } %>
+
+      <label class="mt-4 flex items-center gap-3 text-sm">
+        <input
+          type="checkbox"
+          name="mostrarImagemNaLoja"
+          class="interruptor-input"
+          <%= !item || item.show_image_in_store ? 'checked' : '' %>
+        />
+        <span class="interruptor" aria-hidden="true"></span>
+        <span>Mostrar imagem na loja</span>
+      </label>
     </div>
 
     <div>

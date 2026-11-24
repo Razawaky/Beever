@@ -222,24 +222,14 @@ export const criarPerfil = assincrono(async (req, res) => {
 });
 
 /**
- * A Colmeia (RF-HOM-01 a 09). O controller não orquestra nada: quem aplica os
- * efeitos da visita e monta os blocos é o `homeService`, e o mesmo endereço
- * responde JSON para quem pedir.
+ * O painel principal agora é a trilha.
  */
 export const painel = assincrono(async (req, res) => {
-  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
-  if (querJson(req)) return res.json(colmeia);
-
-  renderizarPagina(res, 'painel', {
-    titulo: `${colmeia.jogador.apelido} — Beever`,
-    classeBody: FUNDO_COLMEIA,
-    colmeia,
-    secao: 'colmeia',
-    // O admin que entra pelo login comum cai aqui, e sem este atalho a área
-    // administrativa só abria digitando o endereço.
-    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
-    scripts: ['/js/painel.js'],
-  });
+  if (querJson(req)) {
+    const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+    return res.json(colmeia);
+  }
+  return res.redirect('/painel/trilha');
 });
 
 /**

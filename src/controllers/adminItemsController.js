@@ -98,6 +98,7 @@ function dadosDoItem(req) {
     rendaPorCiclo: Number(req.body.rendaPorCiclo),
     idItemDeOrigem: req.body.idItemDeOrigem ? Number(req.body.idItemDeOrigem) : null,
     ehConsumivel: req.body.ehConsumivel === 'on' || req.body.ehConsumivel === 'true',
+    mostrarImagemNaLoja: req.body.mostrarImagemNaLoja === 'on' || req.body.mostrarImagemNaLoja === 'true' || req.body.mostrarImagemNaLoja === true,
     tipoCosmetico: req.body.tipoCosmetico || null,
     camadaCosmetica: req.body.camadaCosmetica || null,
     requisitos: adminItemsService.requisitosDoFormulario(linhas),

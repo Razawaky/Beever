@@ -43,7 +43,6 @@ const etapas = [
     pergunta: 'Escolha seu Beenie e a cor de fundo',
     subtitulo: 'Veja a prévia e escolha como seu perfil vai aparecer.',
     tipo: 'avatar',
-x
   },
   {
     id: 'preferencias',

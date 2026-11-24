@@ -31,8 +31,20 @@
     <% } else { %>
       <div class="grid gap-10 md:grid-cols-[minmax(0,1fr)_20rem] md:items-start">
         <ol class="favo-trilha space-y-8">
+          <% let faixaAnterior = null; %>
           <% trilha.forEach((favo) => { %>
+            <% const faixaAtual = favo.age_band_code ?? favo.age_band_id; %>
+            <% if (faixaAnterior && faixaAtual !== faixaAnterior) { %>
+              <li aria-hidden="true" class="py-2">
+                <div class="flex items-center gap-3">
+                  <div class="h-px flex-1 bg-linha"></div>
+                  <span class="favo-hexagono h-5 w-5 shrink-0 bg-linha"></span>
+                  <div class="h-px flex-1 bg-linha"></div>
+                </div>
+              </li>
+            <% } %>
             <li><%- include('../partials/ui/favo-card', { favo, nivel: 2, caminhoBase }) %></li>
+            <% faixaAnterior = faixaAtual; %>
           <% }) %>
         </ol>
 

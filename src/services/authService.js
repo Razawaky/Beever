@@ -28,6 +28,34 @@ export async function autenticar({ email, senha }) {
   return concluirLogin(usuario, 'senha');
 }
 
+/** Confirma a senha da conta atual antes de abrir áreas sensíveis nas configurações. */
+export async function verificarSenhaDaConta(idConta, senha) {
+  if (!senha || !String(senha).trim()) {
+    throw new ErroAplicacao('Digite a senha da conta para continuar.', {
+      status: 400,
+      codigo: 'SENHA_OBRIGATORIA',
+    });
+  }
+
+  const usuario = await usersRepository.buscarPorIdComSenha(idConta);
+  if (!usuario || !usuario.password_hash) {
+    throw new ErroAplicacao('Não foi possível confirmar a senha desta conta.', {
+      status: 400,
+      codigo: 'SENHA_INDISPONIVEL',
+    });
+  }
+
+  const senhaCorreta = await bcrypt.compare(String(senha), usuario.password_hash);
+  if (!senhaCorreta) {
+    throw new ErroAplicacao('Senha incorreta. Tente novamente.', {
+      status: 401,
+      codigo: 'SENHA_INCORRETA',
+    });
+  }
+
+  return true;
+}
+
 /**
  * Parte do login que vale para senha e para Google: confere se a conta está ativa,
  * registra a entrada e devolve o que vai para a sessão.

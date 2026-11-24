@@ -258,10 +258,10 @@
                           <%= corAtual === cor.valor ? 'checked' : '' %>
                         />
                         <span
-                      class="flex items-center justify-center rounded-favo border-2 border-linha bg-white p-2 transition hover:border-ambar peer-checked:border-mel peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
-                    >
-                      <span class="h-10 w-10 rounded-pilula border-2 border-tinta/15 ring-1 ring-linha <%= cor.classe %>" aria-hidden="true"></span>
-                    </span>
+                          class="flex items-center justify-center rounded-favo border-2 border-linha bg-white p-2 transition hover:border-ambar peer-checked:border-mel peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                        >
+                          <span class="h-10 w-10 rounded-pilula border-2 border-tinta/15 ring-1 ring-linha <%= cor.classe %>" aria-hidden="true"></span>
+                        </span>
                       </label>
                     <% }) %>
                   </div>
@@ -301,11 +301,8 @@
                           <%= cosmeticoEquipadoId === Number(cosmetico.itemId) ? 'checked' : '' %>
                         />
                         <span
-                          class="flex min-h-16 flex-col items-center justify-center gap-2 rounded-favo border-2 border-linha bg-cera px-3 py-3 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                          class="flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
                         >
-                          <% if (cosmetico.imagem) { %>
-                            <img src="<%= cosmetico.imagem %>" alt="" width="56" height="56" class="h-14 w-14 object-contain" />
-                          <% } %>
                           <span class="text-sm font-semibold leading-tight text-tinta"><%= cosmetico.nome %></span>
                         </span>
                       </label>
@@ -346,11 +343,8 @@
                           <%= cosmeticoFundoEquipadoId === Number(cosmetico.itemId) ? 'checked' : '' %>
                         />
                         <span
-                          class="flex min-h-16 flex-col items-center justify-center gap-2 rounded-favo border-2 border-linha bg-cera px-3 py-3 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                          class="flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
                         >
-                          <% if (cosmetico.imagem) { %>
-                            <img src="<%= cosmetico.imagem %>" alt="" width="56" height="56" class="h-14 w-14 object-contain" />
-                          <% } %>
                           <span class="text-sm font-semibold leading-tight text-tinta"><%= cosmetico.nome %></span>
                         </span>
                       </label>

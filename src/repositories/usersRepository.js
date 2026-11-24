@@ -40,6 +40,20 @@ export async function buscarPorId(id) {
   return linhas[0] ?? null;
 }
 
+/** Inclui o hash da senha: usado para confirmar a senha da conta em ações sensíveis. */
+export async function buscarPorIdComSenha(id) {
+  const linhas = await consultar(
+    `SELECT u.id, u.email, u.password_hash, u.is_active,
+            (a.id IS NOT NULL) AS eh_admin
+       FROM users u
+       LEFT JOIN admins a ON a.user_id = u.id
+      WHERE u.id = ?
+        AND u.owner_user_id IS NULL`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
 /** Inclui o hash da senha: usado pelo login, que precisa comparar, e pelo vínculo com o Google. */
 export async function buscarPorEmailComSenha(email) {
   const linhas = await consultar(

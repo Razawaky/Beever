@@ -57,14 +57,25 @@ function montarPagina(req, res, dados, { status = 200, alterado = null, erro = n
     alterado,
     erro,
     mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
-    // `painel.js` cuida do diálogo de saída que continua na lateral.
-    scripts: ['/js/painel.js'],
+    // `painel.js` cuida do diálogo de saída; `configuracoes.js` protege a área da conta.
+    scripts: ['/js/painel.js', '/js/configuracoes.js'],
   });
 }
 
 export const mostrar = assincrono(async (req, res) => {
   const dados = await carregarDados(req);
   return montarPagina(req, res, dados, { alterado: req.query.alterado ?? null });
+});
+
+/** Confirma a senha da conta antes de revelar configurações avançadas. */
+export const verificarSenhaConta = assincrono(async (req, res) => {
+  try {
+    await authService.verificarSenhaDaConta(idDaConta(req), req.body.senha);
+    return res.json({ ok: true });
+  } catch (erro) {
+    if (!(erro instanceof ErroAplicacao)) throw erro;
+    return res.status(erro.status).json({ erro: erro.message });
+  }
 });
 
 /** Caixa marcada chega como `"on"` no formulário e como `true` no JSON. */

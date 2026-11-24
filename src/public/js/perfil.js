@@ -357,6 +357,43 @@ dialogoAvatar?.addEventListener('cancel', () => {
   restaurarSelecaoAvatar();
 });
 
+const chaveCosmeticosPerfilVistos = (formAvatar?.dataset.perfilId || perfilId)
+  ? `beever:perfil:${formAvatar?.dataset.perfilId || perfilId}:cosmeticos-perfil-vistos`
+  : null;
+
+function lerCosmeticosPerfilVistos() {
+  if (!chaveCosmeticosPerfilVistos) return new Set();
+  try {
+    const ids = JSON.parse(localStorage.getItem(chaveCosmeticosPerfilVistos) || '[]');
+    return new Set(Array.isArray(ids) ? ids.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function marcarCosmeticoPerfilVisto(itemId) {
+  if (!chaveCosmeticosPerfilVistos || !itemId) return;
+  const vistos = lerCosmeticosPerfilVistos();
+  vistos.add(String(itemId));
+  try {
+    localStorage.setItem(chaveCosmeticosPerfilVistos, JSON.stringify([...vistos]));
+  } catch {
+    // Sem armazenamento disponível: a bolinha some só nesta tela.
+  }
+}
+
+function aplicarCosmeticosPerfilVistos() {
+  const vistos = lerCosmeticosPerfilVistos();
+  formAvatar?.querySelectorAll('input[name="cosmetico_perfil_equipado_item_id"]').forEach((radio) => {
+    if (!vistos.has(String(radio.value))) return;
+    radio.closest('label')?.querySelectorAll('[data-novo-bolinha]').forEach((el) => {
+      el.classList.add('hidden');
+    });
+  });
+}
+
+aplicarCosmeticosPerfilVistos();
+
 formAvatar?.addEventListener('click', (evento) => {
   const aba = evento.target.closest('[data-aba-avatar]')?.dataset.abaAvatar;
   if (aba) selecionarAbaAvatar(aba);
@@ -380,6 +417,7 @@ formAvatar?.addEventListener('change', (evento) => {
       radio.checked = false;
     });
     if (evento.target.value) {
+      marcarCosmeticoPerfilVisto(evento.target.value);
       evento.target.closest('label')?.querySelectorAll('[data-novo-bolinha]').forEach((el) => {
         el.classList.add('hidden');
       });

@@ -6,7 +6,8 @@
   <div>
     <%# A arte é opcional: o catálogo do seed não tem, e a cadastrada pelo painel
         chega sempre em WebP com dimensões escritas, para não haver salto. -%>
-    <% if (item.image_path) { %>
+    <% const mostrarImagemNaLoja = item.show_image_in_store === undefined || item.show_image_in_store === null || Boolean(item.show_image_in_store); %>
+    <% if (item.image_path && mostrarImagemNaLoja) { %>
       <img src="<%= item.image_path %>" alt="" width="800" height="800"
         class="mb-4 aspect-square w-full rounded-favo bg-cera object-contain" />
     <% } %>

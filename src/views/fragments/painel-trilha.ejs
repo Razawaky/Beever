@@ -28,12 +28,24 @@
         </div>
         <% } else { %>
         <ol class="favo-trilha mt-4 space-y-6">
+            <% let faixaAnterior = null; %>
             <% colmeia.trilha.forEach((favo) => { %>
+            <% const faixaAtual = favo.age_band_code ?? favo.age_band_id; %>
+            <% if (faixaAnterior && faixaAtual !== faixaAnterior) { %>
+              <li aria-hidden="true" class="py-1">
+                <div class="flex items-center gap-3">
+                  <div class="h-px flex-1 bg-linha"></div>
+                  <span class="favo-hexagono h-5 w-5 shrink-0 bg-linha"></span>
+                  <div class="h-px flex-1 bg-linha"></div>
+                </div>
+              </li>
+            <% } %>
             <li>
                 <div class="<%= favo.emFoco ? 'rounded-favo bg-cera p-4' : 'opacity-80' %>">
                 <%- include('../partials/ui/favo-card', { favo, compacto: !favo.emFoco, caminhoBase: '/painel/trilha' }) %>
                 </div>
             </li>
+            <% faixaAnterior = faixaAtual; %>
             <% }) %>
         </ol>
         <% } %>

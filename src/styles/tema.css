@@ -132,7 +132,7 @@
 
 .beenie-balao {
   position: relative;
-  max-width: 16rem;
+  max-width: 18rem;
 }
 
 .beenie-balao::after {
@@ -302,4 +302,49 @@
   width: 100%;
   max-width: 100%;
   height: auto;
+}
+
+/* Switch simples para formulários administrativos. */
+.interruptor-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.interruptor {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  align-items: center;
+  border-radius: 9999px;
+  background: #cfcac0;
+  transition: background-color 0.2s;
+}
+.interruptor::after {
+  content: '';
+  display: block;
+  height: 1.125rem;
+  width: 1.125rem;
+  border-radius: 9999px;
+  background: #fff;
+  margin-left: 0.1875rem;
+  transition: transform 0.2s;
+}
+.interruptor-input:checked + .interruptor {
+  background: #f5b041;
+}
+.interruptor-input:checked + .interruptor::after {
+  transform: translateX(1.25rem);
+}
+.interruptor-input:focus-visible + .interruptor {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
 }
