@@ -7,6 +7,7 @@ import * as adminAuditController from '../controllers/adminAuditController.js';
 import * as adminController from '../controllers/adminController.js';
 import * as adminItemsController from '../controllers/adminItemsController.js';
 import * as adminTaskTypesController from '../controllers/adminTaskTypesController.js';
+import { erroDeLogin } from '../middlewares/erroDeLogin.js';
 import { limiteAdministrativo, limiteAutenticacao, limitePorCredencial } from '../middlewares/rateLimiters.js';
 import { requireAdmin } from '../middlewares/requireAdmin.js';
 import { validate } from '../middlewares/validate.js';
@@ -31,7 +32,15 @@ const regrasLogin = [
 router.get('/login', adminController.paginaDeLogin);
 // A porta administrativa é o alvo de maior valor do sistema: leva os dois
 // limites, o do endereço e o da credencial.
-router.post('/login', limiteAutenticacao, limitePorCredencial, regrasLogin, validate, adminController.login);
+router.post(
+  '/login',
+  limiteAutenticacao,
+  limitePorCredencial,
+  regrasLogin,
+  validate,
+  adminController.login,
+  erroDeLogin({ pagina: 'admin/login', titulo: 'Administração — Beever' }),
+);
 
 router.use(requireAdmin);
 

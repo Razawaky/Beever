@@ -154,6 +154,37 @@ describe('recusas da autenticação', opcoes, () => {
     assert.equal(senhaErrada.status, contaInexistente.status);
   });
 
+  it('credencial inválida volta ao formulário com aviso e borda vermelha', async () => {
+    const resposta = await agente
+      .post('/sessao/login')
+      .set('Accept', 'text/html')
+      .send({ email: 'ninguem@beever.dev', senha: 'senhaerrada1', _csrf: csrf })
+      .expect(401);
+
+    // Continua no formulário — nada de página de erro separada.
+    assert.match(resposta.text, /<h1[^>]*>Entrar<\/h1>/);
+    assert.match(resposta.text, /E-mail ou senha inválidos/);
+    assert.match(resposta.text, /data-icone="aviso"/);
+    assert.match(resposta.text, /border-erro/);
+    assert.match(resposta.text, /aria-invalid="true"/);
+    assert.ok(!resposta.text.includes('Erro 401 —'), 'não pode cair na tela técnica');
+    assert.ok(!resposta.text.includes('senhaerrada1'), 'a senha digitada não volta para a página');
+    assert.match(resposta.text, /value="ninguem@beever.dev"/, 'o e-mail digitado volta para o campo');
+  });
+
+  it('e-mail malformado marca só o campo do e-mail', async () => {
+    const resposta = await agente
+      .post('/sessao/login')
+      .set('Accept', 'text/html')
+      .send({ email: 'nao-e-um-email', senha: 'beever123', _csrf: csrf })
+      .expect(422);
+
+    assert.match(resposta.text, /E-mail inválido/);
+    assert.match(resposta.text, /id="email-erro"/);
+    assert.ok(!resposta.text.includes('id="senha-erro"'));
+    assert.match(resposta.text, /<h1[^>]*>Entrar<\/h1>/);
+  });
+
   it('conta inativa não entra, mesmo com a senha certa', async () => {
     await banco.conexao.query('UPDATE users SET is_active = 0 WHERE email = ?', [CONTA.email]);
     const resposta = await agente

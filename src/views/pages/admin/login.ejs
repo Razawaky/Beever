@@ -10,6 +10,10 @@
     <h1 class="mt-6 text-3xl font-bold">Administração</h1>
     <p class="mt-2 text-tinta-suave">Entre com uma conta de administrador.</p>
 
+    <% if (locals.erro) { %>
+      <%- include('../../partials/ui/aviso-de-erro') %>
+    <% } %>
+
     <form method="POST" action="/admin/login" class="mt-8 space-y-4">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
@@ -21,8 +25,14 @@
           type="email"
           required
           autocomplete="email"
-          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          value="<%= locals.email || '' %>"
+          aria-invalid="<%= Boolean(locals.erroDeEmail) %>"
+          <% if (locals.mensagemEmail) { %>aria-describedby="email-erro"<% } %>
+          class="w-full rounded-lg border <%= locals.erroDeEmail ? 'border-erro focus:border-erro' : 'border-linha focus:border-mel' %> px-4 py-3 text-sm focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
         />
+        <% if (locals.mensagemEmail) { %>
+          <p id="email-erro" class="mt-1 text-xs font-medium text-erro-texto"><%= mensagemEmail %></p>
+        <% } %>
       </div>
 
       <div>
@@ -33,8 +43,13 @@
           type="password"
           required
           autocomplete="current-password"
-          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          aria-invalid="<%= Boolean(locals.erroDeSenha) %>"
+          <% if (locals.mensagemSenha) { %>aria-describedby="senha-erro"<% } %>
+          class="w-full rounded-lg border <%= locals.erroDeSenha ? 'border-erro focus:border-erro' : 'border-linha focus:border-mel' %> px-4 py-3 text-sm focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
         />
+        <% if (locals.mensagemSenha) { %>
+          <p id="senha-erro" class="mt-1 text-xs font-medium text-erro-texto"><%= mensagemSenha %></p>
+        <% } %>
       </div>
 
       <%- include('../../partials/ui/botao', { texto: 'Entrar', tipo: 'submit', classe: 'w-full' }) %>

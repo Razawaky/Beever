@@ -1,0 +1,26 @@
+<%#
+  Alerta de formulário que fica na própria tela: caixa com ícone, borda vermelha
+  e mensagem. Não é modal nem página de erro — a pessoa continua no formulário
+  e vê o que aconteceu ao lado dos campos. A cor nunca vem sozinha: o ícone e as
+  palavras carregam o significado (RNF-25).
+-%>
+<div
+  role="alert"
+  aria-live="assertive"
+  class="mt-6 flex gap-3 rounded-favo border-2 border-erro bg-white p-4 text-sm text-erro-texto shadow-painel"
+>
+  <%- svgIcone('aviso', 'h-5 w-5 shrink-0 text-erro-texto') %>
+  <div>
+    <p class="font-semibold"><%= erro %></p>
+    <% if (locals.dicaErro) { %>
+      <p class="mt-1 text-tinta-suave"><%= dicaErro %></p>
+    <% } %>
+    <% if (locals.mensagensErro && mensagensErro.length > 0) { %>
+      <ul class="mt-1 list-disc space-y-0.5 pl-5 text-xs text-tinta-suave">
+        <% mensagensErro.forEach((mensagem) => { %>
+          <li><%= mensagem %></li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</div>

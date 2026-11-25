@@ -9,6 +9,7 @@ import {
   limitePorCredencial,
   limiteRecuperacaoDeSenha,
 } from '../middlewares/rateLimiters.js';
+import { erroDeLogin } from '../middlewares/erroDeLogin.js';
 import { requireAuth } from '../middlewares/requireAuth.js';
 import { validate } from '../middlewares/validate.js';
 import { exigirApelidoPublico } from '../services/apelidoPublico.js';
@@ -58,7 +59,15 @@ const regrasCadastroPeloGoogle = [
     .withMessage('Confirmação de responsável inválida'),
 ];
 
-router.post('/login', limiteAutenticacao, limitePorCredencial, regrasLogin, validate, authController.login);
+router.post(
+  '/login',
+  limiteAutenticacao,
+  limitePorCredencial,
+  regrasLogin,
+  validate,
+  authController.login,
+  erroDeLogin(),
+);
 router.post(
   '/recuperar-senha',
   limiteRecuperacaoDeSenha,

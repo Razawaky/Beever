@@ -47,6 +47,7 @@ const CAMINHOS = {
   brilho:
     '<path d="M12 3l1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3Z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15Z"/>',
   check: '<path d="m5 13 4 4L19 7"/>',
+  aviso: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5"/><path d="M12 16h.01"/>',
   marcado: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/>',
   desmarcado: '<rect x="4" y="4" width="16" height="16" rx="3"/>',
   acessibilidade:
