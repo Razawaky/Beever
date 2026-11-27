@@ -1,0 +1,9 @@
+/* O painel lateral do login é âmbar, então o mel do padrão de favos sumiria.
+   Aqui o traço vira cera e fica só na textura: o fundo continua âmbar. */
+.login-favos.favos-de-fundo {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='96' viewBox='0 0 56 96'%3E%3Cpath fill='none' stroke='%23FFFDF7' stroke-width='6' stroke-linejoin='round' stroke-linecap='round' d='M28 0L56 16V48L28 64L0 48V16Z M0 48L-28 64V96L0 112L28 96V64 M56 48L84 64V96L56 112L28 96'/%3E%3C/svg%3E");
+}
+
+.login-favos.camada-meio {
+  opacity: 0.16;
+}

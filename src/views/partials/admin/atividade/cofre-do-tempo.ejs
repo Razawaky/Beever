@@ -1,0 +1,15 @@
+<%#
+  Cofre do Tempo: a simulação inteira cabe em sete campos, porque o jogo não tem
+  lista nenhuma — é uma decisão por ciclo.
+-%>
+<div class="space-y-3">
+  <%- include('campos', { nome: 'enunciado', rotulo: 'Enunciado', valor: corpo?.enunciado, id: 'enunciado' }) %>
+  <%- include('campos', { nome: 'nomeDoCiclo', rotulo: 'Como o ciclo se chama', valor: corpo?.nomeDoCiclo ?? 'semana', dica: 'Aparece na tela: "semana 1 de 6".', id: 'nome-do-ciclo' }) %>
+  <div class="grid gap-3 sm:grid-cols-2">
+    <%- include('campos', { nome: 'entradaPorCiclo', rotulo: 'Quanto entra por ciclo', valor: corpo?.entradaPorCiclo ?? 10, tipo: 'number', minimo: 1, id: 'entrada' }) %>
+    <%- include('campos', { nome: 'minimoPorCiclo', rotulo: 'Mínimo a guardar por ciclo', valor: corpo?.minimoPorCiclo ?? 0, tipo: 'number', minimo: 0, id: 'minimo' }) %>
+    <%- include('campos', { nome: 'taxaPorCiclo', rotulo: 'Taxa por ciclo, em %', valor: corpo?.taxaPorCiclo ?? 10, tipo: 'number', minimo: 1, maximo: 100, id: 'taxa' }) %>
+    <%- include('campos', { nome: 'ciclos', rotulo: 'Quantos ciclos', valor: corpo?.ciclos ?? 6, tipo: 'number', minimo: 1, id: 'ciclos' }) %>
+    <%- include('campos', { nome: 'meta', rotulo: 'Meta a alcançar', valor: corpo?.meta ?? 60, tipo: 'number', minimo: 1, id: 'meta' }) %>
+  </div>
+</div>

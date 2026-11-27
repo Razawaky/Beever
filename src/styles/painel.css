@@ -1,0 +1,14 @@
+/* Fundo de favos do miolo do painel.
+ *
+ * É a mesma textura do onboarding (`favos-de-fundo`), mas presa à `<main>` em
+ * vez de ficar dentro dos cartões. Os blocos brancos continuam por cima; o
+ * padrão aparece no fundo ao redor deles e nos vãos. A camada usa a opacidade
+ * e o tamanho da `camada-meio` da landing, que é a medida usada no onboarding. */
+.main-favos {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: 84px 144px;
+  opacity: 0.1;
+}

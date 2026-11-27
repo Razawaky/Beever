@@ -1,0 +1,45 @@
+<%#
+  O miolo das conquistas (RF-GAM-01). Cada família é uma escada de quatro
+  degraus, e o que ainda não foi conquistado aparece com o alvo à vista. Tudo
+  chega pronto do `conquistasDoJogador`: a tela não faz conta.
+
+  A página `/conquistas` e a seção `/painel/conquistas` usam este mesmo miolo;
+  `comTitulo` evita o título repetido quando a casca já traz um no cabeçalho.
+-%>
+<%
+  const mostrarTitulo = locals.comTitulo !== false;
+%>
+
+<% if (mostrarTitulo) { %>
+  <h2 class="font-display text-2xl font-bold text-tinta">Minhas conquistas</h2>
+<% } %>
+
+<p class="<%= mostrarTitulo ? 'mt-6 ' : '' %>rounded-favo bg-white p-5 text-sm tabular-nums shadow-md">
+  Você já conquistou <strong><%= catalogo.desbloqueadas %></strong> de <%= catalogo.total %> conquistas.
+</p>
+
+<% catalogo.familias.forEach((familia) => { %>
+  <section class="mt-10">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h2 class="font-display text-xl">
+        <span aria-hidden="true"><%= iconeDaConquista(familia.criterio) %></span> <%= familia.titulo %>
+      </h2>
+      <p class="text-sm tabular-nums text-tinta-suave">
+        <% if (familia.falta === null) { %>
+          Escada completa!
+        <% } else { %>
+          Faltam <%= familia.falta %> para o próximo degrau
+        <% } %>
+      </p>
+    </div>
+
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+      <% familia.conquistas.forEach((conquista) => { %>
+        <%- include('../partials/ui/conquista-card', {
+          conquista,
+          icone: iconeDaConquista(familia.criterio),
+        }) %>
+      <% }) %>
+    </ul>
+  </section>
+<% }) %>

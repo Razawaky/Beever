@@ -1,0 +1,14 @@
+<%#
+  Área do Quadrinho Interativo (RF-JOG-10): um painel por vez, com a imagem em
+  cima e o texto embaixo. Painel de narrativa só avança; painel de escolha espera
+  a decisão. Quem preenche é o `quadrinho.js`.
+-%>
+<figure class="mt-6">
+  <img id="quadrinho-imagem" src="" alt="" width="800" height="600"
+    class="hidden aspect-[4/3] w-full rounded-favo object-cover" />
+  <figcaption id="quadrinho-texto" tabindex="-1" class="mt-4 font-display text-xl text-tinta" aria-live="polite"></figcaption>
+</figure>
+
+<ul id="quadrinho-escolhas" class="mt-5 space-y-3"></ul>
+
+<%- include('../ui/botao', { texto: 'Continuar', id: 'quadrinho-avancar', classe: 'mt-6 w-full' }) %>

@@ -1,0 +1,52 @@
+<%# O fundo repete os favos da landing. Fica preso à janela para continuar
+    cheio mesmo quando o formulário passa de uma tela; o conteúdo sobe para
+    `z-index: 10` para o padrão nunca competir com o texto. -%>
+<div class="onboarding-favos camada-de-favos camada-meio favos-de-fundo" aria-hidden="true"></div>
+
+<main class="relative z-10 w-full max-w-md">
+  <h1 class="sr-only">Configuração da conta</h1>
+
+  <div class="mb-8">
+    <div class="mb-2 flex justify-between text-xs font-bold uppercase tracking-wide text-tinta-suave">
+      <span id="progress-label">Configuração</span>
+      <span id="progress-text">0%</span>
+    </div>
+
+    <div class="h-3 overflow-hidden rounded-pilula bg-white">
+      <div
+        id="progress-bar"
+        class="barra-0 h-full bg-mel transition-all duration-500 ease-out"
+        role="progressbar"
+        aria-labelledby="progress-label"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      ></div>
+    </div>
+  </div>
+
+  <form id="form-onboarding" class="relative mt-8 rounded-favo bg-white p-8 text-tinta shadow-lg">
+    <div id="mascote-onboarding" class="onboarding-mascote" aria-hidden="true"></div>
+
+    <div id="etapa-conteudo" class="relative z-10"></div>
+
+    <p id="erro-onboarding" class="relative z-10 mt-4 hidden text-sm text-erro-texto"></p>
+
+    <div class="relative z-10 mt-8 flex gap-4">
+      <button
+        type="button"
+        id="btn-voltar"
+        class="hidden rounded-favo px-6 py-3 font-bold text-tinta-suave hover:text-tinta"
+      >
+        Voltar
+      </button>
+      <%- include('../partials/ui/botao', { texto: 'Continuar', tipo: 'submit', id: 'btn-avancar', classe: 'flex-1' }) %>
+    </div>
+  </form>
+
+  <p class="relative z-10 mt-6 text-center">
+    <a href="/perfis" class="text-sm font-semibold text-tinta-suave underline hover:text-tinta">
+      Trocar de perfil
+    </a>
+  </p>
+</main>

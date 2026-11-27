@@ -1,0 +1,250 @@
+/* Demo isolada: nada aqui entra no CSS do app. As fontes são as mesmas do
+   Beever, servidas pelo próprio projeto. */
+
+@font-face {
+  font-family: 'Beever Texto';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/nunito-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Beever Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/lilita-one-latin.woff2') format('woff2');
+}
+
+:root {
+  --mel: #ffc200;
+  --nectar: #ffde00;
+  --tinta: #241d0b;
+  --tinta-suave: #6b5a35;
+  --creme: #fff8e8;
+  --cera: #f3e7c8;
+  --linha: #d9c79c;
+  --verde: #2f9e44;
+  --palco: #1b1508;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: #f7edd4;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 50% -10%, #fffdf5 0, #f7edd4 52%, #efe0bd 100%);
+  color: var(--tinta);
+  font-family: 'Beever Texto', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.demo {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: 28px 16px 48px;
+}
+
+.demo__cabecalho {
+  max-width: 760px;
+  margin: 0 auto 20px;
+  text-align: center;
+}
+
+.demo__selo {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 6px 12px;
+  border: 1px solid var(--linha);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--tinta-suave);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.demo__titulo {
+  margin: 0;
+  font-family: 'Beever Display', Georgia, serif;
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--tinta);
+}
+
+.demo__resumo {
+  max-width: 620px;
+  margin: 12px auto 0;
+  color: var(--tinta-suave);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.demo__palco {
+  padding: 12px;
+  border: 1px solid #3a2f16;
+  border-radius: 26px;
+  background: var(--palco);
+  box-shadow:
+    0 24px 60px rgba(67, 48, 8, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.demo__canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--palco);
+  touch-action: none;
+}
+
+.demo__canvas canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+}
+
+.demo__canvas canvas:focus-visible {
+  outline: 3px solid var(--mel);
+  outline-offset: -3px;
+}
+
+.demo__status {
+  min-height: 1.5em;
+  margin: 12px 8px 0;
+  color: #f5e8c8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.demo__instrucoes {
+  margin: 4px 8px 4px;
+  color: #bfae87;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.demo__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.demo__botao {
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 2px solid #9a7400;
+  border-radius: 999px;
+  background: var(--mel);
+  color: var(--tinta);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #9a7400;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.demo__botao:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 0 #9a7400;
+}
+
+.demo__botao:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #9a7400;
+}
+
+.demo__botao:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
+
+.demo__botao[hidden] {
+  display: none;
+}
+
+.demo__link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--tinta-suave);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.demo__link:hover {
+  color: var(--tinta);
+}
+
+.demo__link:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+.demo__rodape {
+  max-width: 680px;
+  margin: 24px auto 0;
+  color: #8b7a54;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.demo__aviso {
+  max-width: 680px;
+  margin: 18px auto 0;
+  padding: 12px 16px;
+  border: 1px solid var(--linha);
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .demo {
+    padding: 18px 10px 36px;
+  }
+
+  .demo__palco {
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  .demo__canvas {
+    border-radius: 12px;
+  }
+
+  .demo__resumo {
+    font-size: 0.92rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo__botao {
+    transition: none;
+  }
+}

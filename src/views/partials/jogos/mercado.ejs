@@ -1,0 +1,12 @@
+<%#
+  Área do Mercado Esperto (RF-JOG-05): uma comparação por vez, cada opção com
+  preço e quantidade à vista. Quem preenche é o `mercado.js`; a casca em volta é
+  a `pages/celula.ejs`.
+
+  O preço por unidade não aparece: fazer essa conta é o jogo.
+-%>
+<h2 id="mercado-enunciado" tabindex="-1" class="mt-6 font-display text-xl text-tinta" aria-live="polite"></h2>
+
+<ul id="mercado-opcoes" class="mt-5 space-y-3"></ul>
+
+<%- include('../ui/botao', { texto: 'Confirmar', id: 'mercado-confirmar', classe: 'mt-6 w-full', desabilitado: true }) %>

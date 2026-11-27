@@ -1,0 +1,39 @@
+<%#
+  Card da tarefa (RF-HOM-08). A tarefa avança sozinha pelo evento — célula
+  concluída, dia jogado, favo fechado —, então aqui só se mostra onde ela está e,
+  quando o alvo já foi cumprido, o botão de receber.
+
+  `compacto` é o formato da Colmeia: progresso em texto, sem barra, para não
+  competir com a trilha. `voltarPara` diz para onde o jogador volta depois de
+  receber, e é conferido contra lista branca no servidor.
+-%>
+<li class="flex flex-wrap items-center justify-between gap-3 rounded-favo bg-white px-4 py-3 text-sm shadow-sm">
+  <div class="min-w-0">
+    <p class="font-medium <%= tarefa.concluida ? 'text-tinta-suave line-through' : '' %>"><%= tarefa.titulo %></p>
+    <p class="mt-0.5 text-xs tabular-nums text-tinta-suave">
+      <%= tarefa.atual %> de <%= tarefa.alvo %> · <%= tarefa.escopo %> ·
+      vale 🍯 <%= tarefa.melDaRecompensa %><% if (tarefa.polenDaRecompensa > 0) { %> e 🌼 <%= tarefa.polenDaRecompensa %><% } %>
+    </p>
+
+    <% if (!locals.compacto && !tarefa.concluida) { %>
+      <div class="mt-2 w-40">
+        <%- include('barra-progresso', {
+          percentual: tarefa.percentual,
+          rotuloAcessivel: `Progresso da tarefa ${tarefa.titulo}`,
+        }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <% if (tarefa.concluida) { %>
+    <span class="text-xs font-semibold text-acerto-texto">Concluída ✓</span>
+  <% } else if (tarefa.cumprida) { %>
+    <form method="POST" action="/tarefas/<%= tarefa.id %>/concluir">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="voltarPara" value="<%= locals.voltarPara || '/metas' %>" />
+      <%- include('./botao', { texto: 'Receber recompensa', tipo: 'submit', tamanho: 'medio' }) %>
+    </form>
+  <% } else { %>
+    <span class="text-xs tabular-nums text-tinta-suave"><%= tarefa.percentual %>% feito</span>
+  <% } %>
+</li>

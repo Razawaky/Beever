@@ -1,0 +1,25 @@
+<%#
+  A sequência do jogador: número de dias e os sete dias da semana em pontos
+  (seção 3 do design system). Ícone e palavra juntos, porque cor sozinha não
+  informa (RNF-25).
+
+  Recebe `sequencia` pronta do `streakService.resumoDaSemana`. Com `href` o
+  bloco inteiro vira link para o calendário completo; sem `href` é só leitura.
+-%>
+<%
+  const dias = sequencia.diasAtuais;
+  const frase = `🔥 ${dias} ${dias === 1 ? 'dia seguido' : 'dias seguidos'}`;
+  const foco =
+    'rounded-favo px-2 py-1 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2';
+%>
+<% if (locals.href) { %>
+  <a href="<%= href %>" class="<%= foco %>">
+    <p class="text-sm font-semibold tabular-nums text-tinta"><%= frase %></p>
+    <div class="mt-2"><%- include('calendario-semana', { semana: sequencia, compacto: true }) %></div>
+  </a>
+<% } else { %>
+  <div class="px-2 py-1">
+    <p class="text-sm font-semibold tabular-nums text-tinta"><%= frase %></p>
+    <div class="mt-2"><%- include('calendario-semana', { semana: sequencia, compacto: true }) %></div>
+  </div>
+<% } %>

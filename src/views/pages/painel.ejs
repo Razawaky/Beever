@@ -1,0 +1,132 @@
+<%#
+  A Colmeia (RF-HOM). Tudo o que a tela mostra vem pronto de `colmeia`. O topo
+  é partial e fica fora do cartão branco de propósito: `overflow-hidden` no
+  ancestral desliga o `sticky` do cabeçalho.
+
+  A partir de `lg` a tela vira duas colunas: a trilha e o "Continuar" de um
+  lado, as tarefas e a meta do outro. A ordem do HTML é a do celular, então
+  empilhar continua dando trilha, continuar, tarefas e meta.
+
+  A `secao` troca só o miolo da `<main>`. As laterais continuam as mesmas, e
+  por isso a loja entra aqui como fragmento em vez de abrir uma página inteira.
+%>
+
+<%
+  const secaoAtual = typeof secao === 'string' ? secao : 'colmeia';
+%>
+
+<div class="min-h-screen bg-fundo lg:flex lg:pl-72 lg:pr-72">
+
+  <%- include('../partials/ui/sidebar-colmeia', {
+    jogador: colmeia.jogador,
+    secaoAtual,
+  }) %>
+  
+  <%# Conteúdo principal %>
+  <main id="conteudo-main" class="flex-1 p-4 lg:p-8 relative">
+    <%# O fundo de favos do onboarding fica na `<main>`, atrás dos blocos
+        brancos. Os blocos usam `z-10` para ficarem acima da textura. -%>
+    <div class="main-favos favos-de-fundo" aria-hidden="true"></div>
+
+    <%# Fora da Colmeia, cada seção veste o mesmo bloco branco da trilha. O
+        `overflow-hidden` fica de fora de propósito: a trilha tem uma coluna
+        `sticky`, e um ancestral que recorta o eixo desliga esse comportamento.
+        A Colmeia já traz o próprio bloco em `fragments/painel-trilha`. -%>
+    <% if (secaoAtual !== 'colmeia') { %>
+      <div class="relative z-10 mx-auto w-full max-w-5xl rounded-favo bg-white p-4 shadow-xl sm:p-6">
+    <% } %>
+
+    <% if (secaoAtual === 'configuracoes') { %>
+      <%- include('../fragments/configuracoes', { alterado, erro }) %>
+    <% } else if (secaoAtual === 'perfil') { %>
+      <%- include('../fragments/perfil', { nivelTitulo: 2, emBloco: true }) %>
+    <% } else if (secaoAtual === 'loja') { %>
+      <%- include('../fragments/loja', {
+        vitrine,
+        confirmacaoBase: '/painel/loja/itens',
+      }) %>
+    <% } else if (secaoAtual === 'cofre') { %>
+      <%- include('../fragments/cofre', {
+        acaoDoFiltro: '/painel/cofre',
+        voltarPara: '/painel/cofre',
+      }) %>
+    <% } else if (secaoAtual === 'inventario') { %>
+      <%- include('../fragments/inventario', {
+        resumo
+      }) %>
+    <% } else if (secaoAtual === 'conquistas') { %>
+      <%- include('../fragments/conquistas', {}) %>
+    <% } else if (secaoAtual === 'metas') { %>
+      <%- include('../fragments/metas', {
+        metas,
+        tarefas,
+        semana,
+        conquistas,
+        voltarPara: '/painel/metas',
+      }) %>
+    <% } else if (secaoAtual === 'liga') { %>
+      <%- include('../fragments/liga', {
+        liga,
+        periodo,
+        premios,
+        idUsuario,
+        caminhoTrilha: '/painel/trilha',
+      }) %>
+    <% } else if (secaoAtual === 'trilha') { %>
+      <%- include('../fragments/trilha', {
+        trilha,
+        favoAtual,
+        proximaCelula,
+        caminhoBase: '/painel/trilha',
+      }) %>
+    <% } else if (secaoAtual === 'favo') { %>
+      <%- include('../fragments/favo', {
+        favo,
+        celulas,
+        caminhoTrilha: '/painel/trilha',
+      }) %>
+    <% } else if (secaoAtual === 'confirmacao') { %>
+      <%- include('../fragments/confirmar-compra', {
+        previa,
+        chaveDeCompra,
+        caminhoLoja: '/painel/loja',
+        voltarPara: '/painel/loja',
+      }) %>
+    <% } else { %>
+      <%- include('../fragments/painel-trilha', { 
+        colmeia 
+      }) %>
+    <% } %>
+
+    <% if (secaoAtual !== 'colmeia') { %>
+      </div>
+    <% } %>
+
+    <%# A Beenie só mora na Colmeia: nas outras seções ela taparia a loja, o
+        cofre e as conquistas, que ocupam a largura toda da `<main>`. -%>
+    <% if (secaoAtual === 'colmeia') { %>
+      <div class="absolute right-4 bottom-4 z-20">
+        <button
+          type="button"
+          id="beenie-clicavel"
+          aria-label="Brincar com a Beenie"
+          data-beenie-imagens="<%= posesDoClique.map((pose) => mascote(pose).arquivo).join('|') %>"
+          class="min-h-11 cursor-pointer rounded-3xl p-2 transition-transform duration-150 active:scale-95"
+        >
+          <%- include('../partials/ui/mascote', {
+            id: 'beenie-imagem',
+            pose: 'clicavel',
+            decorativa: true,
+            classe: 'h-128 w-auto object-contain animate-balanceio',
+          }) %>
+        </button>
+      </div>
+    <% } %>
+
+  </main>
+
+  <%- include('../partials/ui/sidebar-direita', {
+      sequencia: colmeia.sequencia,
+  }) %>
+
+</div>

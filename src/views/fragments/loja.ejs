@@ -1,0 +1,52 @@
+<%#
+  O miolo da Loja (RF-LOJ-01 a 07). A página `/loja` e a seção `/painel/loja`
+  mostram o mesmo conteúdo; o que muda é só a casca em volta.
+
+  `comTitulo` existe porque a página já traz o título no cabeçalho e o painel
+  precisa dele dentro da `<main>`. Quando ele está ligado, o fragmento também
+  se limita a `max-w-5xl`; na página quem manda na largura é o `<main>`.
+-%>
+<%
+  const mostrarTitulo = locals.comTitulo !== false;
+%>
+
+<div class="<%= mostrarTitulo ? 'mx-auto w-full max-w-5xl' : 'w-full' %>">
+  <% if (mostrarTitulo) { %>
+    <div class="border-b border-tinta/10 pb-4">
+      <h2 class="font-display text-2xl font-bold text-tinta">Loja</h2>
+    </div>
+  <% } %>
+
+  <div class="<%= mostrarTitulo ? 'mt-6' : '' %>">
+    <%- include('../partials/ui/patrimonio-topo', { patrimonio: vitrine.patrimonio }) %>
+  </div>
+
+  <% if (vitrine.itens.length === 0) { %>
+    <p class="mt-10 text-tinta-suave">Nenhum item disponível no momento.</p>
+  <% } %>
+
+  <%
+    // Agrupamento por categoria (RF-LOJ-02). É ordem de exibição, não regra:
+    // por isso mora aqui, e não no service.
+    const porCategoria = new Map();
+    vitrine.itens.forEach((item) => {
+      const lista = porCategoria.get(item.category_name) ?? [];
+      lista.push(item);
+      porCategoria.set(item.category_name, lista);
+    });
+    // A confirmação pode viver na página solta ou dentro da Colmeia. Quem
+    // decide é a casca, que passa a base do caminho.
+    const confirmacaoBase = locals.confirmacaoBase ?? '/loja/itens';
+  %>
+
+  <% for (const [categoria, itens] of porCategoria) { %>
+    <section class="mt-10">
+      <h2 class="font-display text-xl"><%= categoria %></h2>
+      <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <% itens.forEach((item) => { %>
+          <%- include('../partials/ui/item-card', { item, confirmacaoBase }) %>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+</div>

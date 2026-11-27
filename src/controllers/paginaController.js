@@ -1,0 +1,691 @@
+import { randomUUID } from 'node:crypto';
+
+import * as achievementsService from '../services/achievementsService.js';
+import * as conquistasDoJogador from '../services/conquistasDoJogador.js';
+import * as contentService from '../services/contentService.js';
+import * as goalsService from '../services/goalsService.js';
+import * as homeService from '../services/homeService.js';
+import * as inventoryService from '../services/inventoryService.js';
+import * as leagueService from '../services/leagueService.js';
+import * as passwordResetService from '../services/passwordResetService.js';
+import * as profilesService from '../services/profilesService.js';
+import * as schedulesService from '../services/schedulesService.js';
+import * as shopService from '../services/shopService.js';
+import * as streakService from '../services/streakService.js';
+import * as tasksService from '../services/tasksService.js';
+import * as vaultService from '../services/vaultService.js';
+import { env } from '../config/env.js';
+import { googleConfigurado } from '../config/google.js';
+import { mascote } from '../config/mascote.js';
+import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
+import { renderizarPagina } from '../utils/pagina.js';
+import { querJson } from '../utils/resposta.js';
+
+/**
+ * Controller só das páginas que renderizam EJS a partir de GET simples —
+ * formulário e leitura, sem mudar estado. Ações que mudam dado (login,
+ * cadastro, onboarding) continuam nos controllers de domínio, que também sabem
+ * redirecionar em vez de só responder JSON.
+ *
+ * O esqueleto da página (doctype, head, cabeçalho, rodapé) mora no layout: aqui
+ * só se diz qual página, com quais dados, e o que ela tem de diferente do
+ * padrão — a cor de fundo, um script, um cabeçalho.
+ */
+
+const FUNDO_CERA = 'min-h-screen bg-cera text-tinta antialiased';
+// Sem espaço no topo, porque o cabeçalho é grudado; e folga embaixo no celular,
+// para o botão "Continuar" não tapar o fim da página.
+const FUNDO_COLMEIA = 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10';
+
+// O wizard é montado no navegador, então as poses chegam pelo `dataset` do
+// body. O caminho continua saindo do catálogo: trocar a arte é mexer num lugar
+// só, e não caçar strings em `onboarding.js`.
+const MASCOTES_DO_ONBOARDING = {
+  acolhendo: mascote('acolhendo').arquivo,
+  entrando: mascote('entrando').arquivo,
+  um_real: mascote('um_real').arquivo,
+  calendario: mascote('calendario').arquivo,
+  coolpose: mascote('coolpose').arquivo,
+  bebe: mascote('bebe').arquivo,
+  musica: mascote('musica').arquivo,
+  tempo: mascote('tempo').arquivo,
+};
+
+function redirecionarLogado(req, res) {
+  res.redirect(req.session.onboardingConcluido ? '/perfis' : '/onboarding');
+}
+
+/**
+ * O miolo de Metas e tarefas, compartilhado pela página solta e pela seção da
+ * Colmeia. A chegada (`prepararVisita`) fica com quem chama: no painel ela já
+ * aconteceu dentro de `obterColmeia`.
+ */
+async function carregarTelaDeMetas(idUsuario) {
+  const [listaDeMetas, tarefas, semana, conquistas] = await Promise.all([
+    goalsService.listarDoUsuario(idUsuario),
+    tasksService.listarDoUsuario(idUsuario),
+    streakService.resumoDaSemana(idUsuario),
+    achievementsService.listarDoUsuario(idUsuario),
+  ]);
+
+  // A meta chega resumida pelo service, como na Colmeia: percentual, prazo em
+  // palavra e recompensa saem de um lugar só (RF-MET-02).
+  return {
+    metas: listaDeMetas.map((meta) =>
+      goalsService.resumirMeta(meta, { hoje: semana.hoje, fuso: semana.fuso }),
+    ),
+    tarefas: tarefas.map(tasksService.resumirTarefa),
+    semana,
+    conquistas,
+  };
+}
+
+/** Política de privacidade: pública, e o e-mail de contato vem do ambiente. */
+export const privacidade = (req, res) =>
+  renderizarPagina(res, 'privacidade', {
+    titulo: 'Política de privacidade — Beever',
+    classeBody: FUNDO_CERA,
+    emailDeContato: env.emailDeContato,
+  });
+
+export const login = (req, res) => {
+  if (req.session?.usuarioId) return redirecionarLogado(req, res);
+  renderizarPagina(res, 'login', {
+    titulo: 'Entrar — Beever',
+    senhaAlterada: req.query.senha === 'alterada',
+    contaExcluida: req.query.conta === 'excluida',
+    googleConfigurado,
+  });
+};
+
+export const recuperarSenha = (req, res) =>
+  renderizarPagina(res, 'recuperar-senha', { titulo: 'Esqueceu a senha? — Beever', enviado: false });
+
+// O link é conferido antes do formulário: sem isso a criança digitaria a senha duas vezes para só então saber que ele venceu.
+export const redefinirSenha = assincrono(async (req, res) => {
+  const token = req.query.token ?? '';
+  const linkValido = await passwordResetService.linkValido(token);
+  renderizarPagina(res, 'redefinir-senha', { titulo: 'Senha nova — Beever', linkValido, token });
+});
+
+export const cadastro = (req, res) => {
+  if (req.session?.usuarioId) return redirecionarLogado(req, res);
+  renderizarPagina(res, 'cadastro', {
+    titulo: 'Criar conta — Beever',
+    scripts: ['/js/cadastro.js'],
+    googleConfigurado,
+  });
+};
+
+// Só chega aqui quem voltou do Google sem conta; o e-mail já veio verificado de lá.
+export const completarCadastroGoogle = (req, res) => {
+  const pendente = req.session?.cadastroGoogle;
+  if (!pendente) return res.redirect('/login');
+  renderizarPagina(res, 'completar-cadastro', { titulo: 'Criar conta — Beever', email: pendente.email });
+};
+
+// Quem pode ver esta tela é decidido pelo `requireOnboardingPendente` na rota,
+// não por um `if` aqui dentro.
+export const onboarding = assincrono(async (req, res) => {
+  // O que já foi respondido volta do servidor, não do navegador: quem começa no
+  // computador da escola precisa poder terminar em casa (decisão D-2 da T-04.1).
+  const rascunho = await profilesService.obterRascunhoDoOnboarding(req.session.usuarioId);
+
+  renderizarPagina(res, 'onboarding', {
+    titulo: 'Configurar perfil — Beever',
+    classeBody:
+      'isolate flex min-h-screen flex-col items-center justify-center bg-cera p-4 text-tinta antialiased',
+    // O wizard é montado em JavaScript e lê estes dados do `dataset` do body.
+    // Os JSON viajam em atributos, que o EJS escapa como qualquer outro valor
+    // — a CSP não permite script embutido na página (RNF-11).
+    dadosBody: {
+      'perfil-id': req.session.perfilId,
+      'csrf-token': res.locals.csrfToken,
+      onboarding: JSON.stringify(rascunho),
+      mascotes: JSON.stringify(MASCOTES_DO_ONBOARDING),
+      moeda: '/img/1real.gif',
+    },
+    scripts: ['/js/onboarding.js'],
+  });
+});
+
+/**
+ * A porta de entrada depois do login: mostra os perfis da conta e deixa o
+ * jogador escolher qual Colmeia abrir.
+ *
+ * A sessão carrega dois ids desde o multiperfil: `contaUsuarioId` é quem
+ * autenticou (e é o dono de todos os perfis), e `usuarioId` é a persona
+ * escolhida para jogar. A seleção precisa ser acessível mesmo quando a persona
+ * atual ainda não terminou o onboarding — é justamente por aqui que se troca
+ * para outra ou se volta para a conta principal.
+ */
+export const perfis = assincrono(async (req, res) => {
+  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  // Sessões abertas antes da migration 026 não têm `contaUsuarioId`; nelas o
+  // usuário ativo ainda é a conta principal, então ele vira o dono agora e a
+  // lista não perde os irmãos no primeiro clique.
+  req.session.contaUsuarioId = contaId;
+  const lista = await profilesService.listarDaConta(contaId);
+
+  if (querJson(req)) {
+    return res.json({ perfis: lista, perfilAtualId: req.session.perfilId });
+  }
+
+  renderizarPagina(res, 'perfis', {
+    titulo: 'Quem está jogando? — Beever',
+    classeBody: FUNDO_CERA,
+    // A remoção usa `DELETE` com o token no cabeçalho, como a edição de
+    // disponibilidade. O token vai no `dataset` do body para o script da tela.
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
+    perfis: lista,
+    perfilAtualId: req.session.perfilId,
+    conta: req.session.email ?? lista.find((perfil) => perfil.email)?.email,
+    scripts: ['/js/perfis.js'],
+  });
+});
+
+/** Troca o perfil ativo da sessão. A posse é conferida dentro do service. */
+export const escolherPerfil = assincrono(async (req, res) => {
+  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  const perfil = await profilesService.selecionar(Number(req.params.id), contaId);
+
+  req.session.contaUsuarioId = contaId;
+  req.session.usuarioId = perfil.usuarioId;
+  req.session.perfilId = perfil.id;
+  req.session.onboardingConcluido = perfil.onboardingConcluido;
+
+  if (querJson(req)) return res.json({ perfilId: perfil.id, usuarioId: perfil.usuarioId });
+  res.redirect(perfil.onboardingConcluido ? '/painel' : '/onboarding');
+});
+
+/**
+ * Cria um perfil novo e já entra nele.
+ *
+ * O perfil nasce sem onboarding concluído, então o destino é o wizard. A conta
+ * dona continua a mesma: `contaUsuarioId` não muda, e é isso que permite
+ * voltar para a seleção e escolher qualquer irmão.
+ */
+export const criarPerfil = assincrono(async (req, res) => {
+  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  const perfil = await profilesService.criarNaConta(contaId, {
+    apelido: req.body.apelido,
+    dataNasc: req.body.data_nasc,
+  });
+
+  req.session.contaUsuarioId = contaId;
+  req.session.usuarioId = perfil.id;
+  req.session.perfilId = perfil.idPerfil;
+  req.session.onboardingConcluido = false;
+
+  if (querJson(req)) return res.status(201).json(perfil);
+  res.redirect('/onboarding');
+});
+
+/**
+ * A Colmeia (RF-HOM-01 a 09). O controller não orquestra nada: quem aplica os
+ * efeitos da visita e monta os blocos é o `homeService`, e o mesmo endereço
+ * responde JSON para quem pedir.
+ */
+export const painel = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  if (querJson(req)) return res.json(colmeia);
+
+  renderizarPagina(res, 'painel', {
+    titulo: `${colmeia.jogador.apelido} — Beever`,
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    secao: 'colmeia',
+    // O admin que entra pelo login comum cai aqui, e sem este atalho a área
+    // administrativa só abria digitando o endereço.
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/**
+ * O perfil dentro da casca da Colmeia. A lateral continua na tela porque o que
+ * troca é só o miolo da `<main>`: o `fragments/perfil` recebe os mesmos dados
+ * da página `/perfil`, e o `painel.ejs` decide entre ele e a trilha.
+ */
+export const painelPerfil = assincrono(async (req, res) => {
+  const [colmeia, dados, semana, metas] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    schedulesService.obterSemana(req.session.usuarioId),
+    goalsService.listarAtivas(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: `${dados.apelido} — Beever`,
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    perfil: dados,
+    semana,
+    metas,
+    secao: 'perfil',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
+    scripts: ['/js/painel.js', '/js/perfil.js'],
+  });
+});
+
+/**
+ * A loja dentro da casca da Colmeia. A lateral continua na tela porque o que
+ * troca é só o miolo da `<main>`: o `fragments/loja` recebe a mesma vitrine da
+ * página `/loja`, e o `painel.ejs` decide entre ele e a trilha.
+ */
+export const painelLoja = assincrono(async (req, res) => {
+  const [colmeia, vitrine] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    shopService.listarVitrine(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Loja — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    vitrine,
+    secao: 'loja',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js', '/js/graficos.js'],
+  });
+});
+
+/** O inventário dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelInventario = assincrono(async (req, res) => {
+  const [colmeia, resumo] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    inventoryService.resumoDoUsuario(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Meus itens — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    resumo,
+    secao: 'inventario',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** O cofre dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelCofre = assincrono(async (req, res) => {
+  const porSemana = req.query.porSemana ? Number(req.query.porSemana) : 0;
+  const [colmeia, perfil, cofreDoJogador] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    vaultService.obterDoUsuario(req.session.usuarioId, { porSemana }),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Meu cofre — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    perfil,
+    cofre: cofreDoJogador,
+    porSemana,
+    secao: 'cofre',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js', '/js/graficos.js'],
+  });
+});
+
+/** Metas e tarefas dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelMetas = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const dados = await carregarTelaDeMetas(req.session.usuarioId);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Metas — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    ...dados,
+    secao: 'metas',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** A liga da semana dentro da casca da Colmeia. */
+export const painelLiga = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const premios = await leagueService.premiosDoPodio();
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Liga da semana — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    liga: colmeia.liga,
+    periodo: colmeia.liga ? leagueService.periodoDaLiga(colmeia.liga.grupo) : null,
+    premios,
+    idUsuario: Number(req.session.usuarioId),
+    secao: 'liga',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** A trilha completa dentro da casca da Colmeia. */
+export const painelTrilha = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const favoAtual = colmeia.trilha.find((favo) => favo.aberto && !favo.concluido) ?? null;
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Minha trilha — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    trilha: colmeia.trilha,
+    favoAtual,
+    proximaCelula: colmeia.proximaCelula,
+    secao: 'trilha',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** As células de um favo dentro da casca da Colmeia. */
+export const painelFavo = assincrono(async (req, res) => {
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const dadosDoFavo = await contentService.listarCelulasDoFavo(
+    req.session.usuarioId,
+    Number(req.params.id),
+  );
+
+  renderizarPagina(res, 'painel', {
+    titulo: `${dadosDoFavo.favo.title} — Beever`,
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    ...dadosDoFavo,
+    secao: 'favo',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** A confirmação da compra dentro da casca da Colmeia. */
+export const painelConfirmarCompra = assincrono(async (req, res) => {
+  // A visita é preparada antes da prévia: o ciclo pode ter mexido no saldo, e a
+  // confirmação precisa mostrar o mel de agora.
+  const colmeia = await homeService.obterColmeia(req.session.usuarioId);
+  const [perfil, previa] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    shopService.previaDaCompra(req.session.usuarioId, Number(req.params.idItem)),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: `Comprar ${previa.item.name} — Beever`,
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    perfil,
+    previa,
+    chaveDeCompra: randomUUID(),
+    secao: 'confirmacao',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+/** As conquistas dentro da casca da Colmeia: a lateral continua, só o miolo troca. */
+export const painelConquistas = assincrono(async (req, res) => {
+  const [colmeia, catalogo] = await Promise.all([
+    homeService.obterColmeia(req.session.usuarioId),
+    conquistasDoJogador.catalogoPorFamilia(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'painel', {
+    titulo: 'Minhas conquistas — Beever',
+    classeBody: FUNDO_COLMEIA,
+    colmeia,
+    catalogo,
+    secao: 'conquistas',
+    mostrarAtalhoAdmin: Boolean(req.session.ehAdmin),
+    scripts: ['/js/painel.js'],
+  });
+});
+
+export const loja = assincrono(async (req, res) => {
+  const [perfil, vitrine] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    shopService.listarVitrine(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'loja', {
+    titulo: 'Loja — Beever',
+    classeBody: FUNDO_CERA,
+    perfil,
+    vitrine,
+    scripts: ['/js/graficos.js'],
+  });
+});
+
+/**
+ * A confirmação da compra (RF-LOJ-05) tem endereço próprio, e não um balão na
+ * loja: funciona sem JavaScript, dá para voltar, e o impacto vem pronto do
+ * service — a tela não faz conta nenhuma.
+ */
+export const confirmarCompra = assincrono(async (req, res) => {
+  const [perfil, previa] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    shopService.previaDaCompra(req.session.usuarioId, Number(req.params.idItem)),
+  ]);
+
+  // Uma chave de idempotência por renderização: dois cliques no mesmo botão
+  // mandam a mesma chave e compram uma vez só, e abrir a confirmação de novo
+  // traz chave nova, então comprar o mesmo item de propósito continua possível.
+  renderizarPagina(res, 'confirmar-compra', {
+    titulo: `Comprar ${previa.item.name} — Beever`,
+    classeBody: FUNDO_CERA,
+    perfil,
+    previa,
+    chaveDeCompra: randomUUID(),
+  });
+});
+
+export const inventario = assincrono(async (req, res) => {
+  const [perfil, resumo] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    inventoryService.resumoDoUsuario(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'inventario', {
+    titulo: 'Meus itens — Beever',
+    classeBody: FUNDO_CERA,
+    perfil,
+    resumo,
+    scripts: ['/js/graficos.js'],
+  });
+});
+
+export const cofre = assincrono(async (req, res) => {
+  const porSemana = req.query.porSemana ? Number(req.query.porSemana) : 0;
+  const [perfil, cofreDoJogador] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    vaultService.obterDoUsuario(req.session.usuarioId, { porSemana }),
+  ]);
+
+  renderizarPagina(res, 'cofre', {
+    titulo: 'Meu cofre — Beever',
+    classeBody: FUNDO_CERA,
+    perfil,
+    cofre: cofreDoJogador,
+    porSemana,
+    scripts: ['/js/graficos.js'],
+  });
+});
+
+export const metas = assincrono(async (req, res) => {
+  // A chegada do jogador tem uma dona só: o `homeService`. Esta tela repetia
+  // cinco dos seis passos à mão, sem o ciclo econômico, e mostrava o saldo de
+  // antes das contas da semana.
+  await homeService.prepararVisita(req.session.usuarioId);
+
+  const dados = await carregarTelaDeMetas(req.session.usuarioId);
+
+  renderizarPagina(res, 'metas', {
+    titulo: 'Metas — Beever',
+    classeBody: FUNDO_CERA,
+    ...dados,
+  });
+});
+
+/** As conquistas (RF-GAM-01). A escada inteira vem pronta do service. */
+export const conquistas = assincrono(async (req, res) => {
+  await homeService.prepararVisita(req.session.usuarioId);
+
+  const catalogo = await conquistasDoJogador.catalogoPorFamilia(req.session.usuarioId);
+
+  renderizarPagina(res, 'conquistas', {
+    titulo: 'Minhas conquistas — Beever',
+    classeBody: FUNDO_CERA,
+    catalogo,
+  });
+});
+
+/**
+ * A liga da semana (RF-GAM-02). A visita é preparada primeiro porque é ela que
+ * fecha a semana vencida e põe o jogador num grupo.
+ */
+export const liga = assincrono(async (req, res) => {
+  await homeService.prepararVisita(req.session.usuarioId);
+
+  const [ligaDaSemana, premios] = await Promise.all([
+    leagueService.ligaDoJogador(req.session.usuarioId),
+    leagueService.premiosDoPodio(),
+  ]);
+
+  renderizarPagina(res, 'liga', {
+    titulo: 'Liga da semana — Beever',
+    classeBody: FUNDO_CERA,
+    liga: ligaDaSemana,
+    periodo: ligaDaSemana ? leagueService.periodoDaLiga(ligaDaSemana.grupo) : null,
+    premios,
+    // A tela precisa saber qual linha é a do próprio jogador para destacá-la.
+    idUsuario: Number(req.session.usuarioId),
+  });
+});
+
+/**
+ * Perfil do jogador. Existe para editar os dias da semana (RF-ONB-09); os outros
+ * campos têm rota e ainda não têm tela (DT-12).
+ */
+export const perfil = assincrono(async (req, res) => {
+  // Mesma chegada da Colmeia e da tela de metas, pelo mesmo caminho.
+  await homeService.prepararVisita(req.session.usuarioId);
+
+  const [dados, semana, metas] = await Promise.all([
+    profilesService.obterDoUsuario(req.session.usuarioId),
+    schedulesService.obterSemana(req.session.usuarioId),
+    goalsService.listarAtivas(req.session.usuarioId),
+  ]);
+
+  renderizarPagina(res, 'perfil', {
+    titulo: `${dados.apelido} — Beever`,
+    classeBody: FUNDO_CERA,
+    perfil: dados,
+    semana,
+    metas,
+    dadosBody: { 'csrf-token': res.locals.csrfToken },
+    scripts: ['/js/perfil.js'],
+  });
+});
+
+/**
+ * A trilha (RF-CON-01). O favo "atual" é o primeiro aberto e não concluído — é
+ * ele que o botão "Continuar" abre.
+ */
+export const trilha = assincrono(async (req, res) => {
+  const trilha = await contentService.listarTrilha(req.session.usuarioId);
+  const favoAtual = trilha.find((favo) => favo.aberto && !favo.concluido) ?? null;
+  // A trilha já está lida: passar adiante evita cobrar do banco as mesmas
+  // consultas de novo (RNF-04).
+  const proximaCelula = await contentService.proximaCelulaPendente(req.session.usuarioId, trilha);
+
+  renderizarPagina(res, 'trilha', {
+    titulo: 'Minha trilha — Beever',
+    classeBody: 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10',
+    trilha,
+    favoAtual,
+    proximaCelula,
+  });
+});
+
+/** As células de um favo (RF-CON-02). Favo travado nem lista: quem barra é o service. */
+export const favo = assincrono(async (req, res) => {
+  const { favo, celulas } = await contentService.listarCelulasDoFavo(req.session.usuarioId, Number(req.params.id));
+
+  // Quem diz se a célula tem jogo é o `contentService`, célula a célula: o quiz
+  // e o Arraste e Classifique existem, os outros quatro não. As demais seguem
+  // com "em breve", porque prometer o que não existe é pior do que avisar que
+  // não dá.
+  renderizarPagina(res, 'favo', {
+    titulo: `${favo.title} — Beever`,
+    classeBody: FUNDO_CERA,
+    favo,
+    celulas,
+  });
+});
+
+/**
+ * Qual recorte de tela e qual JavaScript cada jogo usa.
+ *
+ * A casca da página é a mesma para todos; o que muda é a área do meio. O mapa
+ * fica aqui, e não na view, para que o slug vindo do banco nunca vire caminho
+ * de arquivo.
+ */
+const TELAS_DE_JOGO = {
+  'quiz-do-favo': { areaDoJogo: 'quiz', script: '/js/quiz.js' },
+  'arraste-e-classifique': { areaDoJogo: 'arraste', script: '/js/arraste.js' },
+  'monte-o-orcamento': { areaDoJogo: 'orcamento', script: '/js/orcamento.js' },
+  'cofre-do-tempo': { areaDoJogo: 'cofre', script: '/js/cofre.js' },
+  'mercado-esperto': { areaDoJogo: 'mercado', script: '/js/mercado.js' },
+  'ordene-a-prioridade': { areaDoJogo: 'ordene', script: '/js/ordene.js' },
+  'listas-suspensas': { areaDoJogo: 'listas', script: '/js/listas.js' },
+  'quadrinho-interativo': { areaDoJogo: 'quadrinho', script: '/js/quadrinho.js' },
+};
+
+/**
+ * A tela de jogo (RF-JOG-01 e RF-JOG-02).
+ *
+ * A página é uma casca: ela conhece o id da célula e nada mais. Quem abre a
+ * partida e recebe o conteúdo é o JavaScript do jogo, por `fetch` — assim `GET`
+ * não cria partida, e atualizar a tela não deixa partida abandonada para trás.
+ *
+ * A conferência de acesso acontece aqui também, e não só no `POST`: quem digita
+ * a URL de uma célula travada precisa ver o erro na hora, não depois de a tela
+ * carregar.
+ */
+export const celula = assincrono(async (req, res) => {
+  const { celula } = await contentService.abrirCelula(req.session.usuarioId, Number(req.params.idCelula));
+  const tela = TELAS_DE_JOGO[celula.game_type_slug];
+
+  if (!tela) throw erroNaoEncontrado('Este jogo ainda não está disponível');
+
+  renderizarPagina(res, 'celula', {
+    titulo: `${celula.title} — Beever`,
+    classeBody: FUNDO_CERA,
+    // Sem menu, sem saldo, sem nada clicável fora do jogo (design system §5).
+    comAcessibilidade: false,
+    celula,
+    idFavo: Number(req.params.idFavo),
+    areaDoJogo: tela.areaDoJogo,
+    scripts: [tela.script],
+    // Os nomes vão em kebab-case porque o navegador lê `data-celula-id` como
+    // `dataset.celulaId`; escrito junto, `data-celulaId` vira `celulaid` e o
+    // JavaScript não acha nada. O token de CSRF viaja aqui pelo mesmo motivo
+    // que no onboarding: a partida é POST, e a página não tem formulário.
+    dadosBody: {
+      'celula-id': Number(celula.id),
+      'favo-id': Number(req.params.idFavo),
+      'csrf-token': res.locals.csrfToken,
+    },
+  });
+});
+
+export const manutencao = (req, res) => {
+  renderizarPagina(res, 'manutencao', {
+    titulo: 'Em manutenção — Beever',
+    classeBody: 'flex min-h-screen flex-col items-center justify-center bg-breu p-6 text-center antialiased',
+  });
+};
