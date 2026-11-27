@@ -22,6 +22,7 @@ export const consultar = assincrono(async (req, res) => {
     classeBody: FUNDO_ADMIN,
     emailDoAdmin: req.session.email,
     linhas: resultado.linhas,
+    integridade: resultado.integridade,
     acoes: resultado.acoes,
     filtros: resultado.filtros,
     tiposDeAtor: resultado.tiposDeAtor,

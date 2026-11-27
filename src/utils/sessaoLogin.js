@@ -24,7 +24,7 @@ export function iniciarSessaoLogin(
       // Cacheado na sessão pelo mesmo motivo do ehAdmin: evita reconsultar o
       // banco a cada requisição só para decidir entre /painel e /onboarding.
       req.session.onboardingConcluido = onboardingConcluido;
-      resolve();
+      req.session.save((e) => (e ? reject(e) : resolve()));
     });
   });
 }

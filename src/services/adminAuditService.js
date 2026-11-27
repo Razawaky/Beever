@@ -1,4 +1,5 @@
 import * as auditLogsRepository from '../repositories/auditLogsRepository.js';
+import { validar as validarCadeia } from './logBlockchainService.js';
 
 /**
  * Leitura da trilha de auditoria pelo painel (RF-ADM-05).
@@ -102,8 +103,14 @@ export async function consultar(recebido = {}) {
     before_state: mascararDadoPessoal(linha.before_state),
     after_state: mascararDadoPessoal(linha.after_state),
   }));
-
+  let integridade;
+  try {
+    integridade = await validarCadeia();
+  } catch {
+    integridade = { valido: null };
+  }
   return {
+    integridade,
     linhas: semDadoPessoal,
     acoes,
     filtros,

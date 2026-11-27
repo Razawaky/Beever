@@ -5,6 +5,9 @@
   botão de apagar mentiria sobre o que o sistema permite. O antes/depois fica num
   `details` por linha, porque é JSON e espalhá-lo em colunas inventaria estrutura
   que a tabela não tem.
+
+  Painel de integridade: mostra o resultado da validação da cadeia de hashes
+  (log_blockchain), que DETECTA adulteração mesmo se alguém burlar o banco.
 -%>
 <%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'auditoria' }) %>
 
@@ -17,6 +20,11 @@
   });
   const comFiltros = parametros.toString();
   const enderecoDaPagina = (numero) => `/admin/auditoria?${comFiltros}${comFiltros ? '&' : ''}pagina=${numero}`;
+
+  // Resultado da validação da cadeia de hashes.
+  const cadeia = typeof integridade !== 'undefined' ? integridade : null;
+  const cadeiaOk = Boolean(cadeia && cadeia.valido === true);
+  const cadeiaFalhou = Boolean(cadeia && cadeia.valido === false);
 %>
 
 <main class="mx-auto max-w-5xl px-6 py-10">
@@ -25,6 +33,24 @@
     Toda alteração de mel, pólen, XP, compra e ação administrativa deixa linha aqui (RN-010).
     A trilha não pode ser alterada nem apagada, nem por esta tela.
   </p>
+
+  <section class="mt-8 rounded-favo border p-4"
+    style="border-color: <%= cadeiaOk ? '#16a34a' : cadeiaFalhou ? '#dc2626' : '#999999' %>; background: <%= cadeiaOk ? '#f0fdf4' : cadeiaFalhou ? '#fef2f2' : '#f5f5f5' %>;">
+    <p class="font-semibold">
+      Integridade da cadeia (blockchain):
+      <% if (cadeiaOk) { %>
+        ✅ Íntegra · <%= cadeia.totalBlocos %> bloco(s)
+      <% } else if (cadeiaFalhou) { %>
+        ❌ Adulterada no bloco #<%= cadeia.blocoInvalido %>
+      <% } else { %>
+        ⚠️ Não foi possível verificar
+      <% } %>
+    </p>
+    <% if (cadeiaFalhou) { %>
+      <p class="mt-1 text-sm"><%= cadeia.motivo %></p>
+    <% } %>
+    <a href="/admin/auditoria" class="mt-2 inline-flex min-h-11 items-center text-sm underline underline-offset-4">Verificar agora</a>
+  </section>
 
   <form method="GET" action="/admin/auditoria" class="mt-8 rounded-favo border border-linha bg-white p-4">
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
