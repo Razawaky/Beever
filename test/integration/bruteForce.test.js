@@ -10,6 +10,7 @@ import { after, before, describe, it } from 'node:test';
 import request from 'supertest';
 
 import './../helpers/ambiente.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 const { criarBancoDeTeste, motivoParaPular } = await import('../helpers/banco.js');
 const { criarApp } = await import('../../src/app.js');
@@ -68,11 +69,7 @@ describe('força bruta no login', opcoes, () => {
     agente = request.agent(app);
     csrf = await tokenDe();
 
-    await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({ ...CONTA, _csrf: csrf })
-      .expect(201);
+    await criarCrianca(agente, { ...CONTA, _csrf: csrf });
 
     await agente.post('/sessao/logout').set('Accept', 'application/json').send({ _csrf: await tokenDe('/painel') });
     csrf = await tokenDe();
@@ -111,10 +108,7 @@ describe('força bruta no login', opcoes, () => {
     };
 
     // Conta nova pela mesma origem que acabou de ser barrada quinze vezes.
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({ ...colega, _csrf: csrf });
+    const cadastro = await criarCrianca(agente, colega);
 
     assert.equal(cadastro.status, 201, 'o cadastro do colega não pode ser barrado pelo ataque à outra conta');
 

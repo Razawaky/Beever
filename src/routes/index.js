@@ -22,10 +22,13 @@ import usersRouter from './users.js';
 /** Router raiz: cada domínio tem seu próprio arquivo, montado aqui. */
 const router = Router();
 
-// O perfil novo pede o mínimo para a tela de seleção existir: apelido (que é a
-// persona pública) e data de nascimento (que define a faixa etária). Avatar,
-// fuso e rotina ficam para o onboarding, que o perfil recém-criado abre em
-// seguida. O apelido usa a mesma regra da liga, porque é o mesmo campo.
+// O perfil infantil pede o mínimo para a tela de seleção existir: apelido (a
+// persona pública), data de nascimento (a faixa etária) e o consentimento do
+// responsável, registrado junto com a criação. Avatar, fuso e rotina ficam para
+// o onboarding, aberto em seguida. O apelido usa a regra da liga, é o mesmo campo.
+// A lista fechada evita o velho `Boolean('false') === true`: só estes valores
+// contam como autorização.
+const VALORES_CONSENTIMENTO = [true, 'true', 'on', '1', false, 'false', 'off', '0'];
 const regrasNovoPerfil = [
   body('apelido')
     .trim()
@@ -33,6 +36,9 @@ const regrasNovoPerfil = [
     .withMessage('Informe como este perfil quer ser chamado')
     .custom(exigirApelidoPublico),
   body('data_nasc').isISO8601().withMessage('Data de nascimento inválida'),
+  body('consentimento_responsavel')
+    .isIn(VALORES_CONSENTIMENTO)
+    .withMessage('Confirme que você é o responsável por esta criança'),
 ];
 
 // A conta tem um e-mail só. Normalizar aqui evita que `Ana@...` e `ana@...`

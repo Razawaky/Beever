@@ -282,16 +282,25 @@ export async function definirTipoAtivo(id, ativo, conexao = null) {
 }
 
 /**
- * Tarefas ativas do jogador num escopo (`diaria` ou `semanal`) criadas a partir
- * de um instante. É o que o gerador consulta para não criar em duplicidade — a
- * pergunta que ele faz é "já existe tarefa diária de hoje?".
+ * Tarefas do jogador num escopo (`diaria` ou `semanal`) criadas a partir de um
+ * instante. É o que o gerador consulta para não criar em duplicidade — a pergunta
+ * que ele faz é "o dia já teve as tarefas deste escopo propostas?".
+ *
+ * Conta `concluida` junto com `ativa`: concluir tira a tarefa do status `ativa`,
+ * e contar só as ativas fazia o gerador achar que o dia estava vago e propor uma
+ * tarefa nova na próxima visita. Como cada linha paga sua recompensa, bastava
+ * receber e recarregar a página para cobrar o mel de novo em loop (RN-047).
+ *
+ * `expirada` fica de fora de propósito: prazo vencido abre vaga para a tarefa
+ * atual, como manda a renovação preguiçosa em `expirarVencidasDoUsuario`.
  */
-export async function listarAtivasPorEscopoDesde(idUsuario, escopo, desde) {
-  return consultar(
+export async function listarDoEscopoDesde(idUsuario, escopo, desde, conexao = null) {
+  return consultarEm(
+    conexao,
     `SELECT ${CAMPOS}
        FROM tasks t
        ${JOINS}
-      WHERE t.user_id = ? AND sc.slug = ? AND st.slug = 'ativa' AND t.created_at >= ?
+      WHERE t.user_id = ? AND sc.slug = ? AND st.slug IN ('ativa', 'concluida') AND t.created_at >= ?
       ORDER BY t.id`,
     [idUsuario, escopo, desde],
   );

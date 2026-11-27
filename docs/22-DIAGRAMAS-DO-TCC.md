@@ -151,9 +151,9 @@ unicidade de `leagues` para o par `(starts_on, name)`.
 ## 2. Diagrama de casos de uso
 
 Atores extraídos da visão de produto (`docs/01-...` seção 1) e das rotas reais
-(`src/routes/`). "Responsável" não tem conta própria no MVP — participa pelo
-consentimento no registro (RNF-34) e pelas seções de pais da landing; por isso
-aparece com participação pontual.
+(`src/routes/`). "Responsável" é o dono da conta no MVP — cria o cadastro e adiciona cada
+criança como perfil, registrando o consentimento (RNF-34). Por isso aparece
+como ator que abre o fluxo, não como participação pontual.
 
 Cada caso mapeia um grupo de requisitos funcionais. A numeração abaixo é a da
 tabela de RFs, para a rastreabilidade fechar sem página nova.
@@ -211,9 +211,9 @@ Observações de fidelidade ao código:
   Meta nasce da disponibilidade no onboarding (RF-MET-01, RN-014) e tarefa é
   proposta pelo servidor na entrada — as rotas `/metas` e `/tarefas` só listam e
   concluem. A ausência é o desenho, não esquecimento.
-- **Não há caixa onde "Responsável" pula por cima do login**: o consentimento é
-  capturado no cadastro (e-mail + checkbox), e o painel do responsável é P2,
-  só modelado no banco.
+- **O responsável entra pela própria conta, mas não joga**: o consentimento é
+  capturado ao adicionar cada criança (e-mail da conta + checkbox), e o painel
+  do responsável continua P2, só modelado no banco.
 - **RF-GAM-01 (conquistas) desbloqueia sozinha por evento** — célula concluída
   na partida, metas batidas, patrimônio, sequência e cofre —, então não é um
   "obter conquista" manual; é acompanhamento (j13).

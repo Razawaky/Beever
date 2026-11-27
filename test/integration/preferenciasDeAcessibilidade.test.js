@@ -11,6 +11,7 @@ import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import { dataDoDia, diaDaSemana, FUSO_PADRAO } from '../../src/utils/diaDoJogador.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Som e animação reduzida eram guardados no `localStorage` com as mesmas chaves
@@ -40,17 +41,13 @@ describe('preferências de acessibilidade da conta', opcoes, () => {
     const agente = request.agent(app);
     let csrf = tokenDe((await agente.get('/login').set('Accept', 'text/html')).text);
 
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido,
         email,
         data_nasc: '1990-05-20',
         senha: 'beever123',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = tokenDe((await agente.get('/onboarding').set('Accept', 'text/html')).text);
     await agente

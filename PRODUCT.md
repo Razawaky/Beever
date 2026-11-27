@@ -18,7 +18,7 @@ The audience splits into three difficulty bands, chosen at onboarding, which cha
 | B | Aprendiz | 9–11 | Simple budgeting, saving toward a goal, first notions of interest |
 | C | Investidor | 12–15 | Compound interest, asset vs. liability, passive income, long-term planning |
 
-**Secondary audience: the parent or guardian**, who never uses the app itself but must authorize the child's registration and decide the product is trustworthy. They read the public landing page, specifically a section written in an adult, sober tone, and they care about three things: what the child actually learns, LGPD compliance, and the absence of real money and advertising.
+**Secondary audience: the parent or guardian**, who now creates the account themselves and adds each child as a playable profile, authorizing it at that moment. They read the public landing page, specifically a section written in an adult, sober tone, and they care about three things: what the child actually learns, LGPD compliance, and the absence of real money and advertising.
 
 By the TCC delivery, both real usage and the presentation matter: a real group of children in the 6–15 range will create accounts and use the product before delivery, and the evaluation board will see it demonstrated afterward. Neither seeded demo data nor a working first-run flow can be sacrificed for the other.
 
@@ -53,8 +53,8 @@ The user's journey through the product:
 LANDING (public, animated)
    └─ CTA "Começar"
 LOGIN / REGISTRO
-   └─ registration → guardian consent
-ONBOARDING (blocking)
+   └─ guardian account → WHO IS PLAYING? → add child (guardian consent)
+ONBOARDING (blocking, per child)
    nickname → age band → AVAILABLE DAYS → session length
    → initial objective → avatar → automatic goal generation
 COLMEIA (Home)
@@ -86,7 +86,7 @@ Three moments are pedagogically load-bearing and must exist as real screens, not
 | **Cofre** | Simulated savings with yield |
 | **Patrimônio** | Wallet + Cofre + current value of owned goods |
 
-**Confirmed functionality:** authentication with guardian consent; blocking onboarding; Colmeia; content trail of favos and células; interactive games (quiz, budget builder, compound-interest vault); goals and streak; shop, inventory, net worth, and cofre; daily tasks; profile; admin area; public landing page.
+**Confirmed functionality:** guardian account with consent registered per child; blocking onboarding; Colmeia; content trail of favos and células; interactive games (quiz, budget builder, compound-interest vault); goals and streak; shop, inventory, net worth, and cofre; daily tasks; profile; admin area; public landing page.
 
 **Hard product constraints:**
 
@@ -101,7 +101,7 @@ Three moments are pedagogically load-bearing and must exist as real screens, not
 - Every change to XP, pólen, mel, every purchase, and every admin action is written to an audit log.
 - The parent/guardian dashboard is out of MVP scope but modeled in the database for later.
 - **No real money, ever** — permanently out of scope. The UI must state explicitly that the currency is fictional. No advertising, no real-spend mechanic, no paid random loot box.
-- LGPD (Art. 14) minimal data collection for minors: nickname and avatar only, no sensitive data. Guardian consent at registration (checkbox + guardian e-mail in the MVP).
+- LGPD (Art. 14) minimal data collection for minors: nickname and avatar only, no sensitive data. Guardian consent when each child profile is created (checkbox + account e-mail and IP hash in the MVP).
 
 **Technical constraints:** server-rendered EJS, no SPA and no view bundler; Tailwind CLI for CSS; game interactivity is plain JavaScript on the page. Performance budget for the landing page: LCP ≤ 2.5s on simulated 4G, CLS ≈ 0, 60 fps scrolling, no image above 200 KB, total landing JS under 30 KB uncompressed. App pages respond in ≤2s, games in <1s.
 

@@ -13,6 +13,7 @@ import { fecharSessionStore } from '../../src/config/session.js';
 import * as itemsRepository from '../../src/repositories/itemsRepository.js';
 import * as profilesRepository from '../../src/repositories/profilesRepository.js';
 import * as coinsService from '../../src/services/coinsService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * As telas da economia (RF-LOJ-01 a 07, RF-INV-01 a 04, RF-COF-01 a 04).
@@ -53,18 +54,14 @@ describe('telas da economia', opcoes, () => {
     agente = request.agent(app);
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'lojista',
         email: 'lojista@beever.dev',
         data_nasc: '2014-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

@@ -103,12 +103,22 @@ export async function emailJaUsado(email) {
   return linhas.length > 0;
 }
 
-/** Conta criada pelo Google chega com `senhaHash` nulo e `googleSub` preenchido. */
-export async function criar({ email, apelido, dataNasc, senhaHash, googleSub = null }, conexao = null) {
+/**
+ * Cria a conta (responsável) ou uma persona filha.
+ *
+ * Nenhuma migration foi necessária: `nickname` e `birth_date` já são NOT NULL,
+ * as linhas filhas já nasciam sem e-mail/senha e `onboarding_completed_at`
+ * já existia — só passa a ser escrito aqui, porque o responsável não faz o wizard.
+ */
+export async function criar(
+  { email, apelido, dataNasc, senhaHash, googleSub = null, onboardingConcluido = false },
+  conexao = null,
+) {
   const resultado = await consultarEm(
     conexao,
-    'INSERT INTO users (email, nickname, birth_date, password_hash, google_sub) VALUES (?, ?, ?, ?, ?)',
-    [email, apelido, dataNasc, senhaHash, googleSub],
+    `INSERT INTO users (email, nickname, birth_date, password_hash, google_sub, onboarding_completed_at)
+     VALUES (?, ?, ?, ?, ?, CASE WHEN ? THEN NOW() ELSE NULL END)`,
+    [email, apelido, dataNasc, senhaHash, googleSub, onboardingConcluido ? 1 : 0],
   );
   return resultado.insertId;
 }
@@ -200,6 +210,52 @@ export async function removerPorIds(ids) {
   const marcadores = ids.map(() => '?').join(', ');
   const resultado = await consultar(`DELETE FROM users WHERE id IN (${marcadores})`, ids);
   return resultado.affectedRows;
+}
+
+/**
+ * Apaga só os dados de jogador de uma linha `users`, mantendo a conta viva.
+ *
+ * É o caso da conta antiga que também era o primeiro perfil: remover a linha
+ * levaria junto e-mail, senha e todas as personas filhas. Aqui a conta fica —
+ * limpa, sem perfil, pronta para receber outras crianças — e a cascata manual
+ * abaixo substitui a do banco que só acontece no `DELETE FROM users`.
+ *
+ * `profiles` vai por último; o restante são tabelas que referenciam `user_id`,
+ * sem dependência entre si além de `inventory → purchases` (SET NULL) e dos
+ * próprios `goals` (SET NULL), então a ordem é segura.
+ */
+const TABELAS_DO_JOGADOR = [
+  'guardian_consents',
+  'schedules',
+  'cell_progress',
+  'hive_progress',
+  'user_levels',
+  'wallets',
+  'game_sessions',
+  'idempotency_keys',
+  'xp_ledger',
+  'point_ledger',
+  'coin_ledger',
+  'goals',
+  'tasks',
+  'streaks',
+  'streak_events',
+  'purchases',
+  'inventory',
+  'vaults',
+  'vault_transactions',
+  'economic_cycles',
+  'patrimony_snapshots',
+  'user_achievements',
+  'league_members',
+  'password_reset_tokens',
+  'profiles',
+];
+
+export async function limparDadosDeJogador(id, conexao = null) {
+  for (const tabela of TABELAS_DO_JOGADOR) {
+    await consultarEm(conexao, `DELETE FROM ${tabela} WHERE user_id = ?`, [id]);
+  }
 }
 
 /** Apagamento definitivo de uma conta (RN-053); a cascata leva o resto. */

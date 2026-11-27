@@ -2,6 +2,7 @@ import * as authService from '../services/authService.js';
 import * as homeService from '../services/homeService.js';
 import * as profilesService from '../services/profilesService.js';
 import * as usersService from '../services/usersService.js';
+import { idContaDaSessao } from '../middlewares/requireAuth.js';
 import { ErroAplicacao, assincrono } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
 import { querJson } from '../utils/resposta.js';
@@ -18,8 +19,9 @@ import { encerrarSessao } from '../utils/sessaoLogin.js';
  */
 const FUNDO_COLMEIA = 'min-h-screen bg-cera pb-28 text-tinta antialiased sm:pb-10';
 
+/** A conta é a autenticada; a persona ativa só muda o que aparece na tela. */
 function idDaConta(req) {
-  return Number(req.session.contaUsuarioId ?? req.session.usuarioId);
+  return idContaDaSessao(req);
 }
 
 function atorDaRequisicao(req) {

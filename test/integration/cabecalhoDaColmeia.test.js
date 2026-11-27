@@ -12,6 +12,7 @@ import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as coinsService from '../../src/services/coinsService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O cabeçalho da Colmeia (RF-HOM-01 a 03).
@@ -45,18 +46,14 @@ describe('cabeçalho da Colmeia', opcoes, () => {
     agente = request.agent(app);
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'topo',
         email: 'topo@beever.dev',
         data_nasc: '2014-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

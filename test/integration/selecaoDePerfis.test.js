@@ -10,6 +10,7 @@ import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
+import { criarCrianca, criarResponsavel } from '../helpers/fixturesDeCadastro.js';
 
 const pular = await motivoParaPular();
 const opcoes = pular ? { skip: pular } : {};
@@ -17,9 +18,8 @@ const opcoes = pular ? { skip: pular } : {};
 const CONTA = {
   apelido: 'perfis',
   email: 'perfis@beever.dev',
-  data_nasc: '2014-05-01',
+  data_nasc: '1991-05-01',
   senha: 'beever123',
-  consentimento_responsavel: 'on',
 };
 
 describe('seleção de perfis', opcoes, () => {
@@ -27,6 +27,7 @@ describe('seleção de perfis', opcoes, () => {
   let agente;
   let contaId;
   let perfilId;
+  let usuarioDaCrianca;
   let perfilIrma;
 
   async function lerToken(caminho) {
@@ -37,16 +38,17 @@ describe('seleção de perfis', opcoes, () => {
     banco = await criarBancoDeTeste();
     agente = request.agent(criarApp());
 
-    let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({ ...CONTA, _csrf: csrf })
-      .expect(201);
-    contaId = cadastro.body.id;
+    const cadastro = await criarCrianca(agente, {
+      apelido: CONTA.apelido,
+      email: CONTA.email,
+      data_nasc: '2014-05-01',
+      senha: CONTA.senha,
+    });
+    contaId = cadastro.body.contaId;
     perfilId = cadastro.body.idPerfil;
+    usuarioDaCrianca = cadastro.body.id;
+    const csrf = await lerToken('/onboarding');
 
-    csrf = await lerToken('/onboarding');
     await agente
       .put(`/perfil/${perfilId}/onboarding`)
       .set('Accept', 'application/json')
@@ -76,13 +78,69 @@ describe('seleção de perfis', opcoes, () => {
     assert.match(html, new RegExp(`action="/perfis/${perfilId}/selecionar"`), 'o perfil precisa ser selecionável');
     assert.match(html, /name="_csrf"/, 'a seleção precisa carregar o token CSRF');
     assert.match(html, /id="btn-criar-perfil"/, 'o botão de criar perfil sumiu');
+    assert.match(
+      html,
+      /<\/section>\s*<form method="POST" action="\/sessao\/logout"[\s\S]*?Sair da conta\s*<\/button>/,
+      'a saída da conta precisa ficar abaixo do quadro de perfis',
+    );
     assert.match(html, /id="dialogo-criar-perfil"/, 'o diálogo de criação precisa existir');
     assert.match(html, /\/js\/perfis\.js/, 'a tela precisa carregar o script do diálogo');
     assert.match(html, /perfis@beever\.dev/, 'a tela precisa identificar a conta');
-    assert.doesNotMatch(html, /data-menu-perfil/, 'a conta principal não pode ser excluída por aqui');
+    assert.doesNotMatch(
+      html,
+      new RegExp(`data-excluir-perfil="${perfilId}"`),
+      'o perfil atual não pode ser excluído direto',
+    );
 
     // O perfil atual ganha um marcador textual, não só cor.
     assert.match(html, /Perfil atual/);
+  });
+
+  it('registra o consentimento da conta ao criar o perfil infantil', async () => {
+    const [[consentimento]] = await banco.conexao.query(
+      `SELECT g.guardian_email, g.ip_hash
+         FROM guardian_consents g
+        WHERE g.user_id = ?`,
+      [usuarioDaCrianca],
+    );
+
+    assert.equal(
+      consentimento.guardian_email,
+      CONTA.email,
+      'a prova precisa copiar o e-mail de quem autorizou',
+    );
+    assert.match(consentimento.ip_hash, /^[0-9a-f]{64}$/, 'a origem fica registrada como hash');
+  });
+
+  it('conta nova do responsável não nasce com perfil jogável', async () => {
+    const resposta = await agente.get('/perfis').set('Accept', 'application/json').expect(200);
+    assert.equal(resposta.body.perfis.some((perfil) => perfil.email === CONTA.email), false);
+
+    const [[linha]] = await banco.conexao.query(
+      `SELECT COUNT(*) AS total
+         FROM profiles p
+         JOIN users u ON u.id = p.user_id
+        WHERE u.id = ?`,
+      [contaId],
+    );
+    assert.equal(Number(linha.total), 0, 'a conta adulta não nasce com persona própria');
+  });
+
+  it('recusa criar uma criança sem consentimento', async () => {
+    const csrf = await lerToken('/perfis');
+    const resposta = await agente
+      .post('/perfis')
+      .set('Accept', 'application/json')
+      .send({ apelido: 'sem-autorizacao', data_nasc: '2016-03-01', consentimento_responsavel: false, _csrf: csrf })
+      .expect(422);
+
+    assert.equal(resposta.body.codigo, 'CONSENTIMENTO_NECESSARIO');
+
+    const [[pessoa]] = await banco.conexao.query(
+      'SELECT id FROM users WHERE nickname = ?',
+      ['sem-autorizacao'],
+    );
+    assert.equal(pessoa, undefined, 'perfil sem autorização não pode ser gravado');
   });
 
   it('a seleção troca o perfil ativo e volta para a Colmeia', async () => {
@@ -95,7 +153,9 @@ describe('seleção de perfis', opcoes, () => {
       .expect(302);
 
     assert.equal(resposta.headers.location, '/painel');
-    await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    // `/painel` entrega a Colmeia por redirect; seguir até o fim prova que a
+    // sessão escolhida realmente chega ao jogo.
+    await agente.get('/painel').set('Accept', 'text/html').redirects(2).expect(200);
   });
 
   it('a página também responde JSON para quem pede dados', async () => {
@@ -121,21 +181,14 @@ describe('seleção de perfis', opcoes, () => {
 
   it('perfil de outra conta não pode ser selecionado', async () => {
     const intruso = request.agent(criarApp());
-    let csrf = await lerTokenPara(intruso, '/login');
-    const cadastro = await intruso
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
-        apelido: 'intruso',
-        email: 'intruso@beever.dev',
-        data_nasc: '2014-05-01',
-        senha: 'beever123',
-        consentimento_responsavel: 'on',
-        _csrf: csrf,
-      })
-      .expect(201);
+    const cadastro = await criarCrianca(intruso, {
+      apelido: 'intruso',
+      email: 'intruso@beever.dev',
+      data_nasc: '2014-05-01',
+      senha: 'beever123',
+    });
 
-    csrf = await lerTokenPara(intruso, '/onboarding');
+    let csrf = await lerTokenPara(intruso, '/onboarding');
     await intruso
       .put(`/perfil/${cadastro.body.idPerfil}/onboarding`)
       .set('Accept', 'application/json')
@@ -162,7 +215,12 @@ describe('seleção de perfis', opcoes, () => {
     const criado = await agente
       .post('/perfis')
       .set('Accept', 'application/json')
-      .send({ apelido: 'irma', data_nasc: '2017-02-03', _csrf: csrf })
+      .send({
+        apelido: 'irma',
+        data_nasc: '2017-02-03',
+        consentimento_responsavel: true,
+        _csrf: csrf,
+      })
       .expect(201);
 
     perfilIrma = criado.body;
@@ -225,13 +283,79 @@ describe('seleção de perfis', opcoes, () => {
       .expect(302);
 
     assert.equal(resposta.headers.location, '/painel');
-    await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    // `/painel` entrega a Colmeia por redirect; seguir até o fim prova que a
+    // sessão escolhida realmente chega ao jogo.
+    await agente.get('/painel').set('Accept', 'text/html').redirects(2).expect(200);
 
     const pagina = await agente.get('/perfis').set('Accept', 'text/html').expect(200);
     assert.match(
       pagina.text,
       new RegExp(`data-excluir-perfil="${perfilIrma.idPerfil}"`),
       'o perfil adicional fora de uso precisa oferecer a exclusão',
+    );
+  });
+
+  it('mantém e permite excluir o perfil principal das contas antigas', async () => {
+    const legado = request.agent(criarApp());
+    const conta = await criarResponsavel(legado, {
+      apelido: 'legado',
+      email: 'legado@beever.dev',
+      data_nasc: '1992-08-12',
+    });
+
+    // Antes da separação, a conta já nascia com a persona principal: é esse
+    // registro que não pode desaparecer da seleção quando o fluxo muda.
+    const [inserido] = await banco.conexao.query('INSERT INTO profiles (user_id) VALUES (?)', [conta.body.id]);
+    const perfilLegado = Number(inserido.insertId);
+
+    const lista = await legado.get('/perfis').set('Accept', 'application/json').expect(200);
+    assert.equal(lista.body.perfis.length, 1);
+    assert.equal(lista.body.perfis[0].id, perfilLegado);
+
+    const csrf = await lerTokenPara(legado, '/perfis');
+    const selecao = await legado
+      .post(`/perfis/${perfilLegado}/selecionar`)
+      .set('Accept', 'text/html')
+      .send({ _csrf: csrf })
+      .expect(302);
+
+    // A conta antiga já concluiu o onboarding quando era a persona principal.
+    assert.equal(selecao.headers.location, '/painel');
+    const depois = await legado.get('/perfis').set('Accept', 'application/json').expect(200);
+    assert.equal(depois.body.perfilAtualId, perfilLegado);
+
+    // Agora ele se comporta como qualquer outro perfil: troca-se para um
+    // irmão e a exclusão apaga só a persona, nunca a conta que a sustenta.
+    const csrfParaCriar = await lerTokenPara(legado, '/perfis');
+    const irma = await legado
+      .post('/perfis')
+      .set('Accept', 'application/json')
+      .send({ apelido: 'irma-legado', data_nasc: '2017-02-03', consentimento_responsavel: true, _csrf: csrfParaCriar })
+      .expect(201);
+
+    const csrfParaExcluir = await lerTokenPara(legado, '/perfis');
+    await legado
+      .delete(`/perfil/${perfilLegado}`)
+      .set('Accept', 'application/json')
+      .set('x-csrf-token', csrfParaExcluir)
+      .expect(200);
+
+    const [[contaDepois]] = await banco.conexao.query(
+      'SELECT email, password_hash FROM users WHERE id = ?',
+      [conta.body.id],
+    );
+    assert.equal(contaDepois.email, 'legado@beever.dev', 'a conta sobrevive à exclusão do perfil principal');
+    assert.ok(contaDepois.password_hash, 'a senha da conta continua valendo para login');
+
+    const [[perfilApagado]] = await banco.conexao.query('SELECT id FROM profiles WHERE id = ?', [perfilLegado]);
+    assert.equal(perfilApagado, undefined, 'a persona principal saiu da tabela de perfis');
+    const [[irmaDepois]] = await banco.conexao.query('SELECT owner_user_id FROM users WHERE id = ?', [irma.body.id]);
+    assert.equal(Number(irmaDepois.owner_user_id), Number(conta.body.id), 'o irmão continua na mesma conta');
+
+    const listaFinal = await legado.get('/perfis').set('Accept', 'application/json').expect(200);
+    assert.deepEqual(
+      listaFinal.body.perfis.map((perfil) => perfil.id),
+      [irma.body.idPerfil],
     );
   });
 

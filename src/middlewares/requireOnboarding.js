@@ -29,9 +29,27 @@ export function requireLogin(req, res, next) {
   return querJson(req) ? next(erroNaoAutorizado()) : res.redirect('/login');
 }
 
+/**
+ * A conta do responsável não joga. `usuarioId` diz quem autenticou, `perfilId`
+ * diz qual criança está na Colmeia — e no cadastro do adulto não há perfil.
+ * Sem esta barreira ele entraria nas rotas de jogo com o próprio id e ganharia
+ * mel, metas e tarefas de uma persona que não deveria existir.
+ */
+function erroSemPerfil() {
+  return new ErroAplicacao('Selecione um perfil infantil para continuar', {
+    status: 403,
+    codigo: 'PERFIL_NAO_SELECIONADO',
+  });
+}
+
 export function requireOnboarding(req, res, next) {
   if (!req.session?.usuarioId) {
     return querJson(req) ? next(erroNaoAutorizado()) : res.redirect('/login');
+  }
+
+  // A conta autenticou, mas sem criança selecionada não há jogador.
+  if (!req.session.perfilId) {
+    return querJson(req) ? next(erroSemPerfil()) : res.redirect('/perfis');
   }
 
   if (req.session.onboardingConcluido) return next();
@@ -59,6 +77,12 @@ export function requireOnboarding(req, res, next) {
 export function requireOnboardingPendente(req, res, next) {
   if (!req.session?.usuarioId) {
     return querJson(req) ? next(erroNaoAutorizado()) : res.redirect('/login');
+  }
+
+  // Onboarding configura um perfil jogador. Sem criança selecionada não há o
+  // que configurar: manda escolher (ou criar) uma antes.
+  if (!req.session.perfilId) {
+    return querJson(req) ? next(erroSemPerfil()) : res.redirect('/perfis');
   }
 
   if (!req.session.onboardingConcluido) return next();

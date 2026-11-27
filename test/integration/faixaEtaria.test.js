@@ -13,6 +13,7 @@ import { fecharSessionStore } from '../../src/config/session.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
 import * as contentService from '../../src/services/contentService.js';
 import * as progressService from '../../src/services/progressService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O filtro da RN-029 com conteúdo real nas três faixas (RF-CON-06).
@@ -60,18 +61,14 @@ describe('conteúdo por faixa etária', opcoes, () => {
     }
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: sufixo,
         email: `faixa-${sufixo}@beever.dev`,
         data_nasc: nascidoHa(idade),
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

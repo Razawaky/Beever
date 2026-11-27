@@ -12,6 +12,7 @@ import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Retomar uma partida interrompida (RF-JOG-07).
@@ -70,18 +71,14 @@ describe('retomada de partida', opcoes, () => {
     agente = request.agent(app);
     csrf = await lerToken('/login');
 
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'retomador',
         email: 'retomada-de-partida@beever.dev',
         data_nasc: '2018-04-02',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente
@@ -178,18 +175,14 @@ describe('retomada de partida', opcoes, () => {
       return /name="_csrf" value="([^"]+)"/.exec(pagina.text)[1];
     })();
 
-    await estranho
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    await criarCrianca(estranho, {
         apelido: 'intruso',
         email: 'intruso-retomada@beever.dev',
         data_nasc: '2018-04-02',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: tokenDoEstranho,
-      })
-      .expect(201);
+      });
 
     await estranho
       .put(`/partidas/${partida.token}/estado`)

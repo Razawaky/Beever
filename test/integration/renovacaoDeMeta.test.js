@@ -12,6 +12,7 @@ import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as goalsRepository from '../../src/repositories/goalsRepository.js';
 import * as goalsService from '../../src/services/goalsService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Renovar a meta vencida (RN-017, RF-MET-05, dívida DT-33).
@@ -63,18 +64,14 @@ describe('renovação de meta', opcoes, () => {
     agente = request.agent(app);
     csrf = await lerToken('/login');
 
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'renovador',
         email: 'renovacao-de-meta@beever.dev',
         data_nasc: '2018-04-02',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

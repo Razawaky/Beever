@@ -3,11 +3,12 @@
  * logo após o cadastro). Regenera o id da sessão sempre: sem isso, um id
  * plantado antes da autenticação continuaria válido depois dela.
  *
- * `usuarioId` é a persona que está jogando; `contaUsuarioId` é quem
- * autenticou e é dono de todos os perfis. No login os dois são iguais — a
- * conta principal também é o primeiro perfil. A seleção em `/perfis` troca só
- * `usuarioId`/`perfilId`, mantendo `contaUsuarioId` para a lista continuar
- * mostrando todos os irmãos.
+ * `contaUsuarioId` é quem autenticou (o responsável, dono de todos os perfis);
+ * `usuarioId` é a persona jogando e `perfilId` o registro dela. No cadastro do
+ * responsável não há persona ainda, e `perfilId` fica vazio até a escolha em
+ * `/perfis` (até lá, `usuarioId` só mantém a sessão autenticada). Nas contas
+ * antigas, que já nasceram com perfil, o login enche os três — o guard de jogo
+ * distingue um caso do outro por `perfilId`.
  */
 export function iniciarSessaoLogin(
   req,

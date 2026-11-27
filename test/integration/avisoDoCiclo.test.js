@@ -14,6 +14,7 @@ import * as inventoryRepository from '../../src/repositories/inventoryRepository
 import * as itemsRepository from '../../src/repositories/itemsRepository.js';
 import * as profilesRepository from '../../src/repositories/profilesRepository.js';
 import * as coinsService from '../../src/services/coinsService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O aviso do ciclo na Colmeia (RF-HOM-09).
@@ -61,18 +62,14 @@ describe('aviso do ciclo na Colmeia', opcoes, () => {
     barraquinha = await itemsRepository.buscarPorSlug('barraquinha-de-limonada');
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'viajante',
         email: 'viajante@beever.dev',
         data_nasc: '2014-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

@@ -74,8 +74,9 @@ export async function concluirLogin(usuario, metodo) {
 
   return {
     id: usuario.id,
-    // Quem autenticou é a conta principal e também o perfil inicial. A seleção
-    // em `/perfis` muda `usuarioId` na sessão, nunca este vínculo.
+    // Quem autenticou é a conta (o responsável). `perfilId` pode vir nulo:
+    // conta criada depois da separação ainda não tem persona, e o login a manda
+    // para `/perfis` escolher ou criar uma criança.
     contaUsuarioId: usuario.id,
     email: usuario.email,
     apelido: usuario.nickname,

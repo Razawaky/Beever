@@ -17,9 +17,14 @@ import * as vaultService from '../services/vaultService.js';
 import { env } from '../config/env.js';
 import { googleConfigurado } from '../config/google.js';
 import { mascote } from '../config/mascote.js';
+import { idContaDaSessao } from '../middlewares/requireAuth.js';
 import { assincrono, erroNaoEncontrado } from '../utils/erros.js';
 import { renderizarPagina } from '../utils/pagina.js';
 import { querJson } from '../utils/resposta.js';
+
+// Checkbox de formulário chega como 'on'; JSON de teste/API manda true ou '1'.
+// Qualquer outro valor — inclusive 'false' e '0' — não é consentimento.
+const CONSENTIMENTO_AFIRMATIVO = [true, 'true', 'on', '1'];
 
 /**
  * Controller só das páginas que renderizam EJS a partir de GET simples —
@@ -160,7 +165,7 @@ export const onboarding = assincrono(async (req, res) => {
  * para outra ou se volta para a conta principal.
  */
 export const perfis = assincrono(async (req, res) => {
-  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  const contaId = idContaDaSessao(req);
   // Sessões abertas antes da migration 026 não têm `contaUsuarioId`; nelas o
   // usuário ativo ainda é a conta principal, então ele vira o dono agora e a
   // lista não perde os irmãos no primeiro clique.
@@ -186,7 +191,7 @@ export const perfis = assincrono(async (req, res) => {
 
 /** Troca o perfil ativo da sessão. A posse é conferida dentro do service. */
 export const escolherPerfil = assincrono(async (req, res) => {
-  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  const contaId = idContaDaSessao(req);
   const perfil = await profilesService.selecionar(Number(req.params.id), contaId);
 
   req.session.contaUsuarioId = contaId;
@@ -206,10 +211,11 @@ export const escolherPerfil = assincrono(async (req, res) => {
  * voltar para a seleção e escolher qualquer irmão.
  */
 export const criarPerfil = assincrono(async (req, res) => {
-  const contaId = req.session.contaUsuarioId ?? req.session.usuarioId;
+  const contaId = idContaDaSessao(req);
   const perfil = await profilesService.criarNaConta(contaId, {
     apelido: req.body.apelido,
     dataNasc: req.body.data_nasc,
+    consentimentoResponsavel: CONSENTIMENTO_AFIRMATIVO.includes(req.body.consentimento_responsavel),
   });
 
   req.session.contaUsuarioId = contaId;

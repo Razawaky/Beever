@@ -13,6 +13,7 @@ import { fecharSessionStore } from '../../src/config/session.js';
 import * as coinsService from '../../src/services/coinsService.js';
 import * as goalProgressSources from '../../src/services/goalProgressSources.js';
 import * as goalsService from '../../src/services/goalsService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O `GoalPlannerService` contra banco real (RN-014, RN-015, RN-016, RN-018).
@@ -70,18 +71,14 @@ describe('planejador de metas', opcoes, () => {
     const agente = request.agent(app);
     let csrf = await lerToken(agente, '/cadastro');
 
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido,
         email: `${apelido}@beever.dev`,
         data_nasc: '2013-06-15',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken(agente, '/onboarding');
     const conclusao = await agente

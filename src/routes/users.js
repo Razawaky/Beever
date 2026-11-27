@@ -10,10 +10,10 @@ import { exigirApelidoPublico } from '../services/apelidoPublico.js';
 /**
  * Rotas de conta.
  *
- * O cadastro **não pede nome completo**: a RN-049 proíbe coletar dado pessoal
- * de criança além de apelido e avatar, e o schema não tem onde guardar. Por
- * isso o apelido, que antes era opcional (o nome real fazia as vezes dele),
- * agora é obrigatório.
+ * O cadastro é do responsável, não da criança: pede como o adulto quer ser
+ * chamado, e-mail e senha. As crianças entram depois como perfis (`/perfis`),
+ * com apelido, faixa etária e consentimento próprios. Não se pede nome completo
+ * porque a RN-049 proíbe coletar dado pessoal de criança além do necessário.
  */
 const router = Router();
 
@@ -42,13 +42,6 @@ const regrasCadastro = [
     .optional()
     .custom((valor, { req }) => valor === req.body.senha)
     .withMessage('As senhas não coincidem'),
-  // Quem decide se o consentimento é obrigatório é o service, que conhece a
-  // idade. Aqui só se garante que o valor tenha forma de "sim ou não" — um
-  // texto qualquer no lugar do checkbox não pode virar autorização.
-  body('consentimento_responsavel')
-    .optional()
-    .isIn(['on', 'true', '1', true, 'false', '0', false])
-    .withMessage('Confirmação de responsável inválida'),
 ];
 
 const regrasAtualizacao = [

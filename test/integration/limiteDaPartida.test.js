@@ -10,6 +10,7 @@ import { after, before, describe, it } from 'node:test';
 import request from 'supertest';
 
 import './../helpers/ambiente.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 const { criarBancoDeTeste, motivoParaPular } = await import('../helpers/banco.js');
 const { criarApp } = await import('../../src/app.js');
@@ -49,18 +50,14 @@ describe('limite da rota de partida', opcoes, () => {
     const pagina = await agente.get('/login').set('Accept', 'text/html');
     csrf = /name="_csrf" value="([^"]+)"/.exec(pagina.text)[1];
 
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'apressado',
         email: 'limite-da-partida@beever.dev',
         data_nasc: '2018-04-02',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     const onboarding = await agente.get('/onboarding').set('Accept', 'text/html');
     csrf = /data-csrf-token="([^"]+)"/.exec(onboarding.text)[1];

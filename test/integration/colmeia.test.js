@@ -15,6 +15,7 @@ import * as itemsRepository from '../../src/repositories/itemsRepository.js';
 import * as profilesRepository from '../../src/repositories/profilesRepository.js';
 import * as coinsService from '../../src/services/coinsService.js';
 import * as contentService from '../../src/services/contentService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * A Colmeia agregada (RF-HOM-01 a 09, RNF-01 e RNF-04).
@@ -76,18 +77,14 @@ describe('a Colmeia', opcoes, () => {
     agente = request.agent(app);
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'moradora',
         email: 'moradora@beever.dev',
         data_nasc: '2014-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

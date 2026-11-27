@@ -169,7 +169,7 @@ A faixa é definida no onboarding e altera: quantidade de texto, dificuldade das
 
 ### 3.8 Conta, perfil e administração
 
-- **RN-048** Registro exige apelido, e-mail (do responsável, quando menor) e senha de no mínimo 8 caracteres com letras e números.
+- **RN-048** Registro é do responsável (maior de 18 anos) e exige como quer ser chamado, e-mail e senha de no mínimo 8 caracteres com letras e números. A conta não joga: as crianças entram depois como perfis.
 - **RN-049** Não coletamos nome completo, endereço, telefone, foto real nem localização. Apelido + avatar apenas. (LGPD, dado de criança.)
 - **RN-050** Perfil é 1:1 com uma persona (linha de `users`) e guarda: faixa de idade, avatar, fuso, disponibilidade, preferências de som/animação. A conta pode ter vários perfis; o adicional é linha-filha ligada por `owner_user_id` e não autentica sozinho.
 - **RN-051** Admin é identificado por tabela própria via join — **nunca** por coluna `role` no usuário.
@@ -385,7 +385,7 @@ Todos em JS puro na página, cálculo validado no servidor.
 
 ### 5.6 Legal / ética (obrigatório no TCC)
 - **RNF-33** Coleta mínima de dados de menores conforme LGPD (Art. 14): apelido e avatar, sem dado sensível.
-- **RNF-34** Consentimento de responsável no registro de menor (checkbox + e-mail do responsável no MVP).
+- **RNF-34** Consentimento de responsável no cadastro de **cada perfil infantil** (checkbox, e-mail da conta e hash do IP registrados na mesma transação). O cadastro do adulto não pede consentimento de criança.
 - **RNF-35** Nenhuma transação com dinheiro real; deixar explícito na UI que a moeda é fictícia.
 - **RNF-36** Sem publicidade, sem mecânica de gasto real, sem loot box aleatória paga.
 

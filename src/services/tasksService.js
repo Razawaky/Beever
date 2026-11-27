@@ -1,5 +1,6 @@
 import { emTransacao } from '../config/database.js';
 import * as tasksRepository from '../repositories/tasksRepository.js';
+import * as usersRepository from '../repositories/usersRepository.js';
 import {
   dataDoDia,
   diaDaSemana,
@@ -148,9 +149,6 @@ export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
   const hojeVale = disponiveis.length === 0 || disponiveis.includes(diaDaSemana(hoje));
   if (!hojeVale) return { criadas: 0, motivo: 'dia fora da agenda do jogador' };
 
-  const vagas = MAXIMO_DE_ATIVAS - (await tasksRepository.contarAtivas(idUsuario));
-  if (vagas <= 0) return { criadas: 0, motivo: 'o jogador já tem o máximo de tarefas ativas' };
-
   // Tipo cuja fonte ninguém sabe medir não é proposto, pelo mesmo motivo do
   // planejador de metas: tarefa impossível de cumprir não é tarefa.
   const mensuraveis = taskProgressSources.fontesMensuraveis();
@@ -160,27 +158,72 @@ export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
   const diarios = tipos.filter((tipo) => tipo.scope === 'diaria');
   const semanais = tipos.filter((tipo) => tipo.scope === 'semanal');
 
-  const [jaDiarias, jaSemanais] = await Promise.all([
-    tasksRepository.listarAtivasPorEscopoDesde(idUsuario, 'diaria', paraMySQL(inicioDoDia(hoje, fuso))),
-    tasksRepository.listarAtivasPorEscopoDesde(idUsuario, 'semanal', paraMySQL(inicioDaSemana(hoje, fuso))),
-  ]);
+  // Trava, reconta e só então cria. Sem a trava, duas visitas simultâneas leem
+  // o mesmo "faltam tantas" e criam a cota cada uma — tarefas duplicadas, cada
+  // uma pagando sua recompensa. É o mesmo desenho de `garantirMetasAtivas`.
+  const { criadas, motivo } = await emTransacao(async (conexao) => {
+    await usersRepository.travarPorId(conexao, idUsuario);
 
-  const aCriar = [
-    ...escolherTipos(diarios, TAREFAS_DIARIAS - jaDiarias.length, hoje).map((tipo) => ({
-      tipo,
-      prazo: paraMySQL(fimDoDia(hoje, fuso)),
-    })),
-    ...escolherTipos(semanais, TAREFAS_SEMANAIS - jaSemanais.length, hoje).map((tipo) => ({
-      tipo,
-      prazo: paraMySQL(fimDaSemana(hoje, fuso)),
-    })),
-  ].slice(0, vagas);
+    const vagas = MAXIMO_DE_ATIVAS - (await tasksRepository.contarAtivas(idUsuario, conexao));
+    if (vagas <= 0) {
+      return { criadas: [], motivo: 'o jogador já tem o máximo de tarefas ativas' };
+    }
 
-  for (const { tipo, prazo } of aCriar) {
-    const idTarefa = await emTransacao((conexao) =>
-      tasksRepository.criar(conexao, { idUsuario, idTipo: tipo.id, prazo }),
+    const jaDiarias = await tasksRepository.listarDoEscopoDesde(
+      idUsuario,
+      'diaria',
+      paraMySQL(inicioDoDia(hoje, fuso)),
+      conexao,
+    );
+    const jaSemanais = await tasksRepository.listarDoEscopoDesde(
+      idUsuario,
+      'semanal',
+      paraMySQL(inicioDaSemana(hoje, fuso)),
+      conexao,
     );
 
+    // Um tipo já proposto no período não volta a ser proposto, mesmo que a
+    // tarefa anterior tenha sido concluída. Contar só as ativas fazia o gerador
+    // achar que o dia estava vago e criar outra tarefa pagável na visita
+    // seguinte — receber e recarregar virava mel infinito.
+    const jaUsados = new Set(
+      [...jaDiarias, ...jaSemanais].map((tarefa) => Number(tarefa.task_type_id)),
+    );
+    const disponiveisDoPeriodo = (tiposDoEscopo) =>
+      tiposDoEscopo.filter((tipo) => !jaUsados.has(Number(tipo.id)));
+
+    const diariasEscolhidas = escolherTipos(
+      disponiveisDoPeriodo(diarios),
+      TAREFAS_DIARIAS - jaDiarias.length,
+      hoje,
+    );
+    const semanaisEscolhidas = escolherTipos(
+      disponiveisDoPeriodo(semanais),
+      TAREFAS_SEMANAIS - jaSemanais.length,
+      hoje,
+    );
+    const aCriar = [
+      ...diariasEscolhidas.map((tipo) => ({
+        tipo,
+        prazo: paraMySQL(fimDoDia(hoje, fuso)),
+      })),
+      ...semanaisEscolhidas.map((tipo) => ({
+        tipo,
+        prazo: paraMySQL(fimDaSemana(hoje, fuso)),
+      })),
+    ].slice(0, vagas);
+
+    const criadas = [];
+    for (const { tipo, prazo } of aCriar) {
+      const idTarefa = await tasksRepository.criar(conexao, { idUsuario, idTipo: tipo.id, prazo });
+      criadas.push({ idTarefa, tipo, prazo });
+    }
+    return { criadas, motivo: null };
+  });
+
+  if (motivo) return { criadas: 0, motivo };
+
+  for (const { idTarefa, tipo, prazo } of criadas) {
     await auditService.registrar(auditService.sistema(), 'tarefa.gerada', {
       entidade: 'task',
       id: idTarefa,
@@ -188,7 +231,7 @@ export async function garantirTarefasDoDia(idUsuario, agora = new Date()) {
     });
   }
 
-  return { criadas: aCriar.length };
+  return { criadas: criadas.length };
 }
 
 /** O pedaço de tempo que a tarefa mede: da criação dela até o prazo. */

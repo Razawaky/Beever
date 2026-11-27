@@ -13,6 +13,7 @@ import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as schedulesService from '../../src/services/schedulesService.js';
 import * as streakService from '../../src/services/streakService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O Escudo de Sequência (RN-022, RF-SEQ-03).
@@ -113,18 +114,14 @@ describe('escudo de sequência', opcoes, () => {
     agente = request.agent(app);
 
     csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'escudeiro',
         email: 'escudo@beever.dev',
         data_nasc: '2015-07-11',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

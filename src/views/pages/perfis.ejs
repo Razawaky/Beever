@@ -3,7 +3,7 @@
   const temVarios = perfis.length > 1;
 %>
 <div class="main-favos favos-de-fundo" aria-hidden="true"></div>
-<main class="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+<main class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-10">
   <section class="relative w-full max-w-xl rounded-favo bg-white p-6 shadow-painel sm:p-10">
     <%# Opções da conta no canto do quadro: o mesmo diálogo de exclusão das configurações. %>
     <div class="absolute right-4 top-4 z-30">
@@ -69,11 +69,13 @@
       <% perfis.forEach((perfil) => { %>
         <%
           const ehAtual = atual(perfil.id);
-          // Só perfis adicionais podem ser excluídos. A conta principal tem
-          // outro fluxo de encerramento, e o perfil em uso precisa ser trocado
-          // antes: apagar a persona ativa deixaria a sessão sem chão.
-          const podeTerMenu = Boolean(perfil.owner_user_id);
-          const podeExcluir = podeTerMenu && !ehAtual;
+          // O perfil em uso precisa ser trocado antes: apagar a persona ativa
+          // deixaria a sessão sem chão.
+          // O perfil principal das contas antigas também é uma persona: pode
+          // ter menu e ser excluído como qualquer outro (desde que não seja o
+          // atual). A conta em si continua saindo pelo menu do canto.
+          const podeTerMenu = true;
+          const podeExcluir = !ehAtual;
         %>
         <li class="relative">
           <form method="POST" action="/perfis/<%= perfil.id %>/selecionar">
@@ -129,7 +131,7 @@
           </form>
 
           <% if (podeTerMenu) { %>
-            <div class="absolute right-2 top-1/2 -translate-y-1/2">
+            <div class="absolute right-2 top-1/2 z-40 -translate-y-1/2">
               <button
                 type="button"
                 id="btn-menu-perfil-<%= perfil.id %>"
@@ -151,7 +153,7 @@
                 id="menu-perfil-<%= perfil.id %>"
                 role="menu"
                 aria-labelledby="btn-menu-perfil-<%= perfil.id %>"
-                class="absolute right-0 top-full z-20 mt-2 hidden w-52 rounded-favo border border-linha bg-white p-2 shadow-elevado"
+                class="absolute right-0 top-full z-50 mt-2 hidden w-52 rounded-favo border border-linha bg-white p-2 shadow-elevado"
               >
                 <% if (podeExcluir) { %>
                   <button
@@ -199,6 +201,17 @@
       Criar novo perfil
     </button>
   </section>
+
+  <%# Saída da conta fora do quadro: continua sendo um POST com CSRF, como na sidebar. -%>
+  <form method="POST" action="/sessao/logout" class="mt-4 text-center">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <button
+      type="submit"
+      class="inline-flex min-h-11 items-center rounded-favo px-4 py-2 text-sm font-semibold text-tinta-suave underline underline-offset-4 transition hover:text-tinta focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2 cursor-pointer"
+    >
+      Sair da conta
+    </button>
+  </form>
 </main>
 
 <dialog
@@ -241,6 +254,25 @@
       />
       <p class="mt-1 text-xs text-tinta-suave">A idade define a faixa etária e o conteúdo do perfil.</p>
     </div>
+
+    <%# RNF-34 / LGPD Art. 14: o consentimento é pedido e registrado por criança,
+        no momento em que o perfil é criado — não no cadastro do responsável. %>
+    <label class="flex cursor-pointer gap-3 rounded-favo border border-linha bg-cera p-4 text-sm">
+      <input
+        type="checkbox"
+        id="perfil-consentimento"
+        name="consentimento_responsavel"
+        value="on"
+        required
+        class="mt-0.5 h-5 w-5 shrink-0 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      />
+      <span>
+        Sou o responsável por esta criança e autorizo a criação do perfil.
+        <span class="mt-1 block text-xs text-tinta-suave">
+          O Beever guarda só o apelido e o avatar dela. O mel do jogo é fictício.
+        </span>
+      </span>
+    </label>
 
     <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
       <button

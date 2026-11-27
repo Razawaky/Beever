@@ -27,6 +27,7 @@ import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import { gerarToken, hashDoToken } from '../../src/services/passwordResetService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Acessibilidade e responsividade em todas as telas (T-14.7).
@@ -101,18 +102,14 @@ describe('acessibilidade de todas as telas', opcoes, () => {
 
     const jogador = request.agent(app);
     let csrf = await lerToken(jogador, '/login');
-    const cadastro = await jogador
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(jogador, {
         apelido: 'varredura',
         email: 'varredura@beever.dev',
         data_nasc: '2014-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     // O onboarding só existe enquanto está pendente, então é a primeira coleta.
     await coletar(jogador, 'onboarding', '/onboarding');

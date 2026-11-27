@@ -10,6 +10,7 @@ import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
+import { criarResponsavel } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * As recusas que a autenticação precisa saber dar (T-03.6).
@@ -30,9 +31,8 @@ const opcoes = pular ? { skip: pular } : {};
 const CONTA = {
   apelido: 'guardiao',
   email: 'seguranca@beever.dev',
-  data_nasc: '2014-02-02',
+  data_nasc: '1990-02-02',
   senha: 'beever123',
-  consentimento_responsavel: 'on',
 };
 
 describe('recusas da autenticação', opcoes, () => {
@@ -68,13 +68,7 @@ describe('recusas da autenticação', opcoes, () => {
     agente = request.agent(app);
     csrf = await tokenDe(agente);
 
-    const criacao = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({ ...CONTA, _csrf: csrf });
-    if (criacao.status !== 201) {
-      throw new Error(`cadastro do before falhou: ${criacao.status} ${JSON.stringify(criacao.body)}`);
-    }
+    await criarResponsavel(agente, CONTA);
 
     // O cadastro loga e regenera a sessão: o token de antes morreu com ela.
     await agente.post('/sessao/logout').set('Accept', 'application/json').send({ _csrf: csrf });
@@ -205,7 +199,7 @@ describe('recusas da autenticação', opcoes, () => {
       .expect(200);
 
     csrf = await tokenDe(agente, '/painel');
-    await agente.get('/perfil/meu').set('Accept', 'application/json').expect(200);
+    await agente.get('/perfis').set('Accept', 'application/json').expect(200);
 
     // A sessão vive no MySQL, não no cookie: apagar a linha é o que acontece
     // quando ela expira. O cookie do agente continua o mesmo, e é justamente o
@@ -248,20 +242,12 @@ describe('recusas da autenticação', opcoes, () => {
     // assumia o lugar dela. A auditoria registrava o atacante com precisão —
     // gravar o fato nunca foi o mesmo que impedi-lo.
     const invasor = request.agent(app);
-    let tokenInvasor = await tokenDe(invasor);
-
-    const criacao = await invasor
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
-        apelido: 'invasor',
-        email: 'invasor@beever.dev',
-        data_nasc: '2013-05-05',
-        senha: 'beever123',
-        consentimento_responsavel: 'on',
-        _csrf: tokenInvasor,
-      })
-      .expect(201);
+    const criacao = await criarResponsavel(invasor, {
+      apelido: 'invasor',
+      email: 'invasor@beever.dev',
+      data_nasc: '1990-05-05',
+      senha: 'beever123',
+    });
 
     // A conta do invasor existe e está logada; o alvo é a conta do `before`.
     const [[alvo]] = await banco.conexao.query('SELECT id, email, password_hash FROM users WHERE email = ?', [
@@ -269,7 +255,7 @@ describe('recusas da autenticação', opcoes, () => {
     ]);
     assert.notEqual(Number(alvo.id), Number(criacao.body.id), 'o teste precisa de duas contas diferentes');
 
-    tokenInvasor = await tokenDe(invasor, '/painel');
+    const tokenInvasor = await tokenDe(invasor, '/painel');
 
     const alteracao = await invasor
       .put(`/users/${alvo.id}`)

@@ -28,8 +28,13 @@ const opcoes = pular ? { skip: pular } : {};
 
 const ADMIN = { email: 'admin@beever.dev', senha: 'admin1234' };
 
+let sequenciaDeApelidos = 0;
+
 function apelidoUnico() {
-  return `apagavel-${Date.now()}`;
+  // RN-049: apelido curto, sem data, telefone ou documento. Um contador em
+  // letras mantém a unicidade dentro do arquivo sem números no nome.
+  sequenciaDeApelidos += 1;
+  return `apagavel${String.fromCharCode(96 + sequenciaDeApelidos)}`;
 }
 
 function emailUnico() {
@@ -52,14 +57,25 @@ describe('apagamento definitivo de conta', opcoes, () => {
   });
 
   async function criarContaDescartavel() {
+    // Cadastro em duas portas: a conta é do responsável adulto, e a persona
+    // jogável — com carteira, nível e consentimento — nasce depois como filha.
     const conta = await usersService.criar({
       email: emailUnico(),
-      dataNasc: '2015-08-20',
+      dataNasc: '1990-08-20',
       senha: 'beever456',
       apelido: apelidoUnico(),
+    });
+    const persona = await usersService.criarPerfilDaConta(conta.id, {
+      apelido: apelidoUnico(),
+      dataNasc: '2015-08-20',
       consentimentoResponsavel: true,
     });
-    return { ...conta, ator: { id: conta.id, ehAdmin: false } };
+    return {
+      ...conta,
+      idPerfil: persona.idPerfil,
+      idPessoa: persona.id,
+      ator: { id: conta.id, ehAdmin: false },
+    };
   }
 
   async function contar(tabela, coluna, id) {
@@ -74,20 +90,20 @@ describe('apagamento definitivo de conta', opcoes, () => {
     const conta = await criarContaDescartavel();
 
     const tabelas = [
-      ['users', 'id'],
-      ['profiles', 'user_id'],
-      ['wallets', 'user_id'],
-      ['user_levels', 'user_id'],
-      ['guardian_consents', 'user_id'],
+      ['users', 'id', conta.id],
+      ['profiles', 'user_id', conta.idPessoa],
+      ['wallets', 'user_id', conta.idPessoa],
+      ['user_levels', 'user_id', conta.idPessoa],
+      ['guardian_consents', 'user_id', conta.idPessoa],
     ];
-    for (const [tabela, coluna] of tabelas) {
-      assert.equal(await contar(tabela, coluna, conta.id), 1, `${tabela} deveria ter linha da conta`);
+    for (const [tabela, coluna, id] of tabelas) {
+      assert.equal(await contar(tabela, coluna, id), 1, `${tabela} deveria ter linha da conta`);
     }
 
     await usersService.apagarDefinitivamente(conta.id, conta.ator);
 
-    for (const [tabela, coluna] of tabelas) {
-      assert.equal(await contar(tabela, coluna, conta.id), 0, `${tabela} deveria ter sido levada pela cascata`);
+    for (const [tabela, coluna, id] of tabelas) {
+      assert.equal(await contar(tabela, coluna, id), 0, `${tabela} deveria ter sido levada pela cascata`);
     }
 
     // O contador geral também cai: a linha não ficou como usuário "inativo".
@@ -103,7 +119,7 @@ describe('apagamento definitivo de conta', opcoes, () => {
     // evento que guardava o apelido, e sem exercitá-lo aqui a guarda não prova
     // nada sobre ele.
     const apelidoNovo = apelidoUnico();
-    await profilesService.atualizar(conta.idPerfil, conta.id, { apelido: apelidoNovo });
+    await profilesService.atualizar(conta.idPerfil, conta.idPessoa, { apelido: apelidoNovo });
 
     await usersService.apagarDefinitivamente(conta.id, conta.ator);
 

@@ -23,6 +23,7 @@ import * as coinsService from '../../src/services/coinsService.js';
 import * as levelsService from '../../src/services/levelsService.js';
 import * as patrimonyService from '../../src/services/patrimonyService.js';
 import * as vaultService from '../../src/services/vaultService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Aceite da E09 — a economia inteira, pelo caminho do jogador.
@@ -96,18 +97,14 @@ describe('aceite da E09 — economia', opcoes, () => {
     }
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'economista',
         email: 'economista@beever.dev',
         data_nasc: '2012-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     idPerfil = cadastro.body.idPerfil;
     csrf = await lerToken('/onboarding');

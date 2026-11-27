@@ -79,12 +79,12 @@ capítulo adicional no TCC sobre portabilidade multiplataforma.
 
 ## 3. Painel do Responsável
 
-**Contexto.** A RNF-34 já captura o e-mail do responsável no
-registro de menor, e o banco modela `guardian_consents` desde a E03.
-Hoje esse dado é gravado e nunca mais lido. Um painel do responsável
-permitiria que o pai ou a mãe acompanhasse o progresso da criança sem
-precisar logar na conta dela — que é o comportamento atual e inadequado
-para o contexto de LGPD e de uso familiar.
+**Contexto.** A RNF-34 agora captura o consentimento quando cada perfil
+infantil é criado, copiando o e-mail da conta responsável em
+`guardian_consents` (modelado desde a E03). Hoje esse dado é gravado e nunca
+mais lido. Um painel do responsável permitiria que o pai ou a mãe
+acompanhasse o progresso da criança sem precisar entrar como a persona —
+o que hoje ainda acontece ao selecionar um perfil.
 
 **O que já existe.** O schema já prevê o vínculo (`guardian_consents`
 com `user_id` e `guardian_email`). A Colmeia entrega nove blocos de
@@ -94,8 +94,8 @@ e promete direitos do Art. 18.
 
 **Caminho proposto.**
 
-- Login separado para o responsável, com token próprio (não a sessão
-  da criança).
+- Painel na própria conta do responsável, sem precisar selecionar a
+  criança para ler os dados dela.
 - Dashboard com: progresso da trilha (favos concluídos e estrelas),
   histórico de sequência, saldo e patrimônio, tarefas cumpridas na
   semana e conquistas desbloqueadas.

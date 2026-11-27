@@ -13,6 +13,7 @@ import request from 'supertest';
 import './../helpers/ambiente.js';
 
 const { criarBancoDeTeste, motivoParaPular } = await import('../helpers/banco.js');
+const { criarCrianca } = await import('../helpers/fixturesDeCadastro.js');
 const { criarApp } = await import('../../src/app.js');
 const { fecharPool } = await import('../../src/config/database.js');
 const { fecharSessionStore } = await import('../../src/config/session.js');
@@ -64,11 +65,7 @@ describe('sessão persistida no login', opcoes, () => {
     app = criarApp();
     agente = request.agent(app);
 
-    const csrfCadastro = await tokenDe('/login');
-    const resposta = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({ ...CONTA, _csrf: csrfCadastro });
+    const resposta = await criarCrianca(agente, CONTA);
     assert.equal(resposta.status, 201);
 
     const perfilId = resposta.body.idPerfil;
@@ -89,7 +86,7 @@ describe('sessão persistida no login', opcoes, () => {
     await agente
       .post('/sessao/logout')
       .set('Accept', 'application/json')
-      .send({ _csrf: await tokenDe('/painel/configuracoes') })
+      .send({ _csrf: await tokenDe('/perfis') })
       .expect(200);
   });
 
@@ -108,28 +105,28 @@ describe('sessão persistida no login', opcoes, () => {
     assert.equal(sessao.body.autenticado, true);
     assert.ok(sessao.body.usuarioId > 0);
 
-    await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    await agente.get('/painel').set('Accept', 'text/html').redirects(2).expect(200);
   });
 
   it('sai e entra de novo sem perder a sessão na segunda vez', async () => {
     await agente
       .post('/sessao/logout')
       .set('Accept', 'application/json')
-      .send({ _csrf: await tokenDe('/painel/configuracoes') })
+      .send({ _csrf: await tokenDe('/perfis') })
       .expect(200);
     await agente.get('/painel').set('Accept', 'text/html').expect(302);
 
     const entrada = await entrar();
     assert.equal(entrada.status, 200);
     await agente.get('/sessao/check').set('Accept', 'application/json').expect(200);
-    await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    await agente.get('/painel').set('Accept', 'text/html').redirects(2).expect(200);
   });
 
   it('também guarda a sessão quando o navegador segue o redirect HTML', async () => {
     await agente
       .post('/sessao/logout')
       .set('Accept', 'application/json')
-      .send({ _csrf: await tokenDe('/painel/configuracoes') })
+      .send({ _csrf: await tokenDe('/perfis') })
       .expect(200);
 
     const csrf = await tokenDe('/login');
@@ -141,6 +138,6 @@ describe('sessão persistida no login', opcoes, () => {
     assert.equal(entrada.headers.location, '/perfis');
 
     await agente.get('/perfis').set('Accept', 'text/html').expect(200);
-    await agente.get('/painel').set('Accept', 'text/html').expect(200);
+    await agente.get('/painel').set('Accept', 'text/html').redirects(2).expect(200);
   });
 });

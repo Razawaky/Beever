@@ -9,6 +9,7 @@ import { after, before, describe, it } from 'node:test';
 import request from 'supertest';
 
 import './../helpers/ambiente.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 const { criarBancoDeTeste, motivoParaPular } = await import('../helpers/banco.js');
 const { criarApp } = await import('../../src/app.js');
@@ -55,11 +56,7 @@ describe('limite global por sessão', opcoes, () => {
     const pagina = await agente.get('/login').set('Accept', 'text/html');
     const csrf = /name="_csrf" value="([^"]+)"/.exec(pagina.text)[1];
 
-    await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({ ...contaDe(numero), _csrf: csrf })
-      .expect(201);
+    await criarCrianca(agente, { ...contaDe(numero), _csrf: csrf });
 
     return agente;
   }

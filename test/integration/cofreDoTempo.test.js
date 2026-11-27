@@ -13,6 +13,7 @@ import { fecharSessionStore } from '../../src/config/session.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
 import * as progressService from '../../src/services/progressService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O Cofre do Tempo pelo HTTP (RF-JOG-04).
@@ -69,18 +70,14 @@ describe('Cofre do Tempo', opcoes, () => {
     agente = request.agent(app);
     csrf = await lerToken('/login');
 
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'poupador',
         email: 'cofre-do-tempo@beever.dev',
         data_nasc: '2018-04-02',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

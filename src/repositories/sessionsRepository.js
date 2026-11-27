@@ -6,6 +6,21 @@ import { consultar } from '../config/database.js';
  */
 
 /**
+ * Derruba as sessões em que um perfil específico estava selecionado.
+ *
+ * Não usar `removerDoUsuario` para excluir perfil: no perfil principal da conta
+ * antiga `usuarioId` é o próprio id da conta, e isso derrubaria também as
+ * sessões dos irmãos. Aqui a chave é o perfil, não o dono.
+ */
+export async function removerDoPerfil(idPerfil) {
+  const resultado = await consultar(
+    `DELETE FROM sessions WHERE JSON_EXTRACT(data, '$.perfilId') = ?`,
+    [idPerfil],
+  );
+  return resultado.affectedRows;
+}
+
+/**
  * Derruba todas as sessões de login de uma conta. O store grava a sessão como
  * JSON.
  *

@@ -13,6 +13,7 @@ import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as schedulesService from '../../src/services/schedulesService.js';
 import * as streakService from '../../src/services/streakService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * A sequência do jogador (RN-019 a RN-021, RN-024, RF-SEQ-01).
@@ -105,18 +106,14 @@ describe('sequência', opcoes, () => {
     agente = request.agent(app);
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'sequencial',
         email: 'sequencia@beever.dev',
         data_nasc: '2016-05-20',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

@@ -41,6 +41,9 @@ function fecharMenu({ devolverFoco = false } = {}) {
 
   const { gatilho, menu } = menuAberto;
   menu.classList.add('hidden');
+  // O cartão aberto precisa ficar acima dos irmãos: sem isso, o próximo `<li>`
+  // pintava por cima do menu mesmo com z-index alto dentro dele.
+  menu.closest('li')?.classList.remove('z-50');
   gatilho.setAttribute('aria-expanded', 'false');
   menuAberto = null;
 
@@ -49,6 +52,7 @@ function fecharMenu({ devolverFoco = false } = {}) {
 
 function abrirMenu(gatilho, menu) {
   fecharMenu();
+  menu.closest('li')?.classList.add('z-50');
   menu.classList.remove('hidden');
   gatilho.setAttribute('aria-expanded', 'true');
   menuAberto = { gatilho, menu };

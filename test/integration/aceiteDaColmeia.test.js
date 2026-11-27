@@ -15,6 +15,7 @@ import { fecharSessionStore } from '../../src/config/session.js';
 import * as profilesRepository from '../../src/repositories/profilesRepository.js';
 import * as coinsService from '../../src/services/coinsService.js';
 import * as vaultService from '../../src/services/vaultService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O aceite da E10: "a Colmeia carrega em ≤2 s com dados semeados de um usuário
@@ -50,18 +51,14 @@ describe('aceite da Colmeia', opcoes, () => {
   /** Cria a conta e conclui o onboarding, que é como todo jogador começa. */
   async function criarJogador(cliente, apelido) {
     let csrf = await lerToken(cliente, '/login');
-    const cadastro = await cliente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(cliente, {
         apelido,
         email: `${apelido}@beever.dev`,
         data_nasc: '2014-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken(cliente, '/onboarding');
     await cliente

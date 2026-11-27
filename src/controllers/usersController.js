@@ -1,30 +1,29 @@
 import * as usersService from '../services/usersService.js';
 import { assincrono } from '../utils/erros.js';
 import { querJson } from '../utils/resposta.js';
+import { idContaDaSessao } from '../middlewares/requireAuth.js';
 import { iniciarSessaoLogin } from '../utils/sessaoLogin.js';
 
 /** Controllers só traduzem HTTP: nenhuma regra, nenhum SQL. */
 
 export const criar = assincrono(async (req, res) => {
   const { email, data_nasc: dataNasc, senha, apelido } = req.body;
-  // Checkbox marcado chega como 'on' pelo formulário e como true pelo JSON.
-  const consentimentoResponsavel = Boolean(req.body.consentimento_responsavel);
 
-  const usuario = await usersService.criar({ email, dataNasc, senha, apelido, consentimentoResponsavel });
+  // A conta do responsável não é perfil de jogo: entra direto na seleção, onde
+  // ele cadastra as crianças. `perfilId` fica vazio até uma delas ser escolhida.
+  const usuario = await usersService.criar({ email, dataNasc, senha, apelido });
 
-  // Conta recém-criada nunca passou pelo onboarding: loga direto, sem exigir
-  // um segundo formulário de login.
   await iniciarSessaoLogin(req, {
     usuarioId: usuario.id,
     contaUsuarioId: usuario.id,
     email: usuario.email,
     ehAdmin: false,
-    perfilId: usuario.idPerfil,
-    onboardingConcluido: false,
+    perfilId: null,
+    onboardingConcluido: true,
   });
 
   if (querJson(req)) return res.status(201).json(usuario);
-  res.redirect('/onboarding');
+  res.redirect('/perfis');
 });
 
 export const atualizar = assincrono(async (req, res) => {
@@ -32,7 +31,7 @@ export const atualizar = assincrono(async (req, res) => {
   const atualizado = await usersService.atualizar(
     Number(req.params.id),
     { apelido, email, dataNasc, senha },
-    { id: req.session.usuarioId, ehAdmin: req.session.ehAdmin },
+    { id: idContaDaSessao(req), ehAdmin: req.session.ehAdmin },
   );
   res.json(atualizado);
 });

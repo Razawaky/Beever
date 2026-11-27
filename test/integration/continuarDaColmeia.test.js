@@ -10,6 +10,7 @@ import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O botão "Continuar" (RF-HOM-07).
@@ -48,18 +49,14 @@ describe('botão Continuar', opcoes, () => {
     agente = request.agent(app);
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'continuadora',
         email: 'continuadora@beever.dev',
         data_nasc: '2014-05-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

@@ -8,6 +8,7 @@ import request from 'supertest';
 // avaliado antes de qualquer módulo do projeto. Não reordene estes imports.
 import '../helpers/ambiente.js';
 import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 import { criarApp } from '../../src/app.js';
 import { emTransacao, fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
@@ -75,9 +76,9 @@ describe('fluxo autenticado', opcoes, () => {
     return achado[1];
   }
 
-  /** O id do jogador logado, para plantar os eventos que movem a tarefa. */
+  /** O id do perfil jogador, para plantar os eventos que movem a tarefa. */
   async function idDoJogador() {
-    const [[usuario]] = await banco.conexao.query('SELECT id FROM users WHERE email = ?', ['fluxo@beever.dev']);
+    const [[usuario]] = await banco.conexao.query('SELECT id FROM users WHERE nickname = ?', ['jogadora']);
     return Number(usuario.id);
   }
 
@@ -175,12 +176,12 @@ describe('fluxo autenticado', opcoes, () => {
     if (banco) await banco.encerrar();
   });
 
-  it('recusa o cadastro de criança sem autorização do responsável', async () => {
+  it('recusa o cadastro feito por um menor', async () => {
     const resposta = await agente
       .post('/users')
       .set('Accept', 'application/json')
       .send({
-        apelido: 'semautorizacao',
+        apelido: 'menorresponsavel',
         email: 'sem-consentimento@beever.dev',
         data_nasc: '2014-05-20',
         senha: 'beever123',
@@ -188,7 +189,7 @@ describe('fluxo autenticado', opcoes, () => {
       })
       .expect(422);
 
-    assert.equal(resposta.body.codigo, 'CONSENTIMENTO_NECESSARIO');
+    assert.equal(resposta.body.codigo, 'RESPONSAVEL_MENOR_DE_IDADE');
 
     // E não pode ter sobrado meia conta: a recusa acontece antes de qualquer
     // escrita, inclusive antes do hash da senha.
@@ -198,32 +199,16 @@ describe('fluxo autenticado', opcoes, () => {
     assert.equal(linhas.length, 0);
   });
 
-  it('cadastra a conta e já entra logado', async () => {
-    const resposta = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
-        apelido: 'jogadora',
-        email: 'fluxo@beever.dev',
-        data_nasc: '2014-05-20',
-        senha: 'beever123',
-        consentimento_responsavel: 'on',
-        _csrf: csrf,
-      })
-      .expect(201);
+  it('cadastra a conta e o perfil infantil, já entra logado', async () => {
+    const resposta = await criarCrianca(agente, {
+      apelido: 'jogadora',
+      email: 'fluxo@beever.dev',
+      data_nasc: '2014-05-20',
+      senha: 'beever123',
+    });
 
-    assert.equal(resposta.body.consentimentoDeResponsavel, true);
-
-    const [[consentimento]] = await banco.conexao.query(
-      `SELECT g.guardian_email, g.ip_hash
-         FROM guardian_consents g
-         JOIN users u ON u.id = g.user_id
-        WHERE u.email = ?`,
-      ['fluxo@beever.dev'],
-    );
-    assert.equal(consentimento.guardian_email, 'fluxo@beever.dev', 'o e-mail do registro é o do responsável');
-    assert.match(consentimento.ip_hash, /^[0-9a-f]{64}$/, 'a origem fica registrada como hash');
-
+    // O consentimento tem asserção própria em selecaoDePerfis.test.js; aqui
+    // interessa só que a conta e a persona chegaram prontas para jogar.
     perfilId = resposta.body.idPerfil;
     assert.ok(perfilId, 'o cadastro devolve o perfil criado junto da conta');
     // A faixa etária sai da data de nascimento, contra a tabela `age_bands`.
@@ -614,7 +599,7 @@ describe('fluxo autenticado', opcoes, () => {
 
   it('o livro explica o saldo: carteira e ledgers batem no fim do fluxo', async () => {
     const conexao = banco.conexao;
-    const [[usuario]] = await conexao.query('SELECT id FROM users WHERE email = ?', ['fluxo@beever.dev']);
+    const [[usuario]] = await conexao.query('SELECT id FROM users WHERE nickname = ?', ['jogadora']);
 
     const [[carteira]] = await conexao.query('SELECT coins, points_total FROM wallets WHERE user_id = ?', [
       usuario.id,
@@ -685,21 +670,12 @@ describe('fluxo autenticado', opcoes, () => {
     before(async () => {
       novato = request.agent(app);
 
-      const paginaLogin = await novato.get('/login').set('Accept', 'text/html');
-      tokenNovato = /name="_csrf" value="([^"]+)"/.exec(paginaLogin.text)[1];
-
-      const cadastro = await novato
-        .post('/users')
-        .set('Accept', 'application/json')
-        .send({
-          apelido: 'novato',
-          email: 'novato@beever.dev',
-          data_nasc: '2015-01-10',
-          senha: 'beever123',
-          consentimento_responsavel: 'on',
-          _csrf: tokenNovato,
-        })
-        .expect(201);
+      const cadastro = await criarCrianca(novato, {
+        apelido: 'novato',
+        email: 'novato@beever.dev',
+        data_nasc: '2015-01-10',
+        senha: 'beever123',
+      });
 
       perfilNovato = cadastro.body.idPerfil;
 

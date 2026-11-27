@@ -16,8 +16,8 @@ import { motivoDeRecusa } from './apelidoPublico.js';
  *
  * A conta **não guarda nome completo**. A RN-049 proíbe coletar dado pessoal de
  * criança além de apelido e avatar, e o schema seguiu a regra: existe
- * `nickname`, não existe `name`. Por isso o cadastro pede apelido, e o apelido é
- * obrigatório — antes era opcional, com o nome real fazendo as vezes dele.
+ * `nickname`, não existe `name`. O cadastro pede como o responsável quer ser
+ * chamado; as crianças entram depois, como perfis da conta.
  */
 
 // Exportado para a recuperação de senha gravar o hash com o mesmo custo do cadastro.
@@ -60,14 +60,7 @@ function exigirSenhaValida(senha) {
   }
 }
 
-/**
- * Idade a partir da qual a pessoa responde por si.
- *
- * Na prática o público inteiro do Beever é menor (6 a 15), então o
- * consentimento vale para todo mundo. A regra fica escrita assim mesmo assim:
- * quando um adulto criar conta para acompanhar, ela se comporta certo sozinha,
- * em vez de pedir autorização de responsável a um pai de família.
- */
+/** Idade a partir da qual a pessoa pode responder pela própria conta. */
 const MAIORIDADE = 18;
 
 /** Idade em anos completos na data de referência. */
@@ -106,39 +99,46 @@ export async function obter(id) {
 }
 
 /**
- * Cria a conta inteira ou nenhuma parte dela.
+ * Cria a conta do responsável.
  *
- * São quatro linhas em quatro tabelas — conta, perfil, carteira e nível — e
- * todas fazem parte do que "ter uma conta" significa. Uma conta sem carteira
- * não consegue receber mel; uma sem linha de nível quebra na primeira
- * recompensa. Por isso a transação: no schema antigo isso eram três chamadas
- * soltas que podiam falhar no meio e deixar conta pela metade.
+ * Hoje é uma linha só: a conta não joga e, portanto, não tem carteira, nível nem
+ * perfil. Os filhos entram depois com `criarPerfilDaConta`, que sim monta o
+ * conjunto completo (usuário, perfil, carteira, nível e consentimento) numa
+ * transação — perfil sem carteira não recebe mel e sem nível quebra na primeira
+ * recompensa.
  */
-export async function criar({ email, dataNasc, senha, apelido, consentimentoResponsavel = false }) {
+export async function criar({ email, dataNasc, senha, apelido }) {
   exigirSenhaValida(senha);
-  return criarConta({ email, dataNasc, apelido, consentimentoResponsavel, senha });
+  return criarConta({ email, dataNasc, apelido, senha });
 }
 
 /** Conta nascida do login com Google: sem senha, com o id do Google no lugar. */
-export async function criarComGoogle({ email, googleSub, dataNasc, apelido, consentimentoResponsavel = false }) {
-  return criarConta({ email, dataNasc, apelido, consentimentoResponsavel, googleSub });
+export async function criarComGoogle({ email, googleSub, dataNasc, apelido }) {
+  return criarConta({ email, dataNasc, apelido, googleSub });
 }
 
-async function criarConta({ email, dataNasc, apelido, consentimentoResponsavel, senha = null, googleSub = null }) {
+/**
+ * Cadastro do responsável. Não cria perfil de jogo: a conta entra no sistema
+ * para cadastrar as crianças depois, e cada perfil infantil terá carteira,
+ * nível, faixa etária e consentimento próprios (`criarPerfilDaConta`).
+ *
+ * A conta também não passa pelo onboarding — wizard de avatar, rotina e objetivo
+ * é coisa de perfil jogador. Por isso ela nasce com onboarding concluído e o
+ * login já a leva para `/perfis`.
+ */
+async function criarConta({ email, dataNasc, apelido, senha = null, googleSub = null }) {
   const apelidoLimpo = apelido?.trim();
   if (!apelidoLimpo) throw erroValidacao('Informe como você quer ser chamado');
 
-  const idade = idadeEm(dataNasc);
-  const precisaDeConsentimento = idade < MAIORIDADE;
-
-  // A checagem vem antes de tudo o que custa: nem hash de senha, nem consulta de
-  // faixa etária, nem linha nenhuma no banco. Conta de criança sem autorização
-  // de responsável não deve nem começar a existir.
-  if (precisaDeConsentimento && !consentimentoResponsavel) {
-    throw new ErroAplicacao(
-      'É preciso que um responsável autorize a criação desta conta',
-      { status: 422, codigo: 'CONSENTIMENTO_NECESSARIO' },
-    );
+  // Quem cria a conta por senha responde por ela. A checagem vem antes do hash
+  // e de qualquer escrita: cadastro de menor como responsável não pode começar.
+  // O fluxo do Google fica como era — foi explicitamente deixado de fora desta
+  // mudança — e por isso não recebe esta barreira.
+  if (!googleSub && idadeEm(dataNasc) < MAIORIDADE) {
+    throw new ErroAplicacao('O cadastro deve ser feito por um adulto responsável', {
+      status: 422,
+      codigo: 'RESPONSAVEL_MENOR_DE_IDADE',
+    });
   }
 
   if (await usersRepository.emailJaUsado(email)) {
@@ -146,71 +146,25 @@ async function criarConta({ email, dataNasc, apelido, consentimentoResponsavel, 
   }
 
   const senhaHash = senha ? await bcrypt.hash(senha, CUSTO_BCRYPT) : null;
-  const faixas = await profilesRepository.listarFaixasEtarias();
-  const faixa = faixaParaIdade(faixas, idade);
-
-  const { idUsuario, idPerfil } = await emTransacao(async (conexao) => {
-    const usuario = await usersRepository.criar(
-      { email, apelido: apelidoLimpo, dataNasc, senhaHash, googleSub },
+  // O responsável não passa pelo wizard, mas a conta pelo Google mantém o
+  // comportamento de antes: ainda cai no onboarding no primeiro login.
+  const onboardingConcluido = !googleSub;
+  const idUsuario = await emTransacao((conexao) =>
+    usersRepository.criar(
+      { email, apelido: apelidoLimpo, dataNasc, senhaHash, googleSub, onboardingConcluido },
       conexao,
-    );
-    const perfil = await profilesRepository.criar({ idUsuario: usuario }, conexao);
-    await walletsRepository.criar(usuario, conexao);
-    await userLevelsRepository.criar(usuario, conexao);
-
-    // O consentimento entra na mesma transação da conta. Consentimento perdido
-    // com conta criada é o pior desfecho possível: a criança fica cadastrada e a
-    // prova de que alguém autorizou, não.
-    if (precisaDeConsentimento) {
-      await guardianConsentsRepository.registrar(conexao, {
-        idUsuario: usuario,
-        // O e-mail do registro é o do responsável quando a conta é de menor
-        // (RN-048). Copiar aqui não é redundância: se o e-mail de login mudar
-        // amanhã, a prova continua dizendo a quem o consentimento foi dado.
-        emailResponsavel: email,
-        ipHash: hashDoIpDaRequisicao() ?? null,
-      });
-    }
-
-    return { idUsuario: usuario, idPerfil: perfil };
-  });
-
-  // A faixa etária fica fora da transação de propósito: se ela falhar, a conta
-  // continua utilizável e o onboarding regrava. Derrubar um cadastro inteiro por
-  // causa da classificação de idade seria trocar um problema pequeno por um
-  // grande.
-  await profilesRepository.atualizar(idPerfil, { faixaEtaria: faixa.code });
+    ),
+  );
 
   // A trilha nasce anônima (RN-053): apelido e e-mail são dado pessoal e a
-  // tabela é append-only por gatilho (RNF-17) — o que entrar aqui sobrevive à
-  // exclusão da conta para sempre. Entra só o agregado: a faixa e o fato de
-  // haver consentimento, que é o que a auditoria precisa saber depois.
+  // tabela é append-only por gatilho (RNF-17). Sai só o agregado.
   await auditService.registrar(auditService.usuario(idUsuario), 'conta.criada', {
     entidade: 'user',
     id: idUsuario,
-    depois: { faixaEtaria: faixa.code, consentimentoDeResponsavel: precisaDeConsentimento },
+    depois: { responsavel: true },
   });
 
-  if (precisaDeConsentimento) {
-    // O e-mail do responsável não entra aqui pelo mesmo motivo do apelido na
-    // linha acima. Quem provou o consentimento na hora é a tabela
-    // `guardian_consents`, que acompanha o ciclo de vida da conta e sai junto
-    // quando ela é apagada.
-    await auditService.registrar(auditService.usuario(idUsuario), 'consentimento.registrado', {
-      entidade: 'user',
-      id: idUsuario,
-      depois: { idade },
-    });
-  }
-
-  return {
-    id: idUsuario,
-    email,
-    apelido: apelidoLimpo,
-    idPerfil,
-    faixaEtaria: faixa.code,
-    consentimentoDeResponsavel: precisaDeConsentimento,
-  };
+  return { id: idUsuario, email, apelido: apelidoLimpo, onboardingConcluido };
 }
 
 /**
@@ -227,11 +181,21 @@ async function criarConta({ email, dataNasc, apelido, consentimentoResponsavel, 
  * A gravação entra na mesma transação do restante porque perfil sem faixa não
  * vê conteúdo nenhum.
  */
-export async function criarPerfilDaConta(idConta, { apelido, dataNasc }) {
+export async function criarPerfilDaConta(idConta, { apelido, dataNasc, consentimentoResponsavel }) {
   const conta = await usersRepository.buscarPorId(idConta);
   if (!conta || conta.owner_user_id) throw erroNaoEncontrado('Conta não encontrada');
   if (!conta.is_active) {
     throw new ErroAplicacao('Esta conta está inativa', { status: 403, codigo: 'CONTA_INATIVA' });
+  }
+
+  // O consentimento é manifestado no ato de adicionar a criança, não no cadastro
+  // do adulto (RN-048/LGPD Art. 14). Sem ele, nenhuma persona nasce: perfil sem
+  // autorização registrada seria dado de menor guardado sem prova.
+  if (consentimentoResponsavel !== true) {
+    throw new ErroAplicacao('Autorize a criação deste perfil infantil', {
+      status: 422,
+      codigo: 'CONSENTIMENTO_NECESSARIO',
+    });
   }
 
   const apelidoLimpo = String(apelido ?? '').trim();
@@ -256,16 +220,33 @@ export async function criarPerfilDaConta(idConta, { apelido, dataNasc }) {
     await walletsRepository.criar(usuario, conexao);
     await userLevelsRepository.criar(usuario, conexao);
     await profilesRepository.atualizar(perfil, { faixaEtaria: faixa.code }, conexao);
+    await guardianConsentsRepository.registrar(conexao, {
+      idUsuario: usuario,
+      // O e-mail é o da conta que autorizou. Copiado de propósito: se o
+      // responsável trocar o e-mail de login amanhã, a prova continua dizendo
+      // a quem o consentimento foi dado.
+      emailResponsavel: conta.email,
+      ipHash: hashDoIpDaRequisicao() ?? null,
+    });
 
     return { idUsuario: usuario, idPerfil: perfil };
   });
 
   // A trilha não guarda apelido nem data: são dado pessoal (RN-049) e o
   // histórico é imutável (RNF-17), então precisa sobreviver ao apagamento.
+  // O consentimento é um fato jurídico (LGPD Art. 14), não um detalhe do
+  // perfil: merece linha própria na trilha. Só o agregado entra nela — e-mail,
+  // apelido e IP ficam na tabela de consentimento, que a exclusão apaga.
+  await auditService.registrar(auditService.usuario(idConta), 'consentimento.registrado', {
+    entidade: 'profile',
+    id: idPerfil,
+    depois: { registrado: true },
+  });
+
   await auditService.registrar(auditService.usuario(idConta), 'perfil.criado', {
     entidade: 'profile',
     id: idPerfil,
-    depois: { faixaEtaria: faixa.code },
+    depois: { faixaEtaria: faixa.code, consentimentoDeResponsavel: true },
   });
 
   return {
@@ -273,6 +254,7 @@ export async function criarPerfilDaConta(idConta, { apelido, dataNasc }) {
     idPerfil,
     apelido: apelidoLimpo,
     faixaEtaria: faixa.code,
+    consentimentoDeResponsavel: true,
   };
 }
 

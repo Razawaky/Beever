@@ -13,6 +13,7 @@ import { fecharSessionStore } from '../../src/config/session.js';
 import * as achievementsService from '../../src/services/achievementsService.js';
 import * as schedulesService from '../../src/services/schedulesService.js';
 import * as streakService from '../../src/services/streakService.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Marcos de sequência (RN-023, RF-SEQ-04).
@@ -78,18 +79,14 @@ describe('marco de sequência', opcoes, () => {
     agente = request.agent(app);
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'marqueiro',
         email: 'marco@beever.dev',
         data_nasc: '2014-09-01',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente

@@ -15,6 +15,7 @@ import * as schedulesService from '../../src/services/schedulesService.js';
 import { fontesMensuraveis } from '../../src/services/taskProgressSources.js';
 import * as tasksService from '../../src/services/tasksService.js';
 import { dataDoDia, diaDaSemana } from '../../src/utils/diaDoJogador.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Geração e progresso das tarefas (RF-TAR-01, RF-TAR-02, RN-046, RN-047).
@@ -85,18 +86,14 @@ describe('tarefas do dia', opcoes, () => {
     agente = request.agent(app);
 
     let csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'tarefeiro',
         email: 'tarefas@beever.dev',
         data_nasc: '2015-02-10',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     csrf = await lerToken('/onboarding');
     await agente
@@ -149,6 +146,22 @@ describe('tarefas do dia', opcoes, () => {
     await tasksService.garantirTarefasDoDia(idUsuario);
 
     assert.ok((await ativas()).length <= 3, 'chamar de novo no mesmo dia não empilha tarefa');
+  });
+
+  it('duas visitas ao mesmo tempo não duplicam a cota do dia', async () => {
+    await limparTarefas();
+    await definirAgenda([0, 1, 2, 3, 4, 5, 6]);
+
+    const [primeira, segunda] = await Promise.all([
+      tasksService.garantirTarefasDoDia(idUsuario),
+      tasksService.garantirTarefasDoDia(idUsuario),
+    ]);
+
+    const [[total]] = await banco.conexao.query('SELECT COUNT(*) AS total FROM tasks WHERE user_id = ?', [
+      idUsuario,
+    ]);
+    assert.equal(primeira.criadas + segunda.criadas, 3, 'uma visita gera a cota, a outra espera');
+    assert.equal(Number(total.total), 3, 'não existe cota duplicada para pagar duas vezes');
   });
 
   it('a tarefa vencida expira e abre vaga para a do dia', async () => {
@@ -204,6 +217,47 @@ describe('tarefas do dia', opcoes, () => {
     assert.ok(
       !resposta.body.some((visivel) => Number(visivel.id) === Number(tarefa.id)),
       'GET /tarefas não devolve tarefa fechada ontem',
+    );
+  });
+
+  it('tarefa concluída hoje não renasce para pagar de novo', async () => {
+    await limparTarefas();
+    await definirAgenda([0, 1, 2, 3, 4, 5, 6]);
+    await tasksService.garantirTarefasDoDia(idUsuario);
+
+    const [tarefa] = (await ativas()).filter((ativa) => ativa.scope === 'diaria');
+    assert.ok(tarefa, 'a agenda do dia tem tarefa diária para o teste');
+
+    // O progresso vem do evento; aqui só encurtamos o caminho para chegar ao
+    // estado "cumprida" que o botão de receber exige.
+    await banco.conexao.query('UPDATE tasks SET current_value = target_value WHERE id = ?', [tarefa.id]);
+    await tasksService.concluir(tarefa.id, idUsuario);
+
+    const [[antes]] = await banco.conexao.query('SELECT COUNT(*) AS total FROM tasks WHERE user_id = ?', [
+      idUsuario,
+    ]);
+    const [[carteiraAntes]] = await banco.conexao.query('SELECT coins FROM wallets WHERE user_id = ?', [
+      idUsuario,
+    ]);
+
+    // É exatamente o que acontece depois de "Receber recompensa": o formulário
+    // volta para /metas, que prepara a visita e roda o gerador de novo.
+    const geracao = await tasksService.garantirTarefasDoDia(idUsuario);
+    await agente.get('/metas').set('Accept', 'text/html').expect(200);
+
+    const [[depois]] = await banco.conexao.query('SELECT COUNT(*) AS total FROM tasks WHERE user_id = ?', [
+      idUsuario,
+    ]);
+    const [[carteiraDepois]] = await banco.conexao.query('SELECT coins FROM wallets WHERE user_id = ?', [
+      idUsuario,
+    ]);
+
+    assert.equal(geracao.criadas, 0, 'o dia já teve suas tarefas propostas');
+    assert.equal(Number(depois.total), Number(antes.total), 'reabrir a página não cria tarefa nova');
+    assert.equal(
+      Number(carteiraDepois.coins),
+      Number(carteiraAntes.coins),
+      'e não paga mel nenhuma vez além da conclusão original',
     );
   });
 

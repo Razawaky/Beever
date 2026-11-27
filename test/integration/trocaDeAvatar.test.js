@@ -10,6 +10,7 @@ import { criarBancoDeTeste, motivoParaPular } from '../helpers/banco.js';
 import { criarApp } from '../../src/app.js';
 import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * Troca de imagem na tela de perfil (RF-PER-01).
@@ -42,18 +43,14 @@ describe('troca de avatar no perfil', opcoes, () => {
     agente = request.agent(criarApp());
 
     csrf = await lerToken('/login');
-    const cadastro = await agente
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(agente, {
         apelido: 'avatares',
         email: 'avatares@beever.dev',
         data_nasc: '2013-09-09',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: csrf,
-      })
-      .expect(201);
+      });
 
     perfilId = cadastro.body.idPerfil;
     csrf = await lerToken('/onboarding');

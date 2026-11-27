@@ -12,6 +12,7 @@ import { fecharPool } from '../../src/config/database.js';
 import { fecharSessionStore } from '../../src/config/session.js';
 import * as cellsRepository from '../../src/repositories/cellsRepository.js';
 import * as hivesRepository from '../../src/repositories/hivesRepository.js';
+import { criarCrianca } from '../helpers/fixturesDeCadastro.js';
 
 /**
  * O Quarto do Beenie como primeira atividade da trilha.
@@ -46,18 +47,14 @@ describe('Quarto do Beenie na trilha', opcoes, () => {
     const quem = request.agent(app);
     let token = await lerToken(quem, '/login');
 
-    const cadastro = await quem
-      .post('/users')
-      .set('Accept', 'application/json')
-      .send({
+    const cadastro = await criarCrianca(quem, {
         apelido,
         email,
         data_nasc: '2018-04-02',
         senha: 'beever123',
         consentimento_responsavel: 'on',
         _csrf: token,
-      })
-      .expect(201);
+      });
 
     token = await lerToken(quem, '/onboarding');
     await quem

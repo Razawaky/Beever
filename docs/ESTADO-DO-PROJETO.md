@@ -5,6 +5,14 @@ dos documentos de escopo `docs/01` a `docs/04` existirem.
 
 **Atualizado em:** 2026-09-10 · **Branch:** `refactor/arquitetura-em-camadas` ·
 
+**Mudança em andamento (2026-11-26):** o cadastro deixou de ser infantil. `POST
+/users` cria só a conta do responsável (maior de 18 anos), sem perfil, carteira nem
+onboarding, e redireciona para `/perfis`. Cada criança é adicionada por `POST
+/perfis`, que registra o consentimento com o e-mail da conta; a conta adulta não
+entra nas rotas de jogo (`perfilId` vazio => `/perfis`). As contas antigas que já nasceram com perfil principal continuam com esse perfil listado e selecionável, sem migração nem perda de progresso; ele também pode ser excluído como qualquer outro, e a limpeza apaga só a persona — a conta com e-mail, senha e os demais perfis fica intacta. A política de privacidade acompanha a mesma regra. O cadastro via
+Google (parte 4 do plano) ficou de fora desta rodada e permanece como era. As seções históricas abaixo descrevem o
+modelo anterior e não foram reescritas.
+
 **Último commit:** o diagrama BPMN do ciclo principal, a última entrega da sessão
 de 2026-09-10 que acompanhou os builds do Jenkins. O build #7 caiu porque a
 máquina reiniciou no meio, e o #8 achou um defeito real de teste: o

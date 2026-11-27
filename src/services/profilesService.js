@@ -249,6 +249,10 @@ export async function obterDoUsuario(idUsuario) {
 export async function listarDaConta(idConta) {
   const perfis = await profilesRepository.listarDetalhadoDaConta(idConta);
 
+  // Nada é filtrado aqui. A conta antiga que nasceu junto com o primeiro perfil
+  // continua aparecendo como perfil normal — escondê-la faria o progresso da
+  // pessoa desaparecer da seleção. Conta nova de responsável não tem linha em
+  // `profiles`, então não entra nesta lista por não existir, não por regra.
   return perfis.map((perfil) => ({
     ...perfil,
     onboardingConcluido: Boolean(perfil.onboarding_completed_at),
@@ -504,13 +508,12 @@ export async function atualizarDisponibilidade(idPerfil, idUsuario, dias) {
 }
 
 /**
- * Remove um perfil adicional e tudo o que pertence a ele.
+ * Remove um perfil e tudo o que pertence a ele.
  *
- * A conta principal não pode ser removida por esta porta: apagá-la é o fluxo
- * de exclusão de conta (`usersService.apagarDefinitivamente`), com inativação,
- * auditoria e cascata próprias. Apagar só o `profiles` da persona deixaria
- * carteira, níveis, metas e progresso órfãos; por isso a remoção é da linha de
- * `users` filha, e a cascata leva o resto.
+ * Perfil adicional é linha-filha de `users`: apagar a linha leva a cascata do
+ * banco. O perfil principal das contas antigas é a própria linha da conta,
+ * então apagá-la levaria e-mail, senha e os irmãos. Para esse caso a limpeza é
+ * manual, mantendo a conta viva e sem persona.
  */
 export async function remover(idPerfil, { contaId, perfilAtualId }) {
   const perfil = await profilesRepository.buscarComContaPorId(idPerfil);
@@ -518,17 +521,19 @@ export async function remover(idPerfil, { contaId, perfilAtualId }) {
 
   const dono = perfil.owner_user_id ?? perfil.user_id;
   if (Number(dono) !== Number(contaId)) throw erroAcessoNegado();
-  if (!perfil.owner_user_id) throw erroValidacao('A conta principal não pode ser removida por aqui');
   if (Number(idPerfil) === Number(perfilAtualId)) {
     throw erroValidacao('Troque de perfil antes de remover o perfil que está em uso');
   }
 
-  await usersRepository.removerPorId(perfil.user_id);
+  if (perfil.owner_user_id) {
+    await usersRepository.removerPorId(perfil.user_id);
+  } else {
+    await emTransacao((conexao) => usersRepository.limparDadosDeJogador(perfil.user_id, conexao));
+  }
 
   // Se outro aparelho estava com este perfil selecionado, a persona acabou de
-  // deixar de existir. Derrubar a sessão evita que a próxima visita tente abrir
-  // carteira, metas e trilha de um `user_id` já apagado.
-  await sessionsRepository.removerDoUsuario(perfil.user_id);
+  // deixar de existir. Só essas sessões caem: as dos irmãos continuam valendo.
+  await sessionsRepository.removerDoPerfil(idPerfil);
 
   await auditService.registrar(auditService.usuario(contaId), 'perfil.removido', {
     entidade: 'profile',
