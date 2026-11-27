@@ -1,0 +1,38 @@
+/* Cursores próprios do Beever, usados no site inteiro.
+   A URL é sempre local para passar pela CSP (`img-src 'self'`). O par de
+   números depois da URL é o hotspot, medido na arte de 64×64. */
+
+html,
+body {
+  cursor: url('/img/cursor/cursor_normal.webp') 14 4, auto;
+}
+
+a:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled),
+button:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled),
+input:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled),
+select:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled),
+summary:not(.cursor-not-allowed):not(.cursor-wait),
+label:not(.cursor-not-allowed):not(.cursor-wait),
+[role='button']:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled),
+[role='link']:not(.cursor-not-allowed):not(.cursor-wait),
+[role='tab']:not(.cursor-not-allowed):not(.cursor-wait),
+[role='switch']:not(.cursor-not-allowed):not(.cursor-wait),
+[tabindex]:not([tabindex='-1']):not(.cursor-not-allowed):not(.cursor-wait),
+.cursor-pointer:not(.cursor-not-allowed):not(.cursor-wait) {
+  cursor: url('/img/cursor/cursor_pointer.webp') 26 0, pointer;
+}
+
+a:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled):active,
+button:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled):active,
+input:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled):active,
+select:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled):active,
+summary:not(.cursor-not-allowed):not(.cursor-wait):active,
+label:not(.cursor-not-allowed):not(.cursor-wait):active,
+[role='button']:not(.cursor-not-allowed):not(.cursor-wait):not(:disabled):active,
+[role='link']:not(.cursor-not-allowed):not(.cursor-wait):active,
+[role='tab']:not(.cursor-not-allowed):not(.cursor-wait):active,
+[role='switch']:not(.cursor-not-allowed):not(.cursor-wait):active,
+[tabindex]:not([tabindex='-1']):not(.cursor-not-allowed):not(.cursor-wait):active,
+.cursor-pointer:not(.cursor-not-allowed):not(.cursor-wait):active {
+  cursor: url('/img/cursor/cursor_click.webp') 25 12, pointer;
+}

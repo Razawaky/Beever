@@ -1,0 +1,307 @@
+import { consultar, consultarEm } from '../config/database.js';
+
+/**
+ * `tasks` — as tarefas diárias e semanais do jogador.
+ *
+ * Duas mudanças de contrato em relação ao schema antigo, ambas de propósito:
+ *
+ * 1. A tarefa **não pertence mais a uma meta**. Ela é do usuário direto
+ *    (`user_id`) e nasce de um `task_type` do catálogo, que carrega o texto, o
+ *    alvo padrão e a recompensa. Título e descrição saem do tipo, não da linha
+ *    da tarefa — é isso que permite gerar as tarefas do dia sem inventar texto.
+ * 2. O progresso deixou de ser porcentagem e virou contagem:
+ *    `current_value` sobe até `target_value`. "Conclua 3 células hoje" é 0/3,
+ *    1/3, 2/3 — não 33%.
+ *
+ * O status usa `goal_statuses`, a mesma tabela das metas: o ciclo de vida é
+ * idêntico (ativa, concluída, expirada, renovada) e duplicar a tabela só
+ * criaria dois vocabulários para a mesma coisa.
+ */
+
+const CAMPOS = `t.id, t.user_id, t.task_type_id, t.target_value, t.current_value,
+                t.reward_points, t.reward_coins, t.due_at, t.completed_at, t.created_at,
+                tt.slug AS type_slug, tt.name AS title, tt.progress_source,
+                sc.slug AS scope, st.slug AS status`;
+
+const JOINS = `JOIN task_types tt ON tt.id = t.task_type_id
+               JOIN task_scopes sc ON sc.id = tt.scope_id
+               JOIN goal_statuses st ON st.id = t.status_id`;
+
+// Colunas do catálogo no painel: inclui o inativo e o nome do escopo. A lista
+// que alimenta a geração continua em `listarTipos`, que esconde o inativo.
+const CAMPOS_ADMIN = `tt.id, tt.slug, tt.name, tt.default_target, tt.reward_points,
+                      tt.reward_coins, tt.progress_source, tt.is_active,
+                      sc.slug AS scope, sc.name AS escopo_nome`;
+
+export async function listarPorUsuario(idUsuario) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM tasks t
+       ${JOINS}
+      WHERE t.user_id = ?
+      ORDER BY t.due_at, t.id`,
+    [idUsuario],
+  );
+}
+
+export async function listarAtivasPorUsuario(idUsuario) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM tasks t
+       ${JOINS}
+      WHERE t.user_id = ? AND st.slug = 'ativa'
+      ORDER BY t.due_at, t.id`,
+    [idUsuario],
+  );
+}
+
+/**
+ * O que a tela mostra como "tarefas do dia": o que ainda pode ser feito no prazo
+ * atual e o que foi concluído hoje. Concluídas de ontem e vencidas ficam no banco
+ * para auditoria, mas não voltam para a lista — senão a tela vira um histórico
+ * repetido em vez de uma agenda.
+ */
+export async function listarVisiveisDoDia(idUsuario, desde, ate) {
+  return consultar(
+    `SELECT ${CAMPOS}
+       FROM tasks t
+       ${JOINS}
+      WHERE t.user_id = ?
+        AND (
+          (st.slug = 'ativa' AND t.due_at >= NOW())
+          OR (st.slug = 'concluida' AND t.completed_at >= ? AND t.completed_at < ?)
+        )
+      ORDER BY t.due_at, t.id`,
+    [idUsuario, desde, ate],
+  );
+}
+
+export async function buscarPorId(id) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS}
+       FROM tasks t
+       ${JOINS}
+      WHERE t.id = ?`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
+/**
+ * Cria a tarefa a partir do tipo. Alvo e recompensa podem vir de fora — a
+ * geração automática pode ajustar por faixa etária — mas o padrão é o que o
+ * catálogo declara, via `COALESCE`, para não haver dois lugares definindo o
+ * mesmo número.
+ */
+export async function criar(conexao, { idUsuario, idTipo, alvo = null, pontos = null, moedas = null, prazo }) {
+  const resultado = await consultarEm(
+    conexao,
+    `INSERT INTO tasks (user_id, task_type_id, status_id, target_value, reward_points, reward_coins, due_at)
+     SELECT ?, tt.id,
+            (SELECT id FROM goal_statuses WHERE slug = 'ativa'),
+            COALESCE(?, tt.default_target),
+            COALESCE(?, tt.reward_points),
+            COALESCE(?, tt.reward_coins),
+            ?
+       FROM task_types tt
+      WHERE tt.id = ?`,
+    [idUsuario, alvo, pontos, moedas, prazo, idTipo],
+  );
+  return resultado.insertId;
+}
+
+/**
+ * Grava o progresso medido na fonte, que é valor absoluto e não incremento: quem
+ * conta é a consulta do evento, não o número que já estava aqui. O `LEAST` mantém
+ * o teto no alvo e o progresso só sobe, para uma partida abandonada não desfazer
+ * o que já foi cumprido.
+ */
+export async function definirProgresso(conexao, id, valor) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE tasks
+        SET current_value = LEAST(GREATEST(current_value, ?), target_value)
+      WHERE id = ?
+        AND completed_at IS NULL
+        AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
+    [valor, id],
+  );
+  return resultado.affectedRows;
+}
+
+/**
+ * Conclui a tarefa — e só conclui o que foi de fato cumprido.
+ *
+ * Duas condições no mesmo `WHERE`, cada uma fechando um buraco:
+ *
+ * - `completed_at IS NULL` faz a checagem e a gravação na mesma instrução, então
+ *   clicar "concluir" duas vezes rápido não credita recompensa duas vezes.
+ * - `current_value >= target_value` impede o atalho que a auditoria da E02
+ *   encontrou: criar tarefa e concluir na sequência, sem cumprir nada, pagava a
+ *   recompensa cheia. Em loop, era mel infinito. Quem decide que o alvo foi
+ *   atingido é o progresso registrado pelo servidor, nunca o clique.
+ *
+ * Não se grava mais `current_value = target_value` aqui: o valor já tem que
+ * estar lá. Igualar na conclusão era justamente o que mascarava o abuso.
+ */
+export async function concluir(conexao, id) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE tasks
+        SET completed_at = NOW(),
+            status_id = (SELECT id FROM goal_statuses WHERE slug = 'concluida')
+      WHERE id = ?
+        AND completed_at IS NULL
+        AND current_value >= target_value`,
+    [id],
+  );
+  return resultado.affectedRows;
+}
+
+/**
+ * Expira as tarefas vencidas de um jogador. É a versão preguiçosa, chamada
+ * quando ele abre a página, e é ela que libera vaga para a geração do dia.
+ */
+export async function expirarVencidasDoUsuario(idUsuario, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE tasks
+        SET status_id = (SELECT id FROM goal_statuses WHERE slug = 'expirada')
+      WHERE user_id = ?
+        AND completed_at IS NULL
+        AND due_at < NOW()
+        AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
+    [idUsuario],
+  );
+  return resultado.affectedRows;
+}
+
+/** Quantas tarefas ativas o jogador tem agora. É o teto de 3 da RN-047. */
+export async function contarAtivas(idUsuario, conexao = null) {
+  const linhas = await consultarEm(
+    conexao,
+    `SELECT COUNT(*) AS total
+       FROM tasks t
+       JOIN goal_statuses st ON st.id = t.status_id
+      WHERE t.user_id = ? AND st.slug = 'ativa'`,
+    [idUsuario],
+  );
+  return Number(linhas[0]?.total ?? 0);
+}
+
+/** Marca como expiradas as tarefas ativas cujo prazo passou, no sistema inteiro. */
+export async function expirarVencidas(conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `UPDATE tasks
+        SET status_id = (SELECT id FROM goal_statuses WHERE slug = 'expirada')
+      WHERE completed_at IS NULL
+        AND due_at < NOW()
+        AND status_id = (SELECT id FROM goal_statuses WHERE slug = 'ativa')`,
+  );
+  return resultado.affectedRows;
+}
+
+/**
+ * Catálogo de tipos de tarefa. É de onde saem o texto, o alvo padrão e a
+ * recompensa de cada tarefa criada — o service não inventa nenhum dos três.
+ */
+export async function listarTipos() {
+  return consultar(
+    `SELECT tt.id, tt.slug, tt.name, tt.progress_source, tt.default_target,
+            tt.reward_points, tt.reward_coins, sc.slug AS scope
+       FROM task_types tt
+       JOIN task_scopes sc ON sc.id = tt.scope_id
+      WHERE tt.is_active = 1
+      ORDER BY sc.slug, tt.name`,
+  );
+}
+
+/** Consultas do painel. Tipo não é apagado: `tasks` aponta para ele com ON DELETE RESTRICT. */
+export async function listarTiposParaAdmin() {
+  return consultar(
+    `SELECT ${CAMPOS_ADMIN}
+       FROM task_types tt
+       JOIN task_scopes sc ON sc.id = tt.scope_id
+      ORDER BY sc.slug, tt.name`,
+  );
+}
+
+export async function buscarTipoParaAdmin(id) {
+  const linhas = await consultar(
+    `SELECT ${CAMPOS_ADMIN}
+       FROM task_types tt
+       JOIN task_scopes sc ON sc.id = tt.scope_id
+      WHERE tt.id = ?`,
+    [id],
+  );
+  return linhas[0] ?? null;
+}
+
+export async function slugTipoJaUsado(slug, idParaIgnorar = null) {
+  const linhas = await consultar(
+    'SELECT 1 FROM task_types WHERE slug = ? AND id <> COALESCE(?, 0) LIMIT 1',
+    [slug, idParaIgnorar],
+  );
+  return linhas.length > 0;
+}
+
+export async function criarTipo(dados, conexao = null) {
+  const resultado = await consultarEm(
+    conexao,
+    `INSERT INTO task_types (slug, name, scope_id, progress_source, default_target, reward_points, reward_coins)
+     SELECT ?, ?, sc.id, ?, ?, ?, ?
+       FROM task_scopes sc
+      WHERE sc.slug = ?`,
+    [dados.slug, dados.nome, dados.fonte, dados.alvo, dados.polen, dados.mel, dados.escopo],
+  );
+  return resultado.insertId;
+}
+
+export async function atualizarTipo(id, dados, conexao = null) {
+  await consultarEm(
+    conexao,
+    `UPDATE task_types
+        SET slug = COALESCE(?, slug),
+            name = COALESCE(?, name),
+            scope_id = COALESCE((SELECT id FROM task_scopes WHERE slug = ?), scope_id),
+            progress_source = COALESCE(?, progress_source),
+            default_target = COALESCE(?, default_target),
+            reward_points = COALESCE(?, reward_points),
+            reward_coins = COALESCE(?, reward_coins)
+      WHERE id = ?`,
+    [dados.slug, dados.nome, dados.escopo, dados.fonte, dados.alvo, dados.polen, dados.mel, id],
+  );
+}
+
+export async function definirTipoAtivo(id, ativo, conexao = null) {
+  await consultarEm(conexao, 'UPDATE task_types SET is_active = ? WHERE id = ?', [
+    ativo ? 1 : 0,
+    id,
+  ]);
+}
+
+/**
+ * Tarefas do jogador num escopo (`diaria` ou `semanal`) criadas a partir de um
+ * instante. É o que o gerador consulta para não criar em duplicidade — a pergunta
+ * que ele faz é "o dia já teve as tarefas deste escopo propostas?".
+ *
+ * Conta `concluida` junto com `ativa`: concluir tira a tarefa do status `ativa`,
+ * e contar só as ativas fazia o gerador achar que o dia estava vago e propor uma
+ * tarefa nova na próxima visita. Como cada linha paga sua recompensa, bastava
+ * receber e recarregar a página para cobrar o mel de novo em loop (RN-047).
+ *
+ * `expirada` fica de fora de propósito: prazo vencido abre vaga para a tarefa
+ * atual, como manda a renovação preguiçosa em `expirarVencidasDoUsuario`.
+ */
+export async function listarDoEscopoDesde(idUsuario, escopo, desde, conexao = null) {
+  return consultarEm(
+    conexao,
+    `SELECT ${CAMPOS}
+       FROM tasks t
+       ${JOINS}
+      WHERE t.user_id = ? AND sc.slug = ? AND st.slug IN ('ativa', 'concluida') AND t.created_at >= ?
+      ORDER BY t.id`,
+    [idUsuario, escopo, desde],
+  );
+}

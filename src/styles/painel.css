@@ -1,0 +1,17 @@
+/* Fundo de favos do miolo do painel/atividades.
+ *
+ * É a mesma textura do onboarding (`favos-de-fundo`), fixa na viewport para
+ * cobrir toda a página (incluindo áreas fora da `<main>`). Os blocos brancos
+ * continuam por cima; o padrão aparece no fundo ao redor deles e nos vãos. */
+.main-favos {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: 84px 144px;
+  opacity: 0.1;
+}
+
+details[open] > summary [data-chevron] {
+  transform: rotate(180deg);
+}

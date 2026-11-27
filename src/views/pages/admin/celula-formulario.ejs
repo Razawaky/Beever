@@ -1,0 +1,116 @@
+<%#
+  Formulário da célula, para criar e para editar. A ordem não é campo: ela nasce
+  no fim do favo e muda pelos botões de subir e descer, que respeitam a UNIQUE.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'conteudo' }) %>
+
+<main class="mx-auto max-w-2xl px-6 py-10">
+  <a href="/admin/favos/<%= favo.id %>" class="text-sm text-tinta-suave hover:text-tinta">
+    &larr; Voltar a <%= favo.title %>
+  </a>
+  <h1 class="mt-4 text-3xl font-bold"><%= celula ? 'Editar célula' : 'Nova célula' %></h1>
+
+  <form
+    method="POST"
+    action="<%= celula ? `/admin/celulas/${celula.id}` : `/admin/favos/${favo.id}/celulas` %>"
+    class="mt-8 space-y-4"
+  >
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div>
+      <label for="titulo" class="mb-1 block text-sm font-medium">Título</label>
+      <input
+        id="titulo"
+        name="titulo"
+        type="text"
+        required
+        maxlength="120"
+        value="<%= celula ? celula.title : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+    </div>
+
+    <div>
+      <label for="idTipoDeJogo" class="mb-1 block text-sm font-medium">Tipo de jogo</label>
+      <select
+        id="idTipoDeJogo"
+        name="idTipoDeJogo"
+        required
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      >
+        <% tiposDeJogo.forEach((tipo) => { %>
+          <option value="<%= tipo.id %>" <%= celula && Number(celula.game_type_id) === Number(tipo.id) ? 'selected' : '' %>>
+            <%= tipo.name %>
+          </option>
+        <% }) %>
+      </select>
+      <p class="mt-1 text-xs text-tinta-suave">É ele que decide qual validador confere o conteúdo.</p>
+    </div>
+
+    <%# A faixa não é escolha: a célula herda a do favo (RN-029). Célula de outra
+        faixa não apareceria para ninguém, então oferecer a escolha era oferecer
+        um jeito de cadastrar conteúdo invisível. -%>
+    <p class="rounded-favo border border-linha bg-white p-4 text-sm text-tinta-suave">
+      Faixa etária: <strong class="text-tinta"><%= favo.age_band_code %></strong>, herdada do favo.
+    </p>
+
+    <div>
+      <label for="segundosEstimados" class="mb-1 block text-sm font-medium">Duração estimada, em segundos</label>
+      <input
+        id="segundosEstimados"
+        name="segundosEstimados"
+        type="number"
+        min="30"
+        max="3600"
+        required
+        value="<%= celula ? celula.estimated_seconds : 300 %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+      />
+    </div>
+
+    <fieldset class="rounded-favo border border-linha p-4">
+      <legend class="px-2 text-sm font-semibold">Recompensas da atividade</legend>
+      <p class="text-xs text-tinta-suave">Deixe em branco para usar o padrão. Se preencher, o valor vale como base de 3 estrelas e escala para 1/2 estrelas.</p>
+      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        <div>
+          <label for="recompensaMel" class="mb-1 block text-sm font-medium">Mel</label>
+          <input
+            id="recompensaMel"
+            name="recompensaMel"
+            type="number"
+            min="0"
+            step="1"
+            value="<%= celula && celula.reward_coins !== null && celula.reward_coins !== undefined ? celula.reward_coins : '' %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+        <div>
+          <label for="recompensaXp" class="mb-1 block text-sm font-medium">XP</label>
+          <input
+            id="recompensaXp"
+            name="recompensaXp"
+            type="number"
+            min="0"
+            step="1"
+            value="<%= celula && celula.reward_xp !== null && celula.reward_xp !== undefined ? celula.reward_xp : '' %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+        <div>
+          <label for="recompensaPontos" class="mb-1 block text-sm font-medium">Pólen</label>
+          <input
+            id="recompensaPontos"
+            name="recompensaPontos"
+            type="number"
+            min="0"
+            step="1"
+            value="<%= celula && celula.reward_points !== null && celula.reward_points !== undefined ? celula.reward_points : '' %>"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <%- include('../../partials/ui/botao', { texto: celula ? 'Salvar célula' : 'Criar célula', tipo: 'submit' }) %>
+  </form>
+</main>

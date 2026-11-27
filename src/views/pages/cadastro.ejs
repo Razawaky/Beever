@@ -1,0 +1,102 @@
+  <div class="relative flex min-h-screen items-center justify-center p-8">
+    <div class="main-favos favos-de-fundo" aria-hidden="true"></div>
+    <div class="relative z-10 w-full max-w-sm rounded-favo bg-white p-8 text-tinta shadow-lg">
+      <a href="/" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar</a>
+
+      <h1 class="mt-6 text-3xl font-bold">Criar conta</h1>
+      <p class="mt-2 text-tinta-suave">
+        Esta conta é do responsável. Depois você poderá adicionar as crianças que vão jogar.
+      </p>
+
+      <form method="POST" action="/users" class="mt-8 space-y-4" id="form-cadastro">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+        <%# Apelido, não nome: a RN-049 proíbe coletar dado pessoal de criança
+            além de apelido e avatar, e o banco não tem coluna de nome. %>
+        <div>
+          <label for="apelido" class="mb-1 block text-sm font-medium">Como podemos chamar você?</label>
+          <input
+            id="apelido"
+            name="apelido"
+            type="text"
+            required
+            maxlength="60"
+            autocomplete="nickname"
+            placeholder="Seu apelido"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="data_nasc" class="mb-1 block text-sm font-medium">Sua data de nascimento</label>
+          <p class="mb-1 text-xs text-tinta-suave">Precisamos confirmar que você é maior de 18 anos.</p>
+          <input
+            id="data_nasc"
+            name="data_nasc"
+            type="date"
+            required
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="email" class="mb-1 block text-sm font-medium">E-mail</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+            placeholder="email@exemplo.com"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="senha" class="mb-1 block text-sm font-medium">Senha</label>
+          <input
+            id="senha"
+            name="senha"
+            type="password"
+            required
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Ao menos 8 caracteres, com letras e números"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <div>
+          <label for="confirmarSenha" class="mb-1 block text-sm font-medium">Confirmar senha</label>
+          <input
+            id="confirmarSenha"
+            name="confirmarSenha"
+            type="password"
+            required
+            autocomplete="new-password"
+            placeholder="Repita a senha"
+            class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta"
+          />
+        </div>
+
+        <%# RNF-35: o aviso sobre a moeda fictícia fica no cadastro, momento em
+            que um adulto está lendo. O consentimento (LGPD Art. 14) mudou para
+            a criação de cada criança, onde ele faz sentido e é registrado. %>
+        <p class="rounded-favo border border-linha bg-cera p-4 text-xs text-tinta-suave">
+          O mel do Beever é fictício: não existe compra com dinheiro de verdade.
+          Ao criar o perfil de uma criança você autoriza o uso de apelido e avatar dela.
+        </p>
+
+        <%- include('../partials/ui/botao', { texto: 'Criar conta', tipo: 'submit', classe: 'w-full' }) %>
+      </form>
+
+      <% if (googleConfigurado) { %>
+        <%- include('../partials/ui/botao-google', { texto: 'Criar conta com Google' }) %>
+      <% } %>
+
+      <p class="mt-6 text-center text-sm text-tinta-suave">
+        Já tem uma conta?
+        <a href="/login" class="font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4 transition hover:decoration-mel">Entrar</a>
+      </p>
+    </div>
+  </div>

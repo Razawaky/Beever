@@ -1,0 +1,145 @@
+/* Ajustes de acessibilidade que a pessoa liga por conta própria.
+
+   O modo normal é o padrão e não muda nada: cor, imagem, animação, navegação e
+   tamanho de texto continuam exatamente como foram desenhados. Os ajustes do
+   painel flutuante entram no `<html>` pelo `acessibilidade.js`, a partir da
+   escolha guardada no navegador. Som e animação reduzida são da conta logada:
+   o servidor coloca as classes no `<body>` ao renderizar cada página.
+
+   As quatro frentes atendem públicos diferentes: movimento para TDAH e autismo,
+   contraste para baixa visão, texto maior para leitura, e menos distração para
+   quem se perde com ilustração e fundo animado competindo com o conteúdo. */
+
+/* ---------------------------------------------------------------------------
+   Movimento reduzido — mesma regra do `prefers-reduced-motion`, mas ligada à mão
+   --------------------------------------------------------------------------- */
+:root.a11y-movimento-reduzido *,
+:root.a11y-movimento-reduzido *::before,
+:root.a11y-movimento-reduzido *::after,
+body.a11y-movimento-reduzido *,
+body.a11y-movimento-reduzido *::before,
+body.a11y-movimento-reduzido *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* As camadas de parallax param onde estão, em vez de pularem para o topo. */
+:root.a11y-movimento-reduzido .camada-de-favos,
+body.a11y-movimento-reduzido .camada-de-favos {
+  animation: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Transições suaves — só na sessão da pessoa logada
+   --------------------------------------------------------------------------- */
+/* A classe vem do servidor junto com as outras preferências da conta. Quem
+   pediu movimento reduzido não a recebe, e o `!important` abaixo cobre o caso
+   de o sistema pedir menos movimento. O deslocamento de página é só opacidade:
+   um `transform` aqui tornaria os elementos fixos dentro do `<main>` filhos
+   dele e quebraria a Beenie grudada na borda. */
+@keyframes beever-entrada {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+:root.transicoes-suaves {
+  scroll-behavior: smooth;
+}
+
+body.transicoes-suaves main {
+  animation: beever-entrada 280ms ease-out both;
+}
+
+:root.a11y-movimento-reduzido,
+body.a11y-movimento-reduzido {
+  scroll-behavior: auto !important;
+}
+
+:root.a11y-movimento-reduzido main,
+body.a11y-movimento-reduzido main {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.transicoes-suaves {
+    scroll-behavior: auto;
+  }
+  body.transicoes-suaves main {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Contraste reforçado — texto de apoio vira texto de verdade
+   --------------------------------------------------------------------------- */
+:root.a11y-contraste .text-tinta-suave {
+  color: var(--color-tinta);
+}
+
+:root.a11y-contraste .border-linha {
+  border-color: var(--color-tinta-suave);
+}
+
+/* Na landing, que é escura, o caminho é o inverso: o texto rebaixado por
+   opacidade volta ao branco cheio. */
+:root.a11y-contraste .text-cera\/80,
+:root.a11y-contraste .text-cera\/70,
+:root.a11y-contraste .text-cera\/60,
+:root.a11y-contraste .text-cera\/50 {
+  color: var(--color-cera);
+}
+
+:root.a11y-contraste .border-white\/10,
+:root.a11y-contraste .border-white\/20,
+:root.a11y-contraste .border-white\/30 {
+  border-color: var(--color-cera);
+}
+
+/* Foco mais grosso: quem precisa de contraste também precisa achar o cursor. */
+:root.a11y-contraste *:focus-visible {
+  outline: 4px solid var(--color-ambar) !important;
+  outline-offset: 3px !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Texto maior — a escala inteira é em rem, então mexer na raiz basta
+   --------------------------------------------------------------------------- */
+:root.a11y-texto-maior {
+  font-size: 118%;
+}
+
+/* ---------------------------------------------------------------------------
+   Menos distração — some o que é enfeite, fica o que informa
+   --------------------------------------------------------------------------- */
+:root.a11y-sem-distracao .camada-de-favos,
+:root.a11y-sem-distracao .favos-de-fundo,
+:root.a11y-sem-distracao .coluna-de-mel {
+  display: none !important;
+}
+
+:root.a11y-sem-distracao img[alt=''] {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Som desligado — a classe é o contrato para qualquer áudio futuro
+   --------------------------------------------------------------------------- */
+/* Não existe áudio no jogo hoje. A classe e a preferência já ficam guardadas
+   para que um efeito novo possa consultar `a11y-sem-som` em vez de inventar
+   outra chave. */
+
+/* ---------------------------------------------------------------------------
+   O painel em si
+   --------------------------------------------------------------------------- */
+
+/* Nasce escondido: sem JavaScript não há preferência para guardar, e um painel
+   que não faz nada é pior que painel nenhum. */
+#acessibilidade {
+  display: none;
+}
+
+.a11y-pronto #acessibilidade {
+  display: block;
+}

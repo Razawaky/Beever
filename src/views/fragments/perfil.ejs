@@ -1,0 +1,463 @@
+<%
+  const TagDoTitulo = locals.nivelTitulo === 2 ? 'h2' : 'h1';
+  // Dentro da Colmeia o perfil já chega embrulhado pelo bloco branco da seção.
+  // Sem esta saída, o cartão branco do perfil viraria um cartão dentro de outro.
+  const emBloco = locals.emBloco === true;
+  // O catálogo vem do banco, igual ao do onboarding: sem upload e sem lista
+  // paralela no JavaScript da tela.
+  const opcoesDeAvatar = locals.avatares ?? [];
+  const coresDeFundo = locals.coresDeFundoDoAvatar ?? [];
+  const cosmeticos = locals.cosmeticos ?? [];
+  const cosmeticosAvatar = cosmeticos.filter((item) => (item.tipo ?? 'avatar') === 'avatar');
+  const cosmeticosFundo = cosmeticos.filter((item) => item.tipo === 'fundo');
+  const cosmeticosPerfil = cosmeticos.filter((item) => item.tipo === 'perfil');
+  const corAtual = perfil.avatar_cor_fundo || perfil.avatar_background || '';
+  const classeFundoAvatar = classeDeCorDeFundoDoAvatar(corAtual);
+  const cosmeticoEquipadoId = perfil.avatar_cosmetico_item_id ? Number(perfil.avatar_cosmetico_item_id) : null;
+  const cosmeticoEquipadoImagem = perfil.avatar_cosmetico_imagem ?? '';
+  const cosmeticoEquipadoCamada = perfil.avatar_cosmetico_camada ?? 'frente';
+  const cosmeticoFundoEquipadoId = perfil.avatar_cosmetico_fundo_item_id ? Number(perfil.avatar_cosmetico_fundo_item_id) : null;
+  const cosmeticoFundoEquipadoImagem = perfil.avatar_cosmetico_fundo_imagem ?? '';
+  const cosmeticoPerfilEquipadoId = perfil.avatar_cosmetico_perfil_item_id ? Number(perfil.avatar_cosmetico_perfil_item_id) : null;
+  const cosmeticoPerfilEquipadoImagem = perfil.avatar_cosmetico_perfil_imagem ?? '';
+  const avatarImagemEfetiva = cosmeticoPerfilEquipadoImagem || perfil.avatar_imagem || '';
+%>
+
+<div class="mx-auto max-w-3xl">
+  <div class="overflow-hidden rounded-favo <%= emBloco ? '' : 'bg-white shadow-xl' %>">
+    <div class="flex items-center gap-4 bg-mel px-8 py-8">
+      <button
+        type="button"
+        id="btn-abrir-avatar"
+        class="group relative rounded-pilula focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+        aria-label="Alterar imagem e cor de fundo do perfil"
+        aria-haspopup="dialog"
+        aria-controls="dialogo-avatar"
+      >
+        <span
+          id="avatar-atual"
+          data-avatar-atual
+          data-avatar-cor="<%= corAtual %>"
+          data-avatar-cosmetico-id="<%= cosmeticoEquipadoId ?? '' %>"
+          data-avatar-cosmetico-imagem="<%= cosmeticoEquipadoImagem %>"
+          data-avatar-cosmetico-camada="<%= cosmeticoEquipadoCamada %>"
+          data-avatar-cosmetico-fundo-id="<%= cosmeticoFundoEquipadoId ?? '' %>"
+          data-avatar-cosmetico-fundo-imagem="<%= cosmeticoFundoEquipadoImagem %>"
+          data-avatar-cosmetico-perfil-id="<%= cosmeticoPerfilEquipadoId ?? '' %>"
+          data-avatar-cosmetico-perfil-imagem="<%= cosmeticoPerfilEquipadoImagem %>"
+          class="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-pilula ring-2 ring-white/70 transition group-hover:ring-tinta/40 <%= classeFundoAvatar %>"
+        >
+          <img
+            id="avatar-atual-cosmetico-fundo"
+            src="<%= cosmeticoFundoEquipadoImagem %>"
+            alt=""
+            width="64"
+            height="64"
+            class="pointer-events-none absolute inset-0 h-full w-full object-cover <%= cosmeticoFundoEquipadoImagem ? '' : 'hidden' %>"
+          />
+          <img
+            id="avatar-atual-cosmetico-atras"
+            src="<%= cosmeticoEquipadoImagem %>"
+            alt=""
+            width="64"
+            height="64"
+            class="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain <%= cosmeticoEquipadoImagem && cosmeticoEquipadoCamada === 'atras' ? '' : 'hidden' %>"
+          />
+          <% if (avatarImagemEfetiva) { %>
+            <img
+              id="avatar-atual-img"
+              src="<%= avatarImagemEfetiva %>"
+              alt=""
+              width="64"
+              height="64"
+              class="relative z-10 h-full w-full object-contain"
+            />
+          <% } else { %>
+            <span id="avatar-atual-fallback" class="relative z-10 text-2xl font-bold text-tinta" aria-hidden="true"><%= perfil.apelido.charAt(0).toUpperCase() %></span>
+          <% } %>
+          <img
+            id="avatar-atual-cosmetico-frente"
+            src="<%= cosmeticoEquipadoImagem %>"
+            alt=""
+            width="64"
+            height="64"
+            class="pointer-events-none absolute inset-0 z-20 h-full w-full object-contain <%= cosmeticoEquipadoImagem && cosmeticoEquipadoCamada !== 'atras' ? '' : 'hidden' %>"
+          />
+        </span>
+        <span class="pointer-events-none absolute -bottom-1 -right-1 z-30 flex h-7 w-7 items-center justify-center rounded-pilula bg-tinta text-cera shadow ring-2 ring-mel" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+        </span>
+      </button>
+      <div>
+        <<%= TagDoTitulo %> class="text-2xl font-bold text-tinta sm:text-3xl"><%= perfil.apelido %></<%= TagDoTitulo %>>
+        <p class="text-sm text-tinta-suave">
+          Nível <%= perfil.nivel?.nivel ?? 1 %> ·
+          sessões de <%= perfil.session_minutes %> minutos ·
+          <%= perfil.faixa_etaria_nome ?? 'faixa não definida' %>
+        </p>
+      </div>
+    </div>
+
+    <div class="p-8">
+      <p
+        id="aviso-avatar"
+        role="status"
+        aria-live="polite"
+        class="hidden rounded-lg bg-cera px-4 py-3 text-sm"
+      ></p>
+
+      <dialog
+        id="dialogo-avatar"
+        class="m-auto w-[calc(100%-2rem)] max-w-5xl rounded-favo border-0 bg-white p-0 text-tinta shadow-elevado backdrop:bg-tinta/40"
+        aria-labelledby="dialogo-avatar-titulo"
+      >
+        <form id="form-avatar" class="p-6 sm:p-8" data-perfil-id="<%= perfil.id %>">
+          <h3 id="dialogo-avatar-titulo" class="font-display text-2xl text-tinta">Escolha seu Beenie e a cor de fundo</h3>
+          <p class="mt-1 text-sm text-tinta-suave">Veja a prévia à esquerda e escolha as opções à direita.</p>
+
+          <div class="mt-6 grid gap-6 sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] sm:items-stretch">
+            <div class="flex flex-col gap-3 rounded-favo bg-cera p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-tinta-suave">Prévia</p>
+              <span
+                id="avatar-preview-modal"
+                class="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-favo ring-2 ring-linha <%= classeFundoAvatar %>"
+              >
+                <img
+                  id="avatar-preview-modal-cosmetico-fundo"
+                  src="<%= cosmeticoFundoEquipadoImagem %>"
+                  alt=""
+                  width="320"
+                  height="320"
+                  class="pointer-events-none absolute inset-0 h-full w-full object-cover <%= cosmeticoFundoEquipadoImagem ? '' : 'hidden' %>"
+                />
+                <img
+                  id="avatar-preview-modal-cosmetico-atras"
+                  src="<%= cosmeticoEquipadoImagem %>"
+                  alt=""
+                  width="320"
+                  height="320"
+                  class="pointer-events-none absolute inset-0 z-0 h-full w-full object-contain <%= cosmeticoEquipadoImagem && cosmeticoEquipadoCamada === 'atras' ? '' : 'hidden' %>"
+                />
+                <% if (avatarImagemEfetiva) { %>
+                  <img
+                    id="avatar-preview-modal-img"
+                    src="<%= avatarImagemEfetiva %>"
+                    alt="Prévia do Beenie"
+                    width="320"
+                    height="320"
+                    class="relative z-10 h-full w-full object-contain"
+                  />
+                <% } else { %>
+                  <img
+                    id="avatar-preview-modal-img"
+                    src=""
+                    alt="Prévia do Beenie"
+                    width="320"
+                    height="320"
+                    class="relative z-10 hidden h-full w-full object-contain"
+                  />
+                  <span id="avatar-preview-modal-fallback" class="relative z-10 text-6xl font-bold text-tinta" aria-hidden="true"><%= perfil.apelido.charAt(0).toUpperCase() %></span>
+                <% } %>
+                <img
+                  id="avatar-preview-modal-cosmetico-frente"
+                  src="<%= cosmeticoEquipadoImagem %>"
+                  alt=""
+                  width="320"
+                  height="320"
+                  class="pointer-events-none absolute inset-0 z-20 h-full w-full object-contain <%= cosmeticoEquipadoImagem && cosmeticoEquipadoCamada !== 'atras' ? '' : 'hidden' %>"
+                />
+              </span>
+              <p class="text-center text-xs text-tinta-suave">Assim vai aparecer no seu perfil.</p>
+            </div>
+
+            <div class="sm:py-1">
+              <div class="flex gap-2" role="tablist" aria-label="Opções do avatar">
+                <button
+                  type="button"
+                  role="tab"
+                  id="aba-avatar-beenie"
+                  aria-selected="true"
+                  aria-controls="painel-avatar-beenie"
+                  data-aba-avatar="beenie"
+                  class="rounded-pilula border-2 border-mel bg-mel/20 px-4 py-2 text-sm font-semibold text-tinta transition focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+                >
+                  Beenie
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  id="aba-avatar-cosmeticos"
+                  aria-selected="false"
+                  aria-controls="painel-avatar-cosmeticos"
+                  data-aba-avatar="cosmeticos"
+                  class="rounded-pilula border-2 border-linha bg-white px-4 py-2 text-sm font-semibold text-tinta transition hover:border-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+                >
+                  Acessórios
+                </button>
+              </div>
+
+              <div id="painel-avatar-beenie" role="tabpanel" aria-labelledby="aba-avatar-beenie" data-painel-avatar="beenie" class="mt-4">
+                <fieldset>
+                  <legend class="text-sm font-semibold text-tinta">Beenie</legend>
+                  <p class="mt-1 text-sm text-tinta-suave">Escolha seu Beenie. Os com bolinha são itens novos da loja.</p>
+                  <div class="mt-3 grid grid-cols-2 gap-3">
+                    <% opcoesDeAvatar.forEach((opcao) => { %>
+                      <label class="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="avatar"
+                          value="<%= opcao.valor %>"
+                          data-imagem="<%= opcao.imagem %>"
+                          class="peer sr-only"
+                          <%= !cosmeticoPerfilEquipadoId && perfil.avatar === opcao.valor ? 'checked' : '' %>
+                        />
+                        <span
+                          class="flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                        >
+                          <span class="text-sm font-semibold leading-tight text-tinta"><%= opcao.rotulo %></span>
+                        </span>
+                      </label>
+                    <% }) %>
+                    <% cosmeticosPerfil.forEach((cosmetico) => { %>
+                      <label class="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="cosmetico_perfil_equipado_item_id"
+                          value="<%= cosmetico.itemId %>"
+                          data-imagem="<%= cosmetico.imagem ?? '' %>"
+                          class="peer sr-only"
+                          <%= cosmeticoPerfilEquipadoId === Number(cosmetico.itemId) ? 'checked' : '' %>
+                        />
+                        <span
+                          class="relative flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                        >
+                          <span data-novo-bolinha class="absolute right-2 top-2 h-2.5 w-2.5 rounded-pilula bg-ambar ring-2 ring-white" aria-hidden="true"></span>
+                          <span data-novo-bolinha class="sr-only">Item novo</span>
+                          <span class="text-sm font-semibold leading-tight text-tinta"><%= cosmetico.nome %></span>
+                        </span>
+                      </label>
+                    <% }) %>
+                  </div>
+                  <input type="hidden" name="avatar_fallback" id="avatar-fallback" value="<%= perfil.avatar || '' %>" />
+                </fieldset>
+
+                <fieldset class="mt-6">
+                  <legend class="text-sm font-semibold text-tinta">Cor de fundo</legend>
+                  <div class="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-6">
+                    <% coresDeFundo.forEach((cor) => { %>
+                      <label class="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="avatar_cor_fundo"
+                          value="<%= cor.valor %>"
+                          data-classe="<%= cor.classe %>"
+                          aria-label="<%= cor.rotulo %>"
+                          class="peer sr-only"
+                          <%= corAtual === cor.valor ? 'checked' : '' %>
+                        />
+                        <span
+                          class="flex items-center justify-center rounded-favo border-2 border-linha bg-white p-2 transition hover:border-ambar peer-checked:border-mel peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                        >
+                          <span class="h-10 w-10 rounded-pilula border-2 border-tinta/15 ring-1 ring-linha <%= cor.classe %>" aria-hidden="true"></span>
+                        </span>
+                      </label>
+                    <% }) %>
+                  </div>
+                </fieldset>
+              </div>
+
+              <div id="painel-avatar-cosmeticos" role="tabpanel" aria-labelledby="aba-avatar-cosmeticos" data-painel-avatar="cosmeticos" class="mt-4 hidden">
+                <fieldset>
+                  <legend class="text-sm font-semibold text-tinta">Acessórios do personagem</legend>
+                  <p class="mt-1 text-sm text-tinta-suave">Ficam sobre ou atrás do Beenie, conforme o item.</p>
+                  <div class="mt-3 grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cosmetico_equipado_item_id"
+                        value=""
+                        data-imagem=""
+                        data-camada=""
+                        class="peer sr-only"
+                        <%= !cosmeticoEquipadoId ? 'checked' : '' %>
+                      />
+                      <span
+                        class="flex min-h-16 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                      >
+                        <span class="text-sm font-semibold leading-tight text-tinta">Sem acessório</span>
+                      </span>
+                    </label>
+                    <% cosmeticosAvatar.forEach((cosmetico) => { %>
+                      <label class="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="cosmetico_equipado_item_id"
+                          value="<%= cosmetico.itemId %>"
+                          data-imagem="<%= cosmetico.imagem ?? '' %>"
+                          data-camada="<%= cosmetico.camada ?? 'frente' %>"
+                          class="peer sr-only"
+                          <%= cosmeticoEquipadoId === Number(cosmetico.itemId) ? 'checked' : '' %>
+                        />
+                        <span
+                          class="flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                        >
+                          <span class="text-sm font-semibold leading-tight text-tinta"><%= cosmetico.nome %></span>
+                        </span>
+                      </label>
+                    <% }) %>
+                  </div>
+                  <% if (cosmeticosAvatar.length === 0) { %>
+                    <p class="mt-3 rounded-favo bg-cera px-4 py-3 text-sm text-tinta-suave">Você ainda não tem acessórios do personagem.</p>
+                  <% } %>
+                </fieldset>
+
+                <fieldset class="mt-6">
+                  <legend class="text-sm font-semibold text-tinta">Fundo do avatar</legend>
+                  <p class="mt-1 text-sm text-tinta-suave">Cosméticos que aparecem no fundo do seu avatar.</p>
+                  <div class="mt-3 grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cosmetico_fundo_equipado_item_id"
+                        value=""
+                        data-imagem=""
+                        class="peer sr-only"
+                        <%= !cosmeticoFundoEquipadoId ? 'checked' : '' %>
+                      />
+                      <span
+                        class="flex min-h-16 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                      >
+                        <span class="text-sm font-semibold leading-tight text-tinta">Sem fundo cosmético</span>
+                      </span>
+                    </label>
+                    <% cosmeticosFundo.forEach((cosmetico) => { %>
+                      <label class="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="cosmetico_fundo_equipado_item_id"
+                          value="<%= cosmetico.itemId %>"
+                          data-imagem="<%= cosmetico.imagem ?? '' %>"
+                          class="peer sr-only"
+                          <%= cosmeticoFundoEquipadoId === Number(cosmetico.itemId) ? 'checked' : '' %>
+                        />
+                        <span
+                          class="flex min-h-12 items-center justify-center rounded-favo border-2 border-linha bg-cera px-3 py-2 text-center transition hover:border-ambar peer-checked:border-mel peer-checked:bg-mel/20 peer-focus-visible:outline-[3px] peer-focus-visible:outline-ambar peer-focus-visible:outline-offset-2"
+                        >
+                          <span class="text-sm font-semibold leading-tight text-tinta"><%= cosmetico.nome %></span>
+                        </span>
+                      </label>
+                    <% }) %>
+                  </div>
+                  <% if (cosmeticosFundo.length === 0) { %>
+                    <p class="mt-3 rounded-favo bg-cera px-4 py-3 text-sm text-tinta-suave">Você ainda não tem cosméticos de fundo do avatar.</p>
+                  <% } %>
+                </fieldset>
+              </div>
+            </div>
+          </div>
+
+          <p
+            id="aviso-avatar-dialogo"
+            role="status"
+            aria-live="polite"
+            class="mt-4 hidden rounded-lg bg-cera px-4 py-3 text-sm"
+          ></p>
+
+          <div class="mt-6 flex flex-wrap justify-end gap-3">
+            <button
+              type="button"
+              id="btn-cancelar-avatar"
+              class="inline-flex min-h-11 items-center justify-center rounded-favo border-2 border-linha bg-white px-4 py-2 text-sm font-semibold text-tinta transition hover:border-ambar focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              id="btn-salvar-avatar"
+              class="inline-flex min-h-11 items-center justify-center rounded-favo bg-mel px-5 py-2 text-sm font-bold text-tinta transition hover:bg-ambar focus-visible:outline-[3px] focus-visible:outline-tinta focus-visible:outline-offset-2"
+            >
+              Salvar
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <section class="mt-6 rounded-favo bg-cera p-6">
+        <h2 class="text-lg font-semibold">Meus dias de jogo</h2>
+
+        <form id="form-disponibilidade" class="mt-6" data-perfil-id="<%= perfil.id %>">
+          <fieldset class="grid gap-3 sm:grid-cols-2">
+            <legend class="sr-only">Dias da semana disponíveis</legend>
+            <% semana.forEach((dia) => { %>
+              <label class="flex cursor-pointer items-center gap-3 rounded-favo border-2 p-4 hover:border-ambar <%= dia.disponivel ? 'border-mel bg-white' : 'border-linha' %>">
+                <input
+                  type="checkbox"
+                  name="dias"
+                  class="h-4 w-4"
+                  value="<%= dia.diaSemana %>"
+                  <%= dia.disponivel ? 'checked' : '' %>
+                />
+                <span class="font-medium capitalize"><%= dia.nome %></span>
+              </label>
+            <% }) %>
+          </fieldset>
+
+          <%# O resultado de salvar aparece por JavaScript. Sem `role="status"`,
+              quem usa leitor de tela trocaria a semana sem ouvir o que mudou. %>
+          <p
+            id="aviso-disponibilidade"
+            role="status"
+            aria-live="polite"
+            class="mt-4 hidden rounded-lg bg-white px-4 py-3 text-sm"
+          ></p>
+
+          <div class="mt-6 flex items-center gap-4">
+            <%- include('../partials/ui/botao', {
+              texto: 'Salvar meus dias',
+              tipo: 'submit',
+              id: 'btn-salvar-dias',
+              formato: 'pilula',
+            }) %>
+            <a href="/painel" class="text-sm font-medium text-tinta underline decoration-ambar decoration-2 underline-offset-4">
+              Voltar ao painel
+            </a>
+          </div>
+        </form>
+      </section>
+
+      <section class="mt-6 rounded-favo bg-cera p-6">
+        <h2 class="text-lg font-semibold">Minhas metas agora</h2>
+        <% if (metas.length === 0) { %>
+          <p class="mt-2 text-sm text-tinta-suave">Nenhuma meta ativa no momento.</p>
+        <% } else { %>
+          <ul class="mt-4 grid gap-3">
+            <% metas.forEach((meta) => { %>
+              <%
+                const alvo = Number(meta.target_value) || 1;
+                const percentual = Math.min(100, Math.round((Number(meta.current_value) / alvo) * 100));
+              %>
+              <li class="rounded-lg bg-white px-4 py-3">
+                <div class="flex items-baseline justify-between gap-4">
+                  <span class="font-medium"><%= meta.title %></span>
+                  <span class="text-sm text-tinta-suave"><%= meta.current_value %> de <%= meta.target_value %></span>
+                </div>
+                <div
+                  class="mt-2 h-2 overflow-hidden rounded-pilula bg-cera"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="<%= percentual %>"
+                  aria-label="Progresso da meta <%= meta.title %>"
+                >
+                  <div class="h-full rounded-pilula bg-mel <%= classeDaBarra(percentual) %>"></div>
+                </div>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </section>
+    </div>
+  </div>
+</div>

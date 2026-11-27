@@ -1,0 +1,25 @@
+<%#
+  Feedback global do Beever. Vive no layout para estar em toda tela — inclusive
+  na de erro — e não precisa de biblioteca: é o `<dialog>` nativo mais o par de
+  classes `.toast` / `.toast-container` que já existe em `tema.css`.
+
+  O container é um `role="status"`: cada toast entra com `role="alert"` quando é
+  erro, mas o ponto de anúncio já está aqui. O dialog começa fechado (sem
+  `open`), como o `dialogo-sair`, e só é aberto por `showModal()` quando a falha
+  exige que a pessoa pare e responda.
+-%>
+<div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<dialog
+  id="dialogo-alerta-global"
+  aria-labelledby="titulo-alerta-global"
+  aria-describedby="mensagem-alerta-global"
+  class="m-auto w-11/12 max-w-md rounded-favo bg-white p-6 text-tinta shadow-painel"
+>
+  <p id="titulo-alerta-global" class="font-display text-xl">Atenção</p>
+  <p id="mensagem-alerta-global" class="mt-2 text-sm text-tinta-suave"></p>
+
+  <div class="mt-6 flex flex-wrap justify-end">
+    <%- include('botao', { texto: 'Entendi', id: 'fechar-alerta-global', tipo: 'button', tamanho: 'medio' }) %>
+  </div>
+</dialog>

@@ -1,0 +1,110 @@
+<%#
+  Formulário do tipo de tarefa, para criar e para editar. Escopo e fonte vêm de
+  listas fechadas: o gerador só propõe o que o sistema sabe medir. Quem credita
+  mel e pólen é o serviço do jogador, nunca este painel.
+-%>
+<%- include('../../partials/admin/casca', { emailDoAdmin, atual: 'tarefas' }) %>
+
+<main class="mx-auto max-w-2xl px-6 py-10">
+  <a href="/admin/tarefas" class="text-sm text-tinta-suave hover:text-tinta">&larr; Voltar às tarefas</a>
+  <h1 class="mt-4 text-3xl font-bold"><%= tarefa ? 'Editar tarefa' : 'Nova tarefa' %></h1>
+
+  <form
+    method="POST"
+    action="<%= tarefa ? `/admin/tarefas/${tarefa.id}` : '/admin/tarefas' %>"
+    class="mt-8 space-y-4"
+  >
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div>
+      <label for="nome" class="mb-1 block text-sm font-medium">Nome</label>
+      <input id="nome" name="nome" type="text" required maxlength="120"
+        value="<%= tarefa ? tarefa.name : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      <p class="mt-1 text-xs text-tinta-suave">É o texto que a criança vê no cartão da tarefa.</p>
+    </div>
+
+    <div>
+      <label for="slug" class="mb-1 block text-sm font-medium">Endereço</label>
+      <input id="slug" name="slug" type="text" maxlength="60" pattern="[a-z0-9\-]+"
+        value="<%= tarefa ? tarefa.slug : '' %>"
+        class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      <p class="mt-1 text-xs text-tinta-suave">
+        <%= tarefa ? 'Em branco mantém o endereço atual.' : 'Deixe em branco para gerar a partir do nome.' %>
+      </p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="escopo" class="mb-1 block text-sm font-medium">Escopo</label>
+        <select id="escopo" name="escopo" required
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
+          <% escopos.forEach((escopo) => { %>
+            <option value="<%= escopo.slug %>" <%= tarefa && tarefa.scope === escopo.slug ? 'selected' : '' %>>
+              <%= escopo.nome %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label for="fonte" class="mb-1 block text-sm font-medium">Fonte do progresso</label>
+        <select id="fonte" name="fonte" required
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta">
+          <% fontes.forEach((fonte) => { %>
+            <option value="<%= fonte.slug %>" <%= tarefa && tarefa.progress_source === fonte.slug ? 'selected' : '' %>>
+              <%= fonte.nome %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <p class="text-xs text-tinta-suave">
+      Só existem fontes que o sistema já sabe medir. Para criar uma nova, é preciso alterar o código.
+    </p>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <label for="alvo" class="mb-1 block text-sm font-medium">Alvo</label>
+        <input id="alvo" name="alvo" type="number" min="1" max="1000000000" required
+          value="<%= tarefa ? tarefa.default_target : 1 %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+
+      <div>
+        <label for="polen" class="mb-1 block text-sm font-medium">Pólen</label>
+        <input id="polen" name="polen" type="number" min="0" max="1000000000" required
+          value="<%= tarefa ? tarefa.reward_points : 0 %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+
+      <div>
+        <label for="mel" class="mb-1 block text-sm font-medium">Mel</label>
+        <input id="mel" name="mel" type="number" min="0" max="1000000000000" required
+          value="<%= tarefa ? tarefa.reward_coins : 0 %>"
+          class="w-full rounded-lg border border-linha px-4 py-3 text-sm focus:border-mel focus:outline-[3px] focus:outline-ambar focus:outline-offset-2 focus:ring-2 focus:ring-tinta" />
+      </div>
+    </div>
+
+    <p class="rounded-favo bg-cera px-4 py-3 text-sm text-tinta-suave">
+      Alvo e recompensas são copiados quando a tarefa nasce. Escopo e fonte são lidos do catálogo:
+      mudá-los também afeta as tarefas que já estão abertas. Para tirar o tipo do jogo sem apagar
+      o histórico, use <strong class="font-semibold text-tinta">Desativar</strong> na lista.
+    </p>
+
+    <div class="flex flex-wrap gap-3 pt-2">
+      <%- include('../../partials/ui/botao', {
+        texto: tarefa ? 'Salvar tarefa' : 'Criar tarefa',
+        tipo: 'submit',
+        tamanho: 'medio',
+      }) %>
+      <%- include('../../partials/ui/botao', {
+        texto: 'Cancelar',
+        href: '/admin/tarefas',
+        variante: 'secundario',
+        tamanho: 'medio',
+      }) %>
+    </div>
+  </form>
+</main>

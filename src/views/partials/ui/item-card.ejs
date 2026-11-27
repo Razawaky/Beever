@@ -1,0 +1,40 @@
+<%#
+  Card do item na vitrine (RF-LOJ-03), simplificado: tipo, nome, descrição e valor.
+  Os números já vêm respondidos pelo `shopService`, com a regra da faixa aplicada (RN-038).
+%>
+<article class="flex flex-col justify-between rounded-favo bg-white p-6 shadow-md">
+  <div>
+    <%# A arte é opcional: o catálogo do seed não tem, e a cadastrada pelo painel
+        chega sempre em WebP com dimensões escritas, para não haver salto. -%>
+    <% const mostrarImagemNaLoja = item.show_image_in_store === undefined || item.show_image_in_store === null || Boolean(item.show_image_in_store); %>
+    <% if (item.image_path && mostrarImagemNaLoja) { %>
+      <img src="<%= item.image_path %>" alt="" width="800" height="800"
+        class="mb-4 aspect-square w-full rounded-favo bg-cera object-contain" />
+    <% } %>
+    <span class="text-xs font-semibold uppercase tracking-wide text-tinta-suave"><%= item.category_name %></span>
+    <h3 class="mt-1 text-lg font-bold"><%= item.name %></h3>
+    <p class="mt-2 text-sm text-tinta-suave"><%= item.description_kid %></p>
+  </div>
+
+  <div class="mt-6 flex items-end justify-between gap-4">
+    <p class="inline-flex items-center gap-1.5 text-lg font-semibold tabular-nums text-tinta">
+      <%- svgIcone('mel', 'h-5 w-5') %><span><%= item.precoComDesconto %></span>
+    </p>
+
+    <% if (item.jaComprou) { %>
+      <span class="rounded-pilula bg-tarefa-concluida px-4 py-2 text-sm font-medium text-tinta">Já é seu</span>
+    <% } else if (item.bloqueios.length > 0) { %>
+      <span class="rounded-pilula bg-cera px-4 py-2 text-sm font-medium text-tinta-suave">Ainda não</span>
+    <% } else { %>
+      <%# O botão leva para a confirmação, nunca direto para a compra: a criança
+          vê o impacto antes de gastar (RF-LOJ-05). A base do caminho vem da
+          casca para a compra não sair da Colmeia. %>
+      <%- include('./botao', {
+        texto: 'Quero este',
+        href: `${locals.confirmacaoBase ?? '/loja/itens'}/${item.id}/confirmar`,
+        tamanho: 'medio',
+        rotuloAcessivel: `Quero ${item.name}`,
+      }) %>
+    <% } %>
+  </div>
+</article>

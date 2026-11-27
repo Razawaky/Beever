@@ -1,0 +1,82 @@
+<%#
+  Sidebar Direita da Colmeia.
+  Fica fixa no canto direito em telas grandes (lg) para que as tarefas e metas
+  continuem visíveis enquanto o jogador rola a trilha; no celular empilha abaixo
+  do conteúdo, então não rouba espaço da tela.
+-%>
+<aside class="z-20 flex h-full w-72 shrink-0 flex-col gap-6 overflow-y-auto bg-mel p-6 shadow-xl lg:fixed lg:inset-y-0 lg:right-0">
+
+  <div class="border-tinta/10">
+    <%- include('chama-sequencia', { sequencia, href: '/painel/metas' }) %>
+  </div>
+
+  <%# Seção: Tarefas de hoje %>
+  <section class="group relative -m-2 flex flex-col gap-3 rounded-favo p-2 transition hover:bg-white/20">
+    <a href="/painel/metas" aria-label="Ver metas e tarefas" class="absolute inset-0 z-0 rounded-favo focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"></a>
+
+    <h2 class="pointer-events-none relative z-10 font-display text-lg text-tinta">Suas tarefas de hoje</h2>
+
+    <% if (colmeia.tarefas.length === 0) { %>
+      <p class="pointer-events-none relative z-10 text-xs text-tinta-suave">Nenhuma tarefa por enquanto. A colmeia propõe as do dia quando você entra.</p>
+    <% } else { %>
+      <ul class="pointer-events-none relative z-10 grid gap-2">
+        <% colmeia.tarefas.forEach((tarefa) => { %>
+          <%- include('./card-tarefa', { tarefa, compacto: true, voltarPara: '/painel' }) %>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+
+  <%# Seção: Meta mais próxima %>
+  <section>
+    <% if (!colmeia.metaEmDestaque) { %>
+      <div class="flex flex-col gap-3">
+        <h2 class="font-display text-lg text-tinta">Sua meta mais próxima</h2>
+        <%- include('./estado-vazio', {
+          mensagem: 'Suas metas aparecem assim que a colmeia montar seu plano.',
+          acao: { href: '/painel/metas', texto: 'Ver metas e tarefas' },
+          semMascote: true,
+        }) %>
+      </div>
+    <% } else { %>
+      <a
+        href="/painel/metas"
+        aria-label="Ver todas as metas"
+        class="group -m-2 flex flex-col gap-3 rounded-favo p-2 transition hover:bg-white/20 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+      >
+        <h2 class="font-display text-lg text-tinta">Sua meta mais próxima</h2>
+        <%- include('./card-meta', { meta: colmeia.metaEmDestaque, destaque: true, compacto: true }) %>
+      </a>
+    <% } %>
+  </section>
+
+  <%# Seção: Liga %>
+  <section>
+    <a
+      href="/painel/liga"
+      aria-label="Ver liga da semana"
+      class="group -m-2 flex flex-col gap-3 rounded-favo p-2 transition hover:bg-white/20 focus-visible:outline-[3px] focus-visible:outline-ambar focus-visible:outline-offset-2"
+    >
+      <h2 class="font-display text-lg text-tinta">Sua liga da semana</h2>
+
+      <div class="rounded-favo bg-white p-4 shadow-sm">
+        <% if (!colmeia.liga || colmeia.liga.posicao === null) { %>
+          <p class="text-xs text-tinta-suave">Ganhe seu primeiro pólen da semana e você entra no ranque do seu grupo.</p>
+        <% } else { %>
+          <p class="text-sm font-semibold text-tinta">
+            <%= colmeia.liga.posicao %>º lugar · <%= colmeia.liga.grupo.nome %>
+          </p>
+          <p class="mt-1 inline-flex items-center gap-1.5 text-xs tabular-nums text-tinta-suave">
+            <%- svgIcone('polen', 'h-4 w-4') %><span><%= colmeia.liga.polen %> de pólen</span>
+          </p>
+        <% } %>
+      </div>
+    </a>
+  </section>
+</aside>
+
+<!--
+<aside class="fixed inset-y-0 left-0 z-20 flex w-72 flex-col justify-between h-full overflow-hidden bg-mel p-6 shadow-xl"></aside>
+
+<aside class="w-auto bg-mel p-6 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:h-full lg:w-80 lg:overflow-hidden lg:border-l lg:border-linha lg:bg-white lg:shadow-xl"></aside>
+-->
